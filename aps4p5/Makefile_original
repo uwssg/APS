@@ -1,0 +1,98 @@
+LAPACK =-L/astro/users/danielsf/lapack-3.1.1/ -llapack
+
+BLAS =-L/astro/users/danielsf/BLAS/ -lblas
+
+FORTRAN = -lgfortran
+
+CAMB = -I/astro/users/danielsf/CAMB_110419/ \
+-L/astro/users/danielsf/CAMB_110419/ -lcamb
+#CAMB = -I/astro/users/danielsf/camb/ -L/astro/users/danielsf/camb -lcamb
+
+CFITSIO = /astro/users/danielsf/cfitsio
+
+WMAP = -I/astro/users/danielsf/WMAP7likelihood/ \
+-L/astro/users/danielsf/WMAP7likelihood -lwmap7
+
+WMAPLIBS = -L$(CFITSIO) -lcfitsio -L/astro/users/danielsf/lapack-3.1.1 \
+-llapack -L/astro/users/danielsf/BLAS -lblas -lpthread
+
+#C++ compiler
+gg = g++ #-fopenmp -D OPENMP
+
+#Fortran compiler
+ff = gfortran #-fopenmp
+
+goto_tools.o: goto_tools.h goto_tools.cpp
+	$(gg) -c goto_tools.cpp $(LAPACK) $(BLAS) $(FORTRAN)
+
+eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h
+	$(gg) -c eigen_wrapper.cpp goto_tools.o $(LAPACK) $(BLAS) \
+	$(FORTRAN) -Wno-deprecated
+
+camb_wrapper_wmap.o: camb_wrapper_wmap.F90
+	$(ff) -c camb_wrapper_wmap.F90 $(CAMB)
+	
+wmap_wrapper.o: wmap_wrapper.F90
+	$(ff) -c wmap_wrapper.F90 -I/astro/users/danielsf/WMAP7likelihood/ \
+	$(WMAP) $(FORTRAN) $(WMAPLIBS) -lgfortran
+
+kd.o: kd.cpp kd.h goto_tools.o
+	$(gg) -c kd.cpp goto_tools.o $(LAPACK) $(BLAS) $(FORTRAN) \
+         -Wno-deprecated
+
+gaussian_process.o: gaussian_process.cpp gaussian_process.h kd.o goto_tools.o \
+eigen_wrapper.o
+	$(gg) -c gaussian_process.cpp goto_tools.o kd.o eigen_wrapper.o \
+	$(LAPACK) $(FORTRAN) $(BLAS) $(ARPACK)
+
+#use the compile command below if you want to use the CAMB and WMAP 7 
+#likelihood function
+#
+#make sure that likelihood::call_likelihood() in likelihoodinterface.cpp
+#uses the proper likelihood function
+#
+likelihoodinterface.o: camb_wrapper_wmap.o likelihoodinterface.h \
+likelihoodinterface.cpp kd.o goto_tools.o eigen_wrapper.o wmap_wrapper.o \
+gaussian_process.o
+	$(gg) -D CMB -c likelihoodinterface.cpp goto_tools.o \
+	eigen_wrapper.o camb_wrapper_wmap.o kd.o wmap_wrapper.o \
+	gaussian_process.o \
+	$(LAPACK) $(BLAS) $(FORTRAN) -Wno-deprecated
+
+#use the compile command below if you only want to use the cartoon likelihood 
+#function
+
+#likelihoodinterface.o: likelihoodinterface.h \
+likelihoodinterface.cpp kd.o goto_tools.o eigen_wrapper.o gaussian_process.o
+#	$(gg) -c likelihoodinterface.cpp goto_tools.o \
+	eigen_wrapper.o kd.o gaussian_process.o \
+	$(LAPACK) $(BLAS) $(FORTRAN) -Wno-deprecated
+
+
+#CMB compilation statement
+aps4p5: aps_interface.cpp goto_tools.o eigen_wrapper.o \
+likelihoodinterface.o kd.o camb_wrapper_wmap.o wmap_wrapper.o gaussian_process.o
+	$(gg) -o aps4p5 aps_interface.cpp goto_tools.o eigen_wrapper.o kd.o \
+	 likelihoodinterface.o camb_wrapper_wmap.o wmap_wrapper.o \
+	 gaussian_process.o \
+	 $(LAPACK) $(BLAS) $(FORTRAN) $(CAMB) $(WMAP) $(WMAPLIBS) \
+	 -Wno-deprecated
+
+
+#cartoon compilation statement
+#aps2: aps_interface.cpp goto_tools.o eigen_wrapper.o gaussian_process.o \
+likelihoodinterface.o kd.o 
+#	$(gg) -o aps2 aps_interface.cpp goto_tools.o eigen_wrapper.o kd.o \
+	 likelihoodinterface.o gaussian_process.o \
+	 $(LAPACK) $(BLAS) $(FORTRAN) \
+	 -Wno-deprecated
+
+test: test_gp.cpp goto_tools.o eigen_wrapper.o \
+likelihoodinterface.o kd.o camb_wrapper_wmap.o wmap_wrapper.o gaussian_process.o
+	$(gg) -o test test_gp.cpp goto_tools.o eigen_wrapper.o kd.o \
+	 likelihoodinterface.o camb_wrapper_wmap.o wmap_wrapper.o \
+	 gaussian_process.o \
+	 $(LAPACK) $(BLAS) $(FORTRAN) $(CAMB) $(WMAP) $(WMAPLIBS) \
+	 -Wno-deprecated
+
+
