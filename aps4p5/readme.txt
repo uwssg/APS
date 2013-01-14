@@ -1,3 +1,12 @@
+14 January 2013
+
+Note: the file goto_tools.h contains a structure Ran() for generating random
+numbers.  This is a direct copy of the Xorshift algorithm proposed by 
+Marsaglia in Journal of Statistical Software vol 8, no 14, pp 1-6.  Those who
+have access should probably replace this with the Ran structure from Numerical
+Recipes (3rd edition) page 342.  The existing code has been written so that the
+interface is identical.
+
 15 November 2012
 
 ------------Differences relative to older versions of APS----------------
