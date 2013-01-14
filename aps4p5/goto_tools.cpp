@@ -4,6 +4,8 @@
 #include <time.h>
 #include "goto_tools.h"
 
+//this algorithm was inspired by Numerical Recipes (3rd edition);
+//Press, Tuekolsky, Vetterling, Flannery 2007
 double normal_deviate(Ran *chaos, double mu, double sig){
  
  int i;
@@ -150,7 +152,8 @@ double interpolate(double *x, double *y, double target, int el){
 }
 
 
-//the routines below are just the merge sort routine from Numerical Recipes;
+//the routines below are just the merge sort algorithm from Numerical Recipes;
+//(3rd edition); Press, Tuekolsky, Vetterling, Flannery 2007
 
 int scanner(double *m, int *indices, int index, int el){
 /*this will take the matrix m and put everything in it with value
