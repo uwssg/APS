@@ -63,45 +63,6 @@ void kill(char *words){
  exit(1);
 }
 
-/*just going to lift this out of Numerical Recipes p 109*/
-void polint(double *xa, double *ya, int n, double x, double *y, double *dy){
-/*recall: because this is from NR, it has arrays start at element unity*/
-	int i,m,ns=1,isfd;
-	double den,dif,dift,ho,hp,w;
-	double c[n+1],d[n+1];
-	char scream[100];
-	dif=fabs(x-xa[1]);
-	for(i=1;i<=n;i++){
-		if((dift=fabs(x-xa[i]))<dif){
-			ns=i;
-			dif=dift;
-		}
-		c[i]=ya[i];
-		d[i]=ya[i];
-	}
-	*y=ya[ns--];
-	for(m=1;m<n;m++){
-		for(i=1;i<=n-m;i++){
-			ho=xa[i]-x;
-			hp=xa[i+m]-x;
-			w=c[i+1]-d[i];
-			if((den=ho-hp)==0.0){printf("Error in routine polint ");
-				for(isfd=1;isfd<=n;isfd++)printf(" (%e, %e) ",xa[isfd],ya[isfd]);
-				printf(" want %e \n",x); 
-				printf("%d %d xs %e %e\n",i,m,xa[i],xa[i+m]);
-				sprintf(scream,"stop");
-				kill(scream);
-			
-			
-			}
-			/*This error can occur only if two input xas re (to within roundoff) identical*/
-			den=w/den;
-			d[i]=hp*den;
-			c[i]=ho*den;
-		}
-		*y+=(*dy=(2*ns<(n-m)?c[ns+1]:d[ns--]));
-	}
-}
 
 
 double interpolate(double *x, double *y, double target, int el){
@@ -123,6 +84,8 @@ double interpolate(double *x, double *y, double target, int el){
  double xint[5],yint[5],err,ans,xup,xdown,yup,ydown;
  int i,n,min,k;
  
+ printf("please do not call this function\n");
+ exit(1);
  
  if(x[0]>x[1]){
   xt=new double[el];
@@ -153,7 +116,7 @@ double interpolate(double *x, double *y, double target, int el){
   k=1;
   for(i=1;i<4;i++)if(xint[i]-xint[i+1]==0.0)k=0;
   if(k==1){
-   polint(xint,yint,4,target,&ans,&err);
+   //polint(xint,yint,4,target,&ans,&err);
   }
   else{
     xdown=xint[1];

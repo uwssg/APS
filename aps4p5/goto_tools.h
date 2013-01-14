@@ -1,5 +1,6 @@
 #define pi 3.141592654
 #define letters 100
+#include <stdio.h>
 
 void kill(char*);
 
@@ -10,24 +11,49 @@ double power(double,int);
 
 struct Ran{
 
-unsigned long long u,v,w;
-Ran(unsigned long long j) : v(4101842887655102017LL), w(1) {
-	u = j^v; int64();
-	v=u; int64();
-	w=v; int64();
+//this structure will be based on the Xorshift random number generator
+// discovered by George Marsaglia and published in
+//Journal of Statistical Software, volume 8, no. 14 pp 1-6
+//
+//those who have access would do well to replace it with the 
+//structure Ran from 
+//Numerical Recipes (3rd edition) 
+//William H. press, Saul A. Teukolsky, William T. Vetterling, Brian P. Flannery
+//Cambridge University Press, 2007
+//p 342
+
+
+//parameters are drawn from the table on page 347 of Numerical Recipes
+
+
+unsigned long long x;
+Ran(unsigned long long seed){
+
+x=seed^88172645463325252LL;
+x^=(x<<21);
+x^=(x>>35);
+x^=(x<<4);
+printf("staring rand with %ld from seed %d\n",x,seed);
 }
-inline unsigned long long int64(){
-	u = u * 2862933555777941757LL + 7046029254386353087LL;
-	v ^= v >> 17; v ^= v<<31; v ^= v>>8;
-	w = 4294957665U*(w & 0xffffffff) + (w>>32);
-	unsigned long long x = u^(u<<21); x^=x>>35;x^=x<<4;
-	return (x+v)^w;
+
+void thework(){
+  x^=(x<<21);
+  x^=(x>>35);
+  x^=(x<<4);
 }
-inline double doub(){return 5.42101086242752217e-20 * int64();}
-inline unsigned int int32(){return (unsigned int)int64();}
+
+double doub(){
+  thework();
+  return x*5.42101086242752217e-20;
+}
+
+int int32(){
+  thework();
+  return int(x);
+}
+
 };
 
-void polint(double*,double*,int,double,double*,double*);
 
 double interpolate(double*,double*,double,int);
 
