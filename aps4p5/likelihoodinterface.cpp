@@ -169,7 +169,7 @@ void likelihood::initialize(double **guesses, int nguess){
  double rn,tp,cc;
  double **base,*chisq;
 
- initialized=1;
+ 
 
  
  gg.kk=kk;//set the number of nearest neighbors the gaussian process will
@@ -270,7 +270,7 @@ void likelihood::initialize(double **guesses, int nguess){
 	}
        
  printf("done with initializer\n");
-
+ initialized=1;
  }
 
 void likelihood::resume(char *inname){
@@ -446,7 +446,7 @@ double likelihood::call_likelihood(double *v){
 // printf("calling on \n");
 /*
  k=1;
- for(i=0;i<nparams;i++){
+ for(i=0;i<nparams && initialized==1;i++){
  // printf("%e ",v[i]);
   if(v[i]<gg.kptr->mins[i] || v[i]>gg.kptr->maxs[i])k=0;
  }

@@ -33,7 +33,7 @@ Note: all keywords must be prefixed with a #
 below is a guess roughly approximating the known best fit point
 
 #guess
-0.02273 0.1099 0.72 0.087 0.963 3.1
+0.02273 0.1099 0.72 0.087 
 
 you can include other guesses (forcing APS to sample points you are interested
 in) by prefacing them with the guess keyword and just listing their parameter 
