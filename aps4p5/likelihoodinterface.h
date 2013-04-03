@@ -45,9 +45,6 @@ class likelihood{
  private:
   
   
-     //f is the distance from the confidence ball center
-     //fpredicted is what Kriging predicted for f
-     //sigma is the variance Kriging predicted for f
      
   int nparams,nprinted,krigct,addct,nodect,gradct;
   int node_called,sam_called,grad_called;
@@ -61,15 +58,7 @@ class likelihood{
  
  public:
   char **pnames,masteroutname[100];
-   //cmd will be a command that calls an external program (the likelihood
-   //code) which takes a point in parameter space and outputs a curve
-   //to be compared to the data
-   
-   //pstore will contain the parameter values to be input to the
-   //likelihood code
-   
-   //dname is the name of the file that will contain the
-   //data produced by the likelihood code
+  
    
    double chimin,chimintarget,junk,chiexcept;
    double *minpt,*mxx,*mnn,proximity,grat;
