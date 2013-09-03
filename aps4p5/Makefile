@@ -1,6 +1,15 @@
+
+#directory where you can find the libraries for the LAPACK linear
+#algebra package
 LAPACK_LIB = -L/Users/noldor/physics/lapack-3.1.1/
 
+#directory where you can find the libraries for the BLAS linear algebra package
 BLAS_LIB = -L/Users/noldor/physics/BLAS/
+
+#directory where you can find the libraries that link fortran to c++
+FORTRAN_LIB = -L/opt/local/lib/g95/x86_64-apple-darwin10/4.2.4/
+
+############below are directories and libraries for the WMAP7 likelihood
 
 CAMB_LIB = -L/Users/noldor/physics/CAMB_110419/camb/ -lcamb
 CAMB_INC = -I/Users/noldor/physics/CAMB_110419/camb/
@@ -10,9 +19,11 @@ WMAP7_INC = -I/Users/noldor/physics/WMAP7likelihood/
 
 CFITSIO = -L/Users/noldor/physics/cfitsio -lcfitsio
 
+###########################
+
 LIBRARIES = $(LAPACK_LIB) \
 $(BLAS_LIB) \
--L/opt/local/lib/g95/x86_64-apple-darwin10/4.2.4/ \
+$(FORTRAN_LIB) \
 $(CAMB_LIB) \
 $(WMAP7_LIB) \
 $(CFITSIO) \
