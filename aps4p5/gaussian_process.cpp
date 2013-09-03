@@ -51,18 +51,26 @@ gp::~gp(){
 
 void gp::initialize(int pin,double **seed, double *seedfn,\
 double *mx, double *mn){
+  
+  /*
+    seed[][] contains the initial data points.  seedfn[] contains the associated
+    values of chisquared.  mx[] and mn[] are maximum and minimum allowed values
+    for the parameters.
+  */
+  
   int i,j,k,l;
   
   initialized=1;
   
   room=pin;
-  fn=new double[pin];//this is where you will store the function associated
-  		//with your data points (chisquared for APS)
+  fn=new double[pin];//seedfn[] gets copied into here.
   
   for(i=0;i<pin;i++)fn[i]=seedfn[i];
 
   kptr=new kd_tree(dim,pin,seed,mn,mx);//store data points in a kd tree
+  
   kptr->check_tree(-1);//make sure kd tree is properly constructed
+  
   printf("tree diagnostic %d\n",kptr->diagnostic);
   pts=kptr->pts;
   printf("setting pts to %d\n",pts);
@@ -731,6 +739,8 @@ void gp::write_data(char *name){
 
 void gp::set_kp(int *flag){
   
+  //NOT USED ANY MORE
+  
   //this routine will look at the points in the Gaussian process' data set
   //and set the Kriging parameter such that 68% of the values predicted for
   //fn[] at those points are within 1-sigma of their true values
@@ -800,7 +810,11 @@ void gp::set_kp(int *flag){
 }
 
 void gp::copy(gp *oldgp){
-
+  //copies oldgp into current gp
+  //NOT USED
+  //NOT WELL TESTED
+  
+  
   double **databuff,*fnbuff;
   int i,j,k,l;
   
@@ -833,6 +847,9 @@ void gp::copy(gp *oldgp){
 }
 
 void gp::fast_predict_gradient(double *v, int *ndex, int nkk, double *gradout, int delswit){
+   
+   //NOT USED
+   //NOT WELL TESTED
    
    int i,j,k,l;
    double nn,fbar;

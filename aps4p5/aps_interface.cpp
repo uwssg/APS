@@ -23,8 +23,6 @@ main(int iargc, char *argv[]){
    
    FILE *input,*output;
    
-   //cv=new gaussian_covariance();
-   //lk=new udder_likelihood();
    
    for(j=0;argv[1][j]!=0;j++){
      paramname[j]=argv[1][j];
