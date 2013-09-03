@@ -1,5 +1,6 @@
-module wmapwrap
+#ifdef _WMAP7_
 
+module wmapwrap
 
 use wmap_likelihood_7yr
 use wmap_options
@@ -56,3 +57,5 @@ real(8) likeout
 call wmaplikeness_actual(cltt,clte,clee,clbb,likeout)
 
 end subroutine wmaplikeness
+
+#endif

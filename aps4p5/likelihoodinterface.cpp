@@ -46,7 +46,14 @@ likelihood::~likelihood(){
   delete dice;
   delete [] minpt;
   if(initialized==1)delete [] lingerflag;
-
+  
+  if(calledmufit==1){
+      delete [] mumufit;
+      delete [] diffmufit;
+      delete [] chimufit;
+      delete [] ctmufit;
+  }
+  
 
 }
 
@@ -58,7 +65,22 @@ likelihood::likelihood(){
   scanf("%lf",&junk);
 }
 
-likelihood::likelihood(int nn,double *mns,double *mxs){
+void likelihood::set_timingname(char *word){
+    int i;
+    for(i=0;word[i]!=0;i++)timingname[i]=word[i];
+    timingname[i]=0;
+}
+
+void likelihood::set_deltachi(double xx){
+    deltachi=xx;
+}
+
+void likelihood::set_seed(int ii){
+    seed=ii;
+}
+
+likelihood::likelihood(int nn,double *mns,double *mxs,
+covariance_function *cv, likelihood_function *lk){
 
  //This routine doesn't actually do much.
  //It just builds some of the necessary matrices
@@ -73,13 +95,22 @@ likelihood::likelihood(int nn,double *mns,double *mxs){
  
  int i,j,k,l;
  double rn;
- 
+  
  printf("starting\n");
+ 
+ call_likelihood=lk;
+ 
+ sprintf(timingname,"timingfile.sav");
  
  initialized=0;
  proximity=0.1;
  foundbywandering=0;
  improvedbywandering=0;
+ deletedwanderers=0;
+ 
+ deltachi=-1.0;
+ 
+ mufitname[0]=0;
  
  //these variables are for a feature that I have not included
  //because it does not work as well as it should
@@ -114,20 +145,21 @@ likelihood::likelihood(int nn,double *mns,double *mxs){
  		//write_pts() so that you do not write the same point
 		//twice.
 		
- chiexcept=1.0e10;//if chisquared is larger than this value, do not add the
- 		//point to your gaussian process' list of sampled points
-		
+
  spentlingering=0;//how many iterations were spent on things that were not
  		//the vanilla sample_pts()
 		
  precision=1.0e-5;
 
- i=int(time(NULL));
  
- printf("\n\nran seed is %d\n\n",i);
+ 
+ //i=1364868230;
+ //i=42;
+ 
+ seed=-1;
 
 
- dice=new Ran(i);
+
  npts=10000; //Number of random starting point sampled.
  	//This is a public parameter, so you can
 	//set it to a different value before calling
@@ -138,7 +170,7 @@ likelihood::likelihood(int nn,double *mns,double *mxs){
 
  nsamples=1000; //Number of samples to consider when using the Gaussian process
 
- target=1280.0; //Default value of chi squared for which to look
+ target=1300.0; //Default value of chi squared for which to look
  chimintarget=1197.0;//this is the target for the gradient descent method in
  		//grad_sample()
 
@@ -157,6 +189,32 @@ likelihood::likelihood(int nn,double *mns,double *mxs){
 
 
  gg.kriging_parameter=1.0;  
+ 
+ assign_covariogram(cv);
+ 
+ 
+ if(call_likelihood->get_type()==LK_TYPE_WMAP){
+     printf("setting mins and maxes for wmap\n");
+     call_likelihood->set_max_min(nparams,mnn,mxx);
+ }
+ 
+}
+
+void likelihood::set_mufitname(char *word){
+    int i;
+    FILE *output;
+    for(i=0;word[i]!=0;i++){
+        mufitname[i]=word[i];
+    }
+    mufitname[i]=0;
+    
+    output=fopen(mufitname,"w");
+    fclose(output);
+    calledmufit=0;
+}
+
+void likelihood::assign_covariogram(covariance_function *cv){
+    gg.assign_covariogram(cv);
 }
 
 void likelihood::initialize(double **guesses, int nguess){
@@ -169,8 +227,11 @@ void likelihood::initialize(double **guesses, int nguess){
  double rn,tp,cc;
  double **base,*chisq;
 
- 
 
+
+ if(seed<0)seed=int(time(NULL));
+ printf("ran seed is %d\n",seed);
+ dice=new Ran(seed);
  
  gg.kk=kk;//set the number of nearest neighbors the gaussian process will
 	//use for predicting chisquared in sample_pts() and for
@@ -206,12 +267,16 @@ void likelihood::initialize(double **guesses, int nguess){
  //assign the values of chisquared to the starting samples
  chimin=1.0e10;
  for(j=0;j<npts;j++){
-   chisq[j]=call_likelihood(base[j]);
+   chisq[j]=(*call_likelihood)(base[j]);
    if(chisq[j]<chimin){
      chimin=chisq[j];
      for(i=0;i<nparams;i++)minpt[i]=base[j][i];
    }
    
+ }
+ 
+ if(deltachi>0.0){
+     target=chimin+deltachi;
  }
  
  //here we initialize the gaussian process.  From now on, chisquared will
@@ -233,7 +298,7 @@ void likelihood::initialize(double **guesses, int nguess){
    lingerflag[i]=0;
  }
  
- gg.set_kp(lingerflag);//set the kriging parameter;
+ //gg.set_kp(lingerflag);//set the kriging parameter;
  			//you pass the lingerflag[] array so that it only
 			//considers points that were chosen using
 			//sample_pts()
@@ -286,7 +351,11 @@ double **base,*chisq,*kpa,nn;
 char word[letters];
  FILE *input;
  
- initialized=1;
+ 
+  if(seed<0)seed=int(time(NULL));
+  printf("ran seed is %d\n",seed);
+  dice=new Ran(seed);
+ 
  printf("about to read %s\n",inname);
  npts=0;
  
@@ -294,7 +363,7 @@ char word[letters];
  input=fopen(inname,"r");
  while(fscanf(input,"%s %le ",word,&nn)==2){
   for(i=1;i<nparams;i++)fscanf(input,"%s %le ",word,&nn);
-  while(compare_char(word,"kp")==0){
+  while(compare_char(word,"ling")==0){
    //for this reason 'kp' should always be the last entry in the 
    //output file
    
@@ -324,7 +393,7 @@ char word[letters];
  for(i=0;i<npts;i++){
    for(j=0;j<nparams;j++)fscanf(input,"%s %le",word,&base[i][j]);
    
-   while(compare_char(word,"kp")==0){
+   while(compare_char(word,"ling")==0){
      fscanf(input,"%s %le",word,&nn);
      if(compare_char(word,"chisq")==1)chisq[i]=nn;
      if(compare_char(word,"ling")==1){
@@ -348,8 +417,12 @@ char word[letters];
    
  }
  
+ if(deltachi>0.0){
+     target=chimin+deltachi;
+ }
+ 
  gg.initialize(npts,base,chisq,mxx,mnn);
- gg.set_kp(lingerflag);
+ //gg.set_kp(lingerflag);
 
  
  gw=new grad_wanderer[gwroom];
@@ -384,15 +457,92 @@ char word[letters];
   for(i=0;i<npts;i++)delete [] base[i];
   delete [] base;
   delete [] kpa;
-
+  initialized=1;
 
  printf("done resuming\n");
  
 }
 
+udder_likelihood::udder_likelihood(){
+    foundp3=-1;
+    foundn3=-1;
+    called=0;
+}
 
-//USER MODIFIED FUNCTION
-double likelihood::call_likelihood(double *v){
+int udder_likelihood::get_type(){
+    return LK_TYPE_UDDER;
+}
+
+double udder_likelihood::operator()(double *v){
+
+  //code below this comment is a cartoon likelihood function
+     double d1,d2,base1,base2,amp1,amp2,base,chisquared;
+   
+     int i;
+    
+    called++;
+    d1=power(v[0]-3.0,2);
+    d2=power(v[0]+3.0,2);
+    
+    for(i=1;i<6;i++){
+        d1+=power(v[i],2);
+	d2+=power(v[i],2);
+    }
+   
+    
+    chisquared=1300.0+0.5*d1+0.5*d2-153.0*exp(-2.0*d1)-100.0*exp(-1.0*d2);
+    
+    if(chisquared<=1280.669){
+        if(d1<d2 && foundp3<0)foundp3=called;
+	if(d2<d1 && foundn3<0) foundn3=called;
+    }
+    
+     return chisquared;
+
+}
+
+int udder_likelihood::get_fp3(){
+    return foundp3;
+}
+
+int udder_likelihood::get_fn3(){
+    return foundn3;
+}
+
+likelihood_function::likelihood_function(){
+    setmaxmin=0;
+}
+
+likelihood_function::~likelihood_function(){
+    if(setmaxmin==1){
+        delete [] maxs;
+	delete [] mins;
+    }
+}
+
+void likelihood_function::set_max_min(
+int dd, double *mn, double *mx){
+    int i;
+    double nn;
+    
+    dim=dd;
+    mins=new double[dim];
+    maxs=new double[dim];
+    
+    for(i=0;i<dim;i++){
+        mins[i]=mn[i];
+	maxs[i]=mx[i];
+	if(mins[i]>maxs[i]){
+	    nn=mins[i];
+	    mins[i]=maxs[i];
+	    maxs[i]=nn;
+	}
+    }
+    
+}
+
+#ifdef _WMAP7_
+double wmap_likelihood::operator()(double *v){
   
   //this is the function that calls the likelihood function
   //to evaluate chi squared
@@ -413,47 +563,27 @@ double likelihood::call_likelihood(double *v){
   FILE *output;
   
  
-  
-  //code below this comment is a cartoon likelihood function
- 
-   
-     d1=(v[0]-5.0)*(v[0]-5.0);
-     for(i=1;i<nparams;i++)d1+=v[i]*v[i];
-     d1=sqrt(d1);
 
-     d2=(v[0]+5.0)*(v[0]+5.0);
-     for(i=1;i<nparams;i++)d2+=v[i]*v[i];
-     d2=sqrt(d2);
-     
-     //base=1300.0+d2*d2;
-     
-     base1=1300.0+d1*d1;
-     base2=1300.0+d2*d2;
-     
-     base=1300.0+0.5*100.0;
-     
-     amp1=1197.0-base;
-     amp2=1250.0-base;
-     
-     chisquared=0.5*base1+0.5*base2+amp1*exp(-d1*d1/0.5)+amp2*exp(-d2*d2/1.0);
-  
-  //code below this comment interfaces with CAMB and the WMAP7 likelihood
-  //function
-  
-  
 ////////////////////////  
-
-// printf("calling on \n");
+//and now a cartoon based on wmap7
 /*
- k=1;
- for(i=0;i<nparams && initialized==1;i++){
- // printf("%e ",v[i]);
-  if(v[i]<gg.kptr->mins[i] || v[i]>gg.kptr->maxs[i])k=0;
- }
-//printf("\n");
+  d1=power((v[0]-0.0215)/0.0015,2);
+  d1+=power((v[1]-0.112)/0.015,2);
+  d1+=power((v[2]+4.0*v[1]-1.15)/0.02,2);
+  d1+=power((v[3]-0.087)/0.01,2);
+  d1+=power((30.0*v[0]+0.3-v[4])/0.02,2);
+  d1+=power((v[5]-3.11)/0.17,2);
+  
+  d1=sqrt(d1);
+  
+  chisquared=1275.0+5.669*d1;
+*/
+///////////////
+ //printf("calling on wmap7\n");
 
- if(k==0)chisquared=2.0*chiexcept;
- else{
+  for(i=0;i<dim;i++){
+      if(v[i]<mins[i] || v[i]>maxs[i])return 2.0*chiexcept;
+  }
   
   while((v[0]+v[1])/(v[2]*v[2])>1.0){
     v[0]=0.9*v[0];
@@ -489,8 +619,8 @@ double likelihood::call_likelihood(double *v){
 			//chisquared=0  (this has been known to happen)
   
 
- } 
- */
+ 
+ 
  /////////////////
  
   //printf("got chisquared %e\n",chisquared);
@@ -499,13 +629,20 @@ double likelihood::call_likelihood(double *v){
 }
 
 
+int wmap_likelihood::get_type(){
+    return LK_TYPE_WMAP;
+}
+
+#endif
+
+
 void likelihood::sample_pts(int delswit){
   int i,j,k,l,ix;
   //static int called=0;
   //static double *bestpt,*v;
-  double stradmax,strad,mu,sig,chitrue,nn,mm,xx,yy;
-  double before,after;
-  
+  double stradmax,strad,mu,sig,chitrue,nn,mm,xx,yy,*candidate_gradient;
+  double before,after,mubest;
+
   //this subroutine does the ``vanilla'' APS sampling
   //(i.e. it choose points based on the straddle parameter)
   
@@ -529,14 +666,19 @@ void likelihood::sample_pts(int delswit){
     before=double(time(NULL));
     stradmax=-1.0e10;
     for(i=0;i<nsamples;i++){
+      
       for(j=0;j<nparams;j++){
         samv[j]=gg.kptr->mins[j]+\
 	dice->doub()*(gg.kptr->maxs[j]-gg.kptr->mins[j]);
       }
       
+  
       mu=gg.user_predict(samv,&sig,1,&nn);
-      strad=1.96*sqrt(gg.kriging_parameter)*sig-fabs(mu-target);
+      //strad=1.96*sqrt(gg.kriging_parameter)*sig-fabs(mu-target);
+      strad=sig-fabs(mu-target);
+      
       if(strad>stradmax){
+        mubest=mu;
         stradmax=strad;
 	for(j=0;j<nparams;j++)sambest[j]=samv[j];
       }
@@ -546,23 +688,40 @@ void likelihood::sample_pts(int delswit){
     krigct++;
 
     before=double(time(NULL));
-    chitrue=call_likelihood(sambest);
-    
+    chitrue=(*call_likelihood)(sambest);
+
     //only add the point to the set of sampled points if chisquared is
     //reasonable
+
+    
     if(chitrue<chiexcept){
       add_pt(sambest,chitrue,0);
+      
+      if(mufitname[0]!=0){
+          if(calledmufit==0){
+	      calledmufit=1;
+	      
+	      nmufit=0;
+	      mumufit=new double[2*writevery];
+	      diffmufit=new double[2*writevery];
+	      chimufit=new double[2*writevery];
+	      ctmufit=new int[2*writevery];
+	  }
+	  
+	  ctmufit[nmufit]=npts;
+	  mumufit[nmufit]=mubest;
+	  chimufit[nmufit]=chitrue;
+	  diffmufit[nmufit]=mubest-chitrue;
+	  if(chitrue!=0.0)diffmufit[nmufit]=diffmufit[nmufit]/fabs(chitrue);
+	  nmufit++;
+	  
+      }
     }
     after=double(time(NULL));
     addtimewall+=(after-before);
     addct++;
 
-    if(chitrue<=target){
-      //this is the feature that I have disabled
-    
-      //add_node(sambest,chitrue);
-    }
-    else if(chitrue-target<grat*target){
+  if(chitrue-target<grat*target){
     //if the value of chisquared is within your set threshold, add it as a
     //new gradient wanderer.  If you are already at your maximum allowed
     //number of wanderers, only add this point if its value of chisquared
@@ -628,13 +787,15 @@ void likelihood::sample_pts(int delswit){
 	    for(i=0;i<nparams;i++)gw[ix].center[i]=sambest[i];
 	    gw[ix].chisq=chitrue;
 	    gw[ix].rr=0.1;
+	    deletedwanderers++;
 	  }
 
 ///////////BELOW IS CODE THAT REMOVES THE WANDERER WITH THE NEAREST
 //////////NEAREST NEIGHBOR (as an alternative to the code above;
 ////////// I am not 100% sure which is best)
-
-	 /* xx=0.0;
+         
+	 /*
+	  xx=0.0;
 	  for(i=0;i<nparams;i++){
 	    xx+=(sambest[i]-gw[0].center[i])*(sambest[i]-gw[0].center[i]);
 	  }
@@ -669,15 +830,49 @@ void likelihood::sample_pts(int delswit){
 	    for(i=0;i<nparams;i++)gw[ix].center[i]=sambest[i];
 	    gw[ix].chisq=chitrue;
 	    gw[ix].rr=0.1;
+	    deletedwanderers++;
 	  }
+	  
 	  */
+	////////////////////
+	//////BELOW IS CODE TO REMOVE THE WANDERER WITH THE SMALLEST MAGNITUDE GRADIENT
+	/////////
+	
+	/*candidate_gradient=new double[nparams];
+	
+	gg.user_predict_gradient(sambest,candidate_gradient,1);
+	
+	nn=0.0;
+	for(i=0;i<nparams;i++){
+	    nn+=power(candidate_gradient[i],2);
 	}
-      }
+	nn=sqrt(nn);
+	for(i=0;i<ngw;i++){
+	    if(i==0 || gw[i].magnitude<xx){
+	        xx=gw[i].magnitude;
+		ix=i;
+            }
+	}
+	  
+	if(xx<nn){
+	    //printf("   adding new wanderer %e %e -- %e\n",\
+	    sambest[0],sambest[1],chitrue);
+	    for(i=0;i<nparams;i++)gw[ix].center[i]=sambest[i];
+	    gw[ix].chisq=chitrue;
+	    gw[ix].rr=0.1;
+	    deletedwanderers++;
+	}
+	  
+	  
+	delete [] candidate_gradient;*/
+	  
+	}//is nnodes==0
+      }//is ngw maxed out
       
-      //if(npts>36880)printf("done checking wanderness\n"); 
-    }
+      
+    }//is this a grad wanderer situation
 
-  }
+  }//is delswit>0
   
 }
 
@@ -720,7 +915,7 @@ void likelihood::write_pts(){
   }
   fprintf(output,"chisq %e ",gg.fn[i]);
 
-  fprintf(output,"ling %d kp %e\n",lingerflag[i],gg.kriging_parameter);
+  fprintf(output,"ling %d\n",lingerflag[i]);
   }//if(i>=nprinted)
   
  }
@@ -734,7 +929,7 @@ void likelihood::write_pts(){
  if(npts%(10*writevery)==0)gg.kptr->check_tree(-1);
  
  
- timefile=fopen("timingfile.sav","a");
+ timefile=fopen(timingname,"a");
  fprintf(timefile,"%s %d wanderers %d found %d improved %d gd %d ",\
  masteroutname\
  ,npts,ngw,foundbywandering,improvedbywandering,good);
@@ -749,12 +944,21 @@ void likelihood::write_pts(){
   "wandertime %e ct %d ",gradtimewall/double(gradct),gradct);
   fprintf(timefile,"kk %d ns %d ",kk,nsamples);
   
-  fprintf(timefile,"kd %d kp %e ",gg.kptr->diagnostic,gg.kriging_parameter);
-  fprintf(timefile,"chimin %e \n",chimin);
+  fprintf(timefile,"kd %d ",gg.kptr->diagnostic);
+  fprintf(timefile,"chimin %e target %e dw %d\n",chimin,target,deletedwanderers);
  fclose(timefile);
     
    nprinted=npts;
-
+   
+   if(mufitname[0]!=0 && calledmufit==1){
+       output=fopen(mufitname,"a");
+       for(i=0;i<nmufit;i++){
+           fprintf(output,"%d %e %e %e\n",
+	   ctmufit[i],mumufit[i],chimufit[i],diffmufit[i]);
+       }
+       fclose(output);
+       nmufit=0;
+   }
 
 }
 
@@ -1014,7 +1218,7 @@ void likelihood::node_sample(int dex){
 	
 	//if(nodes[dex].ggdir->pts>=55)printf("   dr %e rr %e\n",dr,radius);
 	
-        chitrue=call_likelihood(nodev);
+        chitrue=(*call_likelihood)(nodev);
 	if(i==2)nodes[dex].ccfirst=chitrue;
         if(chitrue<chiexcept){
           nodes[dex].cc[i]=chitrue;
@@ -1064,7 +1268,7 @@ void likelihood::node_sample(int dex){
          radius*(gg.kptr->maxs[i]-gg.kptr->mins[i])*nodes[dex].dir[i];
        }
      
-       chitrue=call_likelihood(nodev);
+       chitrue=(*call_likelihood)(nodev);
      }
     
      
@@ -1130,7 +1334,7 @@ void likelihood::node_sample(int dex){
           radius*(gg.kptr->maxs[i]-gg.kptr->mins[i])*nodes[dex].dir[i];
         }
 	
-        chitrue=call_likelihood(nodev);
+        chitrue=(*call_likelihood)(nodev);
 	
 	if(chitrue>=chiexcept){
 	 k=1;
@@ -1626,12 +1830,14 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
   if(npts%writevery==0){
   
     write_pts();
-    if(npts%(10*writevery)==0)gg.set_kp(lingerflag);//reset the kriging
+    //if(npts%(writevery)==0)gg.set_kp(lingerflag);//reset the kriging
                                           //parameter every 10*writevery
   }
   
   if(chitrue<chimin){
     chimin=chitrue;
+    if(chimin+deltachi<target && deltachi>0.0)target=chimin+deltachi;
+    
     for(i=0;i<nparams;i++)minpt[i]=v[i];
   }
   //printf("done in add pt\n");
@@ -1750,7 +1956,7 @@ int likelihood::compare_nodes(double *v, int dex){
       p[i]=nodes[dex].center[i]+nn*dir[i];
     }
     
-    chitest=call_likelihood(p);
+    chitest=(*call_likelihood)(p);
     
     if(chitest>target){
       truth=1;
@@ -1787,13 +1993,15 @@ void likelihood::grad_sample(int dex){
  //this routine uses gradient descent to try to walk the gradient wanderer
  //indicated by dex towards the chisquared value stored in chimintarget
   
-  int i,j,k;
+  int i,j,k,rswit;
   //static int called=0;
   //static double *dir,*v;
   double chitrue,mag,dchi;
   double before,after;
   
   before=double(time(NULL));
+  
+  gw[dex].magnitude=0.0;
   
   if(dex>=0 && grad_called==0){
     graddir=new double[nparams];
@@ -1810,8 +2018,10 @@ void likelihood::grad_sample(int dex){
     //this direction is storred in graddir
     gg.user_predict_gradient(gw[dex].center,graddir,1);
 
-    if(gw[dex].chisq>target)dchi=chimintarget-gw[dex].chisq;
-    else dchi=target-gw[dex].chisq;
+    //if(gw[dex].chisq>target)dchi=chimintarget-gw[dex].chisq;
+    //else dchi=target-gw[dex].chisq;
+    
+    
     
     
     //normalize graddir
@@ -1819,17 +2029,26 @@ void likelihood::grad_sample(int dex){
     for(i=0;i<nparams;i++){
       mag+=power(graddir[i],2);
     }
-    mag=sqrt(mag);
-    for(i=0;i<nparams;i++){
-      graddir[i]=graddir[i]/mag;
-    }
     
-    //sample the point that is some small step along graddir, hopefully
-    //towards the target value of chisquared
-    for(i=0;i<nparams;i++){
-      gradv[i]=gw[dex].center[i]+graddir[i]*gw[dex].rr*dchi;
+    
+    if(mag>0.0 && isnan(mag)==0){ 
+     mag=sqrt(mag);
+     
+     gw[dex].magnitude=mag;
+     
+     for(i=0;i<nparams;i++){
+       graddir[i]=graddir[i]/mag;
+     }
+    
+     //sample the point that is some small step along graddir, hopefully
+     //towards the target value of chisquared
+
+     for(i=0;i<nparams;i++){
+       gradv[i]=gw[dex].center[i]-graddir[i]*gw[dex].rr;
+     }
+     chitrue=(*call_likelihood)(gradv);
     }
-    chitrue=call_likelihood(gradv);
+    else chitrue=chiexcept;
      
     //if the point was reasonable, add it to the list of sampled points
     if(chitrue<chiexcept){
@@ -1842,7 +2061,8 @@ void likelihood::grad_sample(int dex){
       foundbywandering++;
       //add_node(gradv,chitrue);
     }
-    else if(chitrue<gw[dex].chisq){
+    
+    if(chitrue<gw[dex].chisq){
     //even if the point wasn't within your desired confidence limit, if the
     //step reduced chisquared, reassign the location of the wanderer
     //and make a note that you were able to improve your chisquared value
@@ -1863,8 +2083,12 @@ void likelihood::grad_sample(int dex){
     }
     
     
+    rswit=0;
+    for(i=0;i<nparams && rswit==0;i++){
+      if(graddir[i]*gw[dex].rr>=1.0e-4*fabs(gw[dex].center[i]))rswit=1;
+    }
     
-    if(chitrue<=target || gw[dex].rr<1.0e-7){
+    if(rswit==0){
       //delete the wanderer if either the step size gets too small,
       //or it finds a point that is within the desired confidence limit
       
@@ -1876,6 +2100,7 @@ void likelihood::grad_sample(int dex){
       delete [] gw[ngw-1].center;
       gw[ngw-1].chisq=2.0e30;
       ngw--;
+      deletedwanderers++;
      
     }
     

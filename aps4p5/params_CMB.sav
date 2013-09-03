@@ -3,28 +3,28 @@ Note: all keywords must be prefixed with a #
 
 #dim 6 -- dimensionality of your parameter space
 
-#Ns 2000 -- start with 2000 randomly sampled points
-#end 200000 -- end after the algorithm has sampled 200000 points
+#Ns 10 -- start with 2000 randomly sampled points
+#end 20 -- end after the algorithm has sampled 200000 points
 
 #Nc 250 -- sample 250 candidates each time you use the Gaussian process
-#Ng 15 -- use 15 neareast neighbors in the Gaussian process
+#Ng 5 -- use 15 neareast neighbors in the Gaussian process
 
 #Nw 100 -- maximum number of wanderers
 #grat 0.1 -- threshold at which wanderer is created
 
-#chitarget 1280.669 -- target chi squared (where is your confidence limit?)
-#chimintarget 1197  -- target minimum value of chi squared (for gradient
-                       descent)
 
-#write_every 300 -- write after sampling 300 points;
+#write_every 3000 -- write after sampling 300 points;
                     currently, the code will reassess the Kriging parameter
 		    and test the structure of the kd tree every ten times it
 		    writes
 
-
-#outputfile test_aps4p5_wmap_out.sav -- the name of the output file
-#resumefile test_wmap_seed.sav -- if you wanted to resume old #output file 
-			(this line is currently commented out, note the '!')
+#deltachi 12.59
+#likelihood wmap
+#covariance gauss
+#outputfile wmap7_gaussian_no196_out_again.sav
+!#resumefile wmap7_gaussian_no196_out.sav
+#mufitfile wmap7_gauss_no196_fit.sav
+#timingfile wmap7_gauss_timingfile.sav
 
 #param 0 ombh2 0.01 0.04 -- the density of baryons
 #param 1 omch2 0.05 0.2 -- the density fo dark matter
@@ -33,13 +33,4 @@ Note: all keywords must be prefixed with a #
 #param 4 ns 0.8 1.1 -- scalar index controlling primordial power spectrum
 #param 5 lnA 2.5 3.5 -- 10^10 ln(A) where A is normalizatin of primordial power spec.
 
-
-below is a guess roughly approximating the known best fit point
-
-#guess
-0.02273 0.1099 0.72 0.087 0.963 3.1
-
-you can include other guesses (forcing APS to sample points you are interested
-in) by prefacing them with the guess keyword and just listing their parameter 
-values
 

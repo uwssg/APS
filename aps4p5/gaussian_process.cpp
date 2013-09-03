@@ -3,6 +3,7 @@
 #include "eigen_wrapper.h"
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 gp::gp(){
   initialized=0;
@@ -102,30 +103,162 @@ void gp::add_pt(double *newpt, double newfn){
 
 }
 
-double gp::covariogram(double *v1, double *v2, double *grad, int swit){
+double covariance_function::operator()
+(double *v1, double *v2, double *grad, int swit){
+     printf("calling raw covariance function operator\n");
+     exit(1);
+}
+
+void covariance_function::set_hyper_parameters(double *vin){
+    printf("calling raw covariance function set_hyper_parameters\n");
+    exit(1);
+}
+
+covariance_function::covariance_function(){
+    dim=-1;
+}
+
+covariance_function::~covariance_function(){
+    if(dim>0){
+        delete [] maxs;
+	delete [] mins;
+    }
+}
+
+void covariance_function::set_dim(int dd){
+    dim=dd;
+    maxs=new double[dd];
+    mins=new double[dd];
+}
+
+void covariance_function::set_max(int dex, double val){
+    maxs[dex]=val;
+}
+
+void covariance_function::set_min(int dex, double val){
+    mins[dex]=val;
+}
+
+int covariance_function::get_dim(){
+    return dim;
+}
+
+nn_covariance::nn_covariance(){
+    sigma0=1.0;
+    sigma=1.0;
+}
+
+void nn_covariance::set_hyper_parameters(double *vin){
+    sigma0=vin[0];
+    sigma=vin[1];
+}
+
+double nn_covariance::operator()
+(double *x1in, double *x2in, double *grad, int gradswitch){
+    
+    double *x1,*x2,arcsine;
+    double yy,num,dx1,dx2,denom,ans;
+    int i;
+    
+    
+    x1=new double[dim];
+    x2=new double[dim];
+    
+    for(i=0;i<dim;i++){
+        x1[i]=(x1in[i]-0.5*(maxs[i]+mins[i]))/(maxs[i]-mins[i]);
+	x2[i]=(x2in[i]-0.5*(maxs[i]+mins[i]))/(maxs[i]-mins[i]);
+    }
+    
+    num=0.0;
+    dx1=0.0;
+    dx2=0.0;
+    for(i=0;i<dim;i++){
+        num+=sigma*x1[i]*x2[i];
+	dx1+=sigma*x1[i]*x1[i];
+	dx2+=sigma*x2[i]*x2[i];
+    }
+    num+=sigma0;
+    num=num*2.0;
+    
+    dx1+=sigma0;
+    dx1=2.0*dx1;
+    dx1+=1.0;
+    
+    dx2+=sigma0;
+    dx2=dx2*2.0;
+    dx2+=1.0;
+    
+    denom=sqrt(dx1*dx2);
+    
+    yy=num/denom;
+    
+    if(yy>1.0 || yy<-1.0){
+        printf("WARNING argument of nn covar %e\n",yy);
+	exit(1);
+    }
+    arcsine=asin(yy);
+    ans=2.0*arcsine/pi;
+    
+    double dxdxin,macroderiv;
+    
+    if(gradswitch>0){
+        macroderiv=2.0/(pi*sqrt(1.0-yy*yy));
+	
+	for(i=0;i<dim;i++){
+            dxdxin=1.0/(maxs[i]-mins[i]);
+	    
+	    grad[i]=2.0*sigma*x2[i]-4.0*sigma*x1[i]/dx1;
+	    
+	    grad[i]=grad[i]/denom;
+	    
+	    grad[i]=grad[i]*macroderiv*dxdxin;
+        }
+    }
+    
+    delete [] x1;
+    delete [] x2;
+    
+    
+    return ans;
+}
+
+gaussian_covariance::gaussian_covariance(){
+    ellsquared=1.0;
+}
+
+double gaussian_covariance::operator()(double *v1, double *v2, double *grad, int swit){
 
  int i;
- double ans,d,*gg;
+ double ans,d;
  //printf("in covariogram\n");
-
+  
+  if(dim<0){
+      printf("WARNING gaussian_covariance dim %d\n",dim);
+      exit(1);
+  }
+  
  //return value
    d=0.0;
    for(i=0;i<dim;i++){
-    d+=power((v1[i]-v2[i])/(kptr->maxs[i]-kptr->mins[i]),2);
+    d+=power((v1[i]-v2[i])/(maxs[i]-mins[i]),2);
    }
-   ans=exp(-0.5*d);
+   ans=exp(-0.5*d/ellsquared);
  
  if(swit>0){
   //this returns the derivative of the above value (ans) with respect
   //to parameters as a vector stored in grad[]
   for(i=0;i<dim;i++)grad[i]=0.0; 
   for(i=0;i<dim;i++){
-    grad[i]=-1.0*(v1[i]-v2[i])*ans/power(kptr->maxs[i]-kptr->mins[i],2);
+    grad[i]=-1.0*(v1[i]-v2[i])*ans/(ellsquared*power(maxs[i]-mins[i],2));
   }
   
  }
  return ans;
  
+}
+
+void gaussian_covariance::set_hyper_parameters(double *vin){
+    ellsquared=vin[0];
 }
 
 void gp::predict(double **old, double *ffn, double *q, double *dd, \
@@ -144,7 +277,7 @@ int ppts, int coords, double *mu, double *sig, int delswit){
   //  delswit<0 means this routine will just delete various arrays that it
   //            allocated for the calculation
 
-  double fbar,err,junk,d;
+  double fbar,err,junk,d,ikp,xx;
   int i,j,k,l;
 
 
@@ -178,7 +311,7 @@ int ppts, int coords, double *mu, double *sig, int delswit){
   }
   
   if(delswit<0 && calledpredict>0){
-  
+   
    printf("deleting in predict pts %d\n",ppts);
     delete [] ggq;
     for(i=0;i<ppts;i++){
@@ -193,11 +326,18 @@ int ppts, int coords, double *mu, double *sig, int delswit){
   }
   else if(delswit>0){
   
-
+  if(covariogram->get_dim()<0){
+      covariogram->set_dim(dim);
+      for(i=0;i<dim;i++){
+          covariogram->set_max(i,kptr->maxs[i]);
+	  covariogram->set_min(i,kptr->mins[i]);
+      }
+  }
+  
   
   for(i=0;i<ppts;i++){
    for(j=i;j<ppts;j++){
-     gg[i][j]=covariogram(old[i],old[j],grad,0);
+     gg[i][j]=(*covariogram)(old[i],old[j],grad,0);
      if(i!=j)gg[j][i]=gg[i][j];
      else if(i==j)gg[i][j]=gg[i][j]+0.001;//to make the matrix invertible
    }
@@ -214,7 +354,7 @@ int ppts, int coords, double *mu, double *sig, int delswit){
   if(delswit==2)printf("inverted gg\n");
   
 
-  for(i=0;i<ppts;i++)ggq[i]=covariogram(old[i],q,grad,0);
+  for(i=0;i<ppts;i++)ggq[i]=(*covariogram)(old[i],q,grad,0);
 
 
   fbar=0.0;
@@ -236,18 +376,30 @@ int ppts, int coords, double *mu, double *sig, int delswit){
   }
     
     //printf("time for sig\n");
+  
+  xx=0.0;
+  for(i=0;i<ppts;i++){
+      xx+=(ffn[i]-fbar)*(ffn[i]-fbar)*ggin[i][i];
+      for(j=i+1;j<ppts;j++){
+          xx+=2.0*(ffn[i]-fbar)*(ffn[j]-fbar)*ggin[i][j];
+      }
+  }
+  
+  ikp=xx/double(ppts);
     
-  *sig=0.0;
+  sig[0]=0.0;
   for(i=0;i<ppts;i++){
    for(j=0;j<ppts;j++){
-     *sig+=ggq[i]*ggq[j]*ggin[i][j];
+     sig[0]+=ggq[i]*ggq[j]*ggin[i][j];
 
    }
   }
   
-  *sig=covariogram(q,q,grad,0)-*sig;
-
-     *sig=sqrt(fabs(*sig));
+  sig[0]=(*covariogram)(q,q,grad,0)-sig[0];
+   
+  
+   
+     sig[0]=sqrt(fabs(ikp*sig[0]));
 
   }
 
@@ -493,7 +645,15 @@ void gp::user_predict_gradient(double *v,double *vout,int delswit){
 
   
   if(delswit>0){
-  
+    
+    if(covariogram->get_dim()<0){
+        covariogram->set_dim(dim);
+	for(i=0;i<dim;i++){
+	    covariogram->set_max(i,kptr->maxs[i]);
+	    covariogram->set_min(i,kptr->mins[i]);
+	}
+    }
+    
     kptr->nn_srch(v,kk,g_neigh,g_dd);//nearest neighbor search
 
   
@@ -509,7 +669,7 @@ void gp::user_predict_gradient(double *v,double *vout,int delswit){
   
     for(i=0;i<kk;i++){
       for(j=i;j<kk;j++){
-        g_gg[i][j]=covariogram(kptr->data[g_neigh[i]],\
+        g_gg[i][j]=(*covariogram)(kptr->data[g_neigh[i]],\
         kptr->data[g_neigh[j]],g_grad[0],0);
       
         if(i!=j)g_gg[j][i]=g_gg[i][j];
@@ -522,7 +682,7 @@ void gp::user_predict_gradient(double *v,double *vout,int delswit){
 
   
     for(i=0;i<kk;i++){
-      g_dd[0]=covariogram(v,kptr->data[g_neigh[i]],g_grad[i],2);
+      g_dd[0]=(*covariogram)(v,kptr->data[g_neigh[i]],g_grad[i],2);
       //because the switch at the end is >0, this call to covariogram will
       //return the gradient of the covariogram at data point
       //data[g_neigh[i]] ; the gradient will be stored in in g_grad[i][]
@@ -726,7 +886,7 @@ void gp::fast_predict_gradient(double *v, int *ndex, int nkk, double *gradout, i
    
      for(i=0;i<nkk;i++){
        for(j=i;j<nkk;j++){
-         ggf[i][j]=covariogram(kptr->data[ndex[i]],kptr->data[ndex[j]],gqf[0],0);
+         ggf[i][j]=(*covariogram)(kptr->data[ndex[i]],kptr->data[ndex[j]],gqf[0],0);
 	 if(i==j)ggf[i][j]=ggf[i][j]*1.001;
 	 else ggf[j][i]=ggf[i][j];
        }
@@ -735,7 +895,7 @@ void gp::fast_predict_gradient(double *v, int *ndex, int nkk, double *gradout, i
      invert_lapack(ggf,ggfin,nkk,1);
      
      for(i=0;i<nkk;i++){
-       nn=covariogram(v,kptr->data[ndex[i]],gqf[i],2);
+       nn=(*covariogram)(v,kptr->data[ndex[i]],gqf[i],2);
      }
     
      fbar=0.0;
@@ -754,4 +914,8 @@ void gp::fast_predict_gradient(double *v, int *ndex, int nkk, double *gradout, i
      }
    }
    
+}
+
+void gp::assign_covariogram(covariance_function *cv){
+    covariogram=cv;
 }

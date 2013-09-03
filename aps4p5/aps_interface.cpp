@@ -7,7 +7,7 @@
 main(int iargc, char *argv[]){
    
    int i,j,k,l,ii,dim,nstart=2000,nend=10000,nc=200,llswit=0;
-   int resumeswitch=0;
+   int resumeswitch=0,setcovar=0,setlike=0;
    char paramname[letters],keyword[letters],word[letters];
    char resumename[letters];
    double nn,mm,*min,*max,exc;
@@ -18,8 +18,13 @@ main(int iargc, char *argv[]){
    nguess=0;
    
    likelihood *likeness;
+   covariance_function *cv;
+   likelihood_function *lk;
    
-   FILE *input;
+   FILE *input,*output;
+   
+   //cv=new gaussian_covariance();
+   //lk=new udder_likelihood();
    
    for(j=0;argv[1][j]!=0;j++){
      paramname[j]=argv[1][j];
@@ -52,10 +57,47 @@ main(int iargc, char *argv[]){
 	 //printf("set lims %d %e %e\n",ii,min[ii],max[ii]);
 	 
        }
+       else if(compare_char(keyword,"#covariance")==1){
+           setcovar=1;
+           fscanf(input,"%s",word);
+	   if(compare_char(word,"gauss")==1){
+	       cv=new gaussian_covariance();
+	   }
+	   else if(compare_char(word,"nn")==1){
+	       cv=new nn_covariance();
+	   }
+	   else{
+	       cv=new gaussian_covariance();
+	   }
+         
+       }
+       else if(compare_char(keyword,"#likelihood")==1){
+           setlike=1;
+           fscanf(input,"%s",word);
+	   if(compare_char(word,"wmap")==1){
+	       #ifdef _WMAP7_
+	       lk=new wmap_likelihood();
+	       #else
+	       lk=new udder_likelihood();
+	       #endif
+	   }
+	   else if(compare_char(word,"udder")==1){
+	       lk=new udder_likelihood();
+	   }
+	   else{
+	       lk=new udder_likelihood();
+	   }
+       }
      }
    }
    fclose(input);
-   likeness=new likelihood(dim,min,max);
+   
+   if(setcovar==0)cv=new gaussian_covariance();
+   if(setlike==0){
+       lk=new udder_likelihood();
+   }
+
+   likeness=new likelihood(dim,min,max,cv,lk);
    
    likeness->pnames=new char*[dim];
    for(i=0;i<dim;i++)likeness->pnames[i]=new char[letters];
@@ -80,12 +122,8 @@ main(int iargc, char *argv[]){
       fscanf(input,"%d",&nstart);
       likeness->npts=nstart;
       
-      //printf("set start to %d\n",likeness->npts);
+      printf("set start to %d\n",likeness->npts);
       
-    }
-    else if(compare_char(keyword,"#exception")==1){
-      fscanf(input,"%le",&exc);
-      likeness->chiexcept=exc;
     }
     else if(compare_char(keyword,"#end")==1){
       fscanf(input,"%d",&nend);
@@ -96,7 +134,7 @@ main(int iargc, char *argv[]){
     else if(compare_char(keyword,"#Nc")==1){
       fscanf(input,"%d",&nc);
       
-      //printf("set nc %d\n",nc);
+      printf("set nc %d\n",nc);
       
     }
     else if(compare_char(keyword,"#chitarget")==1){
@@ -150,6 +188,25 @@ main(int iargc, char *argv[]){
       
       //printf("set output %s\n",likeness->masteroutname);
     }
+    else if(compare_char(keyword,"#mufitfile")==1){
+        fscanf(input,"%s",word);
+	likeness->set_mufitname(word);
+    }
+    else if(compare_char(keyword,"#timingfile")==1){
+        fscanf(input,"%s",word);
+	likeness->set_timingname(word);
+    }
+    else if(compare_char(keyword,"#deltachi")==1){
+        fscanf(input,"%le",&nn);
+	likeness->set_deltachi(nn);
+    }
+    else if(compare_char(keyword,"#target")==1){
+        fscanf(input,"%le",&likeness->target);
+    }
+    else if(compare_char(keyword,"#seed")==1){
+        fscanf(input,"%d",&i);
+	likeness->set_seed(i);
+    }
     else if(compare_char(keyword,"#guess")==1){
       
       nguess++;
@@ -195,33 +252,49 @@ main(int iargc, char *argv[]){
    }*/
    
    if(resumeswitch==0){
-     printf("about to initialize\n");
+     printf("about to initialize %d\n",nguess);
      likeness->initialize(guess,nguess);
      likeness->nsamples=1; //so that no Kriging is done when setting Kriging parameter
    }
    else{
+    printf("resuming\n");
     likeness->resume(resumename);
     nstart=likeness->npts;
+    printf("nstart %d\n",nstart);
    }
    likeness->write_pts();
-
+   
    likeness->nsamples=nc;
+   
+
+   
    while(likeness->npts<nend){
      
-    if(likeness->ngw==0 && likeness->nnodes==0){
-     likeness->sample_pts(1);
-    }
-    else {
-     for(i=0;i<likeness->nnodes;i++){
-       //printf("going to try to sample from %d\n",i);
-       likeness->node_sample(i);
-       likeness->sample_pts(1);
-     }
-     for(i=0;i<likeness->ngw;i++){
-       likeness->grad_sample(i);
-       likeness->sample_pts(1);
-     }
-    }
+      if(likeness->ngw==0 && likeness->nnodes==0){
+         
+         likeness->sample_pts(1);
+      }
+      else {
+         for(i=0;i<likeness->nnodes;i++){
+             //printf("going to try to sample from %d\n",i);
+             likeness->node_sample(i);
+             likeness->sample_pts(1);
+         }
+         for(i=0;i<likeness->ngw;i++){
+             likeness->grad_sample(i);
+             likeness->sample_pts(1);
+         }
+      }
+    
+    
+   }
+   
+   
+   if(lk->get_type()==LK_TYPE_UDDER){
+       output=fopen("udder_aps_output_start200.sav","a");
+       fprintf(output,"foundp3 %d foundn3 %d\n",
+       lk->get_fp3(),lk->get_fn3());
+       fclose(output);
    }
    
    likeness->write_pts();
@@ -236,5 +309,7 @@ main(int iargc, char *argv[]){
      printf("%s min %e max %e\n",likeness->pnames[i], \
      likeness->CLmin[i],likeness->CLmax[i]);
    }*/
+   
+   
    
 }

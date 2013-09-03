@@ -1,3 +1,5 @@
+#ifdef _WMAP7_
+
 !     Code for Anisotropies in the Microwave Background
 !     by Antony Lewis (http://cosmologist.info/) and Anthony Challinor
 !     See readme.html for documentation. This is a sample driver routine that reads
@@ -35,7 +37,7 @@
 
 #ifndef NAGF95
 #ifndef __INTEL_COMPILER_BUILD_DATE
-        integer iargc
+        !integer iargc
         !external iargc
 #endif        
 #endif
@@ -359,3 +361,4 @@
         end subroutine camb_wrap
 
 
+#endif

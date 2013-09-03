@@ -1,0 +1,38 @@
+A parameter file for the WMAP 7 likelihood function
+Note: all keywords must be prefixed with a #
+
+#dim 6 -- dimensionality of your parameter space
+
+#Ns 200 -- start with 2000 randomly sampled points
+#end 600 -- end after the algorithm has sampled 200000 points
+
+#Nc 250 -- sample 250 candidates each time you use the Gaussian process
+#Ng 15 -- use 15 neareast neighbors in the Gaussian process
+
+#Nw 50 -- maximum number of wanderers
+#grat 0.1 -- threshold at which wanderer is created
+
+#chitarget 1400.0 -- target chi squared (where is your confidence limit?)
+#chimintarget 1197  -- target minimum value of chi squared (for gradient
+                       descent)
+
+#write_every 3000 -- write after sampling 300 points;
+                    currently, the code will reassess the Kriging parameter
+		    and test the structure of the kd tree every ten times it
+		    writes
+
+#deltachi 12.59
+#timingfile sfd_test_timing.sav
+!#mufitfile udder_fit.sav
+#outputfile sfd_udder.sav -- the name of the output file
+!#resumefile sfd_udder.sav -- if you wanted to resume old #output file 
+			(this line is currently commented out, note the '!')
+
+#param 0 ombh2 -10 10 -- the density of baryons
+#param 1 omch2 -10 10 -- the density fo dark matter
+#param 2 h -10 10 -- the hubble parameter in units of 100 km/s/Mpc
+#param 3 tau -10 10 -- optical depth to last scattering
+#param 4 ns -10 10 -- scalar index controlling primordial power spectrum
+#param 5 lnA -10 10 -- 10^10 ln(A) where A is normalizatin of primordial power spec.
+
+
