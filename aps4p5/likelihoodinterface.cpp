@@ -919,7 +919,7 @@ void likelihood::write_pts(){
   
   fprintf(timefile,\
   "wandertime %e ct %d ",gradtimewall/double(gradct),gradct);
-  fprintf(timefile,"kk %d ns %d ",kk,nsamples);
+  fprintf(timefile,"nearest_neighbors %d ns %d ",kk,nsamples);
   
   fprintf(timefile,"kd %d ",gg.kptr->diagnostic);
   fprintf(timefile,"chimin %e target %e dw %d\n",chimin,target,deletedwanderers);
