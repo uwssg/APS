@@ -66,6 +66,8 @@ likelihood::likelihood(){
 }
 
 void likelihood::set_timingname(char *word){
+
+
     int i;
     for(i=0;word[i]!=0;i++)timingname[i]=word[i];
     timingname[i]=0;
@@ -92,6 +94,11 @@ covariance_function *cv, likelihood_function *lk){
  //nn is the number of parameters
  
  //*mns and *mxs are the min and max values allowed in parameter space
+ 
+ //*cv points to the covariogram functor that will be passed to
+ //the Gaussian process
+ 
+ //*lk points to the likelihood_function functor that will be used
  
  int i,j,k,l;
  double rn;
@@ -239,7 +246,7 @@ void likelihood::initialize(double **guesses, int nguess){
  
  
  ngood=0;//Number of points found within the confidence limit
- gw=new grad_wanderer[gwroom];//initialie your set of gradient wanderers
+ gw=new grad_wanderer[gwroom];//initialize your set of gradient wanderers
  
  chisq=new double[npts];
 
@@ -285,25 +292,17 @@ void likelihood::initialize(double **guesses, int nguess){
  gg.initialize(npts,base,chisq,mxx,mnn);
  
  
- lingerflag=new int[npts];//was a given point sampled using sample_pts()
- 			//in which case lingerflag[i]=0
-			//or was it sampled using grad_sample()
-			//in which case lingerflag[i]=1
-			//When setting the kriging parameter, the gaussian
-			//process will only consider points for which 
-			//lingerflag[i]=0
+ lingerflag=new int[npts];//if a given point was sampled using sample_pts()
+ 			//lingerflag[i]=0
+			//if it was sampled using grad_sample()
+			//lingerflag[i]=1
+			
  lingerroom=npts;
  
  for(i=0;i<npts;i++){
    lingerflag[i]=0;
  }
- 
- //gg.set_kp(lingerflag);//set the kriging parameter;
- 			//you pass the lingerflag[] array so that it only
-			//considers points that were chosen using
-			//sample_pts()
- 
- 
+  
  opts=npts;//this was included because, if the node_sample() option was
  	//activated, there would be the possibility that the add_node()
 	//code below would add new points to the sample size so that
@@ -340,9 +339,11 @@ void likelihood::initialize(double **guesses, int nguess){
 
 void likelihood::resume(char *inname){
 
-//if your run gets interrupted, call this routine instead of initialize
+//if you want to resume an interrupted search, 
+//call this routine instead of initialize
 
 //inname will be the name of the last output the code wrote
+
 //the routine will read that file and then you will be set to pick up
 //where you left off
 
@@ -364,7 +365,7 @@ char word[letters];
  while(fscanf(input,"%s %le ",word,&nn)==2){
   for(i=1;i<nparams;i++)fscanf(input,"%s %le ",word,&nn);
   while(compare_char(word,"ling")==0){
-   //for this reason 'kp' should always be the last entry in the 
+   //for this reason 'ling' should always be the last entry in the 
    //output file
    
     fscanf(input,"%s %le",word,&junk);
@@ -422,9 +423,7 @@ char word[letters];
  }
  
  gg.initialize(npts,base,chisq,mxx,mnn);
- //gg.set_kp(lingerflag);
 
- 
  gw=new grad_wanderer[gwroom];
  
  if(chimin<=target){
@@ -451,8 +450,6 @@ char word[letters];
   write_pts();
  }
 
- 
-
   delete [] chisq;
   for(i=0;i<npts;i++)delete [] base[i];
   delete [] base;
@@ -475,7 +472,6 @@ int udder_likelihood::get_type(){
 
 double udder_likelihood::operator()(double *v){
 
-  //code below this comment is a cartoon likelihood function
      double d1,d2,base1,base2,amp1,amp2,base,chisquared;
    
      int i;
@@ -538,6 +534,7 @@ int dd, double *mn, double *mx){
 	    maxs[i]=nn;
 	}
     }
+    setmaxmin=1;
     
 }
 
@@ -562,24 +559,6 @@ double wmap_likelihood::operator()(double *v){
   
   FILE *output;
   
- 
-
-////////////////////////  
-//and now a cartoon based on wmap7
-/*
-  d1=power((v[0]-0.0215)/0.0015,2);
-  d1+=power((v[1]-0.112)/0.015,2);
-  d1+=power((v[2]+4.0*v[1]-1.15)/0.02,2);
-  d1+=power((v[3]-0.087)/0.01,2);
-  d1+=power((30.0*v[0]+0.3-v[4])/0.02,2);
-  d1+=power((v[5]-3.11)/0.17,2);
-  
-  d1=sqrt(d1);
-  
-  chisquared=1275.0+5.669*d1;
-*/
-///////////////
- //printf("calling on wmap7\n");
 
   for(i=0;i<dim;i++){
       if(v[i]<mins[i] || v[i]>maxs[i])return 2.0*chiexcept;
@@ -590,7 +569,7 @@ double wmap_likelihood::operator()(double *v){
     v[1]=0.9*v[1];
     v[2]=1.1*v[2];
     //in the event that total omega_matter>1
-    //printf("had to futz\n");
+    
   }
   
   for(i=0;i<6;i++)params[i]=v[i];
@@ -638,12 +617,11 @@ int wmap_likelihood::get_type(){
 
 void likelihood::sample_pts(int delswit){
   int i,j,k,l,ix;
-  //static int called=0;
-  //static double *bestpt,*v;
+
   double stradmax,strad,mu,sig,chitrue,nn,mm,xx,yy,*candidate_gradient;
   double before,after,mubest;
 
-  //this subroutine does the ``vanilla'' APS sampling
+  //this subroutine does the ``usual'' APS sampling
   //(i.e. it choose points based on the straddle parameter)
   
   if(sam_called==0 && delswit>0){
@@ -674,7 +652,7 @@ void likelihood::sample_pts(int delswit){
       
   
       mu=gg.user_predict(samv,&sig,1,&nn);
-      //strad=1.96*sqrt(gg.kriging_parameter)*sig-fabs(mu-target);
+   
       strad=sig-fabs(mu-target);
       
       if(strad>stradmax){
@@ -775,7 +753,7 @@ void likelihood::sample_pts(int delswit){
 	}
 	else{
 ///////THIS IS THE CODE THAT REMOVES THE WANDERER WITH THE LARGEST
-///////CHISQUARED AND REPLACES IT WITH THE NEW WANDERER	
+///////CHISQUARED-TARGET AND REPLACES IT WITH THE NEW WANDERER	
 	  xx=-1.0e10;
 	  for(i=0;i<ngw;i++){
 	    if(gw[i].chisq-target>xx){
@@ -905,7 +883,6 @@ void likelihood::write_pts(){
  npts=gg.pts;
  for(i=0;i<npts;i++){//printf("i %d np %d\n",i,nprinted);
    
-  
   if(gg.fn[i]<target+precision)good++;
 
   if(i>=nprinted){//no need to print points that have already been printed
@@ -1830,8 +1807,7 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
   if(npts%writevery==0){
   
     write_pts();
-    //if(npts%(writevery)==0)gg.set_kp(lingerflag);//reset the kriging
-                                          //parameter every 10*writevery
+ 
   }
   
   if(chitrue<chimin){
@@ -1840,7 +1816,7 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
     
     for(i=0;i<nparams;i++)minpt[i]=v[i];
   }
-  //printf("done in add pt\n");
+
 }
 
 void likelihood::add_node(double *v, double chitrue){
@@ -1994,8 +1970,7 @@ void likelihood::grad_sample(int dex){
  //indicated by dex towards the chisquared value stored in chimintarget
   
   int i,j,k,rswit;
-  //static int called=0;
-  //static double *dir,*v;
+
   double chitrue,mag,dchi;
   double before,after;
   
@@ -2018,12 +1993,7 @@ void likelihood::grad_sample(int dex){
     //this direction is storred in graddir
     gg.user_predict_gradient(gw[dex].center,graddir,1);
 
-    //if(gw[dex].chisq>target)dchi=chimintarget-gw[dex].chisq;
-    //else dchi=target-gw[dex].chisq;
-    
-    
-    
-    
+
     //normalize graddir
     mag=0.0;
     for(i=0;i<nparams;i++){
