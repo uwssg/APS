@@ -4,76 +4,121 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <time.h>
 
 gp::gp(){
   initialized=0;
   dim=2;
   kk=15;
-  kkoldav=-1;
-  kriging_parameter=1.0;
   room=10000;
   roomstep=10000;
   inversionerr=-1.0e10;
-  calledpredict=0;
-  calleduserpredict=0;
-  calledavpredict=0;
-  kkoldusr=-1;
-  called_fastgrad=0;
-  
-  calledgrad=-1;
-  gradkkold=-1;
+  time_search=0.0;
 
+  sigcap=-1.0;
+  time_dummy_search=0.0;
+  ct_search=0;
+  
+  covariogram=NULL;
+  neighbor_storage=NULL;
+  kptr=NULL;
+  fn=NULL;
+  
 }
 
 gp::~gp(){
-  double **o,*f,*q,*dd,*m,*s,x;
-  int p,c,*dx;
   
- 
- 
-   predict(o,f,q,dd,kk,dim,m,s,-1);
-   
-  x=user_predict(q,q,-1,q);
-  fast_predict_gradient(q,dx,1,q,-1);
-  user_predict_gradient(q,q,-1);
+  if(kptr!=NULL) delete kptr;
+  if(neighbor_storage!=NULL) delete neighbor_storage;
+  if(fn!=NULL) delete [] fn;
   
-  if(initialized==1){
 
-    delete [] fn;
-    
-    delete kptr;
-   
-  }
-  else printf("this is odd; you are deleting gp without initializing it\n");
-  
  
+}
+
+void gp::print_search_time(char *word){
+    FILE *output;
+    
+    output=fopen(word,"a");
+    fprintf(output,"searchtime %e %e %d -- dummy %e %e\n",
+    time_search,time_search/double(ct_search),ct_search,
+    time_dummy_search,time_dummy_search/double(ct_search));
+    fclose(output);
+    time_search=0.0;
+    time_dummy_search=0.0;
+    ct_search=0;
+   
+    
+    
+    
 }
 
 void gp::initialize(int pin,double **seed, double *seedfn,\
 double *mx, double *mn){
-  
-  /*
-    seed[][] contains the initial data points.  seedfn[] contains the associated
-    values of chisquared.  mx[] and mn[] are maximum and minimum allowed values
-    for the parameters.
-  */
-  
   int i,j,k,l;
   
   initialized=1;
   
   room=pin;
-  fn=new double[pin];//seedfn[] gets copied into here.
+  fn=new double[pin];//this is where you will store the function associated
+  		//with your data points (chisquared for APS)
   
   for(i=0;i<pin;i++)fn[i]=seedfn[i];
 
   kptr=new kd_tree(dim,pin,seed,mn,mx);//store data points in a kd tree
-  
   kptr->check_tree(-1);//make sure kd tree is properly constructed
-  
   printf("tree diagnostic %d\n",kptr->diagnostic);
+  if(kptr->diagnostic!=1){
+      printf("WARNING: did not properly construct tree\n");
+      exit(1);
+  }
+  
   pts=kptr->pts;
   printf("setting pts to %d\n",pts);
+  
+  if(kptr->diagnostic!=1){
+      printf("WARNING kd_tree diagnostic %d\n",kptr->diagnostic);
+      exit(1);
+  }
+  neighbor_storage=new neighbor_cache(kptr);
+
+}
+
+void gp::refactor(){
+    //printf("refactoring %d\n",pts);
+    double *max,*min,**buffer,before,after;
+    before=double(time(NULL));
+    
+    max=new double[dim];
+    min=new double[dim];
+    buffer=new double*[pts];
+    int i;
+    
+    for(i=0;i<dim;i++){
+        max[i]=kptr->maxs[i];
+	min[i]=kptr->mins[i];
+    }
+    
+    int j;
+    for(i=0;i<pts;i++){
+        buffer[i]=new double[dim];
+	for(j=0;j<dim;j++)buffer[i][j]=kptr->data[i][j];
+    }
+
+    delete kptr;
+   
+
+    kptr=new kd_tree(dim,pts,buffer,min,max);
+    delete [] min;
+    delete [] max;
+    for(i=0;i<pts;i++){
+        delete [] buffer[i];
+    }
+    delete [] buffer;
+    after=double(time(NULL));
+    delete neighbor_storage;
+    neighbor_storage=new neighbor_cache(kptr);
+    //printf("that took %e\n",after-before);
 
 }
 
@@ -111,8 +156,846 @@ void gp::add_pt(double *newpt, double newfn){
 
 }
 
+void gp::predict(double **old, double *ffn, double *q, double *dd, \
+int ppts, int coords, double *mu, double *sig, int verbose) const{
+
+  //this routine does the actual work of prediction via Gaussian process
+  // **old contains the points that are being used as data
+  // *ffn contains the corresponding values of fn[]
+  //  *q is the query point
+  // *dd is the distance from the query point to the points in **old
+  //    (dd is not acutally used for anything)
+  //  ppts is the number of data points stored in **old
+  //  coords is the dimensionality of the parameter space points
+  //  *mu is a pointer to the result of the prediction
+  //  *sig is a pointer to the square root of the variance of the prediction
+
+
+  double fbar,err,junk,d,*pmin,*pmax,ikp,nn;
+  double *v,mm,bb,*alpha;
+  int i,j,k,l;
+
+  double **gg,**ggin,*ggq,*grad;
+  
+  double before,after;
+  
+  //printf("in predict\n");
+
+
+    gg=new double*[ppts];
+  
+    ggin=new double*[ppts];
+    for(i=0;i<ppts;i++){
+     gg[i]=new double[ppts];
+     ggin[i]=new double[ppts];
+  
+   }
+   ggq=new double[ppts];
+   grad=new double[dim];
+
+   if(covariogram->get_dim()<0){
+       covariogram->set_dim(dim);
+       for(i=0;i<dim;i++){
+           covariogram->set_max(i,kptr->maxs[i]);
+	   covariogram->set_min(i,kptr->mins[i]);
+       }
+   }
+  
+
+  pmin=new double[dim];
+  pmax=new double[dim];
+ 
+  for(i=0;i<ppts;i++){
+    for(j=0;j<dim;j++){
+      if(i==0 || old[i][j]<pmin[j])pmin[j]=old[i][j];
+      if(i==0 || old[i][j]>pmax[j])pmax[j]=old[i][j];
+    }
+  }
+  
+  for(i=0;i<dim;i++){
+    //printf("in ::predict %e %e\n",pmin[i],pmax[i]);
+    pmin[i]-=0.01*fabs(pmin[i]);
+    pmax[i]+=0.01*fabs(pmax[i]);
+  }
+  
+  for(i=0;i<ppts;i++){
+   for(j=i;j<ppts;j++){
+     gg[i][j]=(*covariogram)(old[i],old[j],pmin,pmax,grad,0);
+     if(i!=j)gg[j][i]=gg[i][j];
+     else gg[i][j]+=0.00001;
+     //else if(i==j)gg[i][j]=gg[i][j];//to make the matrix invertible
+   }
+  }
+  
+  if(verbose==2){printf("made gg\n\n");
+  
+  }
+  
+  invert_lapack(gg,ggin,ppts,verbose);
+
+  
+   err=check_inversion(gg,ggin,ppts);
+   if(err>1.0e-5){
+       printf("WARNING inversion error %e\n",err);
+       exit(1);
+   }
+  
+  //if(err>inversionerr)inversionerr=err;
+  
+  if(verbose==2)printf("inverted gg\n");
+  
+
+  for(i=0;i<ppts;i++)ggq[i]=(*covariogram)(old[i],q,pmin,pmax,grad,0);
+  
+  ///construct a more interesting model of fbar;
+  /*
+  v=new double[dim];
+  alpha=new double[ppts];
+  
+  nn=0.0;
+  for(i=0;i<dim;i++){
+    v[i]=0.0;
+    for(j=0;j<ppts;j++){
+       v[i]+=power((old[j][i]-q[i])/(pmin[i]-pmax[i]),2);
+    }
+    nn+=v[i];
+    v[i]=sqrt(v[i]);
+  }
+  nn=sqrt(nn);
+  for(i=0;i<dim;i++)v[i]=v[i]/nn;
+  
+  for(i=0;i<ppts;i++){
+    alpha[i]=0.0;
+    for(j=0;j<dim;j++){
+      alpha[i]+=v[j]*(old[i][j]-q[j])/(pmin[j]-pmax[j]);
+    }
+  }
+  
+  for(i=0;i<ppts;i++)alpha[i]=alpha[i]*alpha[i];
+  
+  fbar=0.0;
+  bb=0.0;
+  for(i=0;i<ppts;i++){
+    //printf("%d\n",i);
+    fbar+=ffn[i];
+    bb+=alpha[i];
+  }
+  fbar=fbar/double(ppts);
+  bb=bb/double(ppts);
+  
+  mm=0.0;
+  nn=0.0;
+  for(i=0;i<ppts;i++){
+    mm+=alpha[i]*(fbar-ffn[i]);
+    nn+=alpha[i]*(bb-alpha[i]);
+  }
+  mm=mm/nn;
+  
+
+  bb=0.0;
+  for(i=0;i<ppts;i++){
+    bb+=ffn[i]-mm*alpha[i];
+  }
+  bb=bb/double(ppts);
+  
+  //printf("nn %e alphabar %e\n",nn,bb);
+  if(isnan(mm)){
+     //for(i=0;i<ppts;i++)printf("a%d %e\n",i,alpha[i]);
+     bb=0.0;
+     for(i=0;i<ppts;i++)bb+=ffn[i];
+     bb=bb/double(ppts);
+     for(i=0;i<ppts;i++)alpha[i]=0.0;
+     mm=0.0;
+     
+  }
+  */
+  
+  //delete [] v;
+  //////done with more interesting model of fbar
+
+  
+  //*mu=fbar;
+  //*mu=bb;
+  //printf("mm %e bb %e\n",mm,bb);
+  //printf("made mu\n");
+  
+  fbar=0.0;
+  for(i=0;i<ppts;i++)fbar+=ffn[i];
+  fbar=fbar/double(ppts);
+  
+  mu[0]=fbar;
+  
+  for(i=0;i<ppts;i++){
+   for(j=0;j<ppts;j++){
+    //printf("i %d j %d\n",i,j); 
+    //mu[0]+=ggq[i]*ggin[i][j]*(ffn[j]-alpha[j]*mm-bb);
+    
+    mu[0]+=ggq[i]*ggin[i][j]*(ffn[j]-fbar);
+    
+    
+   }
+  }
+    
+    //printf("time for sig\n");
+  
+
+  sig[0]=0.0;
+  for(i=0;i<ppts;i++){
+   for(j=0;j<ppts;j++){
+     sig[0]+=ggq[i]*ggq[j]*ggin[i][j];
+
+   }
+  }
+
+  
+  nn=0.0;
+  for(i=0;i<kk;i++){
+  
+    //nn+=(ffn[i]-alpha[i]*mm-bb)*
+      //   ggin[i][i]*
+	// (ffn[i]-alpha[i]*mm-bb);
+
+    nn+=(ffn[i]-fbar)*ggin[i][i]*(ffn[i]-fbar);
+	 
+    for(j=i+1;j<kk;j++){
+      //nn+=2.0*(ffn[i]-alpha[i]*mm-bb)*
+              //(ffn[j]-alpha[j]*mm-bb)*
+	      // ggin[i][j];
+	      
+        nn+=2.0*(ffn[i]-fbar)*(ffn[j]-fbar)*ggin[i][j];
+	      
+    }
+  }
+  
+  ikp=nn/double(kk);
+  
+  sig[0]=(*covariogram)(q,q,pmin,pmax,grad,0)-sig[0];
+  sig[0]=(ikp)*(sig[0]); 
+     
+   if(sig[0]>0.0)*sig=sqrt(sig[0]);
+   else sig[0]=0.0;
+   
+   if(sigcap>0.0){
+        if(sig[0]>sigcap)sig[0]=sigcap;
+   }
+
+   //delete [] alpha;
+   
+   if(isnan(mu[0])==1){
+     printf("mu %e fbar %e\n",mu[0],fbar);
+     for(i=0;i<ppts;i++)printf("%e ",gg[0][i]);
+     printf("\n");
+     exit(1);
+   }
+   
+   delete [] pmin;
+   delete [] pmax;
+   
+   delete [] ggq;
+   delete [] grad;
+   for(i=0;i<ppts;i++){
+     delete [] gg[i];
+     delete [] ggin[i];
+   }
+   delete [] gg;
+   delete [] ggin;
+   //printf("done in predict\n");
+  
+
+}
+
+double gp::get_biggest_neighbor(double *pt){
+    int *neigh;
+    double *dd;
+    neigh=new int[kk];
+    dd=new double[kk];
+    
+    kptr->nn_srch(pt,kk,neigh,dd);
+    
+    int i;
+    double ans;
+    for(i=0;i<kk;i++){
+       if(i==0 || fn[neigh[i]]>ans)ans=fn[neigh[i]];
+    }
+    
+    delete [] neigh;
+    delete [] dd;
+    
+    return ans;
+}
+
+void gp::get_neighbor_range(double *pt, double *omax, double *omin,
+double *omean){
+    int *neigh;
+    double *dd;
+    neigh=new int[kk];
+    dd=new double[kk];
+    
+    kptr->nn_srch(pt,kk,neigh,dd);
+    
+    int i;
+    double ans;
+    omean[0]=0.0;
+    for(i=0;i<kk;i++){
+       if(i==0 || fn[neigh[i]]>omax[0])omax[0]=fn[neigh[i]];
+      // if(i==0 || fn[neigh[i]]<omin[0])omin[0]=fn[neigh[i]];
+       omean[0]+=fn[neigh[i]];
+    }
+    omin[0]=fn[neigh[0]];
+    omean[0]=omean[0]/double(kk);
+    
+    delete [] neigh;
+    delete [] dd;
+    
+    
+}
+
+double gp::user_predict(double *pt,double *sigout,int verbose)
+const{
+
+  //this is the function that oustide code actually calls to use
+  //the Gaussian process for prediction
+  
+  //  *pt contains the query point
+  //  *sigout will point to the variance of the prediction
+
+  //  *fbarout will point to the algebraic mean of the nearest neighbor fn[]'s
+  //           used in the prediction (not really important for anything) 
+  //
+  //  the function will return the predicted value of fn[] at the
+  //  query point
+  
+  if(covariogram==NULL){
+      printf("WARNING in user predict covariogram is null\n");
+      exit(1);
+  }
+  
+  if(kptr==NULL){
+      printf("WARNING in user predict kptr is null\n");
+      exit(1);
+  }
+  
+  if(neighbor_storage==NULL){
+      printf("WARNING in user predict neighbor storage is null\n");
+      exit(1);
+  }
+  
+  
+  int i,j,k,l;
+  
+  for(i=0;i<dim;i++){
+      if(isnan(pt[i])){
+          printf("WARNING passed a nan point to user_predict\n");
+	  exit(1);
+      }
+  }
+  
+  double mu,nn;
+  double before,after;
+
+  int *neigh;
+  double *dd;
+  
+  double *pmin,*pmax,*grad;
+  double **gg,**ggin,*ggq;
+  
+  double **modelpts,*modelfn;
+  
+  fbar_model fbar(dim);
+  
+    
+    
+    neigh=new int[kk];
+    dd=new double[kk];
+    
+    
+    grad=new double[dim];
+    pmin=new double[dim];
+    pmax=new double[dim];
+    ggq=new double[kk];
+    ggin=new double*[kk];
+    for(i=0;i<kk;i++)ggin[i]=new double[kk];
+    
+  
+    //printf("\ncalling from user predict\n");
+    before=double(time(NULL));
+    int dosrch;
+    dosrch=neighbor_storage->compare(pt,kk);
+    //printf("dosrch %d\n",dosrch);
+    if(dosrch==1){
+        //for(i=0;i<dim;i++)printf("    %e\n",pt[i]);
+	
+        kptr->nn_srch(pt,kk,neigh,dd);//nearest neighbor search
+	
+	//printf("got nn\n");
+	
+        neighbor_storage->set(pt,dd,neigh,kk);
+	
+    }
+    else{
+        for(i=0;i<kk;i++){
+              neigh[i]=neighbor_storage->get_neigh(i);
+              dd[i]=kptr->distance(pt,kptr->data[neigh[i]]);   
+         }
+    }
+    after=double(time(NULL));
+    
+    time_search+=after-before;
+    ct_search++;
+    
+    modelpts=new double*[kk];
+    modelfn=new double[kk];
+    for(i=0;i<kk;i++)modelpts[i]=new double[dim];
+    
+    for(i=0;i<kk;i++){
+        modelfn[i]=fn[neigh[i]];
+	for(j=0;j<dim;j++)modelpts[i][j]=kptr->data[neigh[i]][j];
+    } 
+    fbar.set_model(modelpts,modelfn,dim,kk);
+    
+    delete [] modelfn;
+    for(i=0;i<kk;i++)delete [] modelpts[i];
+    delete [] modelpts;
+    
+    for(i=0;i<kk;i++){
+    for(j=0;j<dim;j++){
+      if(i==0 || kptr->data[neigh[i]][j]<pmin[j])pmin[j]=kptr->data[neigh[i]][j];
+      if(i==0 || kptr->data[neigh[i]][j]>pmax[j])pmax[j]=kptr->data[neigh[i]][j];
+    }
+   }
+  
+     for(j=0;j<dim;j++){
+        if(pt[j]<pmin[j])pmin[j]=pt[j];
+	if(pt[j]>pmax[j])pmax[j]=pt[j];
+    }
+  
+   for(i=0;i<dim;i++){
+     //printf("in ::predict %e %e\n",pmin[i],pmax[i]);
+     pmin[i]-=0.01*fabs(pmin[i]);
+     pmax[i]+=0.01*fabs(pmax[i]);
+     
+     if(!(pmax[i]>pmin[i])){
+         printf("did pmax/min wrong %e %e\n",pmax[i],pmin[i]);
+         exit(1);
+     
+     }
+   }
+    
+   
+  
+  
+   for(i=0;i<kk;i++){
+       ggq[i]=(*covariogram)(kptr->data[neigh[i]],pt,pmin,pmax,grad,0);
+  
+   }
+  
+    
+    /*if(verbose==2){ 
+      printf("got neighbors kk %d\n",kk);
+      for(j=0;j<dim;j++)printf("%e ",pt[j]);
+      printf("\n\n");
+      for(j=0;j<kk;j++){
+        if(j==0 || neigh[j]>k)k=neigh[j];
+	printf("neigh %d %d\n",j,neigh[j]);
+      }
+      printf("biggest neighbor %d out of %d\n",k,pts);
+    
+    }*/
+     
+    if(dosrch==1){
+        gg=new double*[kk];
+	for(i=0;i<kk;i++)gg[i]=new double[kk];
+	
+	for(i=0;i<kk;i++){
+	   
+	    
+	    for(j=i;j<kk;j++){
+	        gg[i][j]=(*covariogram)(kptr->data[neigh[i]],kptr->data[neigh[j]],pmin,pmax,grad,0);
+		if(j!=i){
+		    gg[j][i]=gg[i][j];
+		}
+		else gg[i][j]+=0.0001;
+	    }
+	    
+        }
+	
+	
+	invert_lapack(gg,ggin,kk,1);
+	nn=check_inversion(gg,ggin,kk);
+	if(nn>1.0e-5){
+	    printf("WRANING inversion err %e\n",nn);
+	    exit(1);
+	}
+        
+	for(i=0;i<kk;i++){
+	    for(j=0;j<kk;j++)neighbor_storage->set_ggin(i,j,ggin[i][j]);
+	    delete [] gg[i];
+	}
+	delete [] gg;
+	
+    }
+    else{
+        for(i=0;i<kk;i++){
+	    for(j=0;j<kk;j++)ggin[i][j]=neighbor_storage->get_ggin(i,j);
+	}
+    }
+    
+    /*fbar=0.0;
+    for(i=0;i<kk;i++){
+        fbar+=fn[neigh[i]];
+    }
+    fbar=fbar/double(kk);*/
+    
+    mu=fbar(pt);
+    for(i=0;i<kk;i++){
+        for(j=0;j<kk;j++){
+             mu+=ggq[i]*ggin[i][j]*(fn[neigh[j]]-fbar(kptr->data[neigh[j]]));
+	}
+    }
+    
+    double ikp=0.0;
+    
+    
+      sigout[0]=0.0;
+      for(i=0;i<kk;i++){
+       for(j=0;j<kk;j++){
+         sigout[0]+=ggq[i]*ggq[j]*ggin[i][j];
+
+       }
+      }
+    
+     nn=0.0;
+     for(i=0;i<kk;i++){
+  
+
+       nn+=(fn[neigh[i]]-fbar(kptr->data[neigh[i]]))*ggin[i][i]*
+       (fn[neigh[i]]-fbar(kptr->data[neigh[i]]));
+	 
+      for(j=i+1;j<kk;j++){
+     
+         nn+=2.0*(fn[neigh[j]]-fbar(kptr->data[neigh[j]]))*
+	 (fn[neigh[i]]-fbar(kptr->data[neigh[i]]))*ggin[i][j];
+	      
+     }
+   }
+  
+   ikp=nn/double(kk);
+    
+    
+    sigout[0]=(*covariogram)(pt,pt,pmin,pmax,grad,0)-sigout[0];
+    sigout[0]=(ikp)*(sigout[0]); 
+     
+     if(sigout[0]>0.0)sigout[0]=sqrt(sigout[0]);
+     else sigout[0]=0.0;
+   
+     if(sigcap>0.0){
+          if(sigout[0]>sigcap)sigout[0]=sigcap;
+     }
+
+    
+    /*if(fabs(mu-7.807012)<1.0e-5){
+    
+        for(i=0;i<kk;i++)printf("%d %e %e\n",neigh[i],dd[i],ggq[i]);
+	printf("\n");
+	
+	
+	
+	for(i=0;i<dim;i++)printf("%e %e\n",pmin[i],pmax[i]);
+	printf("\n");
+	
+	 for(i=0;i<kk;i++){
+      
+         if(fabs(ggq[i])<1.0e-100){
+           for(j=0;j<dim;j++)printf("%e %e\n",pt[j]-kptr->data[neigh[i]][j],pmin[j]-pmax[j]);
+	   printf("%e\n",ggq[i]);
+	   exit(1); 
+         }
+	 
+        }
+	
+	
+    }*/
+   
+   
+  if(isnan(mu)){
+      printf("WARNING mu %e\n",mu);
+      for(i=0;i<kk;i++)printf("%d %e ggq%d %e\n",neigh[i],dd[i],i,ggq[i]);
+      for(i=0;i<kk;i++){
+          for(j=0;j<kk;j++)printf("%e ",ggin[i][j]);
+	  printf("\n");
+      }
+      printf("fbar %e\n",fbar(pt));
+      exit(1);
+  }
+   if(verbose==2)printf("mu %e fbar %e nn %e\n",mu,fbar(pt),fn[neigh[0]]);
+
+  delete [] neigh;
+  delete [] dd;
+  for(i=0;i<kk;i++){
+    delete [] ggin[i];
+  }
+  delete [] ggin;
+ 
+  
+  delete [] ggq;
+  delete [] pmin;
+  delete [] pmax;
+  delete [] grad;
+  
+   
+
+ //printf("leaving user predict\n");
+   
+   /*if(mu<1.0e-100){
+       printf("mu %e\n",mu);
+       printf("fbar %e\n",fbar);
+       exit(1);
+   }*/
+  
+ 
+  return mu;
+}
+
+void gp::user_predict_gradient(double *v,double *vout,int verbose){
+  
+  //this routine predicts the gradient of fn[]
+  //
+  //  *v stores the query point
+  //   *vout stores the gradient
+
+  
+  int i,j,k,l;
+  double err;
+  double fbar,*pmin,*pmax;
+
+  double **g_gg,**g_ggin,**g_grad,*g_dd;
+  
+  int *g_neigh;
+
+  
+  
+  
+    g_gg=new double*[kk];
+    g_ggin=new double*[kk];
+    g_grad=new double*[kk];
+    g_neigh=new int[kk];
+    g_dd=new double[kk];
+  
+    for(i=0;i<kk;i++){
+      g_gg[i]=new double[kk];
+      g_ggin[i]=new double[kk];
+      g_grad[i]=new double[dim];
+    }
+
+    
+   if(covariogram->get_dim()<0){
+       covariogram->set_dim(dim);
+       for(i=0;i<dim;i++){
+           covariogram->set_max(i,kptr->maxs[i]);
+	   covariogram->set_min(i,kptr->mins[i]);
+       }
+   }
+    
+    pmin=new double[dim];
+    pmax=new double[dim];
+    
+    int dosrch;
+    dosrch=neighbor_storage->compare(v,kk);
+    if(dosrch==1){
+        kptr->nn_srch(v,kk,g_neigh,g_dd);//nearest neighbor search
+        neighbor_storage->set(v,g_dd,g_neigh,kk);
+    }
+    else{
+         for(i=0;i<kk;i++){
+              g_neigh[i]=neighbor_storage->get_neigh(i);
+              g_dd[i]=kptr->distance(v,kptr->data[g_neigh[i]]);
+         }
+    }
+
+    for(i=0;i<kk;i++){
+     for(j=0;j<dim;j++){
+       if(i==0 || kptr->data[g_neigh[i]][j]<pmin[j])pmin[j]=kptr->data[g_neigh[i]][j];
+       if(i==0 || kptr->data[g_neigh[i]][j]>pmax[j])pmax[j]=kptr->data[g_neigh[i]][j];
+     }
+    }
+    
+  
+    
+    for(i=0;i<dim;i++){
+      //printf("in predict gradient %e %e\n",pmin[i],pmax[i]);
+      pmin[i]-=0.01*fabs(pmin[i]);
+      pmax[i]+=0.01*fabs(pmax[i]);
+    }
+    
+    fbar=0.0;
+    for(i=0;i<kk;i++){
+      fbar+=fn[g_neigh[i]];
+    }
+    fbar=fbar/double(kk);
+  
+    //printf("got fbar\n");
+  
+    for(i=0;i<dim;i++)vout[i]=0.0;
+  
+    for(i=0;i<kk;i++){
+      for(j=i;j<kk;j++){
+        g_gg[i][j]=(*covariogram)(kptr->data[g_neigh[i]],\
+        kptr->data[g_neigh[j]],pmin,pmax,g_grad[0],0);
+      
+        if(i!=j)g_gg[j][i]=g_gg[i][j];
+	else g_gg[i][j]+=0.00001;
+        //else g_gg[i][j]=g_gg[i][j];//again, to make matrix invertible
+      } 
+    }
+
+  
+    invert_lapack(g_gg,g_ggin,kk,1);
+    err=check_inversion(g_gg,g_ggin,kk);
+    
+    if(err>1.0e-5){
+        printf("WARNING in gradient: inversion error %e\n",err);
+	exit(1);
+    }
+    
+    for(i=0;i<kk;i++){
+      g_dd[0]=(*covariogram)(v,kptr->data[g_neigh[i]],pmin,pmax,g_grad[i],2);
+      //because the switch at the end is >0, this call to covariogram will
+      //return the gradient of the covariogram at data point
+      //data[g_neigh[i]] ; the gradient will be stored in in g_grad[i][]
+      
+    
+      
+    }
+  
+    for(k=0;k<dim;k++){
+      for(j=0;j<kk;j++){
+        for(i=0;i<kk;i++){
+          vout[k]+=g_grad[j][k]*g_ggin[j][i]*(fn[g_neigh[i]]-fbar);
+	  
+	  if(isnan(vout[k])){
+	    printf("\n%d vout %e g_grad %e g_ggin %e fn %e %d -- %d %d\n",
+	    k,vout[k],g_grad[j][k],g_ggin[j][i],fn[g_neigh[i]],g_neigh[i],i,j);
+	    exit(1);
+	  }
+	  
+        }
+      }
+     
+    }
+   
+    
+    
+    delete [] pmin;
+    delete [] pmax;
+  
+  
+  
+  
+    delete [] g_dd;
+    delete [] g_neigh;
+  
+    for(i=0;i<kk;i++){
+      delete [] g_gg[i];
+      delete [] g_ggin[i];
+      delete [] g_grad[i];
+    }
+    delete [] g_gg;
+    delete [] g_ggin;
+    delete [] g_grad;
+  
+  
+}
+
+void gp::write_data(char *name){
+  int i,j,k,l;
+  
+  FILE *output;
+  if(name[0]!=0){
+      output=fopen(name,"w");
+      for(i=0;i<pts;i++){
+        fprintf(output,"%e ",fn[i]);
+        for(j=0;j<dim;j++)fprintf(output,"%e ",kptr->data[i][j]);
+        fprintf(output,"\n");
+      }
+      fclose(output);
+  }
+  else{
+      printf("weird: GP trying to write to an empty file\n");
+  }
+}
+
+void gp::copy(gp *oldgp){
+
+  double **databuff,*fnbuff;
+  int i,j,k,l;
+  
+  
+  dim=oldgp->dim;
+  kk=oldgp->kk;
+  
+  if(oldgp->initialized>0){
+  printf("\n\n initializing\n\n"); 
+  
+  fnbuff=new double[oldgp->pts];
+  databuff=new double*[oldgp->pts];
+  for(i=0;i<oldgp->pts;i++)databuff[i]=new double[dim];
+  
+  for(i=0;i<oldgp->pts;i++){
+    fnbuff[i]=oldgp->fn[i];
+    for(j=0;j<dim;j++)databuff[i][j]=oldgp->kptr->data[i][j];
+  }
+  
+  initialize(oldgp->pts,databuff,fnbuff,oldgp->kptr->maxs,oldgp->kptr->mins);
+ 
+  
+  delete [] fnbuff;
+  for(i=0;i<oldgp->pts;i++)delete [] databuff[i];
+  delete [] databuff;
+ }
+
+}
+
+
+double gp::selfinterpolate(double *v, double *ss){
+  int i,j,k,l,*ndex;
+  double *dd,**neighpts,*neighf,ans;
+  
+  
+  neighf=new double[kk];
+  neighpts=new double*[kk];
+  for(i=0;i<kk;i++){
+    neighpts[i]=new double[dim];
+  }
+  dd=new double[kk+1];
+  ndex=new int[kk+1];
+  
+  kptr->nn_srch(v,kk+1,ndex,dd);
+  
+  for(i=0;i<kk;i++){
+    neighf[i]=fn[ndex[i+1]];
+    for(j=0;j<dim;j++)neighpts[i][j]=kptr->data[ndex[i+1]][j];
+  }
+  
+  predict(neighpts,neighf,v,dd,kk,dim,&ans,ss,1);
+  
+  delete [] dd;
+  delete [] ndex;
+  for(i=0;i<kk;i++){
+     delete [] neighpts[i];
+  }
+  delete [] neighf;
+  delete [] neighpts;
+  
+  return ans;
+  
+}
+
+void gp::assign_covariogram(covariance_function *cv){
+    covariogram=cv;
+}
+
 double covariance_function::operator()
-(double *v1, double *v2, double *grad, int swit){
+(double *v1, double *v2, double *j1, double *j2, double *grad, int swit)const{
      printf("calling raw covariance function operator\n");
      exit(1);
 }
@@ -162,7 +1045,7 @@ void nn_covariance::set_hyper_parameters(double *vin){
 }
 
 double nn_covariance::operator()
-(double *x1in, double *x2in, double *grad, int gradswitch){
+(double *x1in, double *x2in, double *j1, double *j2, double *grad, int gradswitch)const{
     
     double *x1,*x2,arcsine;
     double yy,num,dx1,dx2,denom,ans;
@@ -234,7 +1117,8 @@ gaussian_covariance::gaussian_covariance(){
     ellsquared=1.0;
 }
 
-double gaussian_covariance::operator()(double *v1, double *v2, double *grad, int swit){
+double gaussian_covariance::operator()
+(double *v1, double *v2, double *j1, double *j2, double *grad, int swit)const{
 
  int i;
  double ans,d;
@@ -269,670 +1153,591 @@ void gaussian_covariance::set_hyper_parameters(double *vin){
     ellsquared=vin[0];
 }
 
-void gp::predict(double **old, double *ffn, double *q, double *dd, \
-int ppts, int coords, double *mu, double *sig, int delswit){
-
-  //this routine does the actual work of prediction via Gaussian process
-  // **old contains the points that are being used as data
-  // *ffn contains the corresponding values of fn[]
-  //  *q is the query point
-  // *dd is the distance from the query point to the points in **old
-  //    (dd is not acutally used for anything)
-  //  ppts is the number of data points stored in **old
-  //  coords is the dimensionality of the parameter space points
-  //  *mu is a pointer to the result of the prediction
-  //  *sig is a pointer to the square root of the variance of the prediction
-  //  delswit<0 means this routine will just delete various arrays that it
-  //            allocated for the calculation
-
-  double fbar,err,junk,d,ikp,xx;
-  int i,j,k,l;
-
-
-  
- if((calledpredict==0 || ppts!=allottedpts) && delswit>0){
-  printf("allocating in predict ppts %d\n",ppts);
-  
-    if(calledpredict>0){
-      for(i=0;i<allottedpts;i++){
-        delete [] gg[i];
-	delete [] ggin[i];
-      }
-      delete [] gg;
-      delete [] ggin;
-      delete [] ggq;
-      delete [] grad;
-    }
-  
-    gg=new double*[ppts];
-  
-    ggin=new double*[ppts];
-    for(i=0;i<ppts;i++){
-     gg[i]=new double[ppts];
-     ggin[i]=new double[ppts];
-  
-   }
-   ggq=new double[ppts];
-   grad=new double[dim];
-   calledpredict=1;
-   allottedpts=ppts;
-  }
-  
-  if(delswit<0 && calledpredict>0){
-   
-   printf("deleting in predict pts %d\n",ppts);
-    delete [] ggq;
-    for(i=0;i<ppts;i++){
-      delete [] gg[i];
-      delete [] ggin[i];
-    }
-    
-    delete [] gg;
-    delete [] ggin;
-    delete [] grad;
-    calledpredict=0;
-  }
-  else if(delswit>0){
-  
-  if(covariogram->get_dim()<0){
-      covariogram->set_dim(dim);
-      for(i=0;i<dim;i++){
-          covariogram->set_max(i,kptr->maxs[i]);
-	  covariogram->set_min(i,kptr->mins[i]);
-      }
-  }
-  
-  
-  for(i=0;i<ppts;i++){
-   for(j=i;j<ppts;j++){
-     gg[i][j]=(*covariogram)(old[i],old[j],grad,0);
-     if(i!=j)gg[j][i]=gg[i][j];
-     else if(i==j)gg[i][j]=gg[i][j]+0.001;//to make the matrix invertible
-   }
-  }
-  
-  if(delswit==2){printf("made gg\n\n");
-  
-  }
-  invert_lapack(gg,ggin,ppts,delswit);
-  
- // err=check_inversion(gg,ggin,ppts);
-  //if(err>inversionerr)inversionerr=err;
-  
-  if(delswit==2)printf("inverted gg\n");
-  
-
-  for(i=0;i<ppts;i++)ggq[i]=(*covariogram)(old[i],q,grad,0);
-
-
-  fbar=0.0;
-  for(i=0;i<ppts;i++){
-    //printf("%d\n",i);
-    fbar+=ffn[i];
-  }
-  fbar=fbar/double(ppts);
-  
-  *mu=fbar;
-  
-  //printf("made mu\n");
-  
-  for(i=0;i<ppts;i++){
-   for(j=0;j<ppts;j++){
-   //printf("i %d j %d\n",i,j);
-    *mu+=ggq[i]*ggin[i][j]*(ffn[j]-fbar);
-   }
-  }
-    
-    //printf("time for sig\n");
-  
-  xx=0.0;
-  for(i=0;i<ppts;i++){
-      xx+=(ffn[i]-fbar)*(ffn[i]-fbar)*ggin[i][i];
-      for(j=i+1;j<ppts;j++){
-          xx+=2.0*(ffn[i]-fbar)*(ffn[j]-fbar)*ggin[i][j];
-      }
-  }
-  
-  ikp=xx/double(ppts);
-    
-  sig[0]=0.0;
-  for(i=0;i<ppts;i++){
-   for(j=0;j<ppts;j++){
-     sig[0]+=ggq[i]*ggq[j]*ggin[i][j];
-
-   }
-  }
-  
-  sig[0]=(*covariogram)(q,q,grad,0)-sig[0];
-   
-  
-   
-     sig[0]=sqrt(fabs(ikp*sig[0]));
-
-  }
-
-}
-
-
-double gp::user_predict(double *pt,double *sigout,int delswit,double *fbarout){
-
-  //this is the function that oustide code actually calls to use
-  //the Gaussian process for prediction
-  
-  //  *pt contains the query point
-  //  *sigout will point to the variance of the prediction
-  //  delswit<0 will cause the routine to delete arrays that it allots
-  //           on its initial call
-  //  *fbarout will point to the algebraic mean of the nearest neighbor fn[]'s
-  //           used in the prediction (not really important for anything) 
-  //
-  //  the function will return the predicted value of fn[] at the
-  //  query point
-
-  int i,j,k,l;
-  double mu;
-
-  
-  if((calleduserpredict==0 || kk!=kkoldusr) && delswit>0){
-    if(kkoldusr>0){
-      printf("deleting in user predict %d\n",delswit);
-      delete [] neigh;
-      delete [] neighf;
-      delete [] dd;
-      for(i=0;i<kkoldusr;i++)delete [] neighpts[i];
-      delete [] neighpts;
-     
-    }
-  
-    printf("allocating in user predict\n");
-    neigh=new int[kk];
-    neighf=new double[kk];
-    dd=new double[kk];
-    neighpts=new double*[kk];
-    kkoldusr=kk;
-    for(i=0;i<kk;i++){
-      neighpts[i]=new double[dim];
-    }
-    
-   dav=0.0;
-   dsig=0.0;
-    ctav=0.0;
-    calleduserpredict=1;
-  }
-  else if(calleduserpredict>0 && delswit<0){
-    printf("deleting other user predict\n");
-    delete [] neigh;
-    delete [] neighf;
-    delete [] dd;
-    
-    for(i=0;i<kkoldusr;i++)delete [] neighpts[i];
-    delete [] neighpts;
-    calleduserpredict=0;
-    kkoldusr=-1;
-  }
-  
-  if(delswit>0){
-
-    kptr->nn_srch(pt,kk,neigh,dd);//nearest neighbor search
-
-      /*dav+=dd[0];
-      dsig+=dd[0]*dd[0];
-      ctav+=1.0;*/
-
-    //assign the neighbors for passage to predict()
-    for(i=0;i<kk;i++){
-      neighf[i]=fn[neigh[i]];
-      for(j=0;j<dim;j++)neighpts[i][j]=kptr->data[neigh[i]][j];
-    }
-    
-   
-    predict(neighpts,neighf,pt,dd,kk,dim,&mu,sigout,1);
-    
-    
-    *fbarout=0.0;
-    for(i=0;i<kk;i++){
-      *fbarout+=neighf[i];
-    }
-    *fbarout=*fbarout/double(kk);
-    
-    
-   
-    
-  }
- 
-  return mu;
-}
-
-
-double gp::user_predict_av(double *pt,int delswit){
-
-//not used
-//I belive this was an alternative prediction routine which
-//set the value of fn[] at the query point to a weighted average of the
-//nearest neighbor fn[]'s
-//NOT WELL TESTED
-
-  int i,j,k,l;
-  double mu,ddtot;
-  
- 
-  
-  /*neigh=new int[kk];
-  neighf=new double[kk];
-  neighpts=new double*[kk];
-  dd=new double[kk];
-  for(i=0;i<kk;i++)neighpts[i]=new double[dim];
-
-  printf("allotted delswit %d kk %d dim %d\n",delswit,kk,dim);
-  */
-  
-  if((calledavpredict==0 || kk!=kkoldav) && delswit>0){
-    if(kkoldav>0){
-      printf("deleting in user predict av kkoldav %d\n",kkoldav);
-     
-      delete [] ddav;
-     delete [] neighav;
-     
-    }
-  
-    printf("allocating in user predict\n");
-    neighav=new int[kk];
-    
-    ddav=new double[kk];
-    
-    kkoldav=kk;
-   
-    
-   dav=0.0;
-   dsig=0.0;
-    ctav=0.0;
-    calledavpredict=1;
-  }
-  else if(calledavpredict>0 && delswit<0){
-    printf("deleting other user predict\n");
-    delete [] neighav;
-
-    delete [] ddav;
-    
-   
-    calledavpredict=0;
-    kkoldav=-1;
-  }
-  
-  if(delswit>0){
-    
-    /*printf("want %e %e %d %e\n",pt[0],pt[1],neigh[0],dd[0]);
-    for(i=0;i<kk;i++){
-      printf("%e %e\n",kptr->data[i][0],kptr->data[i][1]);
-    }*/
-    
-   
-    //actual nn search code
-   /* if(dim!=2){printf("WARNING dim %d\n");
-      scanf("%d",&j);
-    }*/
-    //printf("doing search\n");
-    kptr->nn_srch(pt,kk,neighav,ddav);
-    
-   // for(i=0;i<kk;i++){
-      dav+=ddav[0];
-      dsig+=ddav[0]*ddav[0];
-      ctav+=1.0;
-    //}
-    
-    
-    //for(i=0;i<kk;i++)printf("dd %e fn %e\n",ddav[i],fn[neighav[i]]);
-    
-    ddtot=0.0;
-    for(i=0;i<kk;i++)ddtot+=1.0/ddav[i];
-    
-    mu=0.0;
-    for(i=0;i<kk;i++)mu+=fn[neighav[i]]/ddav[i];
-    mu=mu/ddtot;
-    
-
-    
-    
-  }
- 
-  /*delete [] dd;
-  delete [] neigh;
-  delete [] neighf;
-  for(i=0;i<kk;i++)delete [] neighpts[i];
-  delete [] neighpts;*/
- 
-  return mu;
-}
-
-void gp::user_predict_gradient(double *v,double *vout,int delswit){
-  
-  //this routine predicts the gradient of fn[]
-  //
-  //  *v stores the query point
-  //   *vout stores the gradient
-  //   delswit<0 causes the routine to delete allotted pointers
-  
-  int i,j,k,l;
-  double err;
-  double fbar;
-
-  
-  if(delswit>0 && kk!=gradkkold){
-  
-    if(calledgrad>0){
-    
-      for(i=0;i<gradkkold;i++){
-        delete [] g_gg[i];
-        delete [] g_ggin[i];
-        delete [] g_grad[i];
-      }
-      delete [] g_neigh;
-      delete [] g_dd;
-      delete [] g_gg;
-      delete [] g_ggin;
-      delete [] g_grad;
-    
-    }
-  
-    g_gg=new double*[kk];
-    g_ggin=new double*[kk];
-    g_grad=new double*[kk];
-    g_neigh=new int[kk];
-    g_dd=new double[kk];
-  
-    for(i=0;i<kk;i++){
-      g_gg[i]=new double[kk];
-      g_ggin[i]=new double[kk];
-      g_grad[i]=new double[dim];
-    }
-  
-    calledgrad=1;
-    gradkkold=kk;
-  
- }
-
-  
-  if(delswit>0){
-    
-    if(covariogram->get_dim()<0){
-        covariogram->set_dim(dim);
-	for(i=0;i<dim;i++){
-	    covariogram->set_max(i,kptr->maxs[i]);
-	    covariogram->set_min(i,kptr->mins[i]);
-	}
-    }
-    
-    kptr->nn_srch(v,kk,g_neigh,g_dd);//nearest neighbor search
-
-  
-    fbar=0.0;
-    for(i=0;i<kk;i++){
-      fbar+=fn[g_neigh[i]];
-    }
-    fbar=fbar/double(kk);
-  
-    //printf("got fbar\n");
-  
-    for(i=0;i<dim;i++)vout[i]=0.0;
-  
-    for(i=0;i<kk;i++){
-      for(j=i;j<kk;j++){
-        g_gg[i][j]=(*covariogram)(kptr->data[g_neigh[i]],\
-        kptr->data[g_neigh[j]],g_grad[0],0);
-      
-        if(i!=j)g_gg[j][i]=g_gg[i][j];
-        else g_gg[i][j]=g_gg[i][j]+0.001;//again, to make matrix invertible
-      } 
-    }
-
-  
-    invert_lapack(g_gg,g_ggin,kk,1);
-
-  
-    for(i=0;i<kk;i++){
-      g_dd[0]=(*covariogram)(v,kptr->data[g_neigh[i]],g_grad[i],2);
-      //because the switch at the end is >0, this call to covariogram will
-      //return the gradient of the covariogram at data point
-      //data[g_neigh[i]] ; the gradient will be stored in in g_grad[i][]
-    }
-  
-    for(k=0;k<dim;k++){
-      for(j=0;j<kk;j++){
-        for(i=0;i<kk;i++){
-          vout[k]+=g_grad[j][k]*g_ggin[j][i]*(fn[g_neigh[i]]-fbar);
-        }
-      }
-  
-    }
-  
-  }
-  
-  if(delswit<0 && calledgrad>0){
-  
-    delete [] g_dd;
-    delete [] g_neigh;
-  
-    for(i=0;i<gradkkold;i++){
-      delete [] g_gg[i];
-      delete [] g_ggin[i];
-      delete [] g_grad[i];
-    }
-    delete [] g_gg;
-    delete [] g_ggin;
-    delete [] g_grad;
-  }
+matern_covariance::matern_covariance(){
+    ell=0.25;
   
 }
 
-void gp::write_data(char *name){
-  int i,j,k,l;
-  
-  FILE *output;
-  output=fopen(name,"w");
-  for(i=0;i<pts;i++){
-    fprintf(output,"%e ",fn[i]);
-    for(j=0;j<dim;j++)fprintf(output,"%e ",kptr->data[i][j]);
-    fprintf(output,"\n");
-  }
-  fclose(output);
+void matern_covariance::set_hyper_parameters(double *vin){
+    ell=vin[0];
 }
 
-void gp::set_kp(int *flag){
-  
-  //NOT USED ANY MORE
-  
-  //this routine will look at the points in the Gaussian process' data set
-  //and set the Kriging parameter such that 68% of the values predicted for
-  //fn[] at those points are within 1-sigma of their true values
-  
-  //*flag is a list of ints that are 0 if the corresponding data point was
-  //sampled via vanilla APS and 1 if it was sampled by something fancier
-  
-  //the Kriging parameter is only set according to points for which flag=0
-  
-  double *nf,*d,**np,mu,sig,*rat;
-  int *n,*inn;
-  int i,j,k,l,ct;
-  
-  nf=new double[kk];
-  d=new double[kk+1];
-  np=new double*[kk];
-  for(i=0;i<kk;i++)np[i]=new double[dim];
-  rat=new double[pts];
-  n=new int[kk+1];
-  inn=new int[pts];
-  
-  
-  ct=0;
-  for(i=0;i<pts;i++){
-   
-   if(flag[i]==0){
-   
-    kptr->nn_srch(kptr->data[i],kk+1,n,d);//nearest neighbor search
-   //search for kk+1 points because the nearest neighbor will be the point
-   //itself (since we are performing Gaussian process prediction on the points
-   //we have already sampled and stored in the Gaussina process)
+double matern_covariance::operator()(double *v1, double *v2, 
+double *min, double *max, double *grad, int swit) const{
+
+ int i;
+ double ans,d,*gg,gradnum,exnum;
+
+ //printf("in covariogram\n");
+
+ //return value
+   d=0.0;
+   for(i=0;i<dim;i++){
     
-    //only use the non-self nearest neighbors to assess the Krigin parameter
-    for(j=1;j<=kk;j++){
-      nf[j-1]=fn[n[j]];
-      for(k=0;k<dim;k++){
-        np[j-1][k]=kptr->data[n[j]][k];
-      }
-    }
+    d+=power((v1[i]-v2[i])/((max[i]-min[i])),2);
     
-    predict(np,nf,kptr->data[i],d,kk,dim,&mu,&sig,1);
-    
-    rat[ct]=power((fn[i]-mu)/sig,2);
-    inn[ct]=ct;
-    ct++;
    }
-  }
-  
-  
-  sort(rat,inn,ct);//this is a merge sort which will rearrange
-  //rat[] from lowest to highest value; inn is just an index
-  //in case it is important to keep track of where input points
-  //got placed in the sorted rat[]
- 
-  kriging_parameter=rat[68*ct/100];
-  //set the Kriging parameter so that 68% of the sampled points are within
-  //1-sigma of their predicted values
-  
-  delete [] inn;
-  delete [] n;
-  delete [] rat;
-  delete [] nf;
-  delete [] d;
-  for(i=0;i<kk;i++)delete [] np[i];
-  delete [] np;
-
-}
-
-void gp::copy(gp *oldgp){
-  //copies oldgp into current gp
-  //NOT USED
-  //NOT WELL TESTED
-  
-  
-  double **databuff,*fnbuff;
-  int i,j,k,l;
-  
-  
-  dim=oldgp->dim;
-  kk=oldgp->kk;
-  kriging_parameter=oldgp->kriging_parameter;
-  
-  
-  if(oldgp->initialized>0){
-  printf("\n\n initializing\n\n"); 
-  
-  fnbuff=new double[oldgp->pts];
-  databuff=new double*[oldgp->pts];
-  for(i=0;i<oldgp->pts;i++)databuff[i]=new double[dim];
-  
-  for(i=0;i<oldgp->pts;i++){
-    fnbuff[i]=oldgp->fn[i];
-    for(j=0;j<dim;j++)databuff[i][j]=oldgp->kptr->data[i][j];
-  }
-  
-  initialize(oldgp->pts,databuff,fnbuff,oldgp->kptr->maxs,oldgp->kptr->mins);
- 
-  
-  delete [] fnbuff;
-  for(i=0;i<oldgp->pts;i++)delete [] databuff[i];
-  delete [] databuff;
- }
-
-}
-
-void gp::fast_predict_gradient(double *v, int *ndex, int nkk, double *gradout, int delswit){
+   d=sqrt(d);
+   exnum=exp(-1.732*d/ell);
+   ans=(1.0+1.732*d/ell)*exnum;
    
-   //NOT USED
-   //NOT WELL TESTED
-   
-   int i,j,k,l;
-   double nn,fbar;
-   
-   if(called_fastgrad==0 && delswit>-1){
-     ggf=new double*[nkk];
-     ggfin=new double*[nkk];
-     gqf=new double*[nkk];
-     for(i=0;i<nkk;i++){
-       ggf[i]=new double[nkk];
-       ggfin[i]=new double[nkk];
-       gqf[i]=new double[dim];
-     }
-     called_fastgrad=1;
-     sizeoffastgrad=nkk;
-   }
-   
-   if(called_fastgrad==1 && delswit<0){
-     for(i=0;i<sizeoffastgrad;i++){
-       delete [] ggf[i];
-       delete [] ggfin[i];
-       delete [] gqf[i];
-     }
-     delete [] ggf;
-     delete [] ggfin;
-     delete [] gqf;
-   }
-   
-   if(called_fastgrad==1 && nkk>sizeoffastgrad && delswit>0){
-     for(i=0;i<sizeoffastgrad;i++){
-       delete [] ggf[i];
-       delete [] ggfin[i];
-       delete [] gqf[i];
-     }
-     delete [] ggf;
-     delete [] ggfin;
-     delete [] gqf;
-     
-     ggf=new double*[nkk];
-     ggfin=new double*[nkk];
-     gqf=new double*[nkk];
-     for(i=0;i<nkk;i++){
-       ggf[i]=new double[nkk];
-       ggfin[i]=new double[nkk];
-       gqf[i]=new double[dim];
-     }
-     sizeoffastgrad=nkk;
-   }
-   
-   if(called_fastgrad==1 && delswit>0){
-   
-     for(i=0;i<nkk;i++){
-       for(j=i;j<nkk;j++){
-         ggf[i][j]=(*covariogram)(kptr->data[ndex[i]],kptr->data[ndex[j]],gqf[0],0);
-	 if(i==j)ggf[i][j]=ggf[i][j]*1.001;
-	 else ggf[j][i]=ggf[i][j];
+   /*if(swit<0){
+       printf("d %e dim %d\n",d,dim);
+       for(i=0;i<dim;i++){
+           printf("     %e %e %e %e\n",v1[i],v2[1],max[i],min[i]);
        }
-     }
-     
-     invert_lapack(ggf,ggfin,nkk,1);
-     
-     for(i=0;i<nkk;i++){
-       nn=(*covariogram)(v,kptr->data[ndex[i]],gqf[i],2);
-     }
-    
-     fbar=0.0;
-     for(i=0;i<nkk;i++){
-       fbar+=fn[ndex[i]];
-     }
-     fbar=fbar/double(nkk);
-     
-     for(i=0;i<dim;i++)gradout[i]=0.0;
-     for(k=0;k<dim;k++){
-      for(i=0;i<nkk;i++){
-        for(j=0;j<nkk;j++){
-          gradout[k]+=gqf[i][k]*ggfin[i][j]*(fn[ndex[j]]-fbar);
-        }
-      }
-     }
-   }
+   }*/
    
+   if(isnan(ans)){
+       printf("ans %e dd %e exnum %e\n",ans,d,exnum);
+       for(i=0;i<dim;i++)printf("%e %e max %e min %e\n",v1[i],v2[i],max[i],min[i]);
+       exit(1);
+       
+       return 0.001;
+   }
+ 
+ if(swit>0){
+  //this returns the derivative of the above value (ans) with respect
+  //to parameters as a vector stored in grad[]
+  
+  
+  gradnum=exnum*(-3.0*d/(ell*ell));
+  
+  //printf("gradnum %e exnum %e d %e max0 %e min0 %e\n",gradnum,exnum,d,max[0],min[0]);
+  
+  if(d>1.0e-6){
+    for(i=0;i<dim;i++){
+      grad[i]=gradnum*(v1[i]-v2[i])/(d*power(max[i]-min[i],2));
+      //printf("g%d %e ",i,grad[i]);
+      
+      if(isnan(grad[i])){
+        printf("gradnum %e max %e min %e v %e %e\n",gradnum,max[i],min[i],v1[i],v2[i]);
+        exit(1);
+      }
+      
+    }
+  }
+  else{
+    for(i=0;i<dim;i++){
+      grad[i]=gradnum/power(max[i]-min[i],2);
+      
+      if(isnan(grad[i])){
+        printf("gradnum %e max %e min %e\n",gradnum,max[i],min[i]);
+        exit(1);
+      }
+      
+    }
+  }
+  //printf("\n");
+  
+ }
+
+ 
+  /*d=0.0;
+  for(i=0;i<dim;i++)d+=power((v1[i]-v2[i])/(kptr->maxs[i]-kptr->mins[i]),2);
+  ans=exp(-0.5*d/(ell*ell));
+  if(d<1.0e-6)ans+=1.0e-5;
+  
+  if(swit>0){
+    for(i=0;i<dim;i++)grad[i]=0.0;
+    for(i=0;i<dim;i++){
+     grad[i]=-1.0*(v1[i]-v2[i])*ans/power(ell*(kptr->maxs[i]-kptr->mins[i]),2);
+    }
+  } */
+
+
+ return ans;
+ 
 }
 
-void gp::assign_covariogram(covariance_function *cv){
-    covariogram=cv;
+neighbor_cache::neighbor_cache(kd_tree *inptr){
+     kptr=inptr;
+     dim=kptr->dim;
+     kk=0;
+     pt=new double[dim];
+}
+
+neighbor_cache::~neighbor_cache(){
+    int i;
+    delete [] pt;
+    if(kk>0){
+        delete [] neigh;
+        delete [] dd;
+	for(i=0;i<kk;i++)delete [] ggin[i];
+	delete [] ggin;
+    }
+}
+
+void neighbor_cache::set(double *newpt, double *ddin, int *neighin, int kkin){
+    int i;
+    
+    if(kk>0){
+        delete [] neigh;
+        delete [] dd;
+	for(i=0;i<kk;i++)delete [] ggin[i];
+	delete [] ggin;
+	
+     }
+     kk=kkin;
+     neigh=new int[kk];
+     dd=new double[kk];
+     ggin=new double*[kk];
+     for(i=0;i<kk;i++)ggin[i]=new double[kk];
+   
+     for(i=0;i<dim;i++)pt[i]=newpt[i];
+     for(i=0;i<kk;i++){
+         dd[i]=ddin[i];
+         neigh[i]=neighin[i];
+     }    
+}
+
+int neighbor_cache::compare(double *newpt, int kkin){
+    double dist;
+    if(kkin==0){
+        printf("WARNING kkin is 0 in cache compare\n");
+        exit(1);
+    }
+    if(kk!=kkin) return 1;
+    dist=kptr->distance(pt,newpt);
+    if(dist<dd[0])return 0;
+    else return 1;
+}
+
+int neighbor_cache::get_neigh(int i){
+    if(i>=kk){
+        printf("WARNING asked for %d in get_neigh; kk is %d\n",i,kk);
+        exit(1);
+    }
+    return neigh[i];
+}
+
+double neighbor_cache::get_dd(int i){
+      if(i<0 || i>=kk){
+          printf("WARNING asking neighbor cache for %d but kk %d\n",
+	  i,kk);
+	  
+	  exit(1);
+      }
+      return dd[i];
+}
+
+void neighbor_cache::reset(){
+    int i;
+    if(kk>0){
+          delete [] dd;
+          delete [] neigh;
+	  for(i=0;i<kk;i++)delete [] ggin[i];
+	  delete [] ggin;
+     }
+     kk=0;
+}
+
+void neighbor_cache::set_ggin(int i, int j, double nn){
+    ggin[i][j]=nn;
+}
+
+double neighbor_cache::get_ggin(int i, int j){
+    return ggin[i][j];
+}
+
+void gp::reset_cache(){
+      neighbor_storage->reset();
+}
+
+void gp::set_sig_cap(double nn){
+    sigcap=nn;
+    //sigcap=-1.0;
+}
+
+fbar_model::fbar_model(){
+    printf("I'm sorry; you can't call the default constructor for fbar_model\n");
+    exit(1);
+}
+
+fbar_model::fbar_model(int i){
+    dim=i;
+    coeffs=new double[dim+1];
+
+}
+
+fbar_model::~fbar_model(){
+    //printf("calling the fbar model destructor\n");
+    
+    delete [] coeffs;
+}
+
+double fbar_model::operator()(double *vv){
+   double ans;
+   int i;
+   ans=coeffs[dim];
+   //for(i=0;i<dim;i++)ans+=vv[i]*coeffs[i];
+   
+   if(isnan(ans)){
+       printf("WARNING fbar returning nan\n");
+       for(i=0;i<dim;i++)printf("coeff%d %e pt %e\n",i,coeffs[i],vv[i]);
+       printf("coeffs %e\n",coeffs[dim]);
+       exit(1);
+      
+      ans=0.0;
+   }
+   
+   
+   return ans;
+}
+
+double fbar_model::get_coeff(int i){return coeffs[i];}
+
+
+void fbar_model::set_model(double **datapts, double *datafn, int dim, int npts){
+
+    double *matrix,*bvec,*soln;
+    
+    matrix=new double[(dim+1)*(dim+1)];
+    bvec=new double[dim+1];
+    soln=new double[dim+1];
+    
+    int ipt;
+    int ct,i,j;
+    
+    double **sum2,*sum1;
+    
+    
+    sum2=new double*[dim+1];
+    sum1=new double[dim+1];
+    
+    for(i=0;i<dim+1;i++)sum2[i]=new double[dim+1];
+   
+    /*for(i=0;i<dim+1;i++){
+        sum1[i]=0.0;
+	for(j=0;j<dim+1;j++)sum2[i][j]=0.0;
+    }
+   
+    for(i=0;i<dim;i++){
+        for(ipt=0;ipt<npts;ipt++){
+	    sum1[i]+=datapts[ipt][i];
+	    for(j=i;j<dim;j++)sum2[i][j]+=datapts[ipt][i]*datapts[ipt][j];
+	    sum2[i][dim]+=datafn[ipt]*datapts[ipt][i];
+	}
+
+    }
+   
+    for(ipt=0;ipt<npts;ipt++){
+        sum2[dim][dim]+=datafn[ipt]*datafn[ipt];
+	sum1[dim]+=datafn[ipt];
+    }
+    
+    double nn;
+    for(i=0;i<dim;i++){
+        for(j=0;j<dim;j++){
+	    if(i<=j)nn=sum2[i][j];
+	    else nn=sum2[j][i];
+	    
+	    matrix[i*(dim+1)+j]=nn;
+	    
+	}
+        matrix[i*(dim+1)+dim]=sum1[i];
+	bvec[i]=sum2[i][dim];
+    }
+    bvec[dim]=sum1[dim];
+    for(i=0;i<dim;i++){
+        matrix[dim*(dim+1)+i]=sum1[i];
+    }
+    matrix[dim*(dim+1)+dim]=double(npts);
+    
+    naive_gaussian_solver(matrix,bvec,soln,dim+1);
+    
+    for(i=0;i<dim+1;i++)coeffs[i]=soln[i];*/
+    
+    int nanalarm=1;
+    double mean;
+    for(i=0;i<dim+1;i++)if(isnan(coeffs[i]))nanalarm=1;
+    if(nanalarm==1){
+      // printf("WARNING a coeff is nan\n");
+       for(i=0;i<dim;i++)coeffs[i]=0;
+       mean=0.0;
+       for(i=0;i<npts;i++)mean+=datafn[i];
+       mean=mean/double(npts);
+       coeffs[dim]=mean;
+	
+    }
+    
+    delete [] matrix;
+    delete [] bvec;
+    delete [] soln;
+    for(i=0;i<dim+1;i++)delete [] sum2[i];
+    delete [] sum2;
+    delete [] sum1;
+
+}
+
+gross_gp::gross_gp(){
+    pts=NULL;
+    fn=NULL;
+    ggin=NULL;
+    covariogram=NULL;
+    fbar=NULL;
+    min=NULL;
+    max=NULL;
+    fbarvec=NULL;
+    gginvec=NULL;
+}
+
+gross_gp::~gross_gp(){
+     int i;
+     if(pts!=NULL){
+          for(i=0;i<kk;i++)delete [] pts[i];
+          delete [] pts;
+     }
+     
+     if(ggin!=NULL){
+          for(i=0;i<kk;i++)delete [] ggin[i];
+          delete [] ggin;
+     }
+
+     if(fn!=NULL)delete [] fn;
+     if(min!=NULL)delete [] min;
+     if(max!=NULL)delete [] max;
+     if(fbar!=NULL)delete fbar;
+     if(fbarvec!=NULL) delete [] fbarvec;
+     if(gginvec!=NULL) delete [] gginvec;
+}
+
+void gross_gp::set_covariogram(covariance_function *cc){
+     covariogram=cc;
+}
+
+void gross_gp::set_pts(double **pin, double *ffin, int dd, int kkin){
+     int i,j,k,l;
+
+     if(min!=NULL)delete [] max;
+
+     if(max!=NULL)delete [] min;
+
+     if(pts!=NULL){
+          for(i=0;i<kk;i++)delete [] pts[i];
+          delete [] pts;
+     }
+
+     if(ggin!=NULL){
+          for(i=0;i<kk;i++)delete [] ggin[i];
+          delete [] ggin;
+     }
+     
+     if(gginvec!=NULL){
+         delete [] gginvec;
+     }
+
+     if(fn!=NULL) delete [] fn;
+     
+     if(fbar!=NULL) delete fbar;
+
+     dim=dd;
+     kk=kkin;
+     
+     fn=new double[kk];
+     pts=new double*[kk];
+     ggin=new double*[kk];
+     gginvec=new double[kk];
+     
+     for(i=0;i<kk;i++){
+          pts[i]=new double[dim];
+          ggin[i]=new double[kk];
+          for(j=0;j<dim;j++){
+               pts[i][j]=pin[i][j];
+	       
+	       if(isnan(pts[i][j])){
+	          printf("hello %e %e\n",pts[i][j],pin[i][j]);
+	       }
+          }
+          fn[i]=ffin[i];
+     }
+     
+     
+     
+     fbar=new fbar_model(dim);
+     fbar->set_model(pts,fn,dim,kk);
+     fbarvec=new double[kk];
+     for(i=0;i<kk;i++)fbarvec[i]=fn[i]-(*fbar)(pts[i]);
+     //printf("made fbarvec\n");
+
+     double nn;
+     min=new double[dim];
+     max=new double[dim];
+     for(i=0;i<dim;i++){
+         min[i]=0.0;
+         max[i]=-1.0;
+     }
+     
+     double **ranges;
+     ranges=new double*[dim];
+     for(i=0;i<dim;i++){
+         ranges[i]=new double[kk*(kk-1)/2];
+     } 
+     
+     int ct=0;
+     for(j=0;j<kk;j++){
+         for(k=j+1;k<kk;k++){
+	     for(i=0;i<dim;i++){
+	         ranges[i][ct]=fabs(pts[j][i]-pts[k][i]);
+	     }
+	     ct++;
+	 }
+     }
+     
+     if(ct!=kk*(kk-1)/2){
+         printf("WARNING got %d rather than %d when finding ranges\n",
+	 ct,kk*(kk-1)/2);
+     }
+     
+     double *sorted;
+     sorted=new double[kk*(kk-1)/2];
+     int *inn;
+     inn=new int[kk*(kk-1)/2];
+     
+     for(i=0;i<dim;i++){
+         for(j=0;j<kk*(kk-1)/2;j++)inn[j]=j;
+         sort_and_check(ranges[i],sorted,inn,kk*(kk-1)/2);
+	 max[i]=sorted[kk*(kk-1)/4];
+	 delete [] ranges[i];
+     }
+     delete [] ranges;
+     delete [] inn;
+     delete [] sorted;
+     
+     
+     //for(i=0;i<dim;i++)printf("maxmin %d %e %e\n",i,min[i],max[i]);
+     
+     for(i=0;i<dim;i++){
+        if(max[i]<1.0e-1){
+	    /*for(j=0;j<kk;j++){
+	        for(k=j+1;k<kk;k++){
+		    printf("%e %e\n",pts[j][i],pts[k][i]);
+		}
+	    }*/
+	    max[i]=0.1;
+	}
+	
+     
+     }
+     
+     for(i=0;i<dim;i++)max[i]=200.0;
+     
+     make_ggin();
+}
+
+void gross_gp::make_ggin(){
+     if(covariogram==NULL){
+          printf("You cannot make ggin yet; you have not set covariogram\n");
+          exit(1);
+      }
+      
+      if(fbarvec==NULL){
+          printf("You cannot make ggin yet; have not set fbar\n");
+	  exit(1);
+      }
+      
+     
+      
+      double **gg,*grad;
+      int i,j,k,l;
+      grad=new double[dim];   
+      gg=new double*[kk];
+      for(i=0;i<kk;i++)gg[i]=new double[kk];
+      for(i=0;i<kk;i++){
+           for(j=i;j<kk;j++){
+                gg[i][j]=(*covariogram)(pts[i],pts[j],min,max,grad,0);
+                if(j==i)gg[i][j]+=0.0001;
+                else gg[j][i]=gg[i][j];
+           }
+      }
+
+      double err;
+      invert_lapack(gg,ggin,kk,1);
+      err=check_inversion(gg,ggin,kk);
+      if(err>1.0e-5){
+             printf("WARNING err in gross_gp %e\n",err);
+	     exit(1);
+      }
+      
+     double xx=0.0;
+     for(i=0;i<kk;i++){
+          xx+=fbarvec[i]*fbarvec[i]*ggin[i][i];
+          for(j=i+1;j<kk;j++){
+               xx+=2.0*fbarvec[i]*fbarvec[j]*ggin[i][j];
+          }
+     }
+     ikp=xx/double(kk);
+     
+     for(i=0;i<kk;i++){
+         gginvec[i]=0.0;
+	 for(j=0;j<kk;j++)gginvec[i]+=ggin[i][j]*fbarvec[j];
+     }
+      
+      for(i=0;i<kk;i++)delete [] gg[i];
+      delete [] gg;
+      delete [] grad;
+      
+}
+
+double gross_gp::user_predict(double *q, double *sig) const{
+     if(ggin==NULL || pts==NULL || fn==NULL || covariogram==NULL || fbar==NULL){
+            printf("cannot call user predict yet; you have not initialized\n");
+            printf("this is in gross\n");
+            exit(1);
+     }
+     
+     double *gq,*grad;
+     gq=new double[kk];
+     grad=new double[dim];
+     
+     int i,j;
+     for(i=0;i<kk;i++)gq[i]=(*covariogram)(q,pts[i],min,max,grad,0);
+     
+     double mu;
+     //printf("calling fbar on q \n");
+     //for(i=0;i<dim;i++)printf("%e\n",q[i]);
+     //printf("covar dim %d\n",covariogram->get_dim());
+     //printf("\ngq %e %e %e\n",gq[0],gq[1],gq[2]);
+     
+     mu=(*fbar)(q);
+     //printf("done\n");
+     
+     for(i=0;i<kk;i++){
+          /*for(j=0;j<kk;j++){
+               mu+=gq[i]*ggin[i][j]*fbarvec[j];
+          }*/
+	  mu+=gq[i]*gginvec[i];
+     }
+    
+     
+     sig[0]=0.0;
+     for(i=0;i<kk;i++){
+          sig[0]-=gq[i]*gq[i]*ggin[i][i];
+          for(j=i+1;j<kk;j++)sig[0]-=2.0*gq[i]*gq[j]*ggin[i][j];
+     }
+     sig[0]+=(*covariogram)(q,q,min,max,grad,0);
+     sig[0]=sig[0]*ikp;
+     if(sig[0]>0.0)sig[0]=sqrt(sig[0]);
+     else{
+          printf("WARNING gross is returning sig^2 %e\n",sig[0]);
+          //exit(1);
+	  
+	  mu=1.0e30;
+	  sig[0]=0.0;
+     }
+     
+      //printf("mu %e sig %e -- %e %e -- %e %e\n",mu,sig[0],q[0],q[1],gq[0],gq[1]);
+     
+     delete [] gq;    
+     delete [] grad;
+    
+     return mu;
+}
+
+int gross_gp::get_dim() const{
+     return dim;
+}
+
+double gp::get_nearest_distance(){
+    return neighbor_storage->get_dd(0);
 }
