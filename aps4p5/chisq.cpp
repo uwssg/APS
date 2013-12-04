@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include "chisq_1311.h"
+#include "chisq.h"
+
 
 void chisquared::set_characteristic_error(double nn){
     death_knell("used meaningless set characteristic error");
@@ -439,6 +440,29 @@ chisquared::~chisquared(){
     
     if(maxs!=NULL)delete [] maxs;
     if(mins!=NULL)delete [] mins;
+}
+
+void chisquared::set_max_min(
+    int dd, double *mn, double *mx){
+    
+    
+    
+    int i;
+    double nn;
+    
+    
+    if(mins==NULL)mins=new double[dim];
+    if(maxs==NULL)maxs=new double[dim];
+    
+    for(i=0;i<dim;i++){
+        mins[i]=mn[i];
+	maxs[i]=mx[i];
+	if(mins[i]>maxs[i]){
+	    nn=mins[i];
+	    mins[i]=maxs[i];
+	    maxs[i]=nn;
+	}
+    }    
 }
 
 int chisquared::get_called(){
@@ -968,3 +992,112 @@ void linear_ellipses::build_boundary(double br){
     delete [] alpha;
     
 }
+
+udder_likelihood::udder_likelihood() : chisquared(6){}
+
+udder_likelihood::~udder_likelihood(){}
+
+double udder_likelihood::operator()(double *v) const{
+
+     double d1,d2,base1,base2,amp1,amp2,base,chisquared;
+   
+     int i;
+    
+    called++;
+    d1=power(v[0]-3.0,2);
+    d2=power(v[0]+3.0,2);
+    
+    for(i=1;i<6;i++){
+        d1+=power(v[i],2);
+	d2+=power(v[i],2);
+    }
+   
+    
+     chisquared=1300.0+0.5*d1+0.5*d2-153.0*exp(-2.0*d1)-100.0*exp(-1.0*d2);
+    
+     return chisquared;
+
+}
+
+int udder_likelihood::get_type(){
+    return LK_TYPE_UDDER;
+}
+
+#ifdef _WMAP7_
+
+wmap_likelihood::wmap_likelihood() : chisquared(6){}
+
+wmap_likelihood::~wmap_likelihood(){}
+
+int wmap_likelihood::get_type(){
+    return LK_TYPE_WMAP;
+}
+
+double wmap_likelihood::operator()(double *v) const{
+  
+  //this is the function that calls the likelihood function
+  //to evaluate chi squared
+  
+  //*v is the point in parameter space you have chosen to evaluate
+  
+  //as written, it calls the CAMB likelihood function for the CMB anisotropy 
+  //spectrum
+  
+  int i,start,k;
+  double params[14],chisquared,omm,base1,base2,amp1,amp2,base;
+  double d1,d2,sncc,cc1,cc2,dcc,ccmaxc;
+  double cltt[3000],clte[3000],clee[3000],clbb[3000],el[3000];
+  
+  double *dir;
+ 
+  
+  FILE *output;
+
+  for(i=0;i<dim;i++){
+      if(v[i]<mins[i] || v[i]>maxs[i])return 2.0*exception;
+  }
+  
+  while((v[0]+v[1])/(v[2]*v[2])>1.0){
+    v[0]=0.9*v[0];
+    v[1]=0.9*v[1];
+    v[2]=1.1*v[2];
+    //in the event that total omega_matter>1
+    
+  }
+  
+  for(i=0;i<6;i++)params[i]=v[i];
+ 
+  for(i=0;i<3000;i++)el[i]=0;
+  params[2]=100.0*params[2];
+  params[5]=exp(params[5])*1.0e-10;
+  
+
+  camb_wrap_(params,el,cltt,clte,clee,clbb); //a function to call CAMB
+  
+  for(start=0;el[start]<1.0;start++);
+
+  //printf("cltt start %e %d\n",cltt[start],start);
+  if(cltt[start]>=-10.0){
+  wmaplikeness_(&cltt[start],&clte[start],&clee[start],\
+  &clbb[start],&chisquared); //a function to call the WMAP likelihood code
+  }
+  else chisquared=1.0e30;
+
+ //printf("done with likelihood\n");
+
+  if(chisquared<0.01)chisquared=10.0*exception; 
+  			//in case the model was so pathological that the
+			//likelihood code crashed and returned
+			//chisquared=0  (this has been known to happen)
+  
+
+ 
+ 
+ /////////////////
+ 
+  //printf("got chisquared %e\n",chisquared);
+  return chisquared;
+  
+}
+
+#endif

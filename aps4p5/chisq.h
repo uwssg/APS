@@ -4,6 +4,23 @@
 #include "goto_tools.h"
 #include <math.h>
 #include <stdio.h>
+#define exception 1.0e30
+
+#ifdef _WMAP7_
+
+//the two external function definitions below are only needed to
+//interface with CAMB and the WMAP 7 likelihood function
+//as provided in aps_cmb_module.cpp
+
+extern "C" void \
+camb_wrap_(double*,double*,double*,double*,double*,double*);
+
+extern "C" void wmaplikeness_(double*,double*,double*,double*,double*);
+
+
+#endif
+
+enum{LK_TYPE_UDDER,LK_TYPE_WMAP,LK_TYPE_OTHER};
 
 class chisquared{
 
@@ -44,6 +61,12 @@ public:
     int get_ncenters();
     int get_dim();
     int get_called();
+    
+    void set_max_min(int,double*,double*);
+    
+    virtual int get_type(){
+         return LK_TYPE_OTHER;
+    }
 };
 
 
@@ -85,5 +108,27 @@ public:
 	virtual void build_boundary(double);
 
 };
+
+class udder_likelihood : public chisquared{
+
+public:
+    udder_likelihood();
+    ~udder_likelihood();
+    virtual double operator()(double*) const;
+    virtual int get_type();
+
+};
+
+#ifdef _WMAP7_
+class wmap_likelihood : public chisquared{
+
+public:
+    wmap_likelihood();
+    ~wmap_likelihood();
+    virtual double operator()(double*) const;
+    virtual int get_type();
+};
+
+#endif
 
 #endif

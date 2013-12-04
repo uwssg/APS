@@ -60,6 +60,10 @@ eigen_wrapper.o
 	$(gg) -c gaussian_process.cpp goto_tools.o kd.o eigen_wrapper.o \
 	$(LIBRARIES) $(INCLUDES)
 
+chisq.o: chisq.h chisq.cpp wmap_wrapper.o camb_wrapper_wmap.o goto_tools.o
+	$(gg) -c chisq.cpp goto_tools.o wmap_wrapper.o camb_wrapper_wmap.o \
+	$(LIBRARIES) $(INCLUDES)
+
 likelihoodinterface.o: camb_wrapper_wmap.o likelihoodinterface.h \
 likelihoodinterface.cpp kd.o goto_tools.o eigen_wrapper.o wmap_wrapper.o \
 gaussian_process.o
