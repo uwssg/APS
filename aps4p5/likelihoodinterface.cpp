@@ -11,7 +11,7 @@
 
 #include <time.h>
 #include "likelihoodinterface.h"
-//#include "eigen_wrapper.h"
+#include "eigen_wrapper.h"
 
 int ipower(int arg, int ee){
   int ans,i;
@@ -82,7 +82,7 @@ void likelihood::set_seed(int ii){
 }
 
 likelihood::likelihood(int nn,double *mns,double *mxs,
-covariance_function *cv, likelihood_function *lk){
+covariance_function *cv, chisquared *lk){
 
  //This routine doesn't actually do much.
  //It just builds some of the necessary matrices
@@ -459,161 +459,6 @@ char word[letters];
  printf("done resuming\n");
  
 }
-
-udder_likelihood::udder_likelihood(){
-    foundp3=-1;
-    foundn3=-1;
-    called=0;
-}
-
-int udder_likelihood::get_type(){
-    return LK_TYPE_UDDER;
-}
-
-double udder_likelihood::operator()(double *v){
-
-     double d1,d2,base1,base2,amp1,amp2,base,chisquared;
-   
-     int i;
-    
-    called++;
-    d1=power(v[0]-3.0,2);
-    d2=power(v[0]+3.0,2);
-    
-    for(i=1;i<6;i++){
-        d1+=power(v[i],2);
-	d2+=power(v[i],2);
-    }
-   
-    
-    chisquared=1300.0+0.5*d1+0.5*d2-153.0*exp(-2.0*d1)-100.0*exp(-1.0*d2);
-    
-    if(chisquared<=1280.669){
-        if(d1<d2 && foundp3<0)foundp3=called;
-	if(d2<d1 && foundn3<0) foundn3=called;
-    }
-    
-     return chisquared;
-
-}
-
-int udder_likelihood::get_fp3(){
-    return foundp3;
-}
-
-int udder_likelihood::get_fn3(){
-    return foundn3;
-}
-
-likelihood_function::likelihood_function(){
-    setmaxmin=0;
-}
-
-likelihood_function::~likelihood_function(){
-    if(setmaxmin==1){
-        delete [] maxs;
-	delete [] mins;
-    }
-}
-
-void likelihood_function::set_max_min(
-int dd, double *mn, double *mx){
-    int i;
-    double nn;
-    
-    dim=dd;
-    mins=new double[dim];
-    maxs=new double[dim];
-    
-    for(i=0;i<dim;i++){
-        mins[i]=mn[i];
-	maxs[i]=mx[i];
-	if(mins[i]>maxs[i]){
-	    nn=mins[i];
-	    mins[i]=maxs[i];
-	    maxs[i]=nn;
-	}
-    }
-    setmaxmin=1;
-    
-}
-
-#ifdef _WMAP7_
-double wmap_likelihood::operator()(double *v){
-  
-  //this is the function that calls the likelihood function
-  //to evaluate chi squared
-  
-  //*v is the point in parameter space you have chosen to evaluate
-  
-  //as written, it calls the CAMB likelihood function for the CMB anisotropy 
-  //spectrum
-  
-  int i,start,k;
-  double params[14],chisquared,omm,base1,base2,amp1,amp2,base;
-  double d1,d2,sncc,cc1,cc2,dcc,ccmaxc;
-  double cltt[3000],clte[3000],clee[3000],clbb[3000],el[3000];
-  
-  double *dir;
- 
-  
-  FILE *output;
-  
-
-  for(i=0;i<dim;i++){
-      if(v[i]<mins[i] || v[i]>maxs[i])return 2.0*chiexcept;
-  }
-  
-  while((v[0]+v[1])/(v[2]*v[2])>1.0){
-    v[0]=0.9*v[0];
-    v[1]=0.9*v[1];
-    v[2]=1.1*v[2];
-    //in the event that total omega_matter>1
-    
-  }
-  
-  for(i=0;i<6;i++)params[i]=v[i];
- 
-  for(i=0;i<3000;i++)el[i]=0;
-  params[2]=100.0*params[2];
-  params[5]=exp(params[5])*1.0e-10;
-  
-
-  camb_wrap_(params,el,cltt,clte,clee,clbb); //a function to call CAMB
-  
-  for(start=0;el[start]<1.0;start++);
-
-  //printf("cltt start %e %d\n",cltt[start],start);
-  if(cltt[start]>=-10.0){
-  wmaplikeness_(&cltt[start],&clte[start],&clee[start],\
-  &clbb[start],&chisquared); //a function to call the WMAP likelihood code
-  }
-  else chisquared=1.0e30;
-
- //printf("done with likelihood\n");
-
-  if(chisquared<0.01)chisquared=10.0*chiexcept; 
-  			//in case the model was so pathological that the
-			//likelihood code crashed and returned
-			//chisquared=0  (this has been known to happen)
-  
-
- 
- 
- /////////////////
- 
-  //printf("got chisquared %e\n",chisquared);
-  return chisquared;
-  
-}
-
-
-int wmap_likelihood::get_type(){
-    return LK_TYPE_WMAP;
-}
-
-#endif
-
 
 void likelihood::sample_pts(int delswit){
   int i,j,k,l,ix;

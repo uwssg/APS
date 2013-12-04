@@ -66,18 +66,18 @@ chisq.o: chisq.h chisq.cpp wmap_wrapper.o camb_wrapper_wmap.o goto_tools.o
 
 likelihoodinterface.o: camb_wrapper_wmap.o likelihoodinterface.h \
 likelihoodinterface.cpp kd.o goto_tools.o eigen_wrapper.o wmap_wrapper.o \
-gaussian_process.o
+gaussian_process.o chisq.o
 	$(gg) -D CMB -c likelihoodinterface.cpp goto_tools.o \
 	eigen_wrapper.o camb_wrapper_wmap.o kd.o wmap_wrapper.o \
-	gaussian_process.o \
+	gaussian_process.o chisq.o \
 	$(LIBRARIES) $(INCLUDES) -Wno-deprecated
 
 aps4p5: aps_interface.cpp goto_tools.o eigen_wrapper.o \
 likelihoodinterface.o kd.o gaussian_process.o wmap_wrapper.o \
-camb_wrapper_wmap.o
+camb_wrapper_wmap.o chisq.o 
 	$(gg) -o aps4p5 aps_interface.cpp goto_tools.o eigen_wrapper.o kd.o \
 	 likelihoodinterface.o gaussian_process.o \
-	 camb_wrapper_wmap.o wmap_wrapper.o \
+	 camb_wrapper_wmap.o wmap_wrapper.o chisq.o \
 	 $(LIBRARIES) $(INCLUDES) \
 	 -Wno-deprecated
 

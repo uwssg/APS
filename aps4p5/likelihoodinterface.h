@@ -3,88 +3,9 @@
 
 #include "goto_tools.h"
 #include "gaussian_process.h"
+#include "chisq.h"
 #define likeletters 500
 #define chiexcept 1.0e10
-
-//these are variables which allow the different likelihood_function classes
-//to identify themselves by type
-enum{LK_TYPE_UDDER,LK_TYPE_WMAP,LK_TYPE_OTHER};
-
-#ifdef _WMAP7_
-
-//the two external function definitions below are only needed to
-//interface with CAMB and the WMAP 7 likelihood function
-//as provided in aps_cmb_module.cpp
-
-extern "C" void \
-camb_wrap_(double*,double*,double*,double*,double*,double*);
-
-extern "C" void wmaplikeness_(double*,double*,double*,double*,double*);
-#endif
-
-class likelihood_function{
-
-protected:
-    //maximum and minimum parameter values are not required for all likelihood
-    //functions
-    double *maxs,*mins;
-    
-    //setmaxmin keeps track of whether or not *maxs and *mins have been
-    //allocated; dim is the dimensionality of parameter space
-    int setmaxmin,dim;
-    
-public:
-    
-    likelihood_function();
-    ~likelihood_function();
-    void set_max_min(int,double*,double*);
-    virtual double operator()(double*){};
-
-    virtual int get_type(){
-        return LK_TYPE_OTHER;
-    };
-    
-    //these are used for the case of the udder likelihood function;
-    //they return the iterations on which either the {-3,0,0,0,0,0}
-    //region of highlikelihood or the {3,0,0,0,0,0} region of high
-    //likelihood were found
-    virtual int get_fn3(){};
-    virtual int get_fp3(){};
-
-};
-
-#ifdef _WMAP7_
-class wmap_likelihood : public likelihood_function{
-
-public:
-    wmap_likelihood(){};
-    ~wmap_likelihood(){};
-    virtual double operator()(double*);
-    virtual int get_type();
-
-};
-#endif
-
-class udder_likelihood : public likelihood_function{
-
-private:
-    int foundp3,foundn3,called;
-    
-    //foundp3 and foundn3 keep track of when APS found the two different
-    //high likelihood regions in the udder likelihood function
-    
-    //their values can be accessed by the outside using the public
-    //functions get_fp3 and get_fn3 below
-
-public:
-    udder_likelihood();
-    ~udder_likelihood(){};
-    virtual double operator()(double*);
-    int get_fp3();
-    int get_fn3();
-    virtual int get_type();
-
-};
 
 class node{
   
@@ -142,7 +63,7 @@ class likelihood{
   
   Ran *dice;
   
-  likelihood_function *call_likelihood;
+  chisquared *call_likelihood;
   gp gg;
   
   
@@ -168,7 +89,7 @@ class likelihood{
    int writevery,*ndinn,initialized;
    
    likelihood();
-   likelihood(int,double*,double*,covariance_function*,likelihood_function*);
+   likelihood(int,double*,double*,covariance_function*,chisquared*);
    ~likelihood();
    void initialize(double**,int);
    void resume(char*);//resume an interrupted APS search

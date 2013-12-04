@@ -19,7 +19,7 @@ main(int iargc, char *argv[]){
    
    likelihood *likeness;
    covariance_function *cv;
-   likelihood_function *lk;
+   chisquared *lk;
    
    FILE *input,*output;
    
@@ -288,12 +288,12 @@ main(int iargc, char *argv[]){
    }
    
    
-   if(lk->get_type()==LK_TYPE_UDDER){
+   /*if(lk->get_type()==LK_TYPE_UDDER){
        output=fopen("udder_aps_output_start200.sav","a");
        fprintf(output,"foundp3 %d foundn3 %d\n",
        lk->get_fp3(),lk->get_fn3());
        fclose(output);
-   }
+   }*/
    
    likeness->write_pts();
    
