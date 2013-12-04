@@ -1,5 +1,3 @@
-//this is the heart of APS
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

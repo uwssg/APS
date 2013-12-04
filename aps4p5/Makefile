@@ -7,7 +7,7 @@ LAPACK_LIB = -L/Users/noldor/physics/lapack-3.1.1/
 BLAS_LIB = -L/Users/noldor/physics/BLAS/
 
 #directory where you can find the libraries that link fortran to c++
-FORTRAN_LIB = -L/opt/local/lib/g95/x86_64-apple-darwin10/4.2.4/
+FORTRAN_LIB = -L/opt/local/lib/
 
 ############below are directories and libraries for the WMAP7 likelihood
 
