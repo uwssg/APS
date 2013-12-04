@@ -1,5 +1,8 @@
+#ifndef GOTO_H
+#define GOTO_H
+
 #define pi 3.141592654
-#define letters 100
+#define letters 500
 #include <stdio.h>
 
 void kill(char*);
@@ -61,4 +64,4 @@ void sort(double*,int*,int);
 
 double normal_deviate(Ran*,double,double);
 
-
+#endif

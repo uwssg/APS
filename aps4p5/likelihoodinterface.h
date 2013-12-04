@@ -1,3 +1,6 @@
+#ifndef LIKE_H
+#define LIKE_H
+
 #include "goto_tools.h"
 #include "gaussian_process.h"
 #define likeletters 500
@@ -203,4 +206,4 @@ class likelihood{
   
 };
 
-
+#endif

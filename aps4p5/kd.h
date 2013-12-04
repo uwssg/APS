@@ -1,5 +1,8 @@
 //this is the 27 February 2012 rewrite
 
+#ifndef KD_H
+#define KD_H
+
 class kd_tree{
  private:
   int **tree;
@@ -39,3 +42,5 @@ class kd_tree{
  void nn_srch(double*,int,int*,double*);
 
 };
+
+#endif

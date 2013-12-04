@@ -1,3 +1,6 @@
+#ifndef GP_H
+#define GP_H
+
 #include "kd.h"
 
 class covariance_function{
@@ -113,3 +116,5 @@ class gp{
 
   
 };
+
+#endif
