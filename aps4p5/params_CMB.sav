@@ -7,7 +7,7 @@ dimensionality MUST be the first keyword listed
 #dim 6 -- dimensionality of your parameter space
 
 #Ns 10 -- start with 2000 randomly sampled points
-#end 20 -- end after the algorithm has sampled 200000 points
+#end 50 -- end after the algorithm has sampled 200000 points
 
 #Nc 250 -- sample 250 candidates each time you use the Gaussian process
 #Ng 9 -- use 15 neareast neighbors in the Gaussian process
@@ -30,11 +30,11 @@ with deltachi specifying the target)
 #likelihood wmap -- specify the kind of likelihood function
 #covariance gauss -- specify the kind of covariance funciton
 
-#outputfile wmap7_sampled_points.sav -- store the sampled points
+#outputfile output/wmap7_sampled_points.sav -- store the sampled points
 !#resumefile wmap7_sampled_points.sav -- in case you are interrupted
 
-#mufitfile wmap7_fit.sav -- compare the Gaussian process fit to chisquared
-#timingfile wmap7_timingfile.sav -- time performance
+#mufitfile output/wmap7_fit.sav -- compare the Gaussian process fit to chisquared
+#timingfile output/wmap7_timingfile.sav -- time performance
 
 below is you list of parameters.  The format is:
 kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum

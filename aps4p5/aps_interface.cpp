@@ -82,6 +82,12 @@ main(int iargc, char *argv[]){
 	   else if(compare_char(word,"udder")==1){
 	       lk=new udder_likelihood();
 	   }
+	   else if(compare_char(word,"ellipse")==1){
+	       lk=new ellipses(dim);
+	   }
+	   else if(compare_char(word,"s_curve")==1){
+	       lk=new s_curve(dim,2);
+	   }
 	   else{
 	       lk=new udder_likelihood();
 	   }
