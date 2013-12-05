@@ -753,7 +753,7 @@ void likelihood::grad_sample(int dex){
  //this routine uses gradient descent to try to walk the gradient wanderer
  //indicated by dex towards the chisquared value stored in chimintarget
   
-  int i,j,k,rswit;
+  int i,j,k,rswit,internal_ct=0;
 
   double chitrue,mag,dchi;
   double before,after;
@@ -761,7 +761,8 @@ void likelihood::grad_sample(int dex){
   double *pt,min;
   int mindex;
   
-  ct_grad++;
+  gg.reset_cache();
+ 
   
   before=double(time(NULL));
   
@@ -803,7 +804,7 @@ void likelihood::grad_sample(int dex){
         //find the gradient at the point where the wanderer currently is
         //this direction is storred in graddir
         gg.user_predict_gradient(pt,graddir,1);
-
+        ct_grad++;
 
         //normalize graddir
         mag=0.0;
@@ -811,12 +812,20 @@ void likelihood::grad_sample(int dex){
             mag+=power(graddir[i],2);
         }
     
-    
-       
-    
+        for(i=0;i<nparams;i++){
+	    pt[i]+=0.1*graddir[i]/mag;
+	}
+	
+	chitrue=(*call_likelihood)(pt);
+	add_pt(pt,chitrue);
+        internal_ct++;
+        
+	printf("     gradient %e\n",chitrue);
     }
     
     delete [] pt;
+    
+    printf("internal ct %d ending with %e\n",internal_ct,chitrue);
     
   }
   
