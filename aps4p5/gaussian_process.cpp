@@ -1983,9 +1983,10 @@ const{
 }
 
 void gp::optimize(){
-    
-    int n_use,*use_dex,i,j,k,l;
-    
+
+    int n_use,*use_dex;
+    int i,j,k,l;
+
     Ran chaos(43);
     
     if(pts<3000){
@@ -2013,7 +2014,34 @@ void gp::optimize(){
        
     }
     
+    optimize(use_dex,n_use);
     
+    delete [] use_dex;
+ 
+}
+
+void gp::optimize(int start, int end){
+
+    int n_use,*use_dex;
+    
+    n_use=end-start;
+    use_dex=new int[n_use];
+    
+    int i;
+    for(i=0;i<n_use;i++)use_dex[i]=start+i;
+    
+    optimize(use_dex,n_use);
+    
+    delete [] use_dex;
+
+
+}
+
+void gp::optimize(int *use_dex, int n_use){
+    
+    int i,j,k,l;
+    
+   
     int nhy=covariogram->get_n_hyper_parameters();
     double *hh,*hhbest,*dh;
     
@@ -2082,6 +2110,5 @@ void gp::optimize(){
     
     covariogram->set_hyper_parameters(hhbest);
     
-    delete [] use_dex;
 
 }

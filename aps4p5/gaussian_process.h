@@ -133,6 +133,8 @@ class gp{
 
     void predict(double**,double*,double*,double*,int,int,double*,double*,int) const;
     
+    void optimize(int*,int);
+    
   public:
     kd_tree *kptr;
     int dim,kk,pts;
@@ -160,7 +162,9 @@ class gp{
     
     double get_nearest_distance();
     
+    
     void optimize();
+    void optimize(int,int);
     
     
 };
