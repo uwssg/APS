@@ -875,7 +875,7 @@ void likelihood::grad_sample(int dex){
                     mag+=power(graddir[i],2);
                  }
                 mag=sqrt(mag);
-		ratio=0.5;
+		ratio*=10.0;
 	    }
 	    else{
 	        ratio*=0.5;
@@ -913,7 +913,7 @@ void likelihood::grad_sample(int dex){
 	    
 	}
 	
-	printf("     gradient %e\n",chitrue);
+	printf("     gradient %e -- %e\n",chitrue,ratio);
 	
 	//if(internal_ct==500)exit(1);
     }
