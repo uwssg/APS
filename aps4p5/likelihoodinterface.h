@@ -36,7 +36,7 @@ class likelihood{
   int sam_called,grad_called,deletedwanderers;
   double *ggx,*ggn,*samv,*sambest,*graddir,*gradv;
   
-  int calls_to_usual_sampling;
+  int ct_aps,ct_grad;
   
   char mufitname[letters],timingname[letters];
   int calledmufit,nmufit,*ctmufit;
@@ -76,7 +76,9 @@ class likelihood{
    void resume(char*);//resume an interrupted APS search
    		//the argument is the name of the file containing the data
 		//for the search to be resumed
-
+   
+   void search();
+   
    void sample_pts(int);//do the `usual' APS sampling
    
    void grad_sample(int);//do one step of gradient descent sampling

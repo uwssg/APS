@@ -274,16 +274,7 @@ main(int iargc, char *argv[]){
    
    while(likeness->npts<nend){
      
-      if(likeness->ngw==0){
-         
-         likeness->sample_pts(1);
-      }
-      else {
-         for(i=0;i<likeness->ngw;i++){
-             likeness->grad_sample(i);
-             likeness->sample_pts(1);
-         }
-      }
+      likeness->search();
     
     
    }

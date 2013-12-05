@@ -115,7 +115,8 @@ covariance_function *cv, chisquared *lk){
  
  deltachi=-1.0;
  
- calls_to_usual_sampling=0;
+ ct_aps=0;
+ ct_grad=0;
  
  mufitname[0]=0;
  
@@ -445,7 +446,7 @@ void likelihood::sample_pts(int delswit){
   
   double *sampling_min,*sampling_max;
   
-  calls_to_usual_sampling++;
+  ct_aps++;
   
   sampling_min=new double[nparams];
   sampling_max=new double[nparams];
@@ -455,7 +456,7 @@ void likelihood::sample_pts(int delswit){
       sampling_max[i]=-1.0e30;
   }
   
-  if(calls_to_usual_sampling%2==0 && ngood>2){
+  if(ct_aps%2==0 && ngood>2){
       //printf("focusing\n");
       focusing=1;
       ngood=0;
@@ -853,6 +854,8 @@ void likelihood::grad_sample(int dex){
   double chitrue,mag,dchi;
   double before,after;
   
+  ct_grad++;
+  
   before=double(time(NULL));
   
   gw[dex].magnitude=0.0;
@@ -961,6 +964,18 @@ void likelihood::grad_sample(int dex){
   
 }
 
+void likelihood::search(){
+    
+    int i;
+    if(ct_grad<ct_aps && ngw>0){
+        i=dice->int32()%ngw;
+	grad_sample(i);
+    }
+    else{
+        sample_pts(1);
+    }
+    
+}
 
 
 
