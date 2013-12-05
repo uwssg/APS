@@ -165,6 +165,7 @@ class gp{
     
     void optimize();
     void optimize(int,int);
+    void optimize(double*,double);
     
     
 };

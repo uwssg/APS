@@ -913,9 +913,9 @@ void likelihood::grad_sample(int dex){
 	    
 	}
 	
-	if(gg.pts>n_start && (gg.pts-n_start)%10==0){
+	/*if(gg.pts>n_start && (gg.pts-n_start)%10==0){
 	    gg.optimize(n_start,gg.pts);
-	}
+	}*/
 	
 	printf("     gradient %e -- %e\n",chitrue,ratio);
 	

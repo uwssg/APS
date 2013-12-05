@@ -2037,6 +2037,41 @@ void gp::optimize(int start, int end){
 
 }
 
+void gp::optimize(double *pt, double rr){
+    int n_use,i,j,*use_dex;
+    double dd;
+    
+    n_use=0;
+    for(i=0;i<pts;i++){
+        dd=kptr->distance(pt,kptr->data[i]);
+	if(dd<=rr){
+	    n_use++;
+	}
+    }
+    
+    if(n_use>0){
+        j=0;
+	use_dex=new int[n_use];
+        for(i=0;i<pts;i++){
+	    dd=kptr->distance(pt,kptr->data[i]);
+	    if(dd<=rr){
+	        if(j>=n_use){
+		    printf("WARNING optimize overstepped\n");
+		    exit(1);
+		}
+		use_dex[j]=i;
+	    }
+	}
+	if(j!=n_use){
+	    printf("WARNINg optimize did not find n_use %d %d\n",n_use,j);
+	}
+	
+	optimize(use_dex,n_use);
+	
+	delete [] use_dex;
+    }
+}
+
 void gp::optimize(int *use_dex, int n_use){
     
     int i,j,k,l;
