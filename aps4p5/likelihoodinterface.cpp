@@ -52,6 +52,7 @@ likelihood::~likelihood(){
       delete [] ctmufit;
   }
   
+  if(candidates!=NULL)delete [] candidates;
 
 }
 
@@ -117,6 +118,10 @@ covariance_function *cv, chisquared *lk){
  
  ct_aps=0;
  ct_grad=0;
+ 
+ candidates=NULL;
+ n_candidates=0;
+ room_candidates=0;
  
  mufitname[0]=0;
  
@@ -977,5 +982,43 @@ void likelihood::search(){
     
 }
 
+void likelihood::add_candidate(int dex){
 
+    if(dex>=gg.pts){
+        printf("WARNING trying to add %d as candidate but %d is pts\n",
+	dex,gg.pts);
+	exit(1);
+    }
+    
+    if(gg.pts!=npts){
+        printf("WARNING in add candidate gg.pts %d npts %d\n",gg.pts,npts);
+	exit(1);
+    }
+    
+    int i,*buff;
+    
+    if(candidates==NULL){
+        room_candidates=1000;
+        candidates=new int[room_candidates];
+	n_candidates=0;
+    }
+    
+    if(n_candidates==room_candidates){
+        buff=new int[n_candidates];
+	for(i=0;i<n_candidates;i++){
+	    buff[i]=candidates[i];
+	}
+	delete [] candidates;
+	room_candidates+=1000;
+	candidates=new int[room_candidates];
+	for(i=0;i<n_candidates;i++){
+	    candidates[i]=buff[i];
+	}
+	delete [] buff;
+    }
+    
+    candidates[n_candidates]=dex;
+    n_candidates++;
+
+}
 

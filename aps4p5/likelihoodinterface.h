@@ -48,8 +48,10 @@ class likelihood{
   gp gg;
   
   int ngood;
- 
   
+  int *candidates,n_candidates,room_candidates;
+  
+  void add_candidate(int);
  
  public:
    char **pnames,masteroutname[100];
