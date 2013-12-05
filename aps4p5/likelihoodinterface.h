@@ -7,27 +7,6 @@
 #define likeletters 500
 #define chiexcept 1.0e10
 
-class node{
-  
-  //NOT USED
-  
-  public:
-    int maxel,gotdir,el,dim,ndir,dirfound,**neardex,dirroom;
-    int jadd,jcent,lookingat;
-    double *cc,*rr,*center,*dir,chisq,ccfirst;
-    
-    double *rrbuff,**dirbuff,**neard,**nearg,*neargmag;
-    
-    gp *ggdir;
-    
-    node();
-    ~node();
-    void initialize(int,int);
-    void copy(node*);
-    void recenter(double*,double,double*,double*);
-    
-
-};
 
 class grad_wanderer{
   public:
@@ -53,9 +32,9 @@ class likelihood{
  private:
   
      
-  int nparams,nprinted,krigct,addct,nodect,gradct;
-  int node_called,sam_called,grad_called,deletedwanderers;
-  double *nodev,*ggx,*ggn,*samv,*sambest,*graddir,*gradv;
+  int nparams,nprinted,krigct,addct,gradct;
+  int sam_called,grad_called,deletedwanderers;
+  double *ggx,*ggn,*samv,*sambest,*graddir,*gradv;
   
   int calls_to_usual_sampling;
   
@@ -78,17 +57,15 @@ class likelihood{
    double chimin,chimintarget,junk;
    double *minpt,*mxx,*mnn,proximity,grat;
    
-   int nnodes,noderoom,nodemaxel,foundbywandering;
+   int foundbywandering;
    int improvedbywandering,*lingerflag,lingerroom,seed;
-  
-   node *nodes;
    
    int ngw,gwroom;
    grad_wanderer *gw;
      
    int npts,nsamples,threads;
    int kk,spentlingering;
-   double krigtimewall,addtimewall,nodetimewall,gradtimewall;
+   double krigtimewall,addtimewall,gradtimewall;
    double target,precision,*ndyy;
    int writevery,*ndinn,initialized;
    
@@ -123,11 +100,6 @@ class likelihood{
    
    void set_seed(int);//set the seed for the random number generator
  
-   //the routines below are NOT USED
-   void make_node(double*,double,int);
-   int compare_nodes(double*,int);
-   void node_sample(int);
-   void add_node(double*,double);
   
 };
 

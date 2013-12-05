@@ -31,8 +31,6 @@ likelihood::~likelihood(){
   
   sample_pts(-1);
   
-  delete [] nodes;
-  node_sample(-2);
   grad_sample(-2);
  
   
@@ -123,27 +121,22 @@ covariance_function *cv, chisquared *lk){
  
  //these variables are for a feature that I have not included
  //because it does not work as well as it should
- nodemaxel=100;
- nnodes=0;
- noderoom=1;
- node_called=0;
+
  
  sam_called=0;//have you called sample_pts() yet?
  grad_called=0;//have you called grad_sample() yet?
  grat=0.1;//the threshold (i.e. 10% of your target chisquared) at which you
  	//create a new gradient wanderer
  
- nodes=new node[noderoom];//again, not used
- for(i=0;i<noderoom;i++)nodes[i].initialize(nn,nodemaxel);//not used
+ 
  
  gwroom=100;//the maximum number of allowed gradient wanderers
  ngw=0;//the number of gradient wanderers currently in play
 
  krigct=0;//how many times you used the gaussian process in sample_pts()
  addct=0;//the number of times you added a point in sample_pts()
- nodect=0;//not used
  gradct=0;//the number of times you called grad_sample()
- nodetimewall=0.0;//not used
+
  gradtimewall=0.0;//the clock time spent in grad_sample()
  krigtimewall=0.0;//the clock time spent on the gaussian process
  addtimewall=0.0;//the clock time spent adding points to the gaussian process
@@ -301,19 +294,8 @@ void likelihood::initialize(double **guesses, int nguess){
    lingerflag[i]=0;
  }
   
- opts=npts;//this was included because, if the node_sample() option was
- 	//activated, there would be the possibility that the add_node()
-	//code below would add new points to the sample size so that
-	//deleting base[][] and chisq[] below would be complicated
+ opts=npts;
  
- /*for(j=0;j<opts;j++){
-    if(chisq[j]<target){
-   
-      add_node(base[j],chisq[j]);
-  
-   }
- }*/
-
  for(i=0;i<opts;i++)delete [] base[i];
  delete [] base;
  delete [] chisq;
@@ -424,10 +406,7 @@ char word[letters];
 
  gw=new grad_wanderer[gwroom];
  
- if(chimin<=target){
-   //add_node(minpt,chimin);
- }
- else{
+ if(chimin>target){
   if(ngw<gwroom){
    
    gw[ngw].center=new double[nparams];
@@ -616,44 +595,8 @@ void likelihood::sample_pts(int delswit){
 	ngw++;
       }
       else{
-        if(nnodes>0){
-	  //remove the wanderer closest to the nodes
-	  //this option is meaningless, since I have disabled the
-	  //node option
-	  nn=1.0e10;
-	  for(i=0;i<nnodes;i++){
-	    mm=0.0;
-	    for(j=0;j<nparams;j++){
-	      mm+=power((sambest[j]-nodes[i].center[j])/(gg.kptr->maxs[j]-gg.kptr->mins[j]),2);
-	    }
-	    if(mm<nn)nn=mm;
-	  }
-	  //now nn is the square of the distance from the current candidate
-	  //to the nearest node
-	  
-	  xx=1.0e10;
-	  ix=-1;
-	  
-	  for(i=0;i<ngw;i++){
-	    for(j=0;j<nnodes;j++){
-	      mm=0.0;
-	      for(k=0;k<nparams;k++){
-	      
-	        mm+=power((gw[i].center[k]-nodes[j].center[k])/(gg.kptr->maxs[k]-gg.kptr->mins[k]),2);
-	      }
-	      if(mm<xx){
-	        xx=mm;
-		ix=i;
-	      } 
-	    }
-	  }
-	  if(xx>nn && ix>-1){
-	    for(i=0;i<nparams;i++)gw[ix].center[i]=sambest[i];
-	    gw[ix].chisq=chitrue;
-	    gw[ix].rr=0.1;
-	  }
-	}
-	else{
+       
+	
 ///////THIS IS THE CODE THAT REMOVES THE WANDERER WITH THE LARGEST
 ///////CHISQUARED-TARGET AND REPLACES IT WITH THE NEW WANDERER	
 	  xx=-1.0e10;
@@ -746,7 +689,7 @@ void likelihood::sample_pts(int delswit){
 	  
 	delete [] candidate_gradient;*/
 	  
-	}//is nnodes==0
+
       }//is ngw maxed out
       
       
@@ -846,209 +789,8 @@ void likelihood::write_pts(){
 
 }
 
-//currently, the node class is not used
-node::node(){
-}
-
-void node::initialize(int nn, int nm){
-  int i;
-  
-  ggdir=new gp;
- 
-  
-  dirfound=0;
-  ndir=10;
-  
-  gotdir=-1;
-  maxel=nm;
-  el=0;
-  dim=nn;
-  
-  ggdir->dim=dim;
-  ggdir->kk=15;
-  
-  dirroom=10000;
-  neard=new double*[dirroom];
-  neardex=new int*[dirroom];
-  nearg=new double*[dirroom];
-  neargmag=new double[dirroom];
-  for(i=0;i<dirroom;i++){
-    neard[i]=new double[ndir];
-    neardex[i]=new int[ndir];
-    nearg[i]=new double[dim];
-  }
-  
-  center=new double[dim];
-  dir=new double[dim];
-  rrbuff=new double[ndir];
-  dirbuff=new double*[ndir];
-  for(i=0;i<ndir;i++)dirbuff[i]=new double[dim];
-  
-  cc=new double[maxel];
-  rr=new double[maxel];
-  
-}
-
-node::~node(){
-  int i;
-  
- 
-  delete ggdir;
-
-  
-    delete [] cc;
-    //printf("deleted cc\n");
-    delete [] rr;
-    //printf("deleted rr\n");
- 
-    delete [] center;
-    //printf("deleted center\n");
-    delete [] dir;
-    delete [] rrbuff;
-    for(i=0;i<ndir;i++)delete [] dirbuff[i];
-    delete [] dirbuff;
-    
-    //printf("deleted dir\n");
-  
-    
-    for(i=0;i<dirroom;i++){
-      delete [] neardex[i];
-      delete [] neard[i];
-      delete [] nearg[i];
-    }
-    
-    delete [] neardex;
-    delete [] neard;
-    delete [] nearg;
-    delete [] neargmag;
-  
-}
-
-void likelihood::make_node(double *v, double ff, int dex){
-  
-  int i;
-  
-  //not used
-  
-  printf("making a node; yay!\n");
-  
- 
-
-  nodes[dex].chisq=ff;
 
 
-  for(i=0;i<nparams;i++){
-    nodes[dex].center[i]=v[i];
-  } 
-  
-  printf("made the node %d\n",nodes[dex].el);
-}
-
-void likelihood::node_sample(int dex){
-  
- //unused
-}
-
-
-void node::copy(node *oldnode){
-   
-   //not used
-   
-   int i,j;
-  /*
-  
-  dirfound=0;
-  ndir=10;
-  
-  gotdir=-1;
-  maxel=20;
-  el=0;
-  dim=nn;
-  
-  ggdir->dim=dim;
-  ggdir->kk=15;
-  
-  dirroom=10000;
-  neard=new double[dirroom];
-  neardf=new double[dirroom];
-  neardex=new int[dirroom];
-  
-  center=new double[dim];
-  dir=new double[dim];
-  rrbuff=new double[ndir];
-  dirbuff=new double*[ndir];
-  for(i=0;i<ndir;i++)dirbuff[i]=new double[dim];
-  
-  cc=new double[maxel];
-  rr=new double[maxel];
- */ 
-
-   printf("\n\ncopying el %d ndir %d fnd %d maxel %d dim %d\n",\
-   oldnode->el,oldnode->ndir,oldnode->dirfound,oldnode->maxel,\
-   oldnode->dim);
-   
-   dirfound=oldnode->dirfound;
-   ndir=oldnode->ndir;
-   gotdir=oldnode->gotdir;
-   maxel=oldnode->maxel;
-   el=oldnode->el;
-   dim=oldnode->dim;
-   dirroom=oldnode->dirroom;
-   chisq=oldnode->chisq;
- 
-   
-  
-   
-   neard=new double*[dirroom];
-   nearg=new double*[dirroom];
-   neardex=new int*[dirroom];
-   neargmag=new double[dirroom];
-   
-   for(i=0;i<dirroom;i++){
-     neard[i]=new double[ndir];
-     nearg[i]=new double[dim];
-     neardex[i]=new int[ndir];
-   }
-   
-   center=new double[dim];
-   dir=new double[dim];
-   rrbuff=new double[ndir];
-   dirbuff=new double*[ndir];
-   for(i=0;i<ndir;i++)dirbuff[i]=new double[dim];
-   cc=new double[maxel];
-   rr=new double[maxel];
-   
-   ggdir=new gp;
-   ggdir->dim=dim;
-   ggdir->kk=15;
-   
-   ggdir->copy(oldnode->ggdir);
-   
-   for(i=0;i<dim;i++){
-     center[i]=oldnode->center[i];
-     dir[i]=oldnode->dir[i];
-   }
-   for(i=0;i<ndir;i++){
-     rrbuff[i]=oldnode->rrbuff[i];
-     for(j=0;j<dim;j++)dirbuff[i][j]=oldnode->dirbuff[i][j];
-   }
-   for(i=0;i<maxel;i++){
-     cc[i]=oldnode->cc[i];
-     rr[i]=oldnode->rr[i];
-   }
-   for(i=0;i<dirroom;i++){
-    neargmag[i]=oldnode->neargmag[i];
-    for(j=0;j<ndir;j++){
-      neard[i][j]=oldnode->neard[i][j];
-      neardex[i][j]=oldnode->neardex[i][j];
-     }
-     for(j=0;j<dim;j++){
-      nearg[i][j]=oldnode->nearg[i][j];
-     }
-   }
-   
-   //printf("done with copy routine\n");
-}
 
 
 void likelihood::add_pt(double *v, double chitrue, int lling){
@@ -1090,140 +832,6 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
   
 }
 
-void likelihood::add_node(double *v, double chitrue){
-  
-  //not used
-  
-  int i,j,k,l,truth,copied=0;
-  double **centers,*chisqs;
-
-  node *nodebuffer;
-  FILE *output;
-  
-  //if(npts>36880)printf("evaluating prospective node\n");
- /* output=fopen("directionlog.sav","a");
-   fprintf(output,"\nevaluating prospective node\n");
-  fclose(output);*/
-
-  
-  truth=1;
-  for(i=0;i<nnodes && truth==1;i++){
-    truth=compare_nodes(v,i);
-    //printf("cand %e node %e truth %d\n",v[0],nodes[i].center[0],truth);
-  }
-  
-  if(truth==1){
-   /*output=fopen("directionlog.sav","a");
-   fprintf(output,"adding a node\n");
-   fclose(output);*/
-    if(nnodes==noderoom){
-      
-      
-      nodebuffer=new node[nnodes];
-  
-      //printf("built buffer\n");
-      for(i=0;i<nnodes;i++){
-         nodebuffer[i].copy(&nodes[i]);
-      }
-      
-      delete [] nodes;
-      
-      noderoom+=10;
-      nodes=new node[noderoom];
-      
-      //printf("allotted new space\n");
-      for(i=0;i<nnodes;i++){
-        nodes[i].copy(&nodebuffer[i]);
-      }
-      for(;i<noderoom;i++)nodes[i].initialize(nparams,nodemaxel);
-    
-      delete [] nodebuffer;
-      
-      printf("noderoom is now %d\n",noderoom);
-      
-      
-      /*centers=new double*[nnodes];
-      chisqs=new double[nnodes];
-      for(i=0;i<nnodes;i++){
-        chisqs[i]=nodes[i].chisq;
-        centers[i]=new double[nparams];
-	for(j=0;j<nparams;j++)centers[i][j]=nodes[i].center[j];
-      }
-      delete [] nodes;
-      noderoom+=10;
-      nodes=new node[noderoom];
-      for(i=0;i<nnodes;i++){
-        make_node(centers[i],chisqs[i],i);
-      }
-      
-      delete [] chisqs;
-      for(i=0;i<nnodes;i++)delete [] centers[i];
-      delete [] centers;*/
-      
-    }
-    
-    make_node(v,chitrue,nnodes);
-    nnodes++;
-    
-    
-    
-  }
-  /*else{
-    //printf("false alarm\n");
-  }*/
-  
-  
-  
-  
-}
-
-int likelihood::compare_nodes(double *v, int dex){
-  
-  //not used
-  
-  int i,j,k,l,truth;
-  double *dir,rr,nn,*p,chitest;
-  
-  dir=new double[nparams];
-  p=new double[nparams];
-  
-  rr=0.0;
-  for(i=0;i<nparams;i++){
-    dir[i]=v[i]-nodes[dex].center[i];
-    rr+=dir[i]*dir[i];
-  }
-  rr=sqrt(rr);
-  for(i=0;i<nparams;i++)dir[i]=dir[i]/rr;
-  
-  truth=0;//if truth==1, it means we think we have a different node
-  for(nn=0.2*rr;nn<=rr && truth==0;nn+=0.2*rr){
-    
-    
-    for(i=0;i<nparams;i++){
-      p[i]=nodes[dex].center[i]+nn*dir[i];
-    }
-    
-    chitest=(*call_likelihood)(p);
-    
-    if(chitest>target){
-      truth=1;
-      
-      //printf("chi %e truth %d\n",chitest,truth);
-      
-    }
-    
-    if(chitest<chiexcept){
-      add_pt(p,chitest,1);
-    }
-
-  }
-
-  delete [] dir;
-  delete [] p;
-  
-  return truth;
-  
-}
 
 grad_wanderer::grad_wanderer(){
   chisq=2.0e30;
@@ -1300,7 +908,7 @@ void likelihood::grad_sample(int dex){
     //keep track of how many good points you found this way
     if(chitrue<=target){
       foundbywandering++;
-      //add_node(gradv,chitrue);
+      
     }
     
     if(chitrue<gw[dex].chisq){
@@ -1353,13 +961,6 @@ void likelihood::grad_sample(int dex){
   
 }
 
-void node::recenter(double *newc, double newchi, double *mx, double *mn){
-
-  //not used
-
-  
-  
-}
 
 
 
