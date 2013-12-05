@@ -737,14 +737,17 @@ void likelihood::grad_sample(int dex){
   double chitrue,mag,dchi;
   double before,after,chitrial;
   
-  double *pt,*trial,*dx,min,ratio=0.5,nn,dd,worst,mu,sig;
+  double *pt,*trial,*current,*dx,min,ratio=0.5,nn,dd,worst,mu,sig;
   
-  double *dd_buff;
-  int *nn_buff;
+  double *dd_buff,mu0;
+  int *nn_buff,i_failed;
   int mindex,assess_every=500;
   
   int has_converged=0;
   double chi_mean,chi_var,min_found,old_min;
+  
+  int steps_taken=0;
+  double step_size,took_a_step;
   
   gg.reset_cache();
   
@@ -769,6 +772,7 @@ void likelihood::grad_sample(int dex){
     
     pt=new double[nparams];
     trial=new double[nparams];
+    current=new double[nparams];
     dx=new double[nparams];
     dd_buff=new double[2];
     nn_buff=new int[2];
@@ -802,136 +806,69 @@ void likelihood::grad_sample(int dex){
     if(i<100){
         gg.optimize(pt,100);
     }
+    for(i=0;i<nparams;i++)current[i]=pt[i];
     
-    chi_mean=0.0;
-    chi_var=0.0;
-    mag=1.0;
-    gg.user_predict_gradient(pt,graddir,1);
-     mag=0.0;
-     for(i=0;i<nparams;i++){
-        mag+=power(graddir[i],2);
-     }
-     mag=sqrt(mag);
-     worst=1.0;
-    while(mag>1.0e-4 && has_converged==0 && ratio>1.0e-8 && worst>1.0e-9){
-        
-	gg.reset_cache();
-	
-	//printf("in while loop\n");
-	
-        //find the gradient at the point where the wanderer currently is
-        //this direction is storred in graddir
-        
-	gg.user_predict(pt,graddir,1);
-	mag=0.0;
-	for(i=0;i<nparams;i++)mag+=power(graddir[i],2);
-	mag=sqrt(mag);
+    mu0=chitrue;
    
-
-        //normalize graddir
-       
-        for(i=0;i<nparams;i++){
-	    dx[i]=-ratio*chitrue*graddir[i]/mag;
-	}
-        
-    
-        for(i=0;i<nparams;i++){
-	    trial[i]=pt[i]+dx[i];
-	    printf("    trial %e pt %e dx %e w %e\n",trial[i],pt[i],dx[i],worst);
-	}
+    while(steps_taken<100){
+        step_size=0.1;
+	took_a_step=0;
+	mu0=chitrue;
+	for(i=0;i<nparams;i++)current[i]=pt[i];
+	i_failed=0;
 	
-	ct_grad++;
-	mu=gg.user_predict(trial,&sig,0);
-	chitrial=(*call_likelihood)(trial);
-	
-	printf("    chitrue %e chitrial %e mu %e\n\n",chitrue,chitrial,mu);
-	
-	if(chitrial<exception){
-	    add_pt(trial,chitrial,1);
+	while(step_size>1.0e-5){
+	    for(i=0;i<nparams;i++){
+	        trial[i]=normal_deviate(dice,current[i],step_size*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
+		
+	    }
 	    
-	    if(chitrial<chitrue){
+	    mu=gg.user_predict(trial,&sig,0);
+	    if(mu<mu0){
 	        for(i=0;i<nparams;i++){
-	            pt[i]=trial[i];
-	        }
-	        chitrue=chitrial;
-	
-		ratio=0.1;
+		    current[i]=trial[i];
+                }
+		mu0=mu;
+		
+		took_a_step=1;
 	    }
 	    else{
-	        
-		gg.kptr->nn_srch(pt,2,nn_buff,dd_buff);
+	        i_failed++;
+	    }
+	    
+	    if(i_failed==100){
+	        step_size*=0.5;
+		i_failed=0;
+	    } 
+	}
+	
+	steps_taken++;
+	
+	if(took_a_step==1){
+	    chitrial=(*call_likelihood)(current);
+	    printf("chitrial %e chimin %e\n",chitrial,chimin);
+	    ct_grad++;
+	    if(chitrial<exception){
+	        add_pt(current,chitrial,1);
+		gg.reset_cache();
 		
-		for(i=0;i<nparams;i++){
-		    trial[i]=normal_deviate(dice,pt[i],dd_buff[1]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
+		
+		if(chitrial<chitrue){
+		    chitrue=chitrial;
+		    for(i=0;i<nparams;i++)pt[i]=current[i];
 		}
-	        chitrial=(*call_likelihood)(trial);
-		
-		nn=gg.kptr->distance(pt,trial);
-		
-		printf("other chitrial %e -- nn %e dd %e\n",chitrial,nn,dd_buff[1]);
-		ct_grad++;
-		if(chitrial<exception){
-		    add_pt(trial,chitrial,1);
-		    if(chitrial<chitrue){
-		        chitrue=chitrial;
-			for(i=0;i<nparams;i++)pt[i]=trial[i];
-			ratio*=2.0;
-		    }
-		}
-		
-		ratio*=0.5;
 	    }
 	}
-	else{
-	    ratio*=0.5;
-	}
-	
-        internal_ct++;
-        
-	if(chitrial<min_found){
-	    min_found=chitrial;
-	}
-	
-	chi_mean+=chitrial;
-	chi_var+=chitrial*chitrial;
-	
-	if(internal_ct%assess_every==0){
-	    chi_mean=chi_mean/double(assess_every);
-	    chi_var=chi_var/double(assess_every)-chi_mean*chi_mean;
-	    
-	    if(chi_var<1.0e-3*chi_mean){
-	        has_converged=1;
-	    }
-	    
-	    chi_mean=0.0;
-	    chi_var=0.0;
-	    
-	    if(old_min-min_found<0.01*min_found){
-	        has_converged=1;
-	    }
-	    
-	    old_min=min_found;
-	    
-	}
-	
-	if(internal_ct%10==0){
-	    i=gg.optimize(pt,sqrt(0.01*double(nparams)));
-	    if(i<100)gg.optimize(pt,100);
-	}
-	
-	printf("     gradient %e -- %e\n",chitrue,ratio);
-	
-	//if(internal_ct==500)exit(1);
     }
     
     delete [] pt;
     delete [] trial;
+    delete [] current;
     delete [] dx;
     delete [] dd_buff;
     delete [] nn_buff;
     
-    printf("internal ct %d ending with %e -- m %e rat %e\n",
-    internal_ct,chitrue,mag,ratio);
+    printf("internal ct %d ending with %e\n",steps_taken,chitrue);
     //exit(1);
   }
   
