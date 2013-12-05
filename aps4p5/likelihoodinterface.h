@@ -5,7 +5,7 @@
 #include "gaussian_process.h"
 #include "chisq.h"
 #define likeletters 500
-#define chiexcept 1.0e10
+
 
 
 class likelihood{

@@ -6,14 +6,14 @@ dimensionality MUST be the first keyword listed
 
 #dim 6 -- dimensionality of your parameter space
 
-#Ns 10 -- start with 2000 randomly sampled points
-#end 50 -- end after the algorithm has sampled 200000 points
+#Ns 20 -- start with 2000 randomly sampled points
+#end 5000 -- end after the algorithm has sampled 200000 points
 
 #Nc 250 -- sample 250 candidates each time you use the Gaussian process
 #Ng 9 -- use 15 neareast neighbors in the Gaussian process
 
 #Nw 100 -- maximum number of wanderers
-#grat 0.1 -- threshold at which wanderer is created
+#grat 100.0 -- threshold at which wanderer is created
 
 #seed 99 -- if you want to specify the seed for the random number generator
 	if you leave this blank, it will just use the value returned by the
@@ -31,7 +31,7 @@ with deltachi specifying the target)
 #covariance gauss -- specify the kind of covariance funciton
 
 #outputfile output/wmap7_sampled_points.sav -- store the sampled points
-!#resumefile wmap7_sampled_points.sav -- in case you are interrupted
+#resumefile test_wmap_seed.sav -- in case you are interrupted
 
 #mufitfile output/wmap7_fit.sav -- compare the Gaussian process fit to chisquared
 #timingfile output/wmap7_timingfile.sav -- time performance
@@ -49,13 +49,13 @@ kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum
 if you have an idea where the minimum of your function might be, you can also
 include that as a guess
 
-#guess
+!#guess
 0.0223 0.1099 0.72 0.08 0.96 3.0
 this is a point that we want to make sure is included in our initial sample;
 you can include as many guesses as you want (up to your specified Ns); 
 just be sure to include the keyword before each guess
 
-#guess
+!#guess
 0.03 0.13 0.7 0.087 0.9 3.2
-#guess
+!#guess
 0.021 0.09 0.8 0.07 1.0 2.9
