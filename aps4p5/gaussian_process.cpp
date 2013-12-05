@@ -2062,6 +2062,8 @@ void gp::optimize(){
 	    E+=power(mu-fn[use_dex[i]],2);
 	}
 	
+	printf("hh %e E %e\n",hh[0],E);
+	
 	if(ii==0 || E<Ebest){
 	    Ebest=E;
 	    for(i=0;i<nhy;i++){
