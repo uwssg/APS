@@ -57,6 +57,8 @@ class likelihood{
   int node_called,sam_called,grad_called,deletedwanderers;
   double *nodev,*ggx,*ggn,*samv,*sambest,*graddir,*gradv;
   
+  int calls_to_usual_sampling;
+  
   char mufitname[letters],timingname[letters];
   int calledmufit,nmufit,*ctmufit;
   double *chimufit,*mumufit,*diffmufit,deltachi;
@@ -66,6 +68,8 @@ class likelihood{
   chisquared *call_likelihood;
   gp gg;
   
+  int ngood;
+ 
   
  
  public:
@@ -82,7 +86,7 @@ class likelihood{
    int ngw,gwroom;
    grad_wanderer *gw;
      
-   int npts,nsamples,threads,ngood;
+   int npts,nsamples,threads;
    int kk,spentlingering;
    double krigtimewall,addtimewall,nodetimewall,gradtimewall;
    double target,precision,*ndyy;

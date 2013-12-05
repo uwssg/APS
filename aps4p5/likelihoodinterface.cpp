@@ -117,6 +117,8 @@ covariance_function *cv, chisquared *lk){
  
  deltachi=-1.0;
  
+ calls_to_usual_sampling=0;
+ 
  mufitname[0]=0;
  
  //these variables are for a feature that I have not included
@@ -184,7 +186,6 @@ covariance_function *cv, chisquared *lk){
  nparams=nn;
  gg.dim=nparams;
 
- 
  mxx=new double[nparams];
  mnn=new double[nparams];
  for(i=0;i<nparams;i++){
@@ -462,7 +463,43 @@ void likelihood::sample_pts(int delswit){
 
   double stradmax,strad,mu,sig,chitrue,nn,mm,xx,yy,*candidate_gradient;
   double before,after,mubest;
-
+  
+  double *sampling_min,*sampling_max;
+  
+  sampling_min=new double[nparams];
+  sampling_max=new double[nparams];
+  
+  for(i=0;i<nparams;i++){
+      sampling_min[i]=gg.kptr->mins[i];
+      sampling_max[i]=gg.kptr->maxs[i];
+  }
+  
+  if(calls_to_usual_sampling%2==0 && ngood>2){
+      for(i=0;i<npts;i++){
+          if(gg.fn[i]<=target){
+	      for(j=0;j<nparams;j++){
+	          if(gg.kptr->data[i][j]<sampling_min[j]){
+		      sampling_min[j]=gg.kptr->data[i][j];
+		  }
+		  if(gg.kptr->data[i][j]>sampling_max[j]){
+		      sampling_max[j]=gg.kptr->data[i][j];
+		  }
+	      }
+	  }
+      }
+      
+      for(i=0;i<nparams;i++){
+          sampling_max[i]+=(sampling_max[i]-sampling_min[i])*0.5;
+	  sampling_min[i]-=(sampling_max[i]-sampling_min[i])*0.5;
+	  
+	  while(!(sampling_max[i]>sampling_min[i])){
+	      sampling_max[i]+=0.1*(gg.kptr->maxs[i]-gg.kptr->mins[i]);
+	      sampling_min[i]-=0.1*(gg.kptr->maxs[i]-gg.kptr->mins[i]);
+	  }
+	  
+      }
+  }
+  
   //this subroutine does the ``usual'' APS sampling
   //(i.e. it choose points based on the straddle parameter)
   
@@ -488,8 +525,8 @@ void likelihood::sample_pts(int delswit){
     for(i=0;i<nsamples;i++){
       
       for(j=0;j<nparams;j++){
-        samv[j]=gg.kptr->mins[j]+\
-	dice->doub()*(gg.kptr->maxs[j]-gg.kptr->mins[j]);
+        samv[j]=sampling_min[j]+\
+	dice->doub()*(sampling_max[j]-sampling_min[j]);
       }
       
   
@@ -693,6 +730,9 @@ void likelihood::sample_pts(int delswit){
     }//is this a grad wanderer situation
 
   }//is delswit>0
+  
+  delete [] sampling_min;
+  delete [] sampling_max;
   
 }
 
@@ -1022,7 +1062,9 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
     
     for(i=0;i<nparams;i++)minpt[i]=v[i];
   }
-
+  
+  if(chitrue<=target)ngood++;
+  
 }
 
 void likelihood::add_node(double *v, double chitrue){
