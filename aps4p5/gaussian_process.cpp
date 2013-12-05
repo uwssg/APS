@@ -1005,6 +1005,10 @@ void covariance_function::set_hyper_parameters(double *vin){
     exit(1);
 }
 
+int covariance_function::get_n_hyper_parameters(){
+    return n_hyperparameters;
+}
+
 covariance_function::covariance_function(){
     dim=-1;
 }
@@ -1014,6 +1018,9 @@ covariance_function::~covariance_function(){
         delete [] maxs;
 	delete [] mins;
     }
+    
+    delete [] hyper_max;
+    delete [] hyper_min;
 }
 
 void covariance_function::set_dim(int dd){
@@ -1037,6 +1044,14 @@ int covariance_function::get_dim(){
 nn_covariance::nn_covariance(){
     sigma0=1.0;
     sigma=1.0;
+    
+    n_hyperparameters=2;
+    hyper_max=new double[2];
+    hyper_min=new double[2];
+    hyper_max[0]=10.0;
+    hyper_max[1]=10.0;
+    hyper_min[0]=0.001;
+    hyper_min[1]=0.001;
 }
 
 void nn_covariance::set_hyper_parameters(double *vin){
@@ -1115,6 +1130,12 @@ double nn_covariance::operator()
 
 gaussian_covariance::gaussian_covariance(){
     ellsquared=1.0;
+    n_hyperparameters=1;
+    hyper_max=new double[1];
+    hyper_min=new double[1];
+    
+    hyper_max[0]=10.0;
+    hyper_min[0]=0.001;
 }
 
 double gaussian_covariance::operator()
@@ -1155,6 +1176,13 @@ void gaussian_covariance::set_hyper_parameters(double *vin){
 
 matern_covariance::matern_covariance(){
     ell=0.25;
+    
+    n_hyperparameters=1;
+    hyper_max=new double[1];
+    hyper_min=new double[1];
+    
+    hyper_max[0]=10.0;
+    hyper_min[0]=0.001;
   
 }
 

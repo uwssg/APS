@@ -27,6 +27,9 @@ protected:
     int dim;
     double *maxs,*mins;
     
+    int n_hyperparameters;
+    double *hyper_max,*hyper_min;
+    
 public:
     
     covariance_function();
@@ -37,6 +40,8 @@ public:
     void set_max(int,double);
     void set_min(int, double);
     int get_dim();
+    
+    int get_n_hyper_parameters();
 
 };
 
