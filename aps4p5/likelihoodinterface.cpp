@@ -737,11 +737,11 @@ void likelihood::grad_sample(int dex){
   double chitrue,mag,dchi;
   double before,after,chitrial;
   
-  double *pt,*trial,*current,*dx,min,ratio=0.5,nn,dd,worst,mu,sig;
+  double *pt,*trial,*current,*dx,max,ratio=0.5,nn,dd,worst,mu,sig;
   
   double *dd_buff,mu0;
   int *nn_buff,i_failed;
-  int mindex,assess_every=500;
+  int maxdex,assess_every=500;
   
   int has_converged=0;
   double chi_mean,chi_var,min_found,old_min;
@@ -778,22 +778,23 @@ void likelihood::grad_sample(int dex){
     nn_buff=new int[2];
     
     for(i=0;i<n_candidates;i++){
-        if(i==0 || gg.fn[candidates[i]]<min){
-	    mindex=i;
-	    min=gg.fn[candidates[i]];
+        dd=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
+        if(i==0 || dd>max){
+	    maxdex=i;
+	    max=dd;
 	}
     }
     
-    printf("got mindex %d %d\n",mindex,candidates[mindex]);
+    printf("got maxdex %d %d\n",maxdex,candidates[maxdex]);
     
     for(i=0;i<nparams;i++){
-        pt[i]=gg.kptr->data[candidates[mindex]][i];
+        pt[i]=gg.kptr->data[candidates[maxdex]][i];
     }
-    chitrue=gg.fn[candidates[mindex]];
+    chitrue=gg.fn[candidates[maxdex]];
     
     printf("\ngradient starting with %e\n\n",chitrue);
     
-    for(i=mindex+1;i<n_candidates;i++){
+    for(i=maxdex+1;i<n_candidates;i++){
         candidates[i-1]=candidates[i];
     }
     n_candidates--;
