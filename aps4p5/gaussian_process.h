@@ -42,6 +42,8 @@ public:
     int get_dim();
     
     int get_n_hyper_parameters();
+    double get_hyper_parameter_max(int);
+    double get_hyper_parameter_min(int);
 
 };
 
@@ -139,8 +141,6 @@ class gp{
     void write_data(char*);
 
     void copy(gp*);
-
-    double selfinterpolate(double*,double*);
     
     void assign_covariogram(covariance_function*);
     void refactor();

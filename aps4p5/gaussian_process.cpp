@@ -956,40 +956,6 @@ void gp::copy(gp *oldgp){
 }
 
 
-double gp::selfinterpolate(double *v, double *ss){
-  int i,j,k,l,*ndex;
-  double *dd,**neighpts,*neighf,ans;
-  
-  
-  neighf=new double[kk];
-  neighpts=new double*[kk];
-  for(i=0;i<kk;i++){
-    neighpts[i]=new double[dim];
-  }
-  dd=new double[kk+1];
-  ndex=new int[kk+1];
-  
-  kptr->nn_srch(v,kk+1,ndex,dd);
-  
-  for(i=0;i<kk;i++){
-    neighf[i]=fn[ndex[i+1]];
-    for(j=0;j<dim;j++)neighpts[i][j]=kptr->data[ndex[i+1]][j];
-  }
-  
-  predict(neighpts,neighf,v,dd,kk,dim,&ans,ss,1);
-  
-  delete [] dd;
-  delete [] ndex;
-  for(i=0;i<kk;i++){
-     delete [] neighpts[i];
-  }
-  delete [] neighf;
-  delete [] neighpts;
-  
-  return ans;
-  
-}
-
 void gp::assign_covariogram(covariance_function *cv){
     covariogram=cv;
 }
@@ -1007,6 +973,24 @@ void covariance_function::set_hyper_parameters(double *vin){
 
 int covariance_function::get_n_hyper_parameters(){
     return n_hyperparameters;
+}
+
+double covariance_function::get_hyper_parameter_max(int dex){
+    if(dex>=n_hyperparameters || dex<0){
+        printf("asked for hypermax %d but %d\n",dex,n_hyperparameters);
+	exit(1);
+    }
+    
+    return hyper_max[dex];
+}
+
+double covariance_function::get_hyper_parameter_min(int dex){
+    if(dex>=n_hyperparameters || dex<0){
+        printf("asked for hypermin %d but %d\n",dex,n_hyperparameters);
+	exit(1);
+    }
+    
+    return hyper_min[dex];
 }
 
 covariance_function::covariance_function(){
@@ -1773,7 +1757,7 @@ double gp::get_nearest_distance(){
 double gp::self_predict(int dex)
 const{
   
-  if(dex>=pts){
+  if(dex>=pts || dex<0){
       printf("WARNING in self_predict dex %d pts %d\n",dex,pts);
       exit(1);
   }
@@ -1910,7 +1894,6 @@ const{
 	}
         
 	for(i=0;i<kk;i++){
-	    for(j=0;j<kk;j++)neighbor_storage->set_ggin(i,j,ggin[i][j]);
 	    delete [] gg[i];
 	}
 	delete [] gg;
@@ -1972,3 +1955,81 @@ const{
   return mu;
 }
 
+void gp::optimize(){
+    
+    int n_use,*use_dex,i;
+    
+    if(pts<3000){
+        n_use=pts;
+	use_dex=new int[pts];
+	for(i=0;i<pts;i++){
+	    use_dex[i]=i;
+	}
+    }
+    
+    
+    int nhy=covariogram->get_n_hyper_parameters();
+    double *hh,*hhbest,*dh;
+    
+    hh=new double[nhy];
+    hhbest=new double[nhy];
+    dh=new double[nhy];
+    
+    int nsteps=10;
+    for(i=0;i<nhy;i++){
+        dh[i]=(log(covariogram->get_hyper_parameter_max(i))-log(covariogram->get_hyper_parameter_min(i)))/double(nsteps-1);
+    }
+    
+    int totalsteps=1;
+    for(i=0;i<nhy;i++){
+        totalsteps=totalsteps*nsteps;
+    }
+    
+    int ii,j,k,l;
+    double E,Ebest,mu;
+    
+    for(ii=0;ii<totalsteps;ii++){
+        j=ii;
+	l=totalsteps/nsteps;
+	for(i=0;i<nhy;i++){
+	    if(l==0){
+	        printf("WARNING you indexing magic in optimize failed\n");
+		exit(1);
+	    }
+	    k=j/l;
+	    
+	    hh[i]=log(covariogram->get_hyper_parameter_min(i))+k*dh[i];
+	    
+	    hh[i]=exp(hh[i]);
+	    
+	    j-=k*l;
+	    l=l/nsteps;
+	    
+	}
+	
+	E=0.0;
+	
+	for(i=0;i<n_use;i++){
+	    mu=self_predict(use_dex[i]);
+	    E+=power(mu-fn[use_dex[i]],2);
+	}
+	
+	if(ii==0 || E<Ebest){
+	    Ebest=E;
+	    for(i=0;i<nhy;i++){
+	        hhbest[i]=hh[i];
+	    }
+	}
+	
+	
+    }
+    
+    printf("chose hyper parameters ");
+    for(i=0;i<nhy;i++)printf("%e ",hhbest[i]);
+    printf("\n");
+    
+    covariogram->set_hyper_parameters(hhbest);
+    
+    delete [] use_dex;
+
+}
