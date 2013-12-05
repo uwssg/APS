@@ -1769,3 +1769,206 @@ int gross_gp::get_dim() const{
 double gp::get_nearest_distance(){
     return neighbor_storage->get_dd(0);
 }
+
+double gp::self_predict(int dex)
+const{
+  
+  if(dex>=pts){
+      printf("WARNING in self_predict dex %d pts %d\n",dex,pts);
+      exit(1);
+  }
+ 
+  if(covariogram==NULL){
+      printf("WARNING in self predict covariogram is null\n");
+      exit(1);
+  }
+  
+  if(kptr==NULL){
+      printf("WARNING in self predict kptr is null\n");
+      exit(1);
+  }
+  
+ 
+  
+  
+  int i,j,k,l;
+  
+  
+  double mu,nn;
+  double before,after;
+
+  int *neigh;
+  double *dd;
+  
+  double *pmin,*pmax,*grad;
+  double **gg,**ggin,*ggq;
+  
+  double **modelpts,*modelfn;
+  
+  fbar_model fbar(dim);
+  
+  int *raw_neigh;
+  double *raw_dd,*pt;
+    
+    raw_neigh=new int[kk+1];
+    raw_dd=new double[kk+1];
+    pt=new double[dim];
+    
+    neigh=new int[kk];
+    dd=new double[kk];
+    
+    
+    grad=new double[dim];
+    pmin=new double[dim];
+    pmax=new double[dim];
+    ggq=new double[kk];
+    ggin=new double*[kk];
+    for(i=0;i<kk;i++)ggin[i]=new double[kk];
+    
+    for(i=0;i<dim;i++)pt[i]=kptr->data[dex][i];
+    
+    kptr->nn_srch(pt,kk+1,raw_neigh,raw_dd);
+    if(raw_neigh[0]!=dex){
+        printf("WARNING in self predict dex %d neigh %d dd %e\n",
+	dex,raw_neigh[0],raw_dd[0]);
+    } 
+    
+    for(i=0;i<kk;i++){
+        neigh[i]=raw_neigh[i+1];
+	dd[i]=raw_dd[i]+1;
+    }
+    delete [] raw_neigh;
+    delete [] raw_dd;
+    
+    modelpts=new double*[kk];
+    modelfn=new double[kk];
+    for(i=0;i<kk;i++)modelpts[i]=new double[dim];
+    
+    for(i=0;i<kk;i++){
+        modelfn[i]=fn[neigh[i]];
+	for(j=0;j<dim;j++)modelpts[i][j]=kptr->data[neigh[i]][j];
+    } 
+    fbar.set_model(modelpts,modelfn,dim,kk);
+    
+    delete [] modelfn;
+    for(i=0;i<kk;i++)delete [] modelpts[i];
+    delete [] modelpts;
+    
+    for(i=0;i<kk;i++){
+    for(j=0;j<dim;j++){
+      if(i==0 || kptr->data[neigh[i]][j]<pmin[j])pmin[j]=kptr->data[neigh[i]][j];
+      if(i==0 || kptr->data[neigh[i]][j]>pmax[j])pmax[j]=kptr->data[neigh[i]][j];
+    }
+   }
+  
+     for(j=0;j<dim;j++){
+        if(pt[j]<pmin[j])pmin[j]=pt[j];
+	if(pt[j]>pmax[j])pmax[j]=pt[j];
+    }
+  
+   for(i=0;i<dim;i++){
+     //printf("in ::predict %e %e\n",pmin[i],pmax[i]);
+     pmin[i]-=0.01*fabs(pmin[i]);
+     pmax[i]+=0.01*fabs(pmax[i]);
+     
+     if(!(pmax[i]>pmin[i])){
+         printf("did pmax/min wrong %e %e\n",pmax[i],pmin[i]);
+         exit(1);
+     
+     }
+   }
+    
+   for(i=0;i<kk;i++){
+       ggq[i]=(*covariogram)(kptr->data[neigh[i]],pt,pmin,pmax,grad,0);
+  
+   }
+
+     
+   
+        gg=new double*[kk];
+	for(i=0;i<kk;i++)gg[i]=new double[kk];
+	
+	for(i=0;i<kk;i++){
+	   
+	    
+	    for(j=i;j<kk;j++){
+	        gg[i][j]=(*covariogram)(kptr->data[neigh[i]],kptr->data[neigh[j]],pmin,pmax,grad,0);
+		if(j!=i){
+		    gg[j][i]=gg[i][j];
+		}
+		else gg[i][j]+=0.0001;
+	    }
+	    
+        }
+	
+	
+	invert_lapack(gg,ggin,kk,1);
+	nn=check_inversion(gg,ggin,kk);
+	if(nn>1.0e-5){
+	    printf("WRANING inversion err %e\n",nn);
+	    exit(1);
+	}
+        
+	for(i=0;i<kk;i++){
+	    for(j=0;j<kk;j++)neighbor_storage->set_ggin(i,j,ggin[i][j]);
+	    delete [] gg[i];
+	}
+	delete [] gg;
+	
+  
+    
+    /*fbar=0.0;
+    for(i=0;i<kk;i++){
+        fbar+=fn[neigh[i]];
+    }
+    fbar=fbar/double(kk);*/
+    
+    mu=fbar(pt);
+    for(i=0;i<kk;i++){
+        for(j=0;j<kk;j++){
+             mu+=ggq[i]*ggin[i][j]*(fn[neigh[j]]-fbar(kptr->data[neigh[j]]));
+	}
+    }
+    
+    
+   
+  if(isnan(mu)){
+      printf("WARNING mu %e\n",mu);
+      for(i=0;i<kk;i++)printf("%d %e ggq%d %e\n",neigh[i],dd[i],i,ggq[i]);
+      for(i=0;i<kk;i++){
+          for(j=0;j<kk;j++)printf("%e ",ggin[i][j]);
+	  printf("\n");
+      }
+      printf("fbar %e\n",fbar(pt));
+      exit(1);
+  }
+
+
+  delete [] neigh;
+  delete [] dd;
+  for(i=0;i<kk;i++){
+    delete [] ggin[i];
+  }
+  delete [] ggin;
+ 
+  
+  delete [] ggq;
+  delete [] pmin;
+  delete [] pmax;
+  delete [] grad;
+  delete [] pt;
+  
+   
+
+ //printf("leaving user predict\n");
+   
+   /*if(mu<1.0e-100){
+       printf("mu %e\n",mu);
+       printf("fbar %e\n",fbar);
+       exit(1);
+   }*/
+  
+ 
+  return mu;
+}
+

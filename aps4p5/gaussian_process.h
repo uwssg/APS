@@ -118,6 +118,8 @@ class gp{
     mutable double time_search;
     mutable double time_dummy_search;
     
+    double self_predict(int) const;
+    
 
     void predict(double**,double*,double*,double*,int,int,double*,double*,int) const;
     
@@ -149,6 +151,8 @@ class gp{
     void get_neighbor_range(double*,double*,double*,double*);
     
     double get_nearest_distance();
+    
+    void optimize();
     
     
 };
