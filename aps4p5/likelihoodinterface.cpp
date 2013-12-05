@@ -270,11 +270,15 @@ void likelihood::initialize(double **guesses, int nguess){
  
  //assign the values of chisquared to the starting samples
  chimin=1.0e10;
+ 
+ int mindex;
+ 
  for(j=0;j<npts;j++){
    chisq[j]=(*call_likelihood)(base[j]);
    if(chisq[j]<chimin){
      chimin=chisq[j];
      for(i=0;i<nparams;i++)minpt[i]=base[j][i];
+     mindex=j;
    }
    
  }
@@ -318,6 +322,8 @@ void likelihood::initialize(double **guesses, int nguess){
 	 gw[ngw].rr=0.1;
 	 ngw++;
 	}
+ 
+ add_candidate(mindex);
        
  printf("done with initializer\n");
  initialized=1;
@@ -588,13 +594,15 @@ void likelihood::sample_pts(int delswit){
     addtimewall+=(after-before);
     addct++;
 
-  if(chitrue-target<grat*target){
+  if(chitrue-target<grat*target && chitrue>target){
     //if the value of chisquared is within your set threshold, add it as a
     //new gradient wanderer.  If you are already at your maximum allowed
     //number of wanderers, only add this point if its value of chisquared
     //is closer to the target value than the wanderer that is currently
     //farthest from the target value of chisquared
-    
+      
+      printf("chitrue %e target %e adding candidate\n",chitrue,target);
+      
       add_candidate(gg.pts-1);
       
       
@@ -759,15 +767,18 @@ void likelihood::grad_sample(int dex){
   double before,after;
   
   double *pt,min;
-  int mindex;
+  int mindex,assess_every=500;
+  
+  int has_converged=0;
+  double chi_mean,chi_var,min_found,old_min;
   
   gg.reset_cache();
- 
+  
+  printf("starting gradient search %d\n",dex);
   
   before=double(time(NULL));
   
-  gw[dex].magnitude=0.0;
-  
+ 
   if(dex>=0 && grad_called==0){
     graddir=new double[nparams];
     gradv=new double[nparams];
@@ -777,6 +788,8 @@ void likelihood::grad_sample(int dex){
     delete [] graddir;
     delete [] gradv;
   }
+  
+  printf("allotted everything %d\n",n_candidates);
   
   if(dex>=0 && grad_called>0 && n_candidates>0){
     
@@ -789,18 +802,30 @@ void likelihood::grad_sample(int dex){
 	}
     }
     
+    printf("got mindex %d %d\n",mindex,candidates[mindex]);
+    
     for(i=0;i<nparams;i++){
-        pt[i]=gg.kptr->data[candidates[mindex]][j];
+        pt[i]=gg.kptr->data[candidates[mindex]][i];
     }
+    chitrue=gg.fn[candidates[mindex]];
+    
+    printf("\ngradient starting with %e\n\n",chitrue);
     
     for(i=mindex+1;i<n_candidates;i++){
         candidates[i-1]=candidates[i];
     }
     n_candidates--;
     
-    mag=1.0;
-    while(mag>1.0e-4){
+    min_found=chitrue;
+    old_min=10.0*chitrue;
     
+    chi_mean=0.0;
+    chi_var=0.0;
+    mag=1.0;
+    while(mag>1.0e-4 && has_converged==0){
+        
+	//printf("in while loop\n");
+	
         //find the gradient at the point where the wanderer currently is
         //this direction is storred in graddir
         gg.user_predict_gradient(pt,graddir,1);
@@ -813,21 +838,50 @@ void likelihood::grad_sample(int dex){
         }
     
         for(i=0;i<nparams;i++){
-	    pt[i]+=0.1*graddir[i]/mag;
+	    pt[i]-=0.5*chitrue*graddir[i]/mag;
 	}
 	
 	chitrue=(*call_likelihood)(pt);
-	add_pt(pt,chitrue);
+	add_pt(pt,chitrue,1);
         internal_ct++;
         
+	if(chitrue<min_found){
+	    min_found=chitrue;
+	}
+	
+	chi_mean+=chitrue;
+	chi_var+=chitrue*chitrue;
+	
+	if(internal_ct%assess_every==0){
+	    chi_mean=chi_mean/double(assess_every);
+	    chi_var=chi_var/double(assess_every)-chi_mean*chi_mean;
+	    
+	    if(chi_var<1.0e-3*chi_mean){
+	        has_converged=1;
+	    }
+	    
+	    chi_mean=0.0;
+	    chi_var=0.0;
+	    
+	    if(old_min-min_found<0.01*min_found){
+	        has_converged=1;
+	    }
+	    
+	    old_min=min_found;
+	    
+	}
+	
 	printf("     gradient %e\n",chitrue);
+	
+	//if(internal_ct==500)exit(1);
     }
     
     delete [] pt;
     
     printf("internal ct %d ending with %e\n",internal_ct,chitrue);
-    
+    //exit(1);
   }
+  
   
   after=double(time(NULL));
   gradtimewall+=after-before;
@@ -838,7 +892,7 @@ void likelihood::grad_sample(int dex){
 void likelihood::search(){
     
     int i;
-    if(ct_grad<ct_aps && ngw>0){
+    if(ct_grad<ct_aps && n_candidates>0){
         i=dice->int32()%ngw;
 	grad_sample(i);
     }
