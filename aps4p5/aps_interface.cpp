@@ -147,9 +147,6 @@ main(int iargc, char *argv[]){
       //printf("set target %e\n",likeness->target);
       
     }
-    else if(compare_char(keyword,"#Nw")==1){
-      fscanf(input,"%d",&likeness->gwroom);
-    }
     else if(compare_char(keyword,"#grat")==1){
       fscanf(input,"%le",&likeness->grat);
     }

@@ -32,11 +32,6 @@ likelihood::~likelihood(){
   sample_pts(-1);
   
   grad_sample(-2);
- 
-  
-  for(i=0;i<ngw;i++){
-    if(gw[i].chisq<chiexcept)delete [] gw[i].center;
-  }
   
   for(i=0;i<nparams;i++)delete [] pnames[i];
   delete pnames;
@@ -134,10 +129,6 @@ covariance_function *cv, chisquared *lk){
  grat=0.1;//the threshold (i.e. 10% of your target chisquared) at which you
  	//create a new gradient wanderer
  
- 
- 
- gwroom=100;//the maximum number of allowed gradient wanderers
- ngw=0;//the number of gradient wanderers currently in play
 
  krigct=0;//how many times you used the gaussian process in sample_pts()
  addct=0;//the number of times you added a point in sample_pts()
@@ -243,8 +234,7 @@ void likelihood::initialize(double **guesses, int nguess){
  
  
  ngood=0;//Number of points found within the confidence limit
- gw=new grad_wanderer[gwroom];//initialize your set of gradient wanderers
- 
+
  chisq=new double[npts];
 
  
@@ -312,17 +302,6 @@ void likelihood::initialize(double **guesses, int nguess){
  
  npts=gg.pts;
  	
-	//make sure that the minimum chisquared point is treated
-	//as a gradient wanderer at first
-	
-	if(ngw<gwroom){
-         gw[ngw].center=new double[nparams];
-	 for(i=0;i<nparams;i++)gw[ngw].center[i]=minpt[i];
-	 gw[ngw].chisq=chimin;
-	 gw[ngw].rr=0.1;
-	 ngw++;
-	}
- 
  add_candidate(mindex);
        
  printf("done with initializer\n");
@@ -415,21 +394,7 @@ char word[letters];
  }
  
  gg.initialize(npts,base,chisq,mxx,mnn);
-
- gw=new grad_wanderer[gwroom];
- 
- if(chimin>target){
-  if(ngw<gwroom){
-   
-   gw[ngw].center=new double[nparams];
-   for(i=0;i<nparams;i++)gw[ngw].center[i]=minpt[i];
-   gw[ngw].chisq=chimin;
-   gw[ngw].rr=0.1;
-   ngw++;
-   
-  }
- }
- 
+  
  npts=gg.pts;
  if(compare_char(inname,masteroutname)==1){
    nprinted=npts;
@@ -438,13 +403,23 @@ char word[letters];
   nprinted=0;
   write_pts();
  }
-
+ 
   delete [] chisq;
   for(i=0;i<npts;i++)delete [] base[i];
   delete [] base;
   delete [] kpa;
   initialized=1;
-
+ 
+ 
+ for(i=0;i<npts;i++){
+     if(i==0 || gg.fn[i]<nn){
+        j=i;
+	nn=gg.fn[i];
+     }
+ }
+ 
+ add_candidate(j);
+ 
  printf("done resuming\n");
  
 }
@@ -670,9 +645,9 @@ void likelihood::write_pts(){
  
  
  timefile=fopen(timingname,"a");
- fprintf(timefile,"%s %d wanderers %d found %d improved %d gd %d ",\
+ fprintf(timefile,"%s %d found %d improved %d gd %d ",\
  masteroutname\
- ,npts,ngw,foundbywandering,improvedbywandering,good);
+ ,npts,foundbywandering,improvedbywandering,good);
   
   fprintf(timefile,\
   "gptime %e ct %d ",krigtimewall/double(krigct),krigct);
@@ -743,17 +718,6 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
   
   if(chitrue<=target)ngood++;
   
-}
-
-
-grad_wanderer::grad_wanderer(){
-  chisq=2.0e30;
-}
-
-grad_wanderer::~grad_wanderer(){
-   if(chisq<1.0e30){
-     delete [] center;
-   }
 }
 
 void likelihood::grad_sample(int dex){
@@ -893,8 +857,7 @@ void likelihood::search(){
     
     int i;
     if(ct_grad<ct_aps && n_candidates>0){
-        i=dice->int32()%ngw;
-	grad_sample(i);
+	grad_sample(1);
     }
     else{
         sample_pts(1);

@@ -8,26 +8,6 @@
 #define chiexcept 1.0e10
 
 
-class grad_wanderer{
-  public:
-  double rr,*center,chisq,magnitude;
-  
-  // *center keeps track of the wanderers current location
-  
-  //chisq keeps track of the value of chisquared at that location
-  
-  //rr is the characteristic length of the step currently being taken
-  //by this gradient wanderer
-  
-  //magnitude is the magnitude of the gradient vector last taken for this
-  //gradient wanderer
-  
-  grad_wanderer();
-  ~grad_wanderer();
-  
-};
-
-
 class likelihood{
  private:
   
@@ -61,9 +41,6 @@ class likelihood{
    
    int foundbywandering;
    int improvedbywandering,*lingerflag,lingerroom,seed;
-   
-   int ngw,gwroom;
-   grad_wanderer *gw;
      
    int npts,nsamples,threads;
    int kk,spentlingering;
