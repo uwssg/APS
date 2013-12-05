@@ -707,6 +707,8 @@ void likelihood::write_pts(){
  double trappedpct;
  
  
+ gg.optimize();
+ 
  tot=0;
  trapped=0;
 

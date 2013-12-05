@@ -1957,7 +1957,9 @@ const{
 
 void gp::optimize(){
     
-    int n_use,*use_dex,i;
+    int n_use,*use_dex,i,j,k,l;
+    
+    Ran chaos(43);
     
     if(pts<3000){
         n_use=pts;
@@ -1965,6 +1967,23 @@ void gp::optimize(){
 	for(i=0;i<pts;i++){
 	    use_dex[i]=i;
 	}
+    }
+    else{
+       n_use=3000;
+       use_dex=new int[n_use];
+       for(i=0;i<n_use;){
+           j=chaos.int32()%pts;
+	   l=1;
+	   for(k=0;k<i;k++){
+	      if(use_dex[k]==j)l=0;
+	   }
+	   
+	   use_dex[i]=j;
+	   if(l==1)i++;
+	   
+       }
+       
+       
     }
     
     
@@ -1985,7 +2004,7 @@ void gp::optimize(){
         totalsteps=totalsteps*nsteps;
     }
     
-    int ii,j,k,l;
+    int ii;
     double E,Ebest,mu;
     
     for(ii=0;ii<totalsteps;ii++){
