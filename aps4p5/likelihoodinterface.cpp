@@ -453,6 +453,8 @@ void likelihood::sample_pts(int delswit){
   
   ct_aps++;
   
+  gg.reset_cache();
+  
   sampling_min=new double[nparams];
   sampling_max=new double[nparams];
   
@@ -593,110 +595,7 @@ void likelihood::sample_pts(int delswit){
     //is closer to the target value than the wanderer that is currently
     //farthest from the target value of chisquared
     
-      if(ngw<gwroom){
-        gw[ngw].center=new double[nparams];
-	for(i=0;i<nparams;i++)gw[ngw].center[i]=sambest[i];
-	gw[ngw].chisq=chitrue;
-	gw[ngw].rr=0.1;
-	ngw++;
-      }
-      else{
-       
-	
-///////THIS IS THE CODE THAT REMOVES THE WANDERER WITH THE LARGEST
-///////CHISQUARED-TARGET AND REPLACES IT WITH THE NEW WANDERER	
-	  xx=-1.0e10;
-	  for(i=0;i<ngw;i++){
-	    if(gw[i].chisq-target>xx){
-	      xx=gw[i].chisq-target;
-	      ix=i;
-	    }
-	  }
-	  if(xx>chitrue-target){
-	    for(i=0;i<nparams;i++)gw[ix].center[i]=sambest[i];
-	    gw[ix].chisq=chitrue;
-	    gw[ix].rr=0.1;
-	    deletedwanderers++;
-	  }
-
-///////////BELOW IS CODE THAT REMOVES THE WANDERER WITH THE NEAREST
-//////////NEAREST NEIGHBOR (as an alternative to the code above;
-////////// I am not 100% sure which is best)
-         
-	 /*
-	  xx=0.0;
-	  for(i=0;i<nparams;i++){
-	    xx+=(sambest[i]-gw[0].center[i])*(sambest[i]-gw[0].center[i]);
-	  }
-	  
-	  
-	  for(j=1;j<ngw;j++){
-	    nn=0.0;
-	    for(i=0;i<nparams;i++){
-	      nn+=(sambest[i]-gw[j].center[i])*(sambest[i]-gw[j].center[i]);
-	    }
-	    if(nn<xx)xx=nn;
-	  }
-	  
-	  yy=1.0e10;
-	  
-	  
-	  for(j=0;j<ngw;j++){
-	    for(k=j+1;k<ngw;k++){
-	      nn=0.0;
-	      for(i=0;i<nparams;i++)nn+=power(gw[j].center[i]-gw[k].center[i],2);
-	      
-	      if(nn<yy){
-	        ix=j;
-		yy=nn;
-	      }
-	    }
-	  }
-	  
-	  if(yy<xx){
-	    //printf("   adding new wanderer %e %e -- %e\n",\
-	    sambest[0],sambest[1],chitrue);
-	    for(i=0;i<nparams;i++)gw[ix].center[i]=sambest[i];
-	    gw[ix].chisq=chitrue;
-	    gw[ix].rr=0.1;
-	    deletedwanderers++;
-	  }
-	  
-	  */
-	////////////////////
-	//////BELOW IS CODE TO REMOVE THE WANDERER WITH THE SMALLEST MAGNITUDE GRADIENT
-	/////////
-	
-	/*candidate_gradient=new double[nparams];
-	
-	gg.user_predict_gradient(sambest,candidate_gradient,1);
-	
-	nn=0.0;
-	for(i=0;i<nparams;i++){
-	    nn+=power(candidate_gradient[i],2);
-	}
-	nn=sqrt(nn);
-	for(i=0;i<ngw;i++){
-	    if(i==0 || gw[i].magnitude<xx){
-	        xx=gw[i].magnitude;
-		ix=i;
-            }
-	}
-	  
-	if(xx<nn){
-	    //printf("   adding new wanderer %e %e -- %e\n",\
-	    sambest[0],sambest[1],chitrue);
-	    for(i=0;i<nparams;i++)gw[ix].center[i]=sambest[i];
-	    gw[ix].chisq=chitrue;
-	    gw[ix].rr=0.1;
-	    deletedwanderers++;
-	}
-	  
-	  
-	delete [] candidate_gradient;*/
-	  
-
-      }//is ngw maxed out
+      add_candidate(gg.pts-1);
       
       
     }//is this a grad wanderer situation
@@ -859,6 +758,9 @@ void likelihood::grad_sample(int dex){
   double chitrue,mag,dchi;
   double before,after;
   
+  double *pt,min;
+  int mindex;
+  
   ct_grad++;
   
   before=double(time(NULL));
@@ -874,92 +776,47 @@ void likelihood::grad_sample(int dex){
     delete [] graddir;
     delete [] gradv;
   }
-  if(dex>=0 && grad_called>0){
+  
+  if(dex>=0 && grad_called>0 && n_candidates>0){
     
-    //find the gradient at the point where the wanderer currently is
-    //this direction is storred in graddir
-    gg.user_predict_gradient(gw[dex].center,graddir,1);
-
-
-    //normalize graddir
-    mag=0.0;
+    pt=new double[nparams];
+    
+    for(i=0;i<n_candidates;i++){
+        if(i==0 || gg.fn[candidates[i]]<min){
+	    mindex=i;
+	    min=gg.fn[candidates[i]];
+	}
+    }
+    
     for(i=0;i<nparams;i++){
-      mag+=power(graddir[i],2);
+        pt[i]=gg.kptr->data[candidates[mindex]][j];
     }
     
+    for(i=mindex+1;i<n_candidates;i++){
+        candidates[i-1]=candidates[i];
+    }
+    n_candidates--;
     
-    if(mag>0.0 && isnan(mag)==0){ 
-     mag=sqrt(mag);
-     
-     gw[dex].magnitude=mag;
-     
-     for(i=0;i<nparams;i++){
-       graddir[i]=graddir[i]/mag;
-     }
+    mag=1.0;
+    while(mag>1.0e-4){
     
-     //sample the point that is some small step along graddir, hopefully
-     //towards the target value of chisquared
+        //find the gradient at the point where the wanderer currently is
+        //this direction is storred in graddir
+        gg.user_predict_gradient(pt,graddir,1);
 
-     for(i=0;i<nparams;i++){
-       gradv[i]=gw[dex].center[i]-graddir[i]*gw[dex].rr;
-     }
-     chitrue=(*call_likelihood)(gradv);
-    }
-    else chitrue=chiexcept;
-     
-    //if the point was reasonable, add it to the list of sampled points
-    if(chitrue<chiexcept){
-      add_pt(gradv,chitrue,1);
-      spentlingering++;
-    }
-    
-    //keep track of how many good points you found this way
-    if(chitrue<=target){
-      foundbywandering++;
-      
-    }
-    
-    if(chitrue<gw[dex].chisq){
-    //even if the point wasn't within your desired confidence limit, if the
-    //step reduced chisquared, reassign the location of the wanderer
-    //and make a note that you were able to improve your chisquared value
-    //by wandering along the gradient
-    
-      for(i=0;i<nparams;i++)gw[dex].center[i]=gradv[i];
-      gw[dex].chisq=chitrue;
-      gw[dex].rr=0.1;
-      
-      improvedbywandering++;
-    }
-    else{
-     //if chisquared was not an improvement over the current value
-     //reduce the stepsize;
-     //if the stepsize gets too small, the wanderer will be deleted (below)
-    
-      gw[dex].rr=gw[dex].rr*0.5;
-    }
+
+        //normalize graddir
+        mag=0.0;
+        for(i=0;i<nparams;i++){
+            mag+=power(graddir[i],2);
+        }
     
     
-    rswit=0;
-    for(i=0;i<nparams && rswit==0;i++){
-      if(graddir[i]*gw[dex].rr>=1.0e-4*fabs(gw[dex].center[i]))rswit=1;
+       
+    
     }
     
-    if(rswit==0){
-      //delete the wanderer if either the step size gets too small,
-      //or it finds a point that is within the desired confidence limit
-      
-      for(i=dex+1;i<ngw;i++){
-        gw[i-1].rr=gw[i].rr;
-	gw[i-1].chisq=gw[i].chisq;
-	for(j=0;j<nparams;j++)gw[i-1].center[j]=gw[i].center[j];
-      }
-      delete [] gw[ngw-1].center;
-      gw[ngw-1].chisq=2.0e30;
-      ngw--;
-      deletedwanderers++;
-     
-    }
+    delete [] pt;
     
   }
   
