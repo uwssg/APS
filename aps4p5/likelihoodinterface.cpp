@@ -466,6 +466,8 @@ void likelihood::sample_pts(int delswit){
   
   double *sampling_min,*sampling_max;
   
+  calls_to_usual_sampling++;
+  
   sampling_min=new double[nparams];
   sampling_max=new double[nparams];
   
@@ -475,6 +477,7 @@ void likelihood::sample_pts(int delswit){
   }
   
   if(calls_to_usual_sampling%2==0 && ngood>2){
+      //printf("focusing\n");
       for(i=0;i<npts;i++){
           if(gg.fn[i]<=target){
 	      for(j=0;j<nparams;j++){
