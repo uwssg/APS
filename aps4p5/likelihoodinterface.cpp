@@ -460,9 +460,9 @@ char word[letters];
 
 void likelihood::sample_pts(int delswit){
   int i,j,k,l,ix;
-
-  double stradmax,strad,mu,sig,chitrue,nn,mm,xx,yy,*candidate_gradient;
-  double before,after,mubest;
+  int focusing=0;
+  double stradmax,strad,mu,sig,chitrue,mm,xx,yy,*candidate_gradient;
+  double before,after,mubest,dd,nn;
   
   double *sampling_min,*sampling_max;
   
@@ -472,14 +472,17 @@ void likelihood::sample_pts(int delswit){
   sampling_max=new double[nparams];
   
   for(i=0;i<nparams;i++){
-      sampling_min[i]=gg.kptr->mins[i];
-      sampling_max[i]=gg.kptr->maxs[i];
+      sampling_min[i]=1.0e30;
+      sampling_max[i]=-1.0e30;
   }
   
   if(calls_to_usual_sampling%2==0 && ngood>2){
       //printf("focusing\n");
+      focusing=1;
+      ngood=0;
       for(i=0;i<npts;i++){
           if(gg.fn[i]<=target){
+	      ngood++;
 	      for(j=0;j<nparams;j++){
 	          if(gg.kptr->data[i][j]<sampling_min[j]){
 		      sampling_min[j]=gg.kptr->data[i][j];
@@ -492,14 +495,21 @@ void likelihood::sample_pts(int delswit){
       }
       
       for(i=0;i<nparams;i++){
-          sampling_max[i]+=(sampling_max[i]-sampling_min[i])*0.5;
-	  sampling_min[i]-=(sampling_max[i]-sampling_min[i])*0.5;
+          dd=0.5*(sampling_max[i]-sampling_min[i]);
+          sampling_max[i]+=dd;
+	  sampling_min[i]-=dd;
 	  
 	  while(!(sampling_max[i]>sampling_min[i])){
 	      sampling_max[i]+=0.1*(gg.kptr->maxs[i]-gg.kptr->mins[i]);
 	      sampling_min[i]-=0.1*(gg.kptr->maxs[i]-gg.kptr->mins[i]);
 	  }
 	  
+      }
+  }
+  else{
+      for(i=0;i<nparams;i++){
+          sampling_min[i]=gg.kptr->mins[i];
+          sampling_max[i]=gg.kptr->maxs[i];
       }
   }
   
@@ -549,7 +559,17 @@ void likelihood::sample_pts(int delswit){
 
     before=double(time(NULL));
     chitrue=(*call_likelihood)(sambest);
-
+    
+    if(focusing==1){
+       for(i=0;i<nparams;i++){
+          nn=(sampling_max[i]-sampling_min[i])/(gg.kptr->maxs[i]-gg.kptr->mins[i]);
+	  if(i==0 || nn>dd)dd=nn;
+       }
+    
+    
+        printf("focusing found %e -- %d -- %e -- %e\n",chitrue,ngood,chimin,dd);
+    }
+    
     //only add the point to the set of sampled points if chisquared is
     //reasonable
 
