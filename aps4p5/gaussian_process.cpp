@@ -998,6 +998,25 @@ double covariance_function::get_hyper_parameter_min(int dex){
     return hyper_min[dex];
 }
 
+
+void covariance_function::set_hyper_parameter_max(int dex, double val){
+    if(dex>=n_hyperparameters || dex<0){
+        printf("setting hypermax %d %d\n",dex,n_hyperparameters);
+	exit(1);  
+    }
+    
+    hyper_max[dex]=val;
+}
+
+void covariance_function::set_hyper_parameter_min(int dex, double val){
+    if(dex>=n_hyperparameters || dex<0){
+        printf("setting hypermin %d %d\n",dex,n_hyperparameters);
+	exit(1);
+    }
+    
+    hyper_min[dex]=val;
+}
+
 covariance_function::covariance_function(){
     dim=-1;
 }
@@ -1117,6 +1136,10 @@ double nn_covariance::operator()
     delete [] x1;
     delete [] x2;
     
+    if(isnan(ans)){
+        printf("WARNING nn covariogram returning nan\n");
+	exit(1);
+    }
     
     return ans;
 }
@@ -1163,6 +1186,12 @@ double gaussian_covariance::operator()
   }
   
  }
+ 
+ if(isnan(ans)){
+     printf("WARNING gaussian covariogram returning nan\n");
+     exit(1);
+ }
+ 
  return ans;
  
 }
@@ -1218,11 +1247,12 @@ double *min, double *max, double *grad, int swit) const{
    }*/
    
    if(isnan(ans)){
+       printf("WARNING matern covariogram returning nan\n");
        printf("ans %e dd %e exnum %e\n",ans,d,exnum);
        for(i=0;i<dim;i++)printf("%e %e max %e min %e\n",v1[i],v2[i],max[i],min[i]);
        exit(1);
        
-       return 0.001;
+       
    }
  
  if(swit>0){
@@ -2037,7 +2067,7 @@ void gp::optimize(int start, int end){
 
 }
 
-void gp::optimize(double *pt, double rr){
+int gp::optimize(double *pt, double rr){
     int n_use,i,j,*use_dex;
     double dd;
     
@@ -2060,15 +2090,40 @@ void gp::optimize(double *pt, double rr){
 		    exit(1);
 		}
 		use_dex[j]=i;
+		j++;
 	    }
 	}
 	if(j!=n_use){
-	    printf("WARNINg optimize did not find n_use %d %d\n",n_use,j);
+	    printf("WARNING optimize did not find n_use %d %d\n",n_use,j);
+	    exit(1);
 	}
+	printf("n_use %d\n",n_use);
+	optimize(use_dex,n_use);
+	
+	delete [] use_dex;
+    }
+    
+    return n_use;
+}
+
+void gp::optimize(double *pt, int n_use){
+    
+    int *use_dex;
+    double *use_dd;
+    
+    if(n_use<pts){
+        use_dex=new int[n_use];
+        use_dd=new double[n_use];
+	
+	kptr->nn_srch(pt,n_use,use_dex,use_dd);
 	
 	optimize(use_dex,n_use);
 	
 	delete [] use_dex;
+	delete [] use_dd;
+    }
+    else{
+        optimize();
     }
 }
 
@@ -2078,7 +2133,7 @@ void gp::optimize(int *use_dex, int n_use){
     
    
     int nhy=covariogram->get_n_hyper_parameters();
-    double *hh,*hhbest,*dh;
+    double *hh,*hhbest,*dh,nn;
     
     hh=new double[nhy];
     hhbest=new double[nhy];
@@ -2136,6 +2191,20 @@ void gp::optimize(int *use_dex, int n_use){
 	    }
 	}
 	
+	
+    }
+    
+    
+    for(i=0;i<nhy;i++){
+        if(fabs(log(hhbest[i])-log(covariogram->get_hyper_parameter_max(i)))<dh[i]){
+	    nn=covariogram->get_hyper_parameter_max(i);
+	    covariogram->set_hyper_parameter_max(i,10.0*nn);
+	}
+	
+	if(fabs(log(hhbest[i])-log(covariogram->get_hyper_parameter_min(i)))<dh[i]){
+	    nn=covariogram->get_hyper_parameter_min(i);
+	    covariogram->set_hyper_parameter_min(i,0.1*nn);
+        }
 	
     }
     

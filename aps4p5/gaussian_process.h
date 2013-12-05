@@ -44,6 +44,8 @@ public:
     int get_n_hyper_parameters();
     double get_hyper_parameter_max(int);
     double get_hyper_parameter_min(int);
+    void set_hyper_parameter_max(int,double);
+    void set_hyper_parameter_min(int,double);
     
     virtual void print_hyperparams();
 
@@ -165,7 +167,8 @@ class gp{
     
     void optimize();
     void optimize(int,int);
-    void optimize(double*,double);
+    int optimize(double*,double);
+    void optimize(double*,int);
     
     
 };

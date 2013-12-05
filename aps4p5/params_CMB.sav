@@ -6,11 +6,11 @@ dimensionality MUST be the first keyword listed
 
 #dim 6 -- dimensionality of your parameter space
 
-#Ns 20 -- start with 2000 randomly sampled points
+#Ns 25 -- start with 2000 randomly sampled points
 #end 5000 -- end after the algorithm has sampled 200000 points
 
 #Nc 250 -- sample 250 candidates each time you use the Gaussian process
-#Ng 9 -- use 15 neareast neighbors in the Gaussian process
+#Ng 20 -- use 15 neareast neighbors in the Gaussian process
 
 #Nw 100 -- maximum number of wanderers
 #grat 100.0 -- threshold at which wanderer is created
@@ -31,7 +31,7 @@ with deltachi specifying the target)
 #covariance gauss -- specify the kind of covariance funciton
 
 #outputfile output/wmap7_sampled_points.sav -- store the sampled points
-#resumefile test_wmap_seed.sav -- in case you are interrupted
+!#resumefile test_wmap_seed.sav -- in case you are interrupted
 
 #mufitfile output/wmap7_fit.sav -- compare the Gaussian process fit to chisquared
 #timingfile output/wmap7_timingfile.sav -- time performance

@@ -737,7 +737,10 @@ void likelihood::grad_sample(int dex){
   double chitrue,mag,dchi;
   double before,after,chitrial;
   
-  double *pt,*trial,*dx,min,ratio=0.5,nn,worst;
+  double *pt,*trial,*dx,min,ratio=0.5,nn,dd,worst,mu,sig;
+  
+  double *dd_buff;
+  int *nn_buff;
   int mindex,assess_every=500;
   
   int has_converged=0;
@@ -767,6 +770,8 @@ void likelihood::grad_sample(int dex){
     pt=new double[nparams];
     trial=new double[nparams];
     dx=new double[nparams];
+    dd_buff=new double[2];
+    nn_buff=new int[2];
     
     for(i=0;i<n_candidates;i++){
         if(i==0 || gg.fn[candidates[i]]<min){
@@ -792,6 +797,12 @@ void likelihood::grad_sample(int dex){
     min_found=chitrue;
     old_min=10.0*chitrue;
     
+    printf("optimizing in gradient search\n");
+    i=gg.optimize(pt,sqrt(nparams*0.01));
+    if(i<100){
+        gg.optimize(pt,100);
+    }
+    
     chi_mean=0.0;
     chi_var=0.0;
     mag=1.0;
@@ -811,7 +822,11 @@ void likelihood::grad_sample(int dex){
         //find the gradient at the point where the wanderer currently is
         //this direction is storred in graddir
         
-        ct_grad++;
+	gg.user_predict(pt,graddir,1);
+	mag=0.0;
+	for(i=0;i<nparams;i++)mag+=power(graddir[i],2);
+	mag=sqrt(mag);
+   
 
         //normalize graddir
        
@@ -819,46 +834,17 @@ void likelihood::grad_sample(int dex){
 	    dx[i]=-ratio*chitrue*graddir[i]/mag;
 	}
         
-	/*worst=1.0;
-	for(i=0;i<nparams;i++){
-	    if(pt[i]+dx[i]<gg.kptr->mins[i]){
-	        nn=(pt[i]-gg.kptr->mins[i])/fabs(dx[i]);
-	    }
-	    else{
-	        nn=1.0;  
-	    }
-	    
-	    if(i==0 || nn<worst){
-	        worst=nn;
-	    }
-	    
-	    if(pt[i]+dx[i]>gg.kptr->maxs[i]){
-	        nn=(gg.kptr->maxs[i]-pt[i])/fabs(dx[i]);
-	    }
-	    else{
-	        nn=1.0;
-            }
-	    
-	    if(nn<worst){
-	        worst=nn;
-	    }
-	    
-	}
-	
-	if(worst<0.9999999){
-	    for(i=0;i<nparams;i++){
-	        dx[i]=dx[i]*0.1*worst;
-	    }
-	}*/
     
         for(i=0;i<nparams;i++){
 	    trial[i]=pt[i]+dx[i];
 	    printf("    trial %e pt %e dx %e w %e\n",trial[i],pt[i],dx[i],worst);
 	}
 	
+	ct_grad++;
+	mu=gg.user_predict(trial,&sig,0);
 	chitrial=(*call_likelihood)(trial);
 	
-	printf("    chitrial %e \n\n",chitrial);
+	printf("    chitrue %e chitrial %e mu %e\n\n",chitrue,chitrial,mu);
 	
 	if(chitrial<exception){
 	    add_pt(trial,chitrial,1);
@@ -868,17 +854,32 @@ void likelihood::grad_sample(int dex){
 	            pt[i]=trial[i];
 	        }
 	        chitrue=chitrial;
-	        gg.user_predict_gradient(pt,graddir,1);
-	    
-	        mag=0.0;
-                for(i=0;i<nparams;i++){
-                    mag+=power(graddir[i],2);
-                 }
-                mag=sqrt(mag);
-		ratio*=10.0;
+	
+		ratio=0.1;
 	    }
 	    else{
-	        ratio*=0.5;
+	        
+		gg.kptr->nn_srch(pt,2,nn_buff,dd_buff);
+		
+		for(i=0;i<nparams;i++){
+		    trial[i]=normal_deviate(dice,pt[i],dd_buff[1]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
+		}
+	        chitrial=(*call_likelihood)(trial);
+		
+		nn=gg.kptr->distance(pt,trial);
+		
+		printf("other chitrial %e -- nn %e dd %e\n",chitrial,nn,dd_buff[1]);
+		ct_grad++;
+		if(chitrial<exception){
+		    add_pt(trial,chitrial,1);
+		    if(chitrial<chitrue){
+		        chitrue=chitrial;
+			for(i=0;i<nparams;i++)pt[i]=trial[i];
+			ratio*=2.0;
+		    }
+		}
+		
+		ratio*=0.5;
 	    }
 	}
 	else{
@@ -913,9 +914,10 @@ void likelihood::grad_sample(int dex){
 	    
 	}
 	
-	/*if(gg.pts>n_start && (gg.pts-n_start)%10==0){
-	    gg.optimize(n_start,gg.pts);
-	}*/
+	if(internal_ct%10==0){
+	    i=gg.optimize(pt,sqrt(0.01*double(nparams)));
+	    if(i<100)gg.optimize(pt,100);
+	}
 	
 	printf("     gradient %e -- %e\n",chitrue,ratio);
 	
@@ -925,6 +927,8 @@ void likelihood::grad_sample(int dex){
     delete [] pt;
     delete [] trial;
     delete [] dx;
+    delete [] dd_buff;
+    delete [] nn_buff;
     
     printf("internal ct %d ending with %e -- m %e rat %e\n",
     internal_ct,chitrue,mag,ratio);
