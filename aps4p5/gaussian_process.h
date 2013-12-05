@@ -25,7 +25,7 @@ class covariance_function{
 
 protected:
     int dim;
-    double *maxs,*mins;
+    double *global_maxs,*global_mins;
     
     int n_hyperparameters;
     double *hyper_max,*hyper_min;
@@ -44,6 +44,8 @@ public:
     int get_n_hyper_parameters();
     double get_hyper_parameter_max(int);
     double get_hyper_parameter_min(int);
+    
+    virtual void print_hyperparams();
 
 };
 
@@ -56,6 +58,8 @@ public:
     gaussian_covariance();
     virtual double operator()(double*,double*,double*,double*,double*,int)const;
     virtual void set_hyper_parameters(double*);
+    
+    virtual void print_hyperparams();
 
 };
 
@@ -68,6 +72,8 @@ public:
     nn_covariance();
     virtual double operator()(double*,double*,double*,double*,double*,int)const;
     virtual void set_hyper_parameters(double*);
+    
+    virtual void print_hyperparams();
 
 };
 
@@ -80,6 +86,8 @@ public:
     matern_covariance();
     virtual double operator()(double*,double*,double*,double*,double*,int)const;
     virtual void set_hyper_parameters(double*);
+    
+    virtual void print_hyperparams();
 
 };
 

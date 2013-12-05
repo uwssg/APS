@@ -971,6 +971,11 @@ void covariance_function::set_hyper_parameters(double *vin){
     exit(1);
 }
 
+void covariance_function::print_hyperparams(){
+    printf("sorry there are no hyper params\n");
+    exit(1);
+}
+
 int covariance_function::get_n_hyper_parameters(){
     return n_hyperparameters;
 }
@@ -999,8 +1004,8 @@ covariance_function::covariance_function(){
 
 covariance_function::~covariance_function(){
     if(dim>0){
-        delete [] maxs;
-	delete [] mins;
+        delete [] global_maxs;
+	delete [] global_mins;
     }
     
     delete [] hyper_max;
@@ -1009,16 +1014,16 @@ covariance_function::~covariance_function(){
 
 void covariance_function::set_dim(int dd){
     dim=dd;
-    maxs=new double[dd];
-    mins=new double[dd];
+    global_maxs=new double[dd];
+    global_mins=new double[dd];
 }
 
 void covariance_function::set_max(int dex, double val){
-    maxs[dex]=val;
+    global_maxs[dex]=val;
 }
 
 void covariance_function::set_min(int dex, double val){
-    mins[dex]=val;
+    global_mins[dex]=val;
 }
 
 int covariance_function::get_dim(){
@@ -1038,13 +1043,17 @@ nn_covariance::nn_covariance(){
     hyper_min[1]=0.001;
 }
 
+void nn_covariance::print_hyperparams(){
+    printf("nn hyper params %e %e\n",sigma0,sigma);
+}
+
 void nn_covariance::set_hyper_parameters(double *vin){
     sigma0=vin[0];
     sigma=vin[1];
 }
 
 double nn_covariance::operator()
-(double *x1in, double *x2in, double *j1, double *j2, double *grad, int gradswitch)const{
+(double *x1in, double *x2in, double *mins, double *maxs, double *grad, int gradswitch)const{
     
     double *x1,*x2,arcsine;
     double yy,num,dx1,dx2,denom,ans;
@@ -1122,8 +1131,12 @@ gaussian_covariance::gaussian_covariance(){
     hyper_min[0]=0.001;
 }
 
+void gaussian_covariance::print_hyperparams(){
+    printf("gaussian hyper params %e\n",ellsquared);
+}
+
 double gaussian_covariance::operator()
-(double *v1, double *v2, double *j1, double *j2, double *grad, int swit)const{
+(double *v1, double *v2, double *mins, double *maxs, double *grad, int swit)const{
 
  int i;
  double ans,d;
@@ -1172,6 +1185,10 @@ matern_covariance::matern_covariance(){
 
 void matern_covariance::set_hyper_parameters(double *vin){
     ell=vin[0];
+}
+
+void matern_covariance::print_hyperparams(){
+    printf("matern hyper params %e\n",ell);
 }
 
 double matern_covariance::operator()(double *v1, double *v2, 
@@ -1772,7 +1789,9 @@ const{
       exit(1);
   }
   
- 
+  if(covariogram->get_dim()<0){
+      covariogram->set_dim(dim);
+  }
   
   
   int i,j,k,l;
@@ -1864,7 +1883,7 @@ const{
     
    for(i=0;i<kk;i++){
        ggq[i]=(*covariogram)(kptr->data[neigh[i]],pt,pmin,pmax,grad,0);
-  
+       //printf("ggq %e\n",ggq[i]);
    }
 
      
@@ -1916,13 +1935,21 @@ const{
     
    
   if(isnan(mu)){
-      printf("WARNING mu %e\n",mu);
+      printf("WARNING mu %e (in selfpredict)\n",mu);
       for(i=0;i<kk;i++)printf("%d %e ggq%d %e\n",neigh[i],dd[i],i,ggq[i]);
       for(i=0;i<kk;i++){
           for(j=0;j<kk;j++)printf("%e ",ggin[i][j]);
 	  printf("\n");
       }
-      printf("fbar %e\n",fbar(pt));
+      printf("fbar %e\n\n",fbar(pt));
+      
+      for(i=0;i<dim;i++){
+         printf(" %e %e\n",pmax[i],pmin[i]);
+      }
+      
+      printf("\n");
+      covariogram->print_hyperparams();
+      
       exit(1);
   }
 
@@ -2025,6 +2052,8 @@ void gp::optimize(){
 	    l=l/nsteps;
 	    
 	}
+	
+	covariogram->set_hyper_parameters(hh);
 	
 	E=0.0;
 	
