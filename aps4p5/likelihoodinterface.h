@@ -33,6 +33,13 @@ class likelihood{
   
   void add_candidate(int);
  
+    void sample_pts();//do the `usual' APS sampling
+   
+   void mcmc_sample();//do one step of gradient descent sampling
+   			//the argument is the index of the wanderer to be
+			//sampled
+   
+ 
  public:
    char **pnames;
    
@@ -56,12 +63,7 @@ class likelihood{
    
    void search();
    
-   void sample_pts();//do the `usual' APS sampling
-   
-   void mcmc_sample();//do one step of gradient descent sampling
-   			//the argument is the index of the wanderer to be
-			//sampled
-   
+
    void add_pt(double*,double,int);//add a point a chisquared value to the
                                  //data set being used for the Gaussian process
    
