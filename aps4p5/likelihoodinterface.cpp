@@ -769,9 +769,9 @@ void likelihood::mcmc_sample(){
     maxdex=choose_a_candidate();
     
     for(i=0;i<nparams;i++){
-        pt[i]=gg.kptr->data[candidates[maxdex]][i];
+        pt[i]=gg.kptr->data[maxdex][i];
     }
-    chitrue=gg.fn[candidates[maxdex]];
+    chitrue=gg.fn[maxdex];
     
   
     
@@ -886,14 +886,25 @@ void likelihood::gradient_sample(){
     if(gg.pts<nparams)return;
     
     
-    double *delta_matrix,*f_vector,*gradient,*dd;
-    int *neighbors;
+    double *delta_matrix,*f_vector,*gradient,*dd,*pt;
+    int *neighbors,maxdex;
     
     delta_matrix=new double[nparams*nparams];
     f_vector=new double[nparams];
     gradient=new double[nparams];
     neighbors=new int[nparams];
     dd=new double[nparams];
+    pt=new double[nparams];
+    
+    maxdex=choose_a_candidate();
+    
+    
+    delete [] pt;
+    delete [] delta_matrix;
+    delete [] f_vector;
+    delete [] gradient;
+    delete [] neighbors;
+    delete [] dd;
 
 }
 
