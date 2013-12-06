@@ -952,7 +952,7 @@ void likelihood::gradient_sample(){
 	
 	ct_mcmc++;
 	chitrial=(*call_likelihood)(trial);
-	//printf("chitrial %e -- rat %e mag %e f0 %e\n",chitrial,ratio,magnitude,f0);
+	printf("chitrial %e -- rat %e mag %e f0 %e\n",chitrial,ratio,magnitude,f0);
 	if(chitrial<exception){
 	    //printf("adding\n");
 	    add_pt(trial,chitrial,1);
@@ -963,6 +963,12 @@ void likelihood::gradient_sample(){
 	        maxdex=gg.pts-1;
 	        for(i=0;i<nparams;i++)pt[i]=trial[i];
 	    }
+	}
+	else{
+	    for(i=0;i<nparams;i++){
+	        printf("     %e %e\n",ratio*gradient[i]/magnitude,trial[i]);
+	    }
+	    printf("\n");
 	}
 	
 	if(chitrial>f0){
