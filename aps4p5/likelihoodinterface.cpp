@@ -72,7 +72,8 @@ void likelihood::set_deltachi(double xx){
 }
 
 void likelihood::set_seed(int ii){
-    seed=ii;
+    seed=abs(ii);
+    printf("set seed to %d\n",seed);
 }
 
 likelihood::likelihood(int nn,double *mns,double *mxs,
@@ -305,7 +306,7 @@ void likelihood::initialize(double **guesses, int nguess){
  	
  add_candidate(mindex);
        
- printf("done with initializer\n");
+ printf("done with initializer chimin %e\n",chimin);
  initialized=1;
  }
 
@@ -435,7 +436,7 @@ void likelihood::sample_pts(){
   
   before=double(time(NULL));
   
-  ct_aps++;
+
 
   gg.reset_cache();
   
@@ -514,6 +515,7 @@ void likelihood::sample_pts(){
       }
     }
     
+    ct_aps++;
     chitrue=(*call_likelihood)(sambest);
     
     if(focusing==1){
@@ -640,7 +642,7 @@ void likelihood::write_pts(){
  
  
  timefile=fopen(timingname,"a");
- fprintf(timefile,"%s %d good %d",\
+ fprintf(timefile,"%s %d good %d ",\
  masteroutname\
  ,npts,ngood);
   
@@ -707,7 +709,9 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
        if(chitrue<chimin){
          chimin=chitrue;
          if(chimin+deltachi<target && deltachi>0.0)target=chimin+deltachi;
-    
+         
+	 printf("     chimin is %e\n",chimin);
+	 
          for(i=0;i<nparams;i++)minpt[i]=v[i];
        }
   
@@ -780,7 +784,7 @@ void likelihood::mcmc_sample(){
     min_found=chitrue;
     old_min=10.0*chitrue;
     
-    printf("optimizing in gradient search\n");
+    //printf("optimizing in gradient search\n");
     i=gg.optimize(pt,sqrt(nparams*0.01));
     if(i<100){
         gg.optimize(pt,100);

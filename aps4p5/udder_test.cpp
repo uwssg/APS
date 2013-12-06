@@ -6,6 +6,8 @@
 
 main(){
 
+Ran chaos(87);
+
 udder_likelihood *udder;
 gaussian_covariance *covar;
 
@@ -40,10 +42,18 @@ for(ii=0;ii<200;ii++){
     aps->set_outname("output/udder_output.sav");
     aps->set_timingname("output/udder_timing.sav");
     
-    aps->initialize(g,0);
     aps->npts=25;
+    aps->nsamples=1000;    
+    aps->grat=0.1;
+    
+    
+    aps->set_seed(abs(chaos.int32()));
+    aps->initialize(g,0);
+
     aps->set_deltachi(12.59);
     aps->writevery=10000;
+    
+   
     
     aps->pnames=new char*[dim];
     for(i=0;i<dim;i++){
