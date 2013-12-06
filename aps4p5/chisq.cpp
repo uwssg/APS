@@ -1010,7 +1010,10 @@ void linear_ellipses::build_boundary(double br){
     
 }
 
-udder_likelihood::udder_likelihood() : chisquared(6){}
+udder_likelihood::udder_likelihood() : chisquared(6){
+    foundn3=-1;
+    foundp3=-1;
+}
 
 udder_likelihood::~udder_likelihood(){}
 
@@ -1034,10 +1037,23 @@ double udder_likelihood::operator()(double *v) const{
     
      chisquared=1300.0+0.5*d1+0.5*d2-153.0*exp(-2.0*d1)-100.0*exp(-1.0*d2);
     
-    time_spent+=double(time(NULL))-before;
+     time_spent+=double(time(NULL))-before;
+    
+     if(chisquared<=1280.669){
+         if(d1<d2 && foundp3<0)foundp3=called;
+	 if(d2<d1 && foundn3<0)foundn3=called;
+     }
     
      return chisquared;
 
+}
+
+int udder_likelihood::get_n3(){
+    return foundn3;
+}
+
+int udder_likelihood::get_p3(){
+    return foundp3;
 }
 
 int udder_likelihood::get_type(){

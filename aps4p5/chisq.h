@@ -113,11 +113,17 @@ public:
 
 class udder_likelihood : public chisquared{
 
+private:
+    mutable int foundn3,foundp3;
+
 public:
     udder_likelihood();
     ~udder_likelihood();
     virtual double operator()(double*) const;
     virtual int get_type();
+    
+    int get_n3();
+    int get_p3();
 
 };
 
