@@ -870,7 +870,7 @@ void likelihood::mcmc_sample(){
 void likelihood::search(){
     
     int i;
-    if(time_mcmc<time_aps && n_candidates>0){
+    if(ct_mcmc<ct_aps && n_candidates>0){
 	mcmc_sample();
 	write_pts();
     }
