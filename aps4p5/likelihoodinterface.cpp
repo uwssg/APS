@@ -800,7 +800,7 @@ void likelihood::mcmc_sample(){
 	for(i=0;i<nparams;i++)current[i]=pt[i];
 	i_failed=0;
 	
-	while(step_size>1.0e-5){
+	while(step_size>1.0e-3){
 	    for(i=0;i<nparams;i++){
 	        trial[i]=normal_deviate(dice,current[i],step_size*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
 		
@@ -867,7 +867,7 @@ void likelihood::mcmc_sample(){
 void likelihood::search(){
     
     int i;
-    if(ct_mcmc<ct_aps && n_candidates>0){
+    if(time_mcmc<time_aps && n_candidates>0){
 	mcmc_sample();
 	write_pts();
     }
