@@ -29,10 +29,6 @@ likelihood::~likelihood(){
   //Call subroutines with delswit=-1 so that they delete
   //pointers that were allocated on their initial call  
   
-  sample_pts(-1);
-  
-  mcmc_sample(-2);
-  
   for(i=0;i<nparams;i++)delete [] pnames[i];
   delete pnames;
   
@@ -107,7 +103,6 @@ covariance_function *cv, chisquared *lk){
  proximity=0.1;
  foundbywandering=0;
  improvedbywandering=0;
- deletedwanderers=0;
  
  deltachi=-1.0;
  
@@ -128,17 +123,9 @@ covariance_function *cv, chisquared *lk){
  //because it does not work as well as it should
 
  
- sam_called=0;//have you called sample_pts() yet?
- grad_called=0;//have you called grad_sample() yet?
  grat=0.1;//the threshold (i.e. 10% of your target chisquared) at which you
  	//create a new gradient wanderer
  
-
- krigct=0;//how many times you used the gaussian process in sample_pts()
- addct=0;//the number of times you added a point in sample_pts()
- gradct=0;//the number of times you called grad_sample()
-
-
  
  writevery=100; //call write_pts() every 100 sampled points
  
@@ -147,9 +134,6 @@ covariance_function *cv, chisquared *lk){
 		//twice.
 		
 
- spentlingering=0;//how many iterations were spent on things that were not
- 		//the vanilla sample_pts()
-		
  precision=1.0e-5;
 
  
@@ -172,8 +156,7 @@ covariance_function *cv, chisquared *lk){
  nsamples=1000; //Number of samples to consider when using the Gaussian process
 
  target=1300.0; //Default value of chi squared for which to look
- chimintarget=1197.0;//this is the target for the gradient descent method in
- 		//grad_sample()
+
 
  nparams=nn;
  gg.dim=nparams;
@@ -437,13 +420,13 @@ char word[letters];
  
 }
 
-void likelihood::sample_pts(int delswit){
+void likelihood::sample_pts(){
   int i,j,k,l,ix;
   int focusing=0;
   double stradmax,strad,mu,sig,chitrue,mm,xx,yy,*candidate_gradient;
   double before,after,mubest,dd,nn;
   
-  double *sampling_min,*sampling_max;
+  double *sampling_min,*sampling_max,*sambest,*samv;
   
   before=double(time(NULL));
   
@@ -451,6 +434,8 @@ void likelihood::sample_pts(int delswit){
 
   gg.reset_cache();
   
+  sambest=new double[nparams];
+  samv=new double[nparams];
   sampling_min=new double[nparams];
   sampling_max=new double[nparams];
   
@@ -499,19 +484,6 @@ void likelihood::sample_pts(int delswit){
   //this subroutine does the ``usual'' APS sampling
   //(i.e. it choose points based on the straddle parameter)
   
-  if(sam_called==0 && delswit>0){
-    sambest=new double[nparams];
-    samv=new double[nparams];
-    sam_called++;
-  }
-  
-  if(sam_called>0 && delswit<0){
-    delete [] sambest;
-    delete [] samv;
-    sam_called=0;
-  }
-  
-  if(delswit>0){
 
     //generate nsample random samples and use the gaussian process to guess
     //their chisquared values.  Choose only the one that maximizes strad
@@ -592,10 +564,12 @@ void likelihood::sample_pts(int delswit){
       
     }//is this a grad wanderer situation
 
-  }//is delswit>0
+ 
   
   delete [] sampling_min;
   delete [] sampling_max;
+  delete [] sambest;
+  delete [] samv;
   
   time_aps+=double(time(NULL))-before;
   
@@ -667,18 +641,8 @@ void likelihood::write_pts(){
   fprintf(timefile,"aps %e %d %e ",time_aps,ct_aps,time_aps/double(ct_aps));
   fprintf(timefile,"mcmc %e %d %e ",time_mcmc,ct_mcmc,time_mcmc/double(ct_mcmc));
   
-  /*fprintf(timefile,\
-  "gptime %e ct %d ",krigtimewall/double(krigct),ct_aps);
-  
-  fprintf(timefile,\
-  "liketime %e ct %d ",addtimewall/double(addct),addct);
-  
-  fprintf(timefile,\
-  "wandertime %e ct %d ",gradtimewall/double(gradct),ct_mcmc);
-  fprintf(timefile,"nearest_neighbors %d ns %d ",kk,nsamples);*/
-  
   fprintf(timefile,"kd %d ",gg.kptr->diagnostic);
-  fprintf(timefile,"chimin %e target %e dw %d\n",chimin,target,deletedwanderers);
+  fprintf(timefile,"chimin %e target %e \n",chimin,target);
  fclose(timefile);
     
    nprinted=npts;
@@ -741,7 +705,7 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
   }
 }
 
-void likelihood::mcmc_sample(int dex){
+void likelihood::mcmc_sample(){
   
  //this routine uses gradient descent to try to walk the gradient wanderer
  //indicated by dex towards the chisquared value stored in chimintarget
@@ -767,23 +731,12 @@ void likelihood::mcmc_sample(int dex){
   before=double(time(NULL));
   gg.reset_cache();
   
-  printf("starting gradient search %d\n",dex);
-  
   n_start=gg.pts;
  
-  if(dex>=0 && grad_called==0){
-    graddir=new double[nparams];
-    gradv=new double[nparams];
-    grad_called++;
-  }
-  if(dex<0){
-    delete [] graddir;
-    delete [] gradv;
-  }
-  
+
   printf("allotted everything %d\n",n_candidates);
   
-  if(dex>=0 && grad_called>0 && n_candidates>0){
+  if(n_candidates>0){
     
     pt=new double[nparams];
     trial=new double[nparams];
@@ -901,11 +854,11 @@ void likelihood::search(){
     
     int i;
     if(ct_mcmc<ct_aps && n_candidates>0){
-	mcmc_sample(1);
+	mcmc_sample();
 	write_pts();
     }
     else{
-        sample_pts(1);
+        sample_pts();
 	if(npts>nprinted+writevery){
 	    write_pts();
 	}

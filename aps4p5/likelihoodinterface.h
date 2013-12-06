@@ -12,9 +12,9 @@ class likelihood{
  private:
   
      
-  int nparams,nprinted,krigct,addct,gradct;
-  int sam_called,grad_called,deletedwanderers;
-  double *ggx,*ggn,*samv,*sambest,*graddir,*gradv;
+  int nparams,nprinted;
+ 
+  double *ggx,*ggn,*samv,*sambest;
   
   int ct_aps,ct_mcmc,ct_like;
   double time_mcmc,time_aps,time_like;
@@ -37,14 +37,14 @@ class likelihood{
  public:
    char **pnames,masteroutname[100];
    
-   double chimin,chimintarget,junk;
+   double chimin,junk;
    double *minpt,*mxx,*mnn,proximity,grat;
    
    int foundbywandering;
    int improvedbywandering,*lingerflag,lingerroom,seed;
      
    int npts,nsamples,threads;
-   int kk,spentlingering;
+   int kk;
    double target,precision,*ndyy;
    int writevery,*ndinn,initialized;
    
@@ -58,9 +58,9 @@ class likelihood{
    
    void search();
    
-   void sample_pts(int);//do the `usual' APS sampling
+   void sample_pts();//do the `usual' APS sampling
    
-   void mcmc_sample(int);//do one step of gradient descent sampling
+   void mcmc_sample();//do one step of gradient descent sampling
    			//the argument is the index of the wanderer to be
 			//sampled
    

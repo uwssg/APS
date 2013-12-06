@@ -150,12 +150,6 @@ main(int iargc, char *argv[]){
     else if(compare_char(keyword,"#grat")==1){
       fscanf(input,"%le",&likeness->grat);
     }
-    else if(compare_char(keyword,"#chimin")==1){
-      fscanf(input,"%le",&likeness->chimintarget);
-      
-      //printf("set chimin %e\n",likeness->chimin);
-      
-    }
     else if(compare_char(keyword,"#Ng")==1){
       fscanf(input,"%d",&likeness->kk);
       
@@ -290,8 +284,8 @@ main(int iargc, char *argv[]){
    printf("kk %d\n",likeness->kk);
    printf("ns %d\n",likeness->nsamples);
    printf("target %e\n",likeness->target);
-   printf("chimintarget %e\n",likeness->chimintarget);
-   printf("spent lingering %d\n",likeness->spentlingering);
+
+
    /*for(i=0;i<dim;i++){
      printf("%s min %e max %e\n",likeness->pnames[i], \
      likeness->CLmin[i],likeness->CLmax[i]);
