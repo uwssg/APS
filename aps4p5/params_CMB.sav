@@ -13,7 +13,7 @@ dimensionality MUST be the first keyword listed
 #Ng 20 -- use 15 neareast neighbors in the Gaussian process
 
 #Nw 100 -- maximum number of wanderers
-#grat 1.0 -- threshold at which wanderer is created
+#grat 10.0 -- threshold at which wanderer is created
 
 #seed 99 -- if you want to specify the seed for the random number generator
 	if you leave this blank, it will just use the value returned by the

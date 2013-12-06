@@ -710,11 +710,7 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
   
        gg.add_pt(v,chitrue);
        npts=gg.pts;
-       if(npts%writevery==0){
-  
-         write_pts();
- 
-       }
+    
   
        if(chitrue<chimin){
          chimin=chitrue;
@@ -886,9 +882,13 @@ void likelihood::search(){
     int i;
     if(ct_grad<ct_aps && n_candidates>0){
 	grad_sample(1);
+	write_pts();
     }
     else{
         sample_pts(1);
+	if(npts>nprinted+writevery){
+	    write_pts();
+	}
     }
     
 }
