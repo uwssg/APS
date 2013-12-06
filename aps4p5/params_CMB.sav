@@ -41,7 +41,7 @@ kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum
 
 #param 0 ombh2 0.01 0.1 -- the density of baryons
 #param 1 omch2 0.05 0.3 -- the density fo dark matter
-#param 2 h 0.4 1.1 -- the hubble parameter in units of 100 km/s/Mpc
+#param 2 h 0.4 1.0 -- the hubble parameter in units of 100 km/s/Mpc
 #param 3 tau 0.01 0.15 -- optical depth to last scattering
 #param 4 ns 0.7 1.2 -- scalar index controlling primordial power spectrum
 #param 5 lnA 2.0 4.0 -- 10^10 ln(A) where A is normalizatin of primordial power spec.

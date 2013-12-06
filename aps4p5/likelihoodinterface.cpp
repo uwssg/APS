@@ -747,7 +747,7 @@ void likelihood::grad_sample(int dex){
   double *pt,*trial,*current,*dx,max,ratio=0.5,nn,dd,worst,mu,sig;
   
   double *dd_buff,mu0;
-  int *nn_buff,i_failed;
+  int *nn_buff,i_failed,last_min;
   int maxdex,assess_every=500;
   
   int has_converged=0;
@@ -817,8 +817,8 @@ void likelihood::grad_sample(int dex){
     for(i=0;i<nparams;i++)current[i]=pt[i];
     
     mu0=chitrue;
-   
-    while(steps_taken<100){
+    last_min=0;
+    while(steps_taken<100 || steps_taken-last_min<20){
         step_size=0.1;
 	took_a_step=0;
 	mu0=chitrue;
@@ -857,6 +857,7 @@ void likelihood::grad_sample(int dex){
 	    printf("chitrial %e chimin %e\n",chitrial,chimin);
 	    ct_grad++;
 	    if(chitrial<exception){
+	        if(chitrial<chimin)last_min=steps_taken;
 	        add_pt(current,chitrial,1);
 		gg.reset_cache();
 		
