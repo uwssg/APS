@@ -40,8 +40,7 @@ class likelihood{
    double chimin,junk;
    double *minpt,*mxx,*mnn,proximity,grat;
    
-   int foundbywandering;
-   int improvedbywandering,*lingerflag,lingerroom,seed;
+   int *lingerflag,lingerroom,seed;
      
    int npts,nsamples,threads;
    int kk;

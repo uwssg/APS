@@ -101,8 +101,7 @@ covariance_function *cv, chisquared *lk){
  
  initialized=0;
  proximity=0.1;
- foundbywandering=0;
- improvedbywandering=0;
+
  
  deltachi=-1.0;
  
@@ -449,7 +448,7 @@ void likelihood::sample_pts(){
       focusing=1;
       ngood=0;
       for(i=0;i<npts;i++){
-          if(gg.fn[i]<=target){
+          if(gg.fn[i]<=target+precision){
 	      ngood++;
 	      for(j=0;j<nparams;j++){
 	          if(gg.kptr->data[i][j]<sampling_min[j]){
@@ -582,7 +581,7 @@ void likelihood::write_pts(){
 
  FILE *output,*timefile,*goodfile;
  int i,j,th;
- int tot,trapped,good,tried,wayoff,dontcount;
+ int tot,trapped,tried,wayoff,dontcount;
  double trappedpct;
  
  
@@ -590,8 +589,15 @@ void likelihood::write_pts(){
  
  tot=0;
  trapped=0;
+ 
+ ngood=0;
+ for(i=0;i<npts;i++){
+     if(gg.fn[i]<=target+precision){
+         ngood++;
+     }
+ }
+ 
 
- good=0;
  tried=0;
  wayoff=0;
  dontcount=0;
@@ -606,8 +612,6 @@ void likelihood::write_pts(){
  npts=gg.pts;
  for(i=0;i<npts;i++){//printf("i %d np %d\n",i,nprinted);
    
-  if(gg.fn[i]<target+precision)good++;
-
   if(i>=nprinted){//no need to print points that have already been printed
   
   for(j=0;j<nparams;j++){
@@ -630,9 +634,9 @@ void likelihood::write_pts(){
  
  
  timefile=fopen(timingname,"a");
- fprintf(timefile,"%s %d found %d improved %d gd %d ",\
+ fprintf(timefile,"%s %d good %d",\
  masteroutname\
- ,npts,foundbywandering,improvedbywandering,good);
+ ,npts,ngood);
   
   fprintf(timefile,"like %e %d %e ",
   call_likelihood->get_time(),call_likelihood->get_called(),
