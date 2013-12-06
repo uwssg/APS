@@ -56,11 +56,15 @@ likelihood::likelihood(){
 }
 
 void likelihood::set_timingname(char *word){
-
-
     int i;
     for(i=0;word[i]!=0;i++)timingname[i]=word[i];
     timingname[i]=0;
+}
+
+void likelihood::set_outname(char *word){
+    int i;
+    for(i=0;word[i]!=0;i++)masteroutname[i]=word[i];
+    masteroutname[i]=0;
 }
 
 void likelihood::set_deltachi(double xx){
@@ -98,6 +102,7 @@ covariance_function *cv, chisquared *lk){
  call_likelihood=lk;
  
  sprintf(timingname,"timingfile.sav");
+ sprintf(masteroutname,"outputfile.sav");
  
  initialized=0;
  proximity=0.1;
@@ -152,13 +157,13 @@ covariance_function *cv, chisquared *lk){
  kk=15; //Number of nearest neighbors in the Gaussian Process 
  	//(also can be reset)
 
- nsamples=1000; //Number of samples to consider when using the Gaussian process
+ nsamples=250; //Number of samples to consider when using the Gaussian process
 
  target=1300.0; //Default value of chi squared for which to look
 
 
  nparams=nn;
- gg.dim=nparams;
+ gg.set_dim(nparams);
 
  mxx=new double[nparams];
  mnn=new double[nparams];
@@ -176,6 +181,7 @@ covariance_function *cv, chisquared *lk){
      printf("setting mins and maxes for wmap\n");
      call_likelihood->set_max_min(nparams,mnn,mxx);
  }
+ 
  
 }
 
@@ -340,7 +346,7 @@ char word[letters];
   npts++;
  }
  fclose(input);
- printf("npts %d %d %d\n",npts,nparams,gg.dim);
+ printf("npts %d %d %d\n",npts,nparams,gg.get_dim());
  
  lingerroom=npts;
  lingerflag=new int[lingerroom];

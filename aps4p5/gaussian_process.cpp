@@ -958,6 +958,19 @@ void gp::copy(gp *oldgp){
 
 void gp::assign_covariogram(covariance_function *cv){
     covariogram=cv;
+    
+    covariogram->set_dim(dim);
+}
+
+int gp::get_dim(){
+    return dim;
+}
+
+void gp::set_dim(int ii){
+    dim=ii;
+    if(covariogram!=NULL){
+        covariogram->set_dim(dim);
+    } 
 }
 
 double covariance_function::operator()

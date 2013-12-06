@@ -19,7 +19,7 @@ class likelihood{
   int ct_aps,ct_mcmc,ct_like;
   double time_mcmc,time_aps,time_like;
   
-  char mufitname[letters],timingname[letters];
+  char mufitname[letters],timingname[letters],masteroutname[letters];
   int calledmufit,nmufit,*ctmufit;
   double *chimufit,*mumufit,*diffmufit,deltachi;
   
@@ -35,7 +35,7 @@ class likelihood{
   void add_candidate(int);
  
  public:
-   char **pnames,masteroutname[100];
+   char **pnames;
    
    double chimin,junk;
    double *minpt,*mxx,*mnn,proximity,grat;
@@ -74,6 +74,8 @@ class likelihood{
    void assign_covariogram(covariance_function*);
    void set_mufitname(char*);//set the name of the mu_fit file
    void set_timingname(char*);//set the name of the timing file
+   void set_outname(char*);
+   
    
    void set_deltachi(double);//set delta chisquared in the case where
    			//target = chisquared_min + delta chisquared

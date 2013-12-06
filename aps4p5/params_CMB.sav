@@ -30,11 +30,11 @@ with deltachi specifying the target)
 #likelihood wmap -- specify the kind of likelihood function
 #covariance gauss -- specify the kind of covariance function
 
-#outputfile output/wmap7_sampled_points.sav -- store the sampled points
+#outputfile output/wmap7_sampled_points_junk.sav -- store the sampled points
 !#resumefile test_wmap_seed.sav -- in case you are interrupted
 
-#mufitfile output/wmap7_fit.sav -- compare the Gaussian process fit to chisquared
-#timingfile output/wmap7_timingfile.sav -- time performance
+#mufitfile output/wmap7_fit_junk.sav -- compare the Gaussian process fit to chisquared
+#timingfile output/wmap7_timingfile_junk.sav -- time performance
 
 below is you list of parameters.  The format is:
 kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum

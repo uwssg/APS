@@ -6,8 +6,8 @@
 
 main(){
 
-udder_likelihood udder;
-gaussian_covariance covar;
+udder_likelihood *udder;
+gaussian_covariance *covar;
 
 int i,dim=6;
 double *mins,*maxs;
@@ -19,6 +19,58 @@ for(i=0;i<dim;i++){
      maxs[i]=10.0;
 }
 
-likelihood aps(6,mins,maxs,&covar,&udder);
+likelihood *aps; //aps(6,mins,maxs,&covar,&udder);
+
+char outname[500];
+sprintf(outname,"udder_test_output.sav");
+FILE *output;
+
+output=fopen(outname,"w");
+fclose(output);
+
+int ii,foundboth;
+double **g;
+
+for(ii=0;ii<200;ii++){
+    udder=new udder_likelihood;
+    covar=new gaussian_covariance;
+    
+    aps=new likelihood(6,mins,maxs,covar,udder);
+    
+    aps->set_outname("output/udder_output.sav");
+    aps->set_timingname("output/udder_timing.sav");
+    
+    aps->initialize(g,0);
+    aps->npts=25;
+    aps->set_deltachi(12.59);
+    aps->writevery=10000;
+    
+    aps->pnames=new char*[dim];
+    for(i=0;i<dim;i++){
+        aps->pnames[i]=new char[letters];
+	sprintf(aps->pnames[i],"p%d",i);
+    }
+    
+    foundboth=0;
+    for(i=0;i<100000 && foundboth==0;i++){
+        aps->search();
+	
+	if(udder->get_p3()>=0 && udder->get_n3()>=0){
+	    foundboth=1;
+	}
+    }
+    
+    output=fopen(outname,"a");
+    fprintf(output,"%d %d\n",udder->get_p3(),udder->get_n3());
+    fclose(output);
+    
+    system("rm output/udder_output.sav");
+    system("rm output/udder_timeing.sav");
+    
+    delete aps;
+    delete udder;
+    delete covar;
+}
+
 
 }

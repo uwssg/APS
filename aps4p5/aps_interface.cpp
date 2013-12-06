@@ -176,10 +176,9 @@ main(int iargc, char *argv[]){
     else if(compare_char(keyword,"#outputfile")==1){
       fscanf(input,"%s",word);
       //printf("%s\n",word);
-      for(i=0;word[i]!=0 && word[i]!=' ';i++){
-        likeness->masteroutname[i]=word[i];
-      }
-      likeness->masteroutname[i]=0;
+      
+      likeness->set_outname(word);
+    
       
       //printf("set output %s\n",likeness->masteroutname);
     }

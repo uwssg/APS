@@ -123,7 +123,7 @@ class gp{
     neighbor_cache *neighbor_storage;   
     covariance_function *covariogram;
     
-    int initialized,room,roomstep,allottedpts;
+    int initialized,room,roomstep,allottedpts,dim;
     double sigcap;
    
     mutable int ct_search;
@@ -139,7 +139,7 @@ class gp{
     
   public:
     kd_tree *kptr;
-    int dim,kk,pts;
+    int kk,pts;
     double inversionerr,*fn;
     double dav,dsig,ctav;
     
@@ -169,6 +169,9 @@ class gp{
     void optimize(int,int);
     int optimize(double*,double);
     void optimize(double*,int);
+    
+    int get_dim();
+    void set_dim(int);
     
     
 };
