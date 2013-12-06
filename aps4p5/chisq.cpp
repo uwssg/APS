@@ -371,6 +371,7 @@ chisquared::chisquared(int id){
     
     rr_max=-1.0;
     called=0;
+    time_spent=0.0;
     
     allot_arrays();
 };
@@ -390,6 +391,7 @@ chisquared::chisquared(int id, int ic){
     
     rr_max=-1.0;
     called=0;
+    time_spent=0.0;
     
     allot_arrays();
 };
@@ -469,6 +471,10 @@ int chisquared::get_called(){
     return called;
 }
 
+double chisquared::get_time(){
+    return time_spent;
+}
+
 double chisquared::operator()(double *v)const{
     death_knell("meaningless operator");
 }
@@ -540,6 +546,7 @@ double s_curve::operator()(double *in_pt) const{
     
     called++;
     
+    double before=double(time(NULL));
     double *dd,*pt;
     dd=new double[ncenters];
     pt=new double[dim];
@@ -580,6 +587,8 @@ double s_curve::operator()(double *in_pt) const{
     
     delete [] dd;
     delete [] pt;
+    
+    time_spent+=double(time(NULL))-before;
     
     return ddmin;
 }
@@ -854,6 +863,8 @@ double ellipses::operator()(double *in_pt) const{
          death_knell("you called operator before making bases");
     } 
     
+    double before=double(time(NULL));
+    
     int ii,ix;
     double dd,ddmin,nn;
     
@@ -868,7 +879,9 @@ double ellipses::operator()(double *in_pt) const{
 	}
 	if(ii==0 || dd<ddmin)ddmin=dd;
     }
-
+    
+    time_spent+=double(time(NULL))-before;
+    
     return ddmin;
     
 }
@@ -928,6 +941,8 @@ double linear_ellipses::operator()(double *in_pt) const{
          death_knell("you called operator before making bases");
     } 
     
+    double before=double(time(NULL));
+    
     int ii,ix;
     double dd,ddmin,nn;
     
@@ -942,6 +957,8 @@ double linear_ellipses::operator()(double *in_pt) const{
 	
 	if(ii==0 || dd<ddmin)ddmin=dd;
     }
+    
+    time_spent+=double(time(NULL))-before;
     
     return sqrt(ddmin);
 }
@@ -1003,6 +1020,8 @@ double udder_likelihood::operator()(double *v) const{
    
      int i;
     
+    double before=double(time(NULL));
+    
     called++;
     d1=power(v[0]-3.0,2);
     d2=power(v[0]+3.0,2);
@@ -1014,6 +1033,8 @@ double udder_likelihood::operator()(double *v) const{
    
     
      chisquared=1300.0+0.5*d1+0.5*d2-153.0*exp(-2.0*d1)-100.0*exp(-1.0*d2);
+    
+    time_spent+=double(time(NULL))-before;
     
      return chisquared;
 
@@ -1050,11 +1071,17 @@ double wmap_likelihood::operator()(double *v) const{
   
   double *dir;
  
+  double before=double(time(NULL));
+  called++;
   
   FILE *output;
 
   for(i=0;i<dim;i++){
-      if(v[i]<mins[i] || v[i]>maxs[i])return 2.0*exception;
+      if(v[i]<mins[i] || v[i]>maxs[i]){
+          time_spent+=double(time(NULL))-before;
+      
+          return 2.0*exception;
+      }
   }
   
   while((v[0]+v[1])/(v[2]*v[2])>1.0){
@@ -1094,6 +1121,8 @@ double wmap_likelihood::operator()(double *v) const{
  
  
  /////////////////
+ 
+  time_spent+=double(time(NULL))-before;
  
   //printf("got chisquared %e\n",chisquared);
   return chisquared;

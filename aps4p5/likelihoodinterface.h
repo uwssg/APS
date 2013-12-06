@@ -16,7 +16,8 @@ class likelihood{
   int sam_called,grad_called,deletedwanderers;
   double *ggx,*ggn,*samv,*sambest,*graddir,*gradv;
   
-  int ct_aps,ct_grad;
+  int ct_aps,ct_mcmc,ct_like;
+  double time_mcmc,time_aps,time_like;
   
   char mufitname[letters],timingname[letters];
   int calledmufit,nmufit,*ctmufit;
@@ -44,7 +45,6 @@ class likelihood{
      
    int npts,nsamples,threads;
    int kk,spentlingering;
-   double krigtimewall,addtimewall,gradtimewall;
    double target,precision,*ndyy;
    int writevery,*ndinn,initialized;
    
@@ -60,7 +60,7 @@ class likelihood{
    
    void sample_pts(int);//do the `usual' APS sampling
    
-   void grad_sample(int);//do one step of gradient descent sampling
+   void mcmc_sample(int);//do one step of gradient descent sampling
    			//the argument is the index of the wanderer to be
 			//sampled
    

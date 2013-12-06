@@ -31,7 +31,7 @@ likelihood::~likelihood(){
   
   sample_pts(-1);
   
-  grad_sample(-2);
+  mcmc_sample(-2);
   
   for(i=0;i<nparams;i++)delete [] pnames[i];
   delete pnames;
@@ -112,7 +112,11 @@ covariance_function *cv, chisquared *lk){
  deltachi=-1.0;
  
  ct_aps=0;
- ct_grad=0;
+ ct_mcmc=0;
+ 
+ time_aps=0.0;
+ time_mcmc=0.0;
+ 
  
  candidates=NULL;
  n_candidates=0;
@@ -134,9 +138,7 @@ covariance_function *cv, chisquared *lk){
  addct=0;//the number of times you added a point in sample_pts()
  gradct=0;//the number of times you called grad_sample()
 
- gradtimewall=0.0;//the clock time spent in grad_sample()
- krigtimewall=0.0;//the clock time spent on the gaussian process
- addtimewall=0.0;//the clock time spent adding points to the gaussian process
+
  
  writevery=100; //call write_pts() every 100 sampled points
  
@@ -443,8 +445,10 @@ void likelihood::sample_pts(int delswit){
   
   double *sampling_min,*sampling_max;
   
-  ct_aps++;
+  before=double(time(NULL));
   
+  ct_aps++;
+
   gg.reset_cache();
   
   sampling_min=new double[nparams];
@@ -532,11 +536,7 @@ void likelihood::sample_pts(int delswit){
 	for(j=0;j<nparams;j++)sambest[j]=samv[j];
       }
     }
-    after=double(time(NULL));
-    krigtimewall+=(after-before);
-    krigct++;
-
-    before=double(time(NULL));
+    
     chitrue=(*call_likelihood)(sambest);
     
     if(focusing==1){
@@ -576,9 +576,7 @@ void likelihood::sample_pts(int delswit){
 	  
       }
     }
-    after=double(time(NULL));
-    addtimewall+=(after-before);
-    addct++;
+  
 
   if(chitrue-target<grat*target && chitrue>target){
     //if the value of chisquared is within your set threshold, add it as a
@@ -598,6 +596,8 @@ void likelihood::sample_pts(int delswit){
   
   delete [] sampling_min;
   delete [] sampling_max;
+  
+  time_aps+=double(time(NULL))-before;
   
 }
 
@@ -660,15 +660,22 @@ void likelihood::write_pts(){
  masteroutname\
  ,npts,foundbywandering,improvedbywandering,good);
   
-  fprintf(timefile,\
+  fprintf(timefile,"like %e %d %e ",
+  call_likelihood->get_time(),call_likelihood->get_called(),
+  call_likelihood->get_time()/double(call_likelihood->get_called()));
+  
+  fprintf(timefile,"aps %e %d %e ",time_aps,ct_aps,time_aps/double(ct_aps));
+  fprintf(timefile,"mcmc %e %d %e ",time_mcmc,ct_mcmc,time_mcmc/double(ct_mcmc));
+  
+  /*fprintf(timefile,\
   "gptime %e ct %d ",krigtimewall/double(krigct),ct_aps);
   
   fprintf(timefile,\
   "liketime %e ct %d ",addtimewall/double(addct),addct);
   
   fprintf(timefile,\
-  "wandertime %e ct %d ",gradtimewall/double(gradct),ct_grad);
-  fprintf(timefile,"nearest_neighbors %d ns %d ",kk,nsamples);
+  "wandertime %e ct %d ",gradtimewall/double(gradct),ct_mcmc);
+  fprintf(timefile,"nearest_neighbors %d ns %d ",kk,nsamples);*/
   
   fprintf(timefile,"kd %d ",gg.kptr->diagnostic);
   fprintf(timefile,"chimin %e target %e dw %d\n",chimin,target,deletedwanderers);
@@ -734,7 +741,7 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
   }
 }
 
-void likelihood::grad_sample(int dex){
+void likelihood::mcmc_sample(int dex){
   
  //this routine uses gradient descent to try to walk the gradient wanderer
  //indicated by dex towards the chisquared value stored in chimintarget
@@ -756,11 +763,12 @@ void likelihood::grad_sample(int dex){
   int steps_taken=0;
   double step_size,took_a_step;
   
+  
+  before=double(time(NULL));
   gg.reset_cache();
   
   printf("starting gradient search %d\n",dex);
   
-  before=double(time(NULL));
   n_start=gg.pts;
  
   if(dex>=0 && grad_called==0){
@@ -855,7 +863,7 @@ void likelihood::grad_sample(int dex){
 	if(took_a_step==1){
 	    chitrial=(*call_likelihood)(current);
 	    printf("chitrial %e chimin %e\n",chitrial,chimin);
-	    ct_grad++;
+	    ct_mcmc++;
 	    if(chitrial<exception){
 	       
 	        add_pt(current,chitrial,1);
@@ -882,19 +890,18 @@ void likelihood::grad_sample(int dex){
     //exit(1);
   }
   
-  
-  after=double(time(NULL));
-  gradtimewall+=after-before;
-  gradct++;
+
+
   gg.optimize();
+  time_mcmc+=double(time(NULL))-before;
   
 }
 
 void likelihood::search(){
     
     int i;
-    if(ct_grad<ct_aps && n_candidates>0){
-	grad_sample(1);
+    if(ct_mcmc<ct_aps && n_candidates>0){
+	mcmc_sample(1);
 	write_pts();
     }
     else{

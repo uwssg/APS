@@ -27,6 +27,7 @@ class chisquared{
 protected:
     int dim,ncenters;
     mutable int called;
+    mutable double time_spent;
     double **bases,**widths,**centers;
     double ***boundary,rr_max,*maxs,*mins;
     int *nboundary,*boundary_room;
@@ -61,6 +62,7 @@ public:
     int get_ncenters();
     int get_dim();
     int get_called();
+    double get_time();
     
     void set_max_min(int,double*,double*);
     
