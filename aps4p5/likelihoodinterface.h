@@ -39,6 +39,9 @@ class likelihood{
    			//the argument is the index of the wanderer to be
 			//sampled
    
+   void gradient_sample();
+   
+   int choose_a_candidate();
  
  public:
    char **pnames;

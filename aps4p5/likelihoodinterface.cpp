@@ -762,27 +762,18 @@ void likelihood::mcmc_sample(){
     dd_buff=new double[2];
     nn_buff=new int[2];
     
-    for(i=0;i<n_candidates;i++){
-        dd=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
-        if(i==0 || dd>max){
-	    maxdex=i;
-	    max=dd;
-	}
-    }
+ 
     
     //printf("got maxdex %d %d\n",maxdex,candidates[maxdex]);
+    
+    maxdex=choose_a_candidate();
     
     for(i=0;i<nparams;i++){
         pt[i]=gg.kptr->data[candidates[maxdex]][i];
     }
     chitrue=gg.fn[candidates[maxdex]];
     
-    //printf("\ngradient starting with %e\n\n",chitrue);
-    
-    for(i=maxdex+1;i<n_candidates;i++){
-        candidates[i-1]=candidates[i];
-    }
-    n_candidates--;
+  
     
     min_found=chitrue;
     old_min=10.0*chitrue;
@@ -865,6 +856,45 @@ void likelihood::mcmc_sample(){
   gg.optimize();
   time_mcmc+=double(time(NULL))-before;
   
+}
+
+int likelihood::choose_a_candidate(){
+    
+    double dd,max;
+    int i,maxdex,to_return;
+    
+    for(i=0;i<n_candidates;i++){
+        dd=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
+	if(i==0 || dd>max){
+	    maxdex=i;
+	    max=dd;
+	}
+    }
+    
+    to_return=candidates[maxdex];
+    for(i=maxdex+1;i<n_candidates;i++){
+        candidates[i-1]=candidates[i];
+    }
+    n_candidates--;
+    
+    return to_return;
+    
+}
+
+void likelihood::gradient_sample(){
+
+    if(gg.pts<nparams)return;
+    
+    
+    double *delta_matrix,*f_vector,*gradient,*dd;
+    int *neighbors;
+    
+    delta_matrix=new double[nparams*nparams];
+    f_vector=new double[nparams];
+    gradient=new double[nparams];
+    neighbors=new int[nparams];
+    dd=new double[nparams];
+
 }
 
 void likelihood::search(){
