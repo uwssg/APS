@@ -408,7 +408,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	}
     }
     
-    if(maxerr>1.0e-6){
+    if(maxerr>1.0e-6 || isnan(maxerr)){
         printf("tridiagonalization: maxerr %e mindiag %e\n",maxerr,mindiag);
 	//exit(1);
     }
@@ -440,8 +440,20 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	}
     }
     
-    if(maxerr>1.0e-5){
-        printf("WARNING gaussian solver failed\n");
+    if(maxerr>1.0e-5 || isnan(maxerr)){
+        printf("WARNING gaussian solver failed %e\n",maxerr);
+	
+	
+	printf("\n");
+	for(i=0;i<params;i++){
+	    for(j=0;j<params;j++)printf("%.3e ",aa_in[i*params+j]);
+	    printf("\n");
+	}
+	printf("\n");
+	
+	for(i=0;i<params;i++){
+	    printf("%e\n",bb_in[i]);
+	}
 	exit(1);
     }
     

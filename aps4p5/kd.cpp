@@ -511,7 +511,7 @@ void kd_tree::nn_srch(double *v, int kk, int *neigh, double *dd){
    //printf("%e %e\n",data[node][0],data[node][1]);
    
    for(i=1;i<kk;i++){
-     dd[i]=dd[0]+double(i)*1.0e6;
+     dd[i]=dd[0]+double(i)*exception;
      neigh[i]=-1;
    }
    

@@ -885,19 +885,102 @@ void likelihood::gradient_sample(){
 
     if(gg.pts<nparams)return;
     
+    double before=double(time(NULL));
     
-    double *delta_matrix,*f_vector,*gradient,*dd,*pt;
+    double *delta_matrix,*f_vector,*gradient,*dd,*pt,*trial,ratio=100.0;
     int *neighbors,maxdex;
     
     delta_matrix=new double[nparams*nparams];
     f_vector=new double[nparams];
     gradient=new double[nparams];
-    neighbors=new int[nparams];
-    dd=new double[nparams];
+    neighbors=new int[nparams+1];
+    dd=new double[nparams+1];
     pt=new double[nparams];
+    trial=new double[nparams];
     
     maxdex=choose_a_candidate();
     
+    int i,j,k,l;
+    for(i=0;i<nparams;i++){
+        pt[i]=gg.kptr->data[maxdex][i];
+    }
+    double f0=gg.fn[maxdex];
+    
+    double magnitude,chitrial;
+    int ii;
+    
+    for(ii=0;ii<200;ii++){
+        gg.kptr->nn_srch(pt,nparams+1,neighbors,dd);
+	
+	//printf("got neighbors\n");
+	if(neighbors[0]!=maxdex){
+	    printf("WARNING did not find self\n");
+	    exit(1);
+	}
+	
+	if(dd[1]<1.0e-20){
+	    printf("WARNING next nearest neighbor %e\n",dd[1]);
+	    exit(1);
+	}
+	
+	//printf("about to make everything\n");
+	
+	for(i=0;i<nparams;i++){
+	    
+	    for(j=0;j<nparams;j++){
+	         //printf("%d %d -- %d %d %d %d\n",i,j,neighbors[i+1],neighbors[2],gg.pts,maxdex);
+		 //printf("%e %e\n",dd[1],dd[2]);
+	        delta_matrix[i*nparams+j]=gg.kptr->data[neighbors[i+1]][j]-pt[j];
+	    }
+	    f_vector[i]=gg.fn[neighbors[i+1]]-f0;
+	}
+	
+	//printf("made vector and delta\n");
+	
+	naive_gaussian_solver(delta_matrix,f_vector,gradient,nparams);
+	
+	magnitude=0.0;
+	for(i=0;i<nparams;i++){
+	    magnitude+=gradient[i]*gradient[i];
+	    //printf("     grad %e\n",gradient[i]);
+	}
+	magnitude=sqrt(magnitude);
+	
+	for(i=0;i<nparams;i++){
+	    trial[i]=pt[i]-ratio*gradient[i]/magnitude;
+	}
+	
+	ct_mcmc++;
+	chitrial=(*call_likelihood)(trial);
+	//printf("chitrial %e -- rat %e mag %e f0 %e\n",chitrial,ratio,magnitude,f0);
+	if(chitrial<exception){
+	    //printf("adding\n");
+	    add_pt(trial,chitrial,1);
+	    //printf("added\n");
+	   
+	    if(chitrial<f0){
+	        f0=chitrial;
+	        maxdex=gg.pts-1;
+	        for(i=0;i<nparams;i++)pt[i]=trial[i];
+	    }
+	}
+	
+	if(chitrial>f0){
+	    if(ratio>2.0)ratio*=0.5;
+	    
+	    for(i=0;i<nparams;i++){
+	        trial[i]=normal_deviate(dice,pt[i],dd[1]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
+	    }
+	    chitrial=(*call_likelihood)(trial);
+	    ct_mcmc++;
+	    if(chitrial<exception){
+	        add_pt(trial,chitrial,1);
+	    }
+	    
+	}
+	//printf("moving on now\n");
+    }
+    //exit(1);
     
     delete [] pt;
     delete [] delta_matrix;
@@ -905,14 +988,19 @@ void likelihood::gradient_sample(){
     delete [] gradient;
     delete [] neighbors;
     delete [] dd;
-
+    
+    printf("after gradient chimin is %e\n",chimin);
+    
+    time_mcmc+=double(time(NULL))-before;
 }
 
 void likelihood::search(){
     
     int i;
     if(ct_mcmc<ct_aps && n_candidates>0){
-	mcmc_sample();
+	//mcmc_sample();
+	
+	gradient_sample();
 	write_pts();
     }
     else{
