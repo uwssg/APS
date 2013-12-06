@@ -523,7 +523,7 @@ void likelihood::sample_pts(){
        }
     
     
-        printf("focusing found %e -- %d -- %e -- %e\n",chitrue,ngood,chimin,dd);
+        //printf("focusing found %e -- %d -- %e -- %e\n",chitrue,ngood,chimin,dd);
     }
     
     //only add the point to the set of sampled points if chisquared is
@@ -562,7 +562,7 @@ void likelihood::sample_pts(){
     //is closer to the target value than the wanderer that is currently
     //farthest from the target value of chisquared
       
-      printf("chitrue %e target %e adding candidate\n",chitrue,target);
+      //printf("chitrue %e target %e adding candidate\n",chitrue,target);
       
       add_candidate(gg.pts-1);
       
@@ -744,7 +744,7 @@ void likelihood::mcmc_sample(){
   n_start=gg.pts;
  
 
-  printf("allotted everything %d\n",n_candidates);
+  //printf("allotted everything %d\n",n_candidates);
   
   if(n_candidates>0){
     
@@ -763,14 +763,14 @@ void likelihood::mcmc_sample(){
 	}
     }
     
-    printf("got maxdex %d %d\n",maxdex,candidates[maxdex]);
+    //printf("got maxdex %d %d\n",maxdex,candidates[maxdex]);
     
     for(i=0;i<nparams;i++){
         pt[i]=gg.kptr->data[candidates[maxdex]][i];
     }
     chitrue=gg.fn[candidates[maxdex]];
     
-    printf("\ngradient starting with %e\n\n",chitrue);
+    //printf("\ngradient starting with %e\n\n",chitrue);
     
     for(i=maxdex+1;i<n_candidates;i++){
         candidates[i-1]=candidates[i];
@@ -825,7 +825,7 @@ void likelihood::mcmc_sample(){
 	
 	if(took_a_step==1){
 	    chitrial=(*call_likelihood)(current);
-	    printf("chitrial %e chimin %e\n",chitrial,chimin);
+	    //printf("chitrial %e chimin %e\n",chitrial,chimin);
 	    ct_mcmc++;
 	    if(chitrial<exception){
 	       
@@ -849,7 +849,7 @@ void likelihood::mcmc_sample(){
     delete [] dd_buff;
     delete [] nn_buff;
     
-    printf("internal ct %d ending with %e\n",steps_taken,chitrue);
+    //printf("internal ct %d ending with %e\n",steps_taken,chitrue);
     //exit(1);
   }
   

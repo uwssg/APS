@@ -2110,7 +2110,7 @@ int gp::optimize(double *pt, double rr){
 	    printf("WARNING optimize did not find n_use %d %d\n",n_use,j);
 	    exit(1);
 	}
-	printf("n_use %d\n",n_use);
+	//printf("n_use %d\n",n_use);
 	optimize(use_dex,n_use);
 	
 	delete [] use_dex;
@@ -2193,9 +2193,9 @@ void gp::optimize(int *use_dex, int n_use){
 	    E+=power(mu-fn[use_dex[i]],2);
 	}
 	
-	printf("hh ");
+	/*printf("hh ");
 	for(i=0;i<nhy;i++)printf("%e ",hh[i]);
-	printf("E %e\n",E);
+	printf("E %e\n",E);*/
 	
 	if(ii==0 || E<Ebest){
 	    Ebest=E;
@@ -2221,9 +2221,9 @@ void gp::optimize(int *use_dex, int n_use){
 	
     }
     
-    printf("chose hyper parameters ");
+    /*printf("chose hyper parameters ");
     for(i=0;i<nhy;i++)printf("%e ",hhbest[i]);
-    printf("\n");
+    printf("\n");*/
     
     covariogram->set_hyper_parameters(hhbest);
     
