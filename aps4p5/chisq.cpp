@@ -1081,11 +1081,11 @@ double wmap_likelihood::operator()(double *v) const{
   wmaplikeness_(&cltt[start],&clte[start],&clee[start],\
   &clbb[start],&chisquared); //a function to call the WMAP likelihood code
   }
-  else chisquared=1.0e30;
+  else chisquared=2.0*exception;
 
  //printf("done with likelihood\n");
 
-  if(chisquared<0.01)chisquared=10.0*exception; 
+  if(chisquared<0.01)chisquared=2.0*exception; 
   			//in case the model was so pathological that the
 			//likelihood code crashed and returned
 			//chisquared=0  (this has been known to happen)

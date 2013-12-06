@@ -259,7 +259,7 @@ void likelihood::initialize(double **guesses, int nguess){
  }
  
  //assign the values of chisquared to the starting samples
- chimin=1.0e10;
+ chimin=exception;
  
  int mindex;
  
@@ -511,7 +511,7 @@ void likelihood::sample_pts(int delswit){
     //their chisquared values.  Choose only the one that maximizes strad
     //to feed through the actual chisquared function
     before=double(time(NULL));
-    stradmax=-1.0e10;
+    stradmax=-1.0*exception;
     for(i=0;i<nsamples;i++){
       
       for(j=0;j<nparams;j++){
