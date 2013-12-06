@@ -661,13 +661,13 @@ void likelihood::write_pts(){
  ,npts,foundbywandering,improvedbywandering,good);
   
   fprintf(timefile,\
-  "gptime %e ct %d ",krigtimewall/double(krigct),krigct);
+  "gptime %e ct %d ",krigtimewall/double(krigct),ct_aps);
   
   fprintf(timefile,\
   "liketime %e ct %d ",addtimewall/double(addct),addct);
   
   fprintf(timefile,\
-  "wandertime %e ct %d ",gradtimewall/double(gradct),gradct);
+  "wandertime %e ct %d ",gradtimewall/double(gradct),ct_grad);
   fprintf(timefile,"nearest_neighbors %d ns %d ",kk,nsamples);
   
   fprintf(timefile,"kd %d ",gg.kptr->diagnostic);
