@@ -7,7 +7,6 @@
 #define likeletters 500
 
 
-
 class likelihood{
  private:
   
