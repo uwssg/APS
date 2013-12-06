@@ -71,7 +71,7 @@ for(ii=0;ii<200;ii++){
     fclose(output);
     
     system("rm output/udder_output.sav");
-    system("rm output/udder_timeing.sav");
+    system("rm output/udder_timing.sav");
     
     delete aps;
     delete udder;

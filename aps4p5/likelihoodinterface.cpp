@@ -102,6 +102,8 @@ covariance_function *cv, chisquared *lk){
  
  call_likelihood=lk;
  
+ start_time=double(time(NULL));
+ 
  sprintf(timingname,"timingfile.sav");
  sprintf(masteroutname,"outputfile.sav");
  
@@ -640,11 +642,12 @@ void likelihood::write_pts(){
  //to make it less frequent or comment it out entirely
  if(npts%(10*writevery)==0)gg.kptr->check_tree(-1);
  
+ double total_time=double(time(NULL))-start_time;
  
  timefile=fopen(timingname,"a");
- fprintf(timefile,"%s %d good %d ",\
- masteroutname\
- ,npts,ngood);
+ fprintf(timefile,"%s %e %d %e good %d ",\
+ masteroutname,total_time,npts,total_time/double(npts),ngood);
+ 
   
   fprintf(timefile,"like %e %d %e ",
   call_likelihood->get_time(),call_likelihood->get_called(),
@@ -710,7 +713,7 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
          chimin=chitrue;
          if(chimin+deltachi<target && deltachi>0.0)target=chimin+deltachi;
          
-	 printf("     chimin is %e\n",chimin);
+	 //printf("     chimin is %e\n",chimin);
 	 
          for(i=0;i<nparams;i++)minpt[i]=v[i];
        }
