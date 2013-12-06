@@ -7,7 +7,7 @@ dimensionality MUST be the first keyword listed
 #dim 6 -- dimensionality of your parameter space
 
 #Ns 25 -- start with 2000 randomly sampled points
-#end 5000 -- end after the algorithm has sampled 200000 points
+#end 20000 -- end after the algorithm has sampled 200000 points
 
 #Nc 250 -- sample 250 candidates each time you use the Gaussian process
 #Ng 20 -- use 15 neareast neighbors in the Gaussian process
