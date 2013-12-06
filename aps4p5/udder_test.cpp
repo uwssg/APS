@@ -67,7 +67,7 @@ for(ii=0;ii<200;ii++){
     }
     
     output=fopen(outname,"a");
-    fprintf(output,"%d %d\n",udder->get_p3(),udder->get_n3());
+    fprintf(output,"%d %d\n",udder->get_n3(),udder->get_p3());
     fclose(output);
     
     system("rm output/udder_output.sav");
