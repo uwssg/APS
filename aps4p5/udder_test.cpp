@@ -24,7 +24,7 @@ for(i=0;i<dim;i++){
 likelihood *aps; //aps(6,mins,maxs,&covar,&udder);
 
 char outname[500];
-sprintf(outname,"udder_test_output.sav");
+sprintf(outname,"output/udder_test_output.sav");
 FILE *output;
 
 output=fopen(outname,"w");
