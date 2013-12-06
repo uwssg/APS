@@ -81,5 +81,12 @@ camb_wrapper_wmap.o chisq.o
 	 $(LIBRARIES) $(INCLUDES) \
 	 -Wno-deprecated
 
+udder: udder_test.cpp likelihoodinterface.o chisq.o
+	$(gg) -o udder udder_test.cpp goto_tools.o eigen_wrapper.o kd.o \
+	likelihoodinterface.o gaussian_process.o chisq.o camb_wrapper_wmap.o \
+	wmap_wrapper.o \
+	$(LIBRARIES) $(INCLUDE) \
+	-Wno-deprecated
+
 clean:
-	rm aps4p5 *.o
+	rm aps4p5 udder *.o
