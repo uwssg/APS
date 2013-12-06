@@ -264,7 +264,16 @@ void likelihood::initialize(double **guesses, int nguess){
  int mindex;
  
  for(j=0;j<npts;j++){
+   
    chisq[j]=(*call_likelihood)(base[j]);
+   while(!(chisq[j]<exception)){
+       for(i=0;i<nparams;i++){
+           base[j][i]=mnn[i]+dice->doub()*(mxx[i]-mnn[i]);
+       }
+       chisq[j]=(*call_likelihood)(base[j]);
+   }
+   
+   
    if(chisq[j]<chimin){
      chimin=chisq[j];
      for(i=0;i<nparams;i++)minpt[i]=base[j][i];
