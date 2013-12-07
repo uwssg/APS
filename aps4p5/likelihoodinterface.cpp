@@ -221,6 +221,8 @@ void likelihood::initialize(double **guesses, int nguess){
  printf("ran seed is %d\n",seed);
  dice=new Ran(seed);
  
+ printf("first call %e\n",dice->doub());
+ 
  gg.kk=kk;//set the number of nearest neighbors the gaussian process will
 	//use for predicting chisquared in sample_pts() and for
 	//calculating the gradient in grad_sample()
@@ -858,14 +860,18 @@ void likelihood::mcmc_sample(){
 
 int likelihood::choose_a_candidate(){
     
-    double dd,max;
+    double dd,max,ff,metric;
     int i,maxdex,to_return;
     
     for(i=0;i<n_candidates;i++){
         dd=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
-	if(i==0 || dd>max){
+	ff=sqrt(nparams)*(gg.fn[candidates[i]]-target)/target;
+	
+	metric=dd-ff;
+	
+	if(i==0 || metric>max){
 	    maxdex=i;
-	    max=dd;
+	    max=metric;
 	}
     }
     
@@ -960,7 +966,7 @@ void likelihood::gradient_sample(){
 	
 	    ct_mcmc++;
 	    chitrial=(*call_likelihood)(trial);
-	    printf("chitrial %e -- rat %e mag %e f0 %e\n",chitrial,ratio,magnitude,f0);
+	    //printf("chitrial %e -- rat %e mag %e f0 %e\n",chitrial,ratio,magnitude,f0);
 	}
 	else{
 	    chitrial=exception;
@@ -1008,6 +1014,7 @@ void likelihood::gradient_sample(){
     delete [] gradient;
     delete [] neighbors;
     delete [] dd;
+    delete [] trial;
     
     printf("after gradient chimin is %e\n",chimin);
     
