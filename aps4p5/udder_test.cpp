@@ -58,7 +58,7 @@ for(ii=0;ii<200;ii++){
     }
     
     foundboth=0;
-    for(i=0;i<10 && foundboth==0;i++){
+    for(i=0;i<100000 && foundboth==0;i++){
         aps->search();
 	
 	if(udder->get_p3()>=0 && udder->get_n3()>=0){
@@ -77,7 +77,7 @@ for(ii=0;ii<200;ii++){
     delete udder;
     delete covar;
     
-    printf("deleted everything I think\n");
+    //printf("deleted everything I think\n");
 }
 
 
