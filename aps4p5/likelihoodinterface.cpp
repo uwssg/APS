@@ -984,12 +984,6 @@ void likelihood::gradient_sample(){
 		ratio*=2.0;
 	    }
 	}
-	else{
-	    for(i=0;i<nparams;i++){
-	        printf("     %e %e\n",ratio*gradient[i]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/magnitude,trial[i]);
-	    }
-	    printf("\n");
-	}
 	
 	if(chitrial>f0){
 	    if(ratio>0.01)ratio*=0.5;
