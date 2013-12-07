@@ -892,7 +892,7 @@ void likelihood::gradient_sample(){
     double before=double(time(NULL));
     
     double *delta_matrix,*f_vector,*gradient,*dd,*pt,*trial,ratio=100.0;
-    int *neighbors,maxdex,abort;
+    int *neighbors,maxdex,abort,last_improved;
     
     delta_matrix=new double[nparams*nparams];
     f_vector=new double[nparams];
@@ -913,7 +913,7 @@ void likelihood::gradient_sample(){
     double magnitude,chitrial;
     int ii;
     
-    for(ii=0;ii<200;ii++){
+    for(ii=0;ii<100 || ii-last_improved<20;ii++){
         gg.kptr->nn_srch(pt,nparams+1,neighbors,dd);
 	
 	//printf("got neighbors\n");
@@ -978,6 +978,7 @@ void likelihood::gradient_sample(){
 	    //printf("added\n");
 	   
 	    if(chitrial<f0){
+	        last_improved=ii;
 	        f0=chitrial;
 	        maxdex=gg.pts-1;
 	        for(i=0;i<nparams;i++)pt[i]=trial[i];
@@ -985,7 +986,8 @@ void likelihood::gradient_sample(){
 	    }
 	}
 	
-	if(chitrial>f0){
+	if(chitrial>f0-precision){
+	    //if(fabs(chitrial-f0)<1.0e-4)printf("I think %e > %e\n",chitrial,f0);
 	    if(ratio>0.01)ratio*=0.5;
 	    
 	    for(i=0;i<nparams;i++){
