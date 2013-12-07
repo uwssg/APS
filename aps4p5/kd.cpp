@@ -8,8 +8,8 @@
 
 kd_tree::~kd_tree(){
   int i;
-  printf("room %d\n",room);
-  printf("in kd deletron\n");
+  //printf("room %d\n",room);
+  //printf("in kd deletron\n");
   delete [] mins;
   delete [] maxs;
   for(i=0;i<room;i++){
@@ -18,7 +18,7 @@ kd_tree::~kd_tree(){
   }
   delete [] tree;
   delete [] data;
-  printf("done destroying kd \n");
+  //printf("done destroying kd \n");
   
 }
 
