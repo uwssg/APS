@@ -368,6 +368,7 @@ chisquared::chisquared(int id){
     boundary_room=NULL;
     maxs=NULL;
     mins=NULL;
+    dice=NULL;
     
     rr_max=-1.0;
     called=0;
@@ -388,6 +389,7 @@ chisquared::chisquared(int id, int ic){
     boundary_room=NULL;
     maxs=NULL;
     mins=NULL;
+    dice=NULL;
     
     rr_max=-1.0;
     called=0;
@@ -400,10 +402,15 @@ chisquared::chisquared(int id, int ic){
 
 chisquared::~chisquared(){
     int i,ix,iy;
+    
+    //printf("starting to delete chisquared\n");
+    
     if(bases!=NULL){
         for(i=0;i<dim;i++)delete [] bases[i];
 	delete [] bases;
     }
+    
+    //printf("deleted bases\n");
     
     if(widths!=NULL){
         for(i=0;i<ncenters;i++){
@@ -411,6 +418,8 @@ chisquared::~chisquared(){
 	}
 	delete [] widths;
     }
+    
+    //printf("deleted widths\n");
     
     if(boundary!=NULL){
         for(ix=0;ix<dim;ix++){
@@ -427,21 +436,33 @@ chisquared::~chisquared(){
 	delete [] nboundary;
     }
     
+    //printf("deleted boundary and nboundary\n");
+    
     if(boundary_room!=NULL){
          delete [] boundary_room;
     }
+    
+    //printf("deleted boundary_room\n");
     
     if(centers!=NULL){
         for(i=0;i<ncenters;i++)delete [] centers[i];
 	delete [] centers;
     }
     
+    //printf("deleted centers\n");
+    
     if(dice!=NULL){
         delete dice;
     }
     
+    //printf("deleted dice\n");
+    
     if(maxs!=NULL)delete [] maxs;
     if(mins!=NULL)delete [] mins;
+    
+    //printf("deleted maxs and mins\n");
+    
+    //printf("done deleting chisquared\n");
 }
 
 void chisquared::set_max_min(

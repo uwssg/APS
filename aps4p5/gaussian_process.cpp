@@ -31,7 +31,7 @@ gp::~gp(){
   if(kptr!=NULL) delete kptr;
   if(neighbor_storage!=NULL) delete neighbor_storage;
   if(fn!=NULL) delete [] fn;
-  
+  //printf("done deleting gp\n");
 
  
 }
@@ -1032,16 +1032,23 @@ void covariance_function::set_hyper_parameter_min(int dex, double val){
 
 covariance_function::covariance_function(){
     dim=-1;
+    global_maxs=NULL;
+    global_mins=NULL;
+    hyper_max=NULL;
+    hyper_min=NULL;
 }
 
 covariance_function::~covariance_function(){
-    if(dim>0){
-        delete [] global_maxs;
-	delete [] global_mins;
-    }
+  //printf("in covariance destructor\n");
+  
+        if(global_maxs!=NULL)delete [] global_maxs;
+	if(global_mins!=NULL)delete [] global_mins;
     
-    delete [] hyper_max;
-    delete [] hyper_min;
+    
+    if(hyper_max!=NULL)delete [] hyper_max;
+    if(hyper_min!=NULL)delete [] hyper_min;
+    
+    //printf("done deleting covariance\n");
 }
 
 void covariance_function::set_dim(int dd){

@@ -24,7 +24,6 @@ int ipower(int arg, int ee){
 
 likelihood::~likelihood(){
   int i;
-  double **dd,*d;
 
   //Call subroutines with delswit=-1 so that they delete
   //pointers that were allocated on their initial call  
@@ -45,6 +44,8 @@ likelihood::~likelihood(){
   
   if(candidates!=NULL)delete [] candidates;
 
+
+  //printf("done deleting aps\n");
 }
 
 likelihood::likelihood(){
