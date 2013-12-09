@@ -931,7 +931,7 @@ int likelihood::choose_a_candidate(){
 	if(i==0 || dd<min){
 	    ichosen=i;
 	    min=dd;
-	    ddnormed=dd/norm;
+	    ddnormed=dd*norm;
 	}
     
     }
@@ -949,7 +949,7 @@ int likelihood::choose_a_candidate(){
 	}
     }*/
     
-    printf("    chose dd %e normed %e -- p %e f %e\n",min,ddnormed,
+    printf("    chose dd %e unnormed %e -- p %e f %e\n",min,ddnormed,
     gg.kptr->data[candidates[ichosen]][0],gg.fn[candidates[ichosen]]);
     
     to_return=candidates[ichosen];
@@ -1076,6 +1076,9 @@ void likelihood::gradient_sample(int in_dex){
 	//printf("moving on now\n");
     }
     //exit(1);
+    
+    add_minimum(pt);
+    
     
     delete [] pt;
 
