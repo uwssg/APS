@@ -432,7 +432,7 @@ char word[letters];
 }
 
 void likelihood::sample_pts(){
-  int i,j,k,l,ix;
+  int i,j,k,l,ix,minimize_it=0,minimize_dex;
   int focusing=0;
   double stradmax,strad,mu,sig,chitrue,mm,xx,yy,*candidate_gradient;
   double before,after,mubest,dd,nn;
@@ -523,6 +523,11 @@ void likelihood::sample_pts(){
     ct_aps++;
     chitrue=(*call_likelihood)(sambest);
     
+    if(chitrue<chimin){
+        minimize_it=1;
+	minimize_dex=gg.pts;
+    }
+    
     if(focusing==1){
        for(i=0;i<nparams;i++){
           nn=(sampling_max[i]-sampling_min[i])/(gg.kptr->maxs[i]-gg.kptr->mins[i]);
@@ -535,7 +540,7 @@ void likelihood::sample_pts(){
     
     //only add the point to the set of sampled points if chisquared is
     //reasonable
-
+  
     
     if(chitrue<exception){
       add_pt(sambest,chitrue,0);
@@ -575,8 +580,10 @@ void likelihood::sample_pts(){
       
       
     }//is this a grad wanderer situation
-
- 
+   
+   if(minimize_it==1){
+       gradient_sample(minimize_dex);
+   } 
   
   delete [] sampling_min;
   delete [] sampling_max;
@@ -915,7 +922,8 @@ int likelihood::choose_a_candidate(){
 	}
     }*/
     
-    printf("    chose dd %e normed %e\n",max,ddnormed);
+    printf("    chose dd %e normed %e -- p %e f %e\n",max,ddnormed,
+    gg.kptr->data[candidates[maxdex]][0],gg.fn[candidates[maxdex]]);
     
     to_return=candidates[maxdex];
     for(i=maxdex+1;i<n_candidates;i++){
@@ -927,16 +935,18 @@ int likelihood::choose_a_candidate(){
     
 }
 
-void likelihood::gradient_sample(){
+void likelihood::gradient_sample(int in_dex){
 
     if(gg.pts<nparams)return;
     
     double before=double(time(NULL));
     
     double *gradient,*pt,*trial,ratio=100.0,dd,chifound=-1.0;
-    int maxdex,abort,last_improved;
+    int maxdex,abort,last_improved,ct_abort=0;
     
-    maxdex=choose_a_candidate();
+    if(in_dex<0)maxdex=choose_a_candidate();
+    else maxdex=in_dex;
+    
     if(maxdex<0){
         n_candidates=0;
 	return;
@@ -958,6 +968,7 @@ void likelihood::gradient_sample(){
     
     for(ii=0;(ii<100 || ii-last_improved<20) && ii<200;ii++){
         abort=0;
+	dd=0.01;
 	try{
 	   
 	    dd=gg.actual_gradient(maxdex,gradient);
@@ -973,20 +984,27 @@ void likelihood::gradient_sample(){
 	        magnitude+=gradient[i]*gradient[i];
 	    }
 	    magnitude=sqrt(magnitude);
-	
+	    
+	    k=1;
 	    for(i=0;i<nparams;i++){
 	        trial[i]=pt[i]-ratio*gradient[i]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/magnitude;
-	    }
-	
-	    ct_mcmc++;
-	    chitrial=(*call_likelihood)(trial);
-	    if(chifound<0.0 || chitrial<chifound){
-	        chifound=chitrial;
+		if(trial[i]<gg.kptr->mins[i] || trial[i]>gg.kptr->maxs[i])k=0;
 	    }
 	    
+	    if(k==1){
+	        ct_mcmc++;
+	        chitrial=(*call_likelihood)(trial);
+	        if(chifound<0.0 || chitrial<chifound){
+	            chifound=chitrial;
+	        }
+	    }
+	    else{
+	        abort=1;
+	    }
 	}
-	else{
-	   
+        
+	if(abort==1){
+	    ct_abort++;
 	    chitrial=exception;
 	}
 	
@@ -1029,7 +1047,7 @@ void likelihood::gradient_sample(){
 
     delete [] trial;
     
-    printf("after gradient chimin is %e -- found %e\n",chimin,chifound);
+    printf("after gradient chimin is %e -- found %e aborted %d\n",chimin,chifound,ct_abort);
     
     time_mcmc+=double(time(NULL))-before;
 }
@@ -1040,7 +1058,7 @@ void likelihood::search(){
     if(ct_mcmc<ct_aps && n_candidates>0){
 	//mcmc_sample();
 	
-	gradient_sample();
+	gradient_sample(-1);
 	write_pts();
     }
     else{
