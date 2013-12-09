@@ -148,7 +148,7 @@ class gp{
     void initialize(int,double**,double*,double*,double*);
     double user_predict(double*,double*,int) const;
     void user_predict_gradient(double*,double*,int);
-    void actual_gradient(int,double*);
+    double actual_gradient(int,double*);
 
     void add_pt(double*,double);
     void write_data(char*);

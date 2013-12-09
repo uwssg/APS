@@ -756,7 +756,7 @@ const{
   return mu;
 }
 
-void gp::actual_gradient(int dex, double *vout){
+double gp::actual_gradient(int dex, double *vout){
     if(dex>=pts || dex<0){
         printf("WARNING asked for gradient at %d, pts %d\n",
 	dex,pts);
@@ -773,7 +773,7 @@ void gp::actual_gradient(int dex, double *vout){
 	for(i=0;i<dim;i++)vout[i]=0.0;
     }
 
-   double *delta_matrix,*f_vector,*dd;
+   double *delta_matrix,*f_vector,*dd,to_return;
    int *neighbors;
    
    neighbors=new int[dim+1];
@@ -782,6 +782,7 @@ void gp::actual_gradient(int dex, double *vout){
    f_vector=new double[dim];
    
    kptr->nn_srch(kptr->data[dex],dim+1,neighbors,dd);
+   to_return=dd[1];
    
    if(neighbors[0]!=dex){
 	printf("WARNING gradient did not find self\n");
@@ -795,7 +796,6 @@ void gp::actual_gradient(int dex, double *vout){
     
     
     for(i=0;i<dim;i++){
-	    
         for(j=0;j<dim;j++){
 	         //printf("%d %d -- %d %d %d %d\n",i,j,neighbors[i+1],neighbors[2],gg.pts,maxdex);
 		 //printf("%e %e\n",dd[1],dd[2]);
@@ -807,7 +807,6 @@ void gp::actual_gradient(int dex, double *vout){
     int abort=0;
     try{
 	naive_gaussian_solver(delta_matrix,f_vector,vout,dim);
-	
      }
      catch(int iex){
 	for(i=0;i<dim;i++){
@@ -827,6 +826,8 @@ void gp::actual_gradient(int dex, double *vout){
     delete [] f_vector;
     delete [] neighbors;
     delete [] dd;
+    
+    return to_return;
     
    
 }

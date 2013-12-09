@@ -892,14 +892,11 @@ void likelihood::gradient_sample(){
     
     double before=double(time(NULL));
     
-    double *delta_matrix,*f_vector,*gradient,*dd,*pt,*trial,ratio=100.0;
-    int *neighbors,maxdex,abort,last_improved;
+    double *gradient,*pt,*trial,ratio=100.0,dd;
+    int maxdex,abort,last_improved;
     
-    delta_matrix=new double[nparams*nparams];
-    f_vector=new double[nparams];
+    
     gradient=new double[nparams];
-    neighbors=new int[nparams+1];
-    dd=new double[nparams+1];
     pt=new double[nparams];
     trial=new double[nparams];
     
@@ -917,7 +914,7 @@ void likelihood::gradient_sample(){
     for(ii=0;(ii<100 || ii-last_improved<20) && ii<200;ii++){
         
 	try{
-	    gg.actual_gradient(maxdex,gradient);
+	    dd=gg.actual_gradient(maxdex,gradient);
 	}
 	catch(int iex){
 	    abort=1;
@@ -927,7 +924,6 @@ void likelihood::gradient_sample(){
 	    magnitude=0.0;
 	    for(i=0;i<nparams;i++){
 	        magnitude+=gradient[i]*gradient[i];
-	        //printf("     grad %e\n",gradient[i]);
 	    }
 	    magnitude=sqrt(magnitude);
 	
@@ -937,7 +933,6 @@ void likelihood::gradient_sample(){
 	
 	    ct_mcmc++;
 	    chitrial=(*call_likelihood)(trial);
-	    //printf("chitrial %e -- rat %e mag %e f0 %e\n",chitrial,ratio,magnitude,f0);
 	}
 	else{
 	    chitrial=exception;
@@ -963,7 +958,7 @@ void likelihood::gradient_sample(){
 	    if(ratio>0.01)ratio*=0.5;
 	    
 	    for(i=0;i<nparams;i++){
-	        trial[i]=normal_deviate(dice,pt[i],dd[1]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
+	        trial[i]=normal_deviate(dice,pt[i],dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
 	    }
 	    chitrial=(*call_likelihood)(trial);
 	    ct_mcmc++;
@@ -977,11 +972,9 @@ void likelihood::gradient_sample(){
     //exit(1);
     
     delete [] pt;
-    delete [] delta_matrix;
-    delete [] f_vector;
+
     delete [] gradient;
-    delete [] neighbors;
-    delete [] dd;
+
     delete [] trial;
     
     printf("after gradient chimin is %e\n",chimin);
