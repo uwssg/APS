@@ -914,7 +914,7 @@ void likelihood::gradient_sample(){
     double magnitude,chitrial;
     int ii;
     
-    for(ii=0;ii<100 || ii-last_improved<20;ii++){
+    for(ii=0;(ii<100 || ii-last_improved<20) && ii<200;ii++){
         gg.kptr->nn_srch(pt,nparams+1,neighbors,dd);
 	
 	//printf("got neighbors\n");
