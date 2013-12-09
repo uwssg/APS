@@ -628,9 +628,9 @@ void likelihood::write_pts(){
   if(i>=nprinted){//no need to print points that have already been printed
   
   for(j=0;j<nparams;j++){
-   fprintf(output,"%s %e ",pnames[j],gg.kptr->data[i][j]);
+   fprintf(output,"%s %.18le ",pnames[j],gg.kptr->data[i][j]);
   }
-  fprintf(output,"chisq %e ",gg.fn[i]);
+  fprintf(output,"chisq %.18le ",gg.fn[i]);
 
   fprintf(output,"ling %d\n",lingerflag[i]);
   }//if(i>=nprinted)

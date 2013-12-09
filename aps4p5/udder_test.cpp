@@ -8,6 +8,10 @@ main(){
 
 Ran chaos(87);
 
+int j,k;
+for(j=0;j<300;j++)k=chaos.int32();
+
+
 udder_likelihood *udder;
 gaussian_covariance *covar;
 
