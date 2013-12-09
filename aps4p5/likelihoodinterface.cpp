@@ -862,9 +862,44 @@ void likelihood::mcmc_sample(){
 int likelihood::choose_a_candidate(){
     
     double dd,max,ff,metric;
-    int i,maxdex=-1,to_return;
+    int i,maxdex=-1,to_return,j;
     
+    double *gradient,*to_min;
+    
+    gradient=new double[nparams];
+    to_min=new double[nparams];
     for(i=0;i<n_candidates;i++){
+        for(j=0;j<nparams;j++){
+	    to_min[j]=gg.kptr->data[candidates[i]][j]-minpt[j];
+	}
+	
+	try{
+	    gg.actual_gradient(candidates[i],gradient);
+	    dd=0.0;
+	    for(j=0;j<nparams;j++){
+	        dd+=gradient[j]*gradient[j];
+	    }
+	    dd=sqrt(dd);
+	    for(j=0;j<nparams;j++)gradient[j]=gradient[j]/dd;
+        }
+	catch(int iex){
+	    for(j=0;j<nparams;j++)gradient[j]=to_min[j];
+	}
+	
+	dd=0.0;
+	for(j=0;j<nparams;j++){
+	    dd+=to_min[j]*gradient[j];
+	}
+	
+	if(i==0 || dd<max){
+	    maxdex=i;
+	    max=dd;
+	}
+    
+    }
+    
+    
+    /*for(i=0;i<n_candidates;i++){
         dd=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
 	ff=sqrt(nparams)*(gg.fn[candidates[i]]-target)/target;
 	
@@ -874,7 +909,7 @@ int likelihood::choose_a_candidate(){
 	    maxdex=i;
 	    max=metric;
 	}
-    }
+    }*/
     
     to_return=candidates[maxdex];
     for(i=maxdex+1;i<n_candidates;i++){
