@@ -915,41 +915,11 @@ void likelihood::gradient_sample(){
     int ii;
     
     for(ii=0;(ii<100 || ii-last_improved<20) && ii<200;ii++){
-        gg.kptr->nn_srch(pt,nparams+1,neighbors,dd);
-	
-	//printf("got neighbors\n");
-	if(neighbors[0]!=maxdex){
-	    printf("WARNING did not find self\n");
-	    exit(1);
-	}
-	
-	if(dd[1]<1.0e-20){
-	    printf("WARNING next nearest neighbor %e\n",dd[1]);
-	    exit(1);
-	}
-	
-	//printf("about to make everything\n");
-	
-	for(i=0;i<nparams;i++){
-	    
-	    for(j=0;j<nparams;j++){
-	         //printf("%d %d -- %d %d %d %d\n",i,j,neighbors[i+1],neighbors[2],gg.pts,maxdex);
-		 //printf("%e %e\n",dd[1],dd[2]);
-	        delta_matrix[i*nparams+j]=(gg.kptr->data[neighbors[i+1]][j]-pt[j])/(gg.kptr->maxs[j]-gg.kptr->mins[j]);
-	    }
-	    f_vector[i]=gg.fn[neighbors[i+1]]-f0;
-	}
-	
-	//printf("made vector and delta\n");
-	
-	abort=0;
+        
 	try{
-	    naive_gaussian_solver(delta_matrix,f_vector,gradient,nparams);
+	    gg.actual_gradient(maxdex,gradient);
 	}
 	catch(int iex){
-	    for(i=0;i<nparams;i++){
-	        printf("%d %e\n",neighbors[i],gg.kptr->data[neighbors[i]][0]);
-	    }
 	    abort=1;
 	}
 	
@@ -976,6 +946,7 @@ void likelihood::gradient_sample(){
 	if(chitrial<exception){
 	    //printf("adding\n");
 	    add_pt(trial,chitrial,1);
+	   
 	    //printf("added\n");
 	   
 	    if(chitrial<f0){

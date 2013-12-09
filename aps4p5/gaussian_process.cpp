@@ -756,6 +756,81 @@ const{
   return mu;
 }
 
+void gp::actual_gradient(int dex, double *vout){
+    if(dex>=pts || dex<0){
+        printf("WARNING asked for gradient at %d, pts %d\n",
+	dex,pts);
+	
+	exit(1);
+    }
+    
+    int i,j;
+    
+    if(pts<dim){
+        printf("CANNOT call gradient yet; dim = %d pts =%d\n",
+	dim,pts);
+	
+	for(i=0;i<dim;i++)vout[i]=0.0;
+    }
+
+   double *delta_matrix,*f_vector,*dd;
+   int *neighbors;
+   
+   neighbors=new int[dim+1];
+   dd=new double[dim+1];
+   delta_matrix=new double[dim*dim];
+   f_vector=new double[dim];
+   
+   kptr->nn_srch(kptr->data[dex],dim+1,neighbors,dd);
+   
+   if(neighbors[0]!=dex){
+	printf("WARNING gradient did not find self\n");
+	exit(1);
+    }
+	
+    if(dd[1]<1.0e-20){
+	printf("WARNING gradient next nearest neighbor %e\n",dd[1]);
+	exit(1);
+    }
+    
+    
+    for(i=0;i<dim;i++){
+	    
+        for(j=0;j<dim;j++){
+	         //printf("%d %d -- %d %d %d %d\n",i,j,neighbors[i+1],neighbors[2],gg.pts,maxdex);
+		 //printf("%e %e\n",dd[1],dd[2]);
+            delta_matrix[i*dim+j]=(kptr->data[neighbors[i+1]][j]-kptr->data[dex][j])/(kptr->maxs[j]-kptr->mins[j]);
+        }
+       f_vector[i]=fn[neighbors[i+1]]-fn[dex];
+    }
+    
+    int abort=0;
+    try{
+	naive_gaussian_solver(delta_matrix,f_vector,vout,dim);
+	
+     }
+     catch(int iex){
+	for(i=0;i<dim;i++){
+	    printf("%d %e\n",neighbors[i],kptr->data[neighbors[i]][0]);
+	}
+        abort=1;
+	delete [] delta_matrix;
+	delete [] f_vector;
+	delete [] neighbors;
+	delete [] dd;
+	
+	throw abort;
+	
+    }
+    
+    delete [] delta_matrix;
+    delete [] f_vector;
+    delete [] neighbors;
+    delete [] dd;
+    
+   
+}
+
 void gp::user_predict_gradient(double *v,double *vout,int verbose){
   
   //this routine predicts the gradient of fn[]
