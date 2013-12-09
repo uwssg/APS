@@ -43,7 +43,8 @@ likelihood::~likelihood(){
   }
   
   if(candidates!=NULL)delete [] candidates;
-
+  
+  if(known_minima!=NULL)delete [] known_minima;
 
   //printf("done deleting aps\n");
 }
@@ -124,6 +125,10 @@ covariance_function *cv, chisquared *lk){
  candidates=NULL;
  n_candidates=0;
  room_candidates=0;
+ 
+ known_minima=NULL;
+ n_minima=0;
+ room_minima=0;
  
  mufitname[0]=0;
  
@@ -868,20 +873,42 @@ void likelihood::mcmc_sample(){
 
 int likelihood::choose_a_candidate(){
     
-    double dd,max,ff,metric;
-    int i,maxdex=-1,to_return,j;
+    double dd,max,ff,metric,min;
+    int i,maxdex=-1,to_return,j,nearest_dex,mindex=-1,ichosen=-1;
     
     double *gradient,*to_min,norm,ddnormed;
+    double *nearest;
     
     gradient=new double[nparams];
     to_min=new double[nparams];
+    nearest=new double[nparams];
     for(i=0;i<n_candidates;i++){
-        norm=0.0;
+        nearest_dex=-1;
+	for(j=0;j<n_minima;j++){
+	    dd=gg.kptr->distance(gg.kptr->data[candidates[i]],gg.kptr->data[known_minima[i]]);
+	    if(j==0 || dd<min){
+	        min=dd;
+		nearest_dex=known_minima[j];
+	    }
+	}
+	
+	if(nearest_dex>=0){
+	    for(j=0;j<nparams;j++)nearest[j]=gg.kptr->data[nearest_dex][j];
+	}
+	else{
+	    for(j=0;j<nparams;j++)nearest[j]=minpt[j];
+	}
+	
+	norm=0.0;
         for(j=0;j<nparams;j++){
-	    to_min[j]=(gg.kptr->data[candidates[i]][j]-minpt[j])/(gg.kptr->maxs[j]-gg.kptr->mins[j]);
+	    to_min[j]=(gg.kptr->data[candidates[i]][j]-nearest[j])/(gg.kptr->maxs[j]-gg.kptr->mins[j]);
 	    norm+=to_min[j]*to_min[j];
 	}
 	norm=sqrt(norm);
+	
+	for(j=0;j<nparams;j++){
+	    to_min[j]=to_min[j]/norm;
+	}
 	
 	try{
 	    gg.actual_gradient(candidates[i],gradient);
@@ -901,9 +928,9 @@ int likelihood::choose_a_candidate(){
 	    dd+=to_min[j]*gradient[j];
 	}
 	
-	if(i==0 || dd<max){
-	    maxdex=i;
-	    max=dd;
+	if(i==0 || dd<min){
+	    ichosen=i;
+	    min=dd;
 	    ddnormed=dd/norm;
 	}
     
@@ -917,19 +944,23 @@ int likelihood::choose_a_candidate(){
 	metric=dd-ff;
 	
 	if(i==0 || metric>max){
-	    maxdex=i;
+	    ichosen=i;
 	    max=metric;
 	}
     }*/
     
-    printf("    chose dd %e normed %e -- p %e f %e\n",max,ddnormed,
-    gg.kptr->data[candidates[maxdex]][0],gg.fn[candidates[maxdex]]);
+    printf("    chose dd %e normed %e -- p %e f %e\n",min,ddnormed,
+    gg.kptr->data[candidates[ichosen]][0],gg.fn[candidates[ichosen]]);
     
-    to_return=candidates[maxdex];
-    for(i=maxdex+1;i<n_candidates;i++){
+    to_return=candidates[ichosen];
+    for(i=ichosen+1;i<n_candidates;i++){
         candidates[i-1]=candidates[i];
     }
     n_candidates--;
+    
+    delete [] gradient;
+    delete [] to_min;
+    delete [] nearest;
     
     return to_return;
     
@@ -1115,3 +1146,41 @@ void likelihood::add_candidate(int dex){
 
 }
 
+void likelihood::add_minimum(double *pt){
+
+    if(n_minima>room_minima){
+        printf("WARNING n_minima %d room_minima %d\n",n_minima,room_minima);
+	exit(1);
+    }
+    
+    int dex;
+    double dd;
+    
+    gg.kptr->nn_srch(pt,1,&dex,&dd);
+    
+    int *buffer,i;
+    
+    if(known_minima==NULL){
+       room_minima=10;
+       known_minima=new int[room_minima];
+       n_minima=0;
+    }
+    
+    if(n_minima==room_minima){
+        buffer=new int[n_minima];
+	for(i=0;i<n_minima;i++){
+	    buffer[i]=known_minima[i];
+	}
+	delete [] known_minima;
+	room_minima+=10;
+	known_minima=new int[room_minima];
+	for(i=0;i<n_minima;i++){
+	    known_minima[i]=buffer[i];
+	}
+	delete [] buffer;
+    }
+    
+    known_minima[n_minima]=dex;
+    n_minima++;
+    
+}

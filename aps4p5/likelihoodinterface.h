@@ -31,7 +31,11 @@ class likelihood{
   
   int *candidates,n_candidates,room_candidates;
   
+  int *known_minima,n_minima,room_minima;
+  
   void add_candidate(int);
+  
+  void add_minimum(double*);
  
     void sample_pts();//do the `usual' APS sampling
    
