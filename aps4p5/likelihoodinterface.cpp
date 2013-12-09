@@ -952,6 +952,11 @@ void likelihood::gradient_sample(int in_dex){
 	return;
     }
     
+    if(maxdex>=gg.pts){
+        printf("WARNING maxdex %d pts %d ; in_dex %d\n",gg.pts,in_dex);
+	return;
+    } 
+    
     gradient=new double[nparams];
     pt=new double[nparams];
     trial=new double[nparams];
