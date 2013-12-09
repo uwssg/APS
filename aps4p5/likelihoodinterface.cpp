@@ -864,14 +864,17 @@ int likelihood::choose_a_candidate(){
     double dd,max,ff,metric;
     int i,maxdex=-1,to_return,j;
     
-    double *gradient,*to_min;
+    double *gradient,*to_min,norm,ddnormed;
     
     gradient=new double[nparams];
     to_min=new double[nparams];
     for(i=0;i<n_candidates;i++){
+        norm=0.0;
         for(j=0;j<nparams;j++){
-	    to_min[j]=gg.kptr->data[candidates[i]][j]-minpt[j];
+	    to_min[j]=(gg.kptr->data[candidates[i]][j]-minpt[j])/(gg.kptr->maxs[j]-gg.kptr->mins[j]);
+	    norm+=to_min[j]*to_min[j];
 	}
+	norm=sqrt(norm);
 	
 	try{
 	    gg.actual_gradient(candidates[i],gradient);
@@ -894,6 +897,7 @@ int likelihood::choose_a_candidate(){
 	if(i==0 || dd<max){
 	    maxdex=i;
 	    max=dd;
+	    ddnormed=dd/norm;
 	}
     
     }
@@ -910,6 +914,8 @@ int likelihood::choose_a_candidate(){
 	    max=metric;
 	}
     }*/
+    
+    printf("    chose dd %e normed %e\n",max,ddnormed);
     
     to_return=candidates[maxdex];
     for(i=maxdex+1;i<n_candidates;i++){
