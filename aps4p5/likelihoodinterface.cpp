@@ -878,7 +878,7 @@ int likelihood::choose_a_candidate(){
     int i,maxdex=-1,to_return,j,nearest_dex,mindex=-1,ichosen=-1;
     
     double *gradient,*to_min,norm,ddnormed;
-    double *nearest;
+    double *nearest,best;
     
     printf("choosing a candidate\n");
     
@@ -935,9 +935,9 @@ int likelihood::choose_a_candidate(){
 	    dd+=to_min[j]*gradient[j];
 	}
 	
-	if(i==0 || dd<min){
+	if(i==0 || dd<best){
 	    ichosen=i;
-	    min=dd;
+	    best=dd;
 	    ddnormed=dd*norm;
 	}
     
@@ -950,13 +950,13 @@ int likelihood::choose_a_candidate(){
 	
 	metric=dd-ff;
 	
-	if(i==0 || metric>max){
+	if(i==0 || metric>best){
 	    ichosen=i;
-	    max=metric;
+	    best=metric;
 	}
     }*/
     
-    printf("    chose dd %e unnormed %e -- p %e f %e\n",min,ddnormed,
+    printf("    chose dd %e unnormed %e -- p %e f %e\n",best,ddnormed,
     gg.kptr->data[candidates[ichosen]][0],gg.fn[candidates[ichosen]]);
     
     to_return=candidates[ichosen];
@@ -1207,4 +1207,10 @@ void likelihood::add_minimum(double *pt){
     n_minima++;
     printf("distance to previous minimum %e\n",dd);
     
+}
+
+void likelihood::guess(double *pt){
+    double chitrue=(*call_likelihood)(pt);
+    printf("\nguessing %e\n",chitrue);
+    add_pt(pt,chitrue,1);
 }

@@ -89,7 +89,8 @@ class likelihood{
    			//target = chisquared_min + delta chisquared
    
    void set_seed(int);//set the seed for the random number generator
- 
+  
+  void guess(double*);
   
 };
 

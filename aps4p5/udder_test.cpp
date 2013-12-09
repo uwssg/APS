@@ -61,6 +61,17 @@ for(ii=0;ii<200;ii++){
 	sprintf(aps->pnames[i],"p%d",i);
     }
     
+    int guessed=0;
+    double *guess;
+    
+    guess=new double[dim];
+    guess[0]=2.2;
+    guess[1]=0.01;
+    guess[2]=0.1;
+    guess[3]=-0.1;
+    guess[4]=0.0;
+    guess[5]=-0.2;
+    
     foundboth=0;
     for(i=0;i<100000 && foundboth==0;i++){
         aps->search();
@@ -68,6 +79,12 @@ for(ii=0;ii<200;ii++){
 	if(udder->get_p3()>=0 && udder->get_n3()>=0){
 	    foundboth=1;
 	}
+	
+	if(aps->npts>3000 && guessed==0){
+	    guessed=1;
+	    aps->guess(guess);
+	}
+	
     }
     
     output=fopen(outname,"a");
