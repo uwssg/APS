@@ -703,6 +703,7 @@ void likelihood::add_pt(double *v, double chitrue, int lling){
   double dd;
   int ii;
   
+  
   gg.kptr->nn_srch(v,1,&ii,&dd);
   
   if(dd>1.0e-10){
@@ -879,13 +880,15 @@ int likelihood::choose_a_candidate(){
     double *gradient,*to_min,norm,ddnormed;
     double *nearest;
     
+    printf("choosing a candidate\n");
+    
     gradient=new double[nparams];
     to_min=new double[nparams];
     nearest=new double[nparams];
     for(i=0;i<n_candidates;i++){
         nearest_dex=-1;
 	for(j=0;j<n_minima;j++){
-	    dd=gg.kptr->distance(gg.kptr->data[candidates[i]],gg.kptr->data[known_minima[i]]);
+	    dd=gg.kptr->distance(gg.kptr->data[candidates[i]],gg.kptr->data[known_minima[j]]);
 	    if(j==0 || dd<min){
 	        min=dd;
 		nearest_dex=known_minima[j];
@@ -906,8 +909,10 @@ int likelihood::choose_a_candidate(){
 	}
 	norm=sqrt(norm);
 	
-	for(j=0;j<nparams;j++){
-	    to_min[j]=to_min[j]/norm;
+	if(norm>0.0){
+	    for(j=0;j<nparams;j++){
+	        to_min[j]=to_min[j]/norm;
+	    }
 	}
 	
 	try{
@@ -917,7 +922,9 @@ int likelihood::choose_a_candidate(){
 	        dd+=gradient[j]*gradient[j];
 	    }
 	    dd=sqrt(dd);
-	    for(j=0;j<nparams;j++)gradient[j]=gradient[j]/dd;
+	    if(dd>0.0){
+	        for(j=0;j<nparams;j++)gradient[j]=gradient[j]/dd;
+	    }
         }
 	catch(int iex){
 	    for(j=0;j<nparams;j++)gradient[j]=to_min[j];
@@ -1086,7 +1093,7 @@ void likelihood::gradient_sample(int in_dex){
 
     delete [] trial;
     
-    printf("after gradient chimin is %e -- found %e aborted %d\n",chimin,chifound,ct_abort);
+    printf("after gradient chimin is %e -- found %e aborted %d\n\n",chimin,chifound,ct_abort);
     
     time_mcmc+=double(time(NULL))-before;
 }
@@ -1150,18 +1157,31 @@ void likelihood::add_candidate(int dex){
 }
 
 void likelihood::add_minimum(double *pt){
-
+    
+   
+    
     if(n_minima>room_minima){
         printf("WARNING n_minima %d room_minima %d\n",n_minima,room_minima);
 	exit(1);
     }
     
     int dex;
-    double dd;
+    double dd,nn;
+    int i,j;
     
     gg.kptr->nn_srch(pt,1,&dex,&dd);
     
-    int *buffer,i;
+    dd=1.0;
+    for(i=0;i<n_minima;i++){
+        nn=gg.kptr->distance(pt,gg.kptr->data[known_minima[i]]);
+	if(i==0 || nn<dd){
+	    dd=nn;
+	}
+    }
+    
+    if(dd<0.05)return;
+    
+    int *buffer;
     
     if(known_minima==NULL){
        room_minima=10;
@@ -1185,5 +1205,6 @@ void likelihood::add_minimum(double *pt){
     
     known_minima[n_minima]=dex;
     n_minima++;
+    printf("distance to previous minimum %e\n",dd);
     
 }
