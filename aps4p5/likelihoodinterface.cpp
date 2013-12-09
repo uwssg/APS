@@ -895,12 +895,16 @@ void likelihood::gradient_sample(){
     double *gradient,*pt,*trial,ratio=100.0,dd,chifound=-1.0;
     int maxdex,abort,last_improved;
     
+    maxdex=choose_a_candidate();
+    if(maxdex<0){
+        n_candidates=0;
+	return;
+    }
     
     gradient=new double[nparams];
     pt=new double[nparams];
     trial=new double[nparams];
     
-    maxdex=choose_a_candidate();
     
     int i,j,k,l;
     for(i=0;i<nparams;i++){
