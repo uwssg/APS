@@ -862,7 +862,7 @@ void likelihood::mcmc_sample(){
 int likelihood::choose_a_candidate(){
     
     double dd,max,ff,metric;
-    int i,maxdex,to_return;
+    int i,maxdex=-1,to_return;
     
     for(i=0;i<n_candidates;i++){
         dd=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
