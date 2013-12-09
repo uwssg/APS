@@ -1884,6 +1884,13 @@ const{
     if(raw_neigh[0]!=dex){
         printf("WARNING in self predict dex %d neigh %d dd %e\n",
 	dex,raw_neigh[0],raw_dd[0]);
+	
+	for(i=0;i<kk+1;i++){
+	    printf("dex %d dd %e\n",raw_neigh[i],raw_dd[i]);
+	}
+	
+	exit(1);
+	
     } 
     
     for(i=0;i<kk;i++){
