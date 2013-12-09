@@ -892,7 +892,7 @@ void likelihood::gradient_sample(){
     
     double before=double(time(NULL));
     
-    double *gradient,*pt,*trial,ratio=100.0,dd;
+    double *gradient,*pt,*trial,ratio=100.0,dd,chifound=-1.0;
     int maxdex,abort,last_improved;
     
     
@@ -912,11 +912,13 @@ void likelihood::gradient_sample(){
     int ii;
     
     for(ii=0;(ii<100 || ii-last_improved<20) && ii<200;ii++){
-        
+        abort=0;
 	try{
+	   
 	    dd=gg.actual_gradient(maxdex,gradient);
 	}
 	catch(int iex){
+	   
 	    abort=1;
 	}
 	
@@ -933,8 +935,13 @@ void likelihood::gradient_sample(){
 	
 	    ct_mcmc++;
 	    chitrial=(*call_likelihood)(trial);
+	    if(chifound<0.0 || chitrial<chifound){
+	        chifound=chitrial;
+	    }
+	    
 	}
 	else{
+	   
 	    chitrial=exception;
 	}
 	
@@ -977,7 +984,7 @@ void likelihood::gradient_sample(){
 
     delete [] trial;
     
-    printf("after gradient chimin is %e\n",chimin);
+    printf("after gradient chimin is %e -- found %e\n",chimin,chifound);
     
     time_mcmc+=double(time(NULL))-before;
 }
