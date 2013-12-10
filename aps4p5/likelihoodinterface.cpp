@@ -999,6 +999,7 @@ void likelihood::gradient_sample(int in_dex){
     
     double *gradient,*pt,*trial,ratio=100.0,dd,nn,chifound=-1.0;
     int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0,istart;
+    int has_refined=0;
     double dx0=10.0,dx1=10.0,dx2=10.0;
     
     istart=call_likelihood->get_called();
@@ -1108,8 +1109,13 @@ void likelihood::gradient_sample(int in_dex){
 	    //if(fabs(chitrial-f0)<1.0e-4)printf("I think %e > %e\n",chitrial,f0);
 	    if(ratio>0.01)ratio*=0.5;
 	    
-	    if(dx0<1.0 && dx1>1.0)k=nparams;
-	    else k=1;
+	    if(dx0<1.0 && has_refined==0){
+	        k=nparams;
+		has_refined=1;
+            }
+	    else{
+	        k=1;
+	    }
 	    
 	    for(j=0;j<k;j++){
 	        nn=0.0;
@@ -1139,6 +1145,8 @@ void likelihood::gradient_sample(int in_dex){
 	    dx2=dx1;
 	    dx1=dx0;
 	    dx0=f0-chitrial;
+	    
+	    if(dx0>1.0)has_refined=0;
 	    
 	    last_improved=ii;
 	    f0=chitrial;
