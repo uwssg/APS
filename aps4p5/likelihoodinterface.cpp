@@ -759,7 +759,7 @@ void likelihood::mcmc_sample(){
   
   int steps_taken=0;
   double step_size,took_a_step;
-  
+  int istart=call_likelihood->get_called();
   
   before=double(time(NULL));
   gg.reset_cache();
@@ -838,7 +838,7 @@ void likelihood::mcmc_sample(){
 	if(took_a_step==1){
 	    chitrial=(*call_likelihood)(current);
 	    //printf("chitrial %e chimin %e\n",chitrial,chimin);
-	    ct_mcmc++;
+	    
 	    if(chitrial<exception){
 	       
 	        add_pt(current,chitrial,1);
@@ -860,6 +860,8 @@ void likelihood::mcmc_sample(){
     delete [] dx;
     delete [] dd_buff;
     delete [] nn_buff;
+    
+    ct_mcmc+=call_likelihood->get_called()-istart;
     
     //printf("internal ct %d ending with %e\n",steps_taken,chitrue);
     //exit(1);
@@ -994,8 +996,10 @@ void likelihood::gradient_sample(int in_dex){
     double before=double(time(NULL));
     
     double *gradient,*pt,*trial,ratio=100.0,dd,nn,chifound=-1.0;
-    int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0;
+    int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0,istart;
     double dx0=10.0,dx1=10.0;
+    
+    istart=call_likelihood->get_called();
     
     if(in_dex<0)maxdex=choose_a_candidate();
     else maxdex=in_dex;
@@ -1039,7 +1043,7 @@ void likelihood::gradient_sample(int in_dex){
 	    trial[i]+=pt[i];
 	}
 	
-	ct_mcmc++;
+	
 	chitrial=(*call_likelihood)(trial);
 	printf("adding %e\n",chitrial);
 	if(chitrial<exception){
@@ -1074,7 +1078,7 @@ void likelihood::gradient_sample(int in_dex){
 	    }
 	    
 	    if(k==1){
-	        ct_mcmc++;
+	        
 	        chitrial=(*call_likelihood)(trial);
 	        if(chifound<0.0 || chitrial<chifound){
 	            chifound=chitrial;
@@ -1107,7 +1111,7 @@ void likelihood::gradient_sample(int in_dex){
 	        trial[i]=normal_deviate(dice,pt[i],dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
 	    }
 	    chitrial=(*call_likelihood)(trial);
-	    ct_mcmc++;
+	    
 	    if(chitrial<exception){
 	        add_pt(trial,chitrial,1);
 	    }
@@ -1130,7 +1134,7 @@ void likelihood::gradient_sample(int in_dex){
        
        
        if(abort==1){
-           for(i=0;i<nparams;i++){
+           for(i=0;i<1;i++){
 	       nn=0.0;
 	       for(j=0;j<nparams;j++){
 	           trial[j]=normal_deviate(dice,0.0,0.1);
@@ -1141,7 +1145,7 @@ void likelihood::gradient_sample(int in_dex){
 		   trial[j]+=pt[j];
 	       }
 	       
-	       ct_mcmc++;
+	      
 	       chitrial=(*call_likelihood)(trial);
 	       if(chitrial<exception){
 	           add_pt(trial,chitrial,1);
@@ -1162,11 +1166,12 @@ void likelihood::gradient_sample(int in_dex){
     delete [] trial;
     
     printf("after gradient chimin is %.4e -- found %.4e %.4e abort %d fudge %d tot %d %d\n\n",
-    chimin,pt[0],chifound,ct_abort,ct_fudge,ii,ct_mcmc);
+    chimin,pt[0],chifound,ct_abort,ct_fudge,ii,call_likelihood->get_called()-istart);
     
     delete [] pt;
     
     time_mcmc+=double(time(NULL))-before;
+    ct_mcmc+=call_likelihood->get_called()-istart;
 }
 
 void likelihood::search(){
