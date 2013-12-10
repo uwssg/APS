@@ -1106,10 +1106,18 @@ void likelihood::gradient_sample(int in_dex){
 	    //if(fabs(chitrial-f0)<1.0e-4)printf("I think %e > %e\n",chitrial,f0);
 	    if(ratio>0.01)ratio*=0.5;
 	    
-	    
+	    nn=0.0;
 	    for(i=0;i<nparams;i++){
-	        trial[i]=normal_deviate(dice,pt[i],dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
+	        trial[i]=normal_deviate(dice,0.0,0.1);
+		nn+=trial[i]*trial[i];
 	    }
+	    nn=sqrt(nn);
+	    for(i=0;i<nparams;i++){
+	        trial[i]*=dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
+		trial[i]+=pt[i];
+	    }
+	    
+	    
 	    chitrial=(*call_likelihood)(trial);
 	    
 	    if(chitrial<exception){
@@ -1133,7 +1141,7 @@ void likelihood::gradient_sample(int in_dex){
        }
        
        
-       if(abort==1){
+       /*if(abort==1){
            for(i=0;i<1;i++){
 	       nn=0.0;
 	       for(j=0;j<nparams;j++){
@@ -1151,7 +1159,7 @@ void likelihood::gradient_sample(int in_dex){
 	           add_pt(trial,chitrial,1);
 	       }
 	   }
-       }
+       }*/
 
     }
     //exit(1);
