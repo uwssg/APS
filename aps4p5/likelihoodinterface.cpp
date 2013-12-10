@@ -999,7 +999,7 @@ void likelihood::gradient_sample(int in_dex){
     
     double *gradient,*pt,*trial,ratio=100.0,dd,nn,chifound=-1.0;
     int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0,istart;
-    double dx0=10.0,dx1=10.0;
+    double dx0=10.0,dx1=10.0,dx2=10.0;
     
     istart=call_likelihood->get_called();
     
@@ -1054,7 +1054,7 @@ void likelihood::gradient_sample(int in_dex){
     }
     
     
-    for(ii=0;(ii<100 || ii-last_improved<20) && (dx1>1.0 || dx0>1.0);ii++){
+    for(ii=0;(ii<100 || ii-last_improved<20) && (dx1>1.0 || dx0>1.0 || dx2>1.0);ii++){
         abort=0;
 	gg.kptr->nn_srch(pt,1,&j,&dd);
 	if(ii==0)printf("dd %e\n",dd);
@@ -1136,6 +1136,7 @@ void likelihood::gradient_sample(int in_dex){
 	    printf("    found %e on %d %d -- %e -- %e\n",
 	    chitrial,ii,call_likelihood->get_called()-istart,chitrial-f0,dd);
 	    
+	    dx2=dx1;
 	    dx1=dx0;
 	    dx0=f0-chitrial;
 	    
