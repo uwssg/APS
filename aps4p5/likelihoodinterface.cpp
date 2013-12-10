@@ -586,6 +586,8 @@ void likelihood::sample_pts(){
       
     }//is this a grad wanderer situation
    
+   time_aps+=double(time(NULL))-before;
+   
    if(minimize_it==1){
        gradient_sample(minimize_dex);
    } 
@@ -595,7 +597,7 @@ void likelihood::sample_pts(){
   delete [] sambest;
   delete [] samv;
   
-  time_aps+=double(time(NULL))-before;
+ 
   
 }
 
