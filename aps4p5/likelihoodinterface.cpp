@@ -951,10 +951,21 @@ int likelihood::choose_a_candidate(){
     */
     
     for(i=0;i<n_candidates;i++){
-        dd=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
+        min=-1.0;
+        for(j=0;j<n_minima;j++){
+            dd=gg.kptr->distance(gg.kptr->data[candidates[i]],gg.kptr->data[known_minima[j]]);
+	    if(j==0 || dd<min){
+	        min=dd;
+	    }
+	}
+	
+	if(min<0.0){
+	    min=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
+	}
+	
 	ff=sqrt(nparams)*(gg.fn[candidates[i]]-target)/target;
 	
-	metric=dd-ff;
+	metric=min-ff;
 	
 	if(i==0 || metric>best){
 	    ichosen=i;
