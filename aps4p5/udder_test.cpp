@@ -4,12 +4,17 @@
 
 #include "likelihoodinterface.h"
 
-main(){
+main(int iargc, char *argv[]){
 
 Ran chaos(87);
 
-int j,k;
-for(j=0;j<300;j++)k=chaos.int32();
+int j,k,iterations=0;
+
+if(iargc>1){
+    iterations=atoi(argv[1]);
+}
+
+for(j=0;j<50*iterations;j++)k=chaos.int32();
 
 
 udder_likelihood *udder;
@@ -28,7 +33,7 @@ for(i=0;i<dim;i++){
 likelihood *aps; //aps(6,mins,maxs,&covar,&udder);
 
 char outname[500];
-sprintf(outname,"output/udder_test_output.sav");
+sprintf(outname,"output/udder_test_output_%d.sav",iterations);
 FILE *output;
 
 output=fopen(outname,"w");
@@ -37,14 +42,19 @@ fclose(output);
 int ii,foundboth;
 double **g;
 
+char name[500];
+
 for(ii=0;ii<200;ii++){
     udder=new udder_likelihood;
     covar=new gaussian_covariance;
     
     aps=new likelihood(6,mins,maxs,covar,udder);
     
-    aps->set_outname("output/udder_output.sav");
-    aps->set_timingname("output/udder_timing.sav");
+    sprintf(name,"output/udder_output_%d.sav",iterations);
+    aps->set_outname(name);
+    
+    sprintf(name,"output/udder_timing_%d.sav",iterations);
+    aps->set_timingname(name);
     
     aps->npts=1000;
     aps->nsamples=1000;    
@@ -93,8 +103,13 @@ for(ii=0;ii<200;ii++){
     
     //exit(1);
     
-    system("rm output/udder_output.sav");
-    system("rm output/udder_timing.sav");
+    sprintf(name,"rm output/udder_output_%d.sav",iterations);
+    system(name);
+    
+    sprintf(name,"rm output/udder_timing_%d.sav",iterations);
+    system(name);
+    
+
     
     delete aps;
     delete udder;
