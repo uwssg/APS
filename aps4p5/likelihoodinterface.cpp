@@ -1108,8 +1108,8 @@ void likelihood::gradient_sample(int in_dex){
 	    //if(fabs(chitrial-f0)<1.0e-4)printf("I think %e > %e\n",chitrial,f0);
 	    if(ratio>0.01)ratio*=0.5;
 	    
-	    if(dx0>1.0)k=1;
-	    else k=nparams;
+	    if(dx0<1.0 && dx1>1.0)k=nparams;
+	    else k=1;
 	    
 	    for(j=0;j<k;j++){
 	        nn=0.0;
