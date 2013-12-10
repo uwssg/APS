@@ -993,7 +993,7 @@ void likelihood::gradient_sample(int in_dex){
     
     double before=double(time(NULL));
     
-    double *gradient,*pt,*trial,ratio=100.0,dd,chifound=-1.0;
+    double *gradient,*pt,*trial,ratio=100.0,dd,nn,chifound=-1.0;
     int maxdex,abort,last_improved,ct_abort=0,ct_fudge=0;
     
     if(in_dex<0)maxdex=choose_a_candidate();
@@ -1022,6 +1022,26 @@ void likelihood::gradient_sample(int in_dex){
     
     double magnitude,chitrial;
     int ii;
+    
+    gg.kptr->nn_srch(pt,1,&j,&dd);
+    
+    for(ii=0;ii<nparams;ii++){
+        nn=0.0;
+        for(i=0;i<nparams;i++){
+	    trial[i]=normal_deviate(dice,0.0,1.0);
+	    nn+=trial[i]*trial[i];
+	}
+	nn=sqrt(nn);
+	for(i=0;i<nparams;i++){
+	    trial[i]*=dd/nn;
+	    trial[i]+=pt[i];
+	}
+	chitrial=(*call_likelihood)(trial);
+	if(chitrial<exception){
+	    add_pt(trial,chitrial,1);
+	}
+    }
+    
     
     for(ii=0;(ii<100 || ii-last_improved<20) && ii<200;ii++){
         abort=0;
