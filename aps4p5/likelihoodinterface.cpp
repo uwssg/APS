@@ -1054,7 +1054,7 @@ void likelihood::gradient_sample(int in_dex){
     }
     
     
-    for(ii=0;(ii<100 || ii-last_improved<20) && (dx1>1.0 || dx0>1.0 || dx2>1.0);ii++){
+    for(ii=0;(ii<100 || ii-last_improved<100) && (dx1>1.0 || dx0>1.0 || dx2>1.0);ii++){
         abort=0;
 	gg.kptr->nn_srch(pt,1,&j,&dd);
 	if(ii==0)printf("dd %e\n",dd);
