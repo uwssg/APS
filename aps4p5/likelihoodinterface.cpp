@@ -1108,25 +1108,29 @@ void likelihood::gradient_sample(int in_dex){
 	    //if(fabs(chitrial-f0)<1.0e-4)printf("I think %e > %e\n",chitrial,f0);
 	    if(ratio>0.01)ratio*=0.5;
 	    
-	    nn=0.0;
-	    for(i=0;i<nparams;i++){
-	        trial[i]=normal_deviate(dice,0.0,0.1);
-		nn+=trial[i]*trial[i];
+	    if(dx0>1.0)k=1;
+	    else k=nparams;
+	    
+	    for(j=0;j<k;j++){
+	        nn=0.0;
+	        for(i=0;i<nparams;i++){
+	            trial[i]=normal_deviate(dice,0.0,0.1);
+		    nn+=trial[i]*trial[i];
+	        }
+	        nn=sqrt(nn);
+	        for(i=0;i<nparams;i++){
+	            trial[i]*=dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
+		    trial[i]+=pt[i];
+	        }
+	    
+	    
+	        chitrial=(*call_likelihood)(trial);
+	    
+	        if(chitrial<exception){
+	            add_pt(trial,chitrial,1);
+	        }
+	        ct_fudge++;
 	    }
-	    nn=sqrt(nn);
-	    for(i=0;i<nparams;i++){
-	        trial[i]*=dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
-		trial[i]+=pt[i];
-	    }
-	    
-	    
-	    chitrial=(*call_likelihood)(trial);
-	    
-	    if(chitrial<exception){
-	        add_pt(trial,chitrial,1);
-	    }
-	    ct_fudge++;
-	    
 	}
         else if(chitrial<f0){
 	    printf("    found %e on %d -- %e\n",chitrial,ii,chitrial-f0);
