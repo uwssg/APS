@@ -1119,7 +1119,7 @@ void likelihood::gradient_sample(int in_dex){
 	        }
 	        nn=sqrt(nn);
 	        for(i=0;i<nparams;i++){
-	            trial[i]*=dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
+	            trial[i]*=0.5*dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
 		    trial[i]+=pt[i];
 	        }
 	    
@@ -1133,7 +1133,8 @@ void likelihood::gradient_sample(int in_dex){
 	    }
 	}
         else if(chitrial<f0){
-	    printf("    found %e on %d -- %e\n",chitrial,ii,chitrial-f0);
+	    printf("    found %e on %d %d -- %e -- %e\n",
+	    chitrial,ii,call_likelihood->get_called()-istart,chitrial-f0,dd);
 	    
 	    dx1=dx0;
 	    dx0=f0-chitrial;
