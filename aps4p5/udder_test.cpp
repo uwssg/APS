@@ -12,6 +12,7 @@ int j,k,iterations=0;
 
 if(iargc>1){
     iterations=atoi(argv[1]);
+    printf("iterations %d\n",iterations);
 }
 
 for(j=0;j<50*iterations;j++)k=chaos.int32();
