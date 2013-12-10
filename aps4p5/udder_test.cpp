@@ -66,10 +66,10 @@ for(ii=0;ii<200;ii++){
     
     guess=new double[dim];
     guess[0]=2.2;
-    guess[1]=0.01;
+    guess[1]=0.1;
     guess[2]=0.1;
-    guess[3]=-0.1;
-    guess[4]=0.0;
+    guess[3]=-0.5;
+    guess[4]=0.3;
     guess[5]=-0.2;
     
     foundboth=0;
@@ -80,16 +80,18 @@ for(ii=0;ii<200;ii++){
 	    foundboth=1;
 	}
 	
-	if(aps->npts>3000 && guessed==0){
+	/*if(aps->npts>3000 && guessed==0){
 	    guessed=1;
 	    aps->guess(guess);
-	}
+	}*/
 	
     }
     
     output=fopen(outname,"a");
     fprintf(output,"%d %d\n",udder->get_n3(),udder->get_p3());
     fclose(output);
+    
+    //exit(1);
     
     system("rm output/udder_output.sav");
     system("rm output/udder_timing.sav");

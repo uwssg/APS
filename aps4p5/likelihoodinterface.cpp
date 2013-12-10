@@ -876,12 +876,14 @@ int likelihood::choose_a_candidate(){
     
     double dd,max,ff,metric,min;
     int i,maxdex=-1,to_return,j,nearest_dex,mindex=-1,ichosen=-1;
+    int grad_failed=0;
     
     double *gradient,*to_min,norm,ddnormed;
     double *nearest,best;
     
-    printf("choosing a candidate\n");
+    printf("choosing a candidate out of %d with %d min\n",n_candidates,n_minima);
     
+    /*
     gradient=new double[nparams];
     to_min=new double[nparams];
     nearest=new double[nparams];
@@ -907,13 +909,8 @@ int likelihood::choose_a_candidate(){
 	    to_min[j]=(gg.kptr->data[candidates[i]][j]-nearest[j])/(gg.kptr->maxs[j]-gg.kptr->mins[j]);
 	    norm+=to_min[j]*to_min[j];
 	}
-	norm=sqrt(norm);
 	
-	if(norm>0.0){
-	    for(j=0;j<nparams;j++){
-	        to_min[j]=to_min[j]/norm;
-	    }
-	}
+	
 	
 	try{
 	    gg.actual_gradient(candidates[i],gradient);
@@ -928,6 +925,7 @@ int likelihood::choose_a_candidate(){
         }
 	catch(int iex){
 	    for(j=0;j<nparams;j++)gradient[j]=to_min[j];
+	    grad_failed++;
 	}
 	
 	dd=0.0;
@@ -935,7 +933,10 @@ int likelihood::choose_a_candidate(){
 	    dd+=to_min[j]*gradient[j];
 	}
 	
-	if(i==0 || dd<best){
+	dd-=1.0;
+	dd=fabs(dd);
+	
+	if(i==0 || dd>best){
 	    ichosen=i;
 	    best=dd;
 	    ddnormed=dd*norm;
@@ -943,8 +944,13 @@ int likelihood::choose_a_candidate(){
     
     }
     
+    delete [] gradient;
+    delete [] nearest;
+    delete [] to_min;
     
-    /*for(i=0;i<n_candidates;i++){
+    */
+    
+    for(i=0;i<n_candidates;i++){
         dd=gg.kptr->distance(gg.kptr->data[candidates[i]],minpt);
 	ff=sqrt(nparams)*(gg.fn[candidates[i]]-target)/target;
 	
@@ -954,20 +960,17 @@ int likelihood::choose_a_candidate(){
 	    ichosen=i;
 	    best=metric;
 	}
-    }*/
+    }
     
-    printf("    chose dd %e unnormed %e -- p %e f %e\n",best,ddnormed,
+    printf("    chose metric %.3e  -- p %.4e f %.4e\n",best,
     gg.kptr->data[candidates[ichosen]][0],gg.fn[candidates[ichosen]]);
+    printf("     grad failed %d\n",grad_failed);
     
     to_return=candidates[ichosen];
     for(i=ichosen+1;i<n_candidates;i++){
         candidates[i-1]=candidates[i];
     }
     n_candidates--;
-    
-    delete [] gradient;
-    delete [] to_min;
-    delete [] nearest;
     
     return to_return;
     
@@ -980,7 +983,7 @@ void likelihood::gradient_sample(int in_dex){
     double before=double(time(NULL));
     
     double *gradient,*pt,*trial,ratio=100.0,dd,chifound=-1.0;
-    int maxdex,abort,last_improved,ct_abort=0;
+    int maxdex,abort,last_improved,ct_abort=0,ct_fudge=0;
     
     if(in_dex<0)maxdex=choose_a_candidate();
     else maxdex=in_dex;
@@ -1011,7 +1014,8 @@ void likelihood::gradient_sample(int in_dex){
     
     for(ii=0;(ii<100 || ii-last_improved<20) && ii<200;ii++){
         abort=0;
-	dd=0.01;
+	gg.kptr->nn_srch(pt,1,&j,&dd);
+	
 	try{
 	   
 	    dd=gg.actual_gradient(maxdex,gradient);
@@ -1057,13 +1061,6 @@ void likelihood::gradient_sample(int in_dex){
 	   
 	    //printf("added\n");
 	   
-	    if(chitrial<f0){
-	        last_improved=ii;
-	        f0=chitrial;
-	        maxdex=gg.pts-1;
-	        for(i=0;i<nparams;i++)pt[i]=trial[i];
-		ratio*=2.0;
-	    }
 	}
 	
 	if(chitrial>f0-precision){
@@ -1078,22 +1075,34 @@ void likelihood::gradient_sample(int in_dex){
 	    if(chitrial<exception){
 	        add_pt(trial,chitrial,1);
 	    }
+	    ct_fudge++;
 	    
 	}
-	//printf("moving on now\n");
+        else if(chitrial<f0){
+	    last_improved=ii;
+	    f0=chitrial;
+	    maxdex=gg.pts-1;
+	    for(i=0;i<nparams;i++)pt[i]=trial[i];
+	    ratio*=2.0;
+       }
+
+
     }
     //exit(1);
     
     add_minimum(pt);
     
     
-    delete [] pt;
+    
 
     delete [] gradient;
 
     delete [] trial;
     
-    printf("after gradient chimin is %e -- found %e aborted %d\n\n",chimin,chifound,ct_abort);
+    printf("after gradient chimin is %.4e -- found %.4e %.4e abort %d fudge %d tot %d\n\n",
+    chimin,pt[0],chifound,ct_abort,ct_fudge,ii);
+    
+    delete [] pt;
     
     time_mcmc+=double(time(NULL))-before;
 }
@@ -1213,4 +1222,6 @@ void likelihood::guess(double *pt){
     double chitrue=(*call_likelihood)(pt);
     printf("\nguessing %e\n",chitrue);
     add_pt(pt,chitrue,1);
+    
+    add_candidate(gg.pts-1);
 }

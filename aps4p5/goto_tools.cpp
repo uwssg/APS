@@ -454,6 +454,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	for(i=0;i<params;i++){
 	    printf("%e\n",bb_in[i]);
 	}
+	printf("\n");
 	
 	delete [] buffer;
 	delete [] dexes;
