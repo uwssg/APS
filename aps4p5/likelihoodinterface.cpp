@@ -995,6 +995,7 @@ void likelihood::gradient_sample(int in_dex){
     
     double *gradient,*pt,*trial,ratio=100.0,dd,nn,chifound=-1.0;
     int maxdex,abort,last_improved,ct_abort=0,ct_fudge=0;
+    double dx0=1.0,dx1=1.0;
     
     if(in_dex<0)maxdex=choose_a_candidate();
     else maxdex=in_dex;
@@ -1024,7 +1025,8 @@ void likelihood::gradient_sample(int in_dex){
     int ii;
     
     gg.kptr->nn_srch(pt,1,&j,&dd);
-    
+    if(dd<1.0e-10)dd=0.01;
+    printf("dd %e\n",dd);
     for(ii=0;ii<nparams;ii++){
         nn=0.0;
         for(i=0;i<nparams;i++){
@@ -1033,26 +1035,27 @@ void likelihood::gradient_sample(int in_dex){
 	}
 	nn=sqrt(nn);
 	for(i=0;i<nparams;i++){
-	    trial[i]*=dd/nn;
+	    trial[i]*=0.1*dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
 	    trial[i]+=pt[i];
 	}
+	
+	ct_mcmc++;
 	chitrial=(*call_likelihood)(trial);
+	printf("adding %e\n",chitrial);
 	if(chitrial<exception){
 	    add_pt(trial,chitrial,1);
 	}
     }
     
     
-    for(ii=0;(ii<100 || ii-last_improved<20) && ii<200;ii++){
+    for(ii=0;(ii<100 || ii-last_improved<20) && ii<200 && dx1>0.1;ii++){
         abort=0;
 	gg.kptr->nn_srch(pt,1,&j,&dd);
-	
+	if(ii==0)printf("dd %e\n",dd);
 	try{
-	   
 	    dd=gg.actual_gradient(maxdex,gradient);
 	}
 	catch(int iex){
-	   
 	    abort=1;
 	}
 	
@@ -1098,6 +1101,7 @@ void likelihood::gradient_sample(int in_dex){
 	    //if(fabs(chitrial-f0)<1.0e-4)printf("I think %e > %e\n",chitrial,f0);
 	    if(ratio>0.01)ratio*=0.5;
 	    
+	    
 	    for(i=0;i<nparams;i++){
 	        trial[i]=normal_deviate(dice,pt[i],dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/sqrt(nparams));
 	    }
@@ -1110,13 +1114,39 @@ void likelihood::gradient_sample(int in_dex){
 	    
 	}
         else if(chitrial<f0){
+	    printf("    found %e on %d -- %e\n",chitrial,ii,chitrial-f0);
+	    
+	    dx1=dx0;
+	    dx0=f0-chitrial;
+	    
 	    last_improved=ii;
 	    f0=chitrial;
 	    maxdex=gg.pts-1;
 	    for(i=0;i<nparams;i++)pt[i]=trial[i];
 	    ratio*=2.0;
+	   
        }
-
+       
+       
+       if(abort==1){
+           for(i=0;i<nparams;i++){
+	       nn=0.0;
+	       for(j=0;j<nparams;j++){
+	           trial[j]=normal_deviate(dice,0.0,0.1);
+		   nn+=trial[j]*trial[j];
+	       }
+	       for(j=0;j<nparams;j++){
+	           trial[j]*=0.5*dd*(gg.kptr->maxs[j]-gg.kptr->mins[j])/nn;
+		   trial[j]+=pt[j];
+	       }
+	       
+	       ct_mcmc++;
+	       chitrial=(*call_likelihood)(trial);
+	       if(chitrial<exception){
+	           add_pt(trial,chitrial,1);
+	       }
+	   }
+       }
 
     }
     //exit(1);
@@ -1130,8 +1160,8 @@ void likelihood::gradient_sample(int in_dex){
 
     delete [] trial;
     
-    printf("after gradient chimin is %.4e -- found %.4e %.4e abort %d fudge %d tot %d\n\n",
-    chimin,pt[0],chifound,ct_abort,ct_fudge,ii);
+    printf("after gradient chimin is %.4e -- found %.4e %.4e abort %d fudge %d tot %d %d\n\n",
+    chimin,pt[0],chifound,ct_abort,ct_fudge,ii,ct_mcmc);
     
     delete [] pt;
     
