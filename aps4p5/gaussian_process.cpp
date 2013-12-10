@@ -766,22 +766,30 @@ double gp::actual_gradient(int dex, double *vout){
     
     int i,j;
     
-    if(pts<dim){
+    if(pts<dim+1){
         printf("CANNOT call gradient yet; dim = %d pts =%d\n",
 	dim,pts);
 	
 	for(i=0;i<dim;i++)vout[i]=0.0;
     }
-
+   
+   int total_neighbors;
+   if(pts<2*dim+1){
+       total_neighbors=pts;
+   }
+   else{
+       total_neighbors=2*dim+1;
+   }
+    
    double *delta_matrix,*f_vector,*dd,to_return;
    int *neighbors;
    
-   neighbors=new int[dim+1];
-   dd=new double[dim+1];
+   neighbors=new int[total_neighbors];
+   dd=new double[total_neighbors];
    delta_matrix=new double[dim*dim];
    f_vector=new double[dim];
    
-   kptr->nn_srch(kptr->data[dex],dim+1,neighbors,dd);
+   kptr->nn_srch(kptr->data[dex],total_neighbors,neighbors,dd);
    to_return=dd[1];
    
    if(neighbors[0]!=dex){
@@ -794,32 +802,56 @@ double gp::actual_gradient(int dex, double *vout){
 	exit(1);
     }
     
+    int abort=0,success=0;
     
-    for(i=0;i<dim;i++){
-        for(j=0;j<dim;j++){
+    while(success==0){
+        abort=0;
+        for(i=0;i<dim;i++){
+            for(j=0;j<dim;j++){
 	         //printf("%d %d -- %d %d %d %d\n",i,j,neighbors[i+1],neighbors[2],gg.pts,maxdex);
 		 //printf("%e %e\n",dd[1],dd[2]);
-            delta_matrix[i*dim+j]=(kptr->data[neighbors[i+1]][j]-kptr->data[dex][j])/(kptr->maxs[j]-kptr->mins[j]);
+                delta_matrix[i*dim+j]=(kptr->data[neighbors[i+1]][j]-kptr->data[dex][j])/(kptr->maxs[j]-kptr->mins[j]);
+            }
+           f_vector[i]=fn[neighbors[i+1]]-fn[dex];
         }
-       f_vector[i]=fn[neighbors[i+1]]-fn[dex];
-    }
     
-    int abort=0;
-    try{
-	naive_gaussian_solver(delta_matrix,f_vector,vout,dim);
-     }
-     catch(int iex){
-	for(i=0;i<dim;i++){
-	    printf("%d %e\n",neighbors[i],kptr->data[neighbors[i]][0]);
-	}
-        abort=1;
-	delete [] delta_matrix;
-	delete [] f_vector;
-	delete [] neighbors;
-	delete [] dd;
+  
+ 
+        try{
+	    naive_gaussian_solver(delta_matrix,f_vector,vout,dim);
+         }
+         catch(int iex){
+	    /*for(i=0;i<dim;i++){
+	        printf("%d %e\n",neighbors[i],kptr->data[neighbors[i]][0]);
+	    }
+            abort=1;
+	    delete [] delta_matrix;
+	    delete [] f_vector;
+	    delete [] neighbors;
+	    delete [] dd;
 	
-	throw abort;
+	    throw abort;*/
+	    
+	    
+	    abort=1;
+	    success=0;
+	    if(total_neighbors==dim+1){
+	        delete [] delta_matrix;
+		delete [] f_vector;
+		delete [] neighbors;
+		delete [] dd;
+		
+		throw abort;
+	    }
+	    else{
+	        for(i=iex;i<total_neighbors-1;i++){
+		    neighbors[i]=neighbors[i+1];
+		}
+		total_neighbors--;
+	    }
+	    
 	
+        }
     }
     
     delete [] delta_matrix;

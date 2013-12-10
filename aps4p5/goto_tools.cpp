@@ -324,7 +324,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
     int *dexes;
     dexes=new int[params];
     
-    int i;
+    int i,k;
     for(i=0;i<params*params;i++){
         aa[i]=aa_in[i];
     }
@@ -392,7 +392,8 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	
     }
     
-    double err,maxerr,mindiag=-1.0;
+    double err,maxerr,mindiag=-1.0,minfail;
+    int ifail;
     
     maxerr=-1.0;
     for(row=0;row<params;row++){
@@ -461,7 +462,22 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	delete [] aa;
 	delete [] bb;
 	
-	throw i;
+	nn=0.0;
+	minfail=-10.0;
+	for(i=0;i<params;i++){
+	    for(j=i+1;j<params;j++){
+	       nn=0.0;
+	       for(k=0;k<params;k++){
+	           nn+=power(aa_in[i*params+k]+aa_in[j*params+k],2);
+	       }
+	       if(minfail<0.0 || nn<minfail){
+	           minfail=nn;
+		   ifail=j;
+	       }
+	    }
+	}
+	
+	throw ifail;
     }
     
     
