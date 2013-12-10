@@ -816,9 +816,10 @@ double gp::actual_gradient(int dex, double *vout){
         }
     
   
- 
+        success=1;
         try{
 	    naive_gaussian_solver(delta_matrix,f_vector,vout,dim);
+	  
          }
          catch(int iex){
 	    /*for(i=0;i<dim;i++){
@@ -832,10 +833,10 @@ double gp::actual_gradient(int dex, double *vout){
 	
 	    throw abort;*/
 	    
-	    
+	 
 	    abort=1;
 	    success=0;
-	    if(total_neighbors==dim+1){
+	    if(total_neighbors<=dim+1){
 	        delete [] delta_matrix;
 		delete [] f_vector;
 		delete [] neighbors;
@@ -852,6 +853,7 @@ double gp::actual_gradient(int dex, double *vout){
 	    
 	
         }
+	
     }
     
     delete [] delta_matrix;
