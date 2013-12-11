@@ -1060,16 +1060,16 @@ double udder_likelihood::operator()(double *v) const{
     
      time_spent+=double(time(NULL))-before;
     
-     if(chisquared<=1280.669){
-         if(d1<d2 && foundp3<0){
+     
+         if(chisquared<1177.59 && d1<d2 && foundp3<0){
 	     foundp3=called;
 	     printf("foundp3 %d\n",foundp3);
 	 }
-	 if(d2<d1 && foundn3<0){
+	 if(chisquared<1218.0 && d2<d1 && foundn3<0){
 	     foundn3=called;
 	     printf("foundn3 %d\n",foundn3);
 	 }
-     }
+     
     
      return chisquared;
 

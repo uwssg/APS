@@ -1305,7 +1305,7 @@ void likelihood::add_minimum(double *pt){
     
     known_minima[n_minima]=dex;
     n_minima++;
-    printf("distance to previous minimum %e\n",dd);
+    //printf("distance to previous minimum %e\n",dd);
     
 }
 
