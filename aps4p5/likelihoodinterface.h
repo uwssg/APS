@@ -14,6 +14,7 @@ class likelihood{
   int nparams,nprinted;
   
   double *ggx,*ggn,*samv,*sambest,start_time;
+ 
   
   int ct_aps,ct_mcmc,ct_like;
   double time_mcmc,time_aps,time_like;

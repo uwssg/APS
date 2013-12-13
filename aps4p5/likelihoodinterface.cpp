@@ -173,6 +173,8 @@ covariance_function *cv, chisquared *lk){
 
  nparams=nn;
  gg.set_dim(nparams);
+ 
+ 
 
  mxx=new double[nparams];
  mnn=new double[nparams];
@@ -617,12 +619,36 @@ void likelihood::write_pts(){
  tot=0;
  trapped=0;
  
+ double volume,*good_max,*good_min;
+ 
+ good_max=new double[nparams];
+ good_min=new double[nparams];
+ 
  ngood=0;
  for(i=0;i<npts;i++){
      if(gg.fn[i]<=target+precision){
+         for(j=0;j<nparams;j++){
+	     if(ngood==0 || gg.kptr->data[i][j]<good_min[j]){
+	         good_min[j]=gg.kptr->data[i][j];
+	     }
+	     if(ngood==0 || gg.kptr->data[i][j]>good_max[j]){
+	         good_max[j]=gg.kptr->data[i][j];
+	     }
+	 }
+     
+     
          ngood++;
      }
  }
+ 
+ volume=0.0;
+ if(ngood>0){
+     volume=1.0;
+     for(i=0;i<nparams;i++)volume*=(good_max[i]-good_min[i]);
+ }
+ 
+ delete [] good_min;
+ delete [] good_max;
  
 
  tried=0;
@@ -674,7 +700,7 @@ void likelihood::write_pts(){
   fprintf(timefile,"mcmc %e %d %e ",time_mcmc,ct_mcmc,time_mcmc/double(ct_mcmc));
   
   fprintf(timefile,"kd %d ",gg.kptr->diagnostic);
-  fprintf(timefile,"chimin %e target %e \n",chimin,target);
+  fprintf(timefile,"chimin %e target %e volume %e \n",chimin,target,volume);
  fclose(timefile);
     
    nprinted=npts;
