@@ -1106,6 +1106,10 @@ void likelihood::gradient_sample(int in_dex){
 		if(trial[i]<gg.kptr->mins[i] || trial[i]>gg.kptr->maxs[i])k=0;
 	    }
 	    
+	    
+	    gg.kptr->nn_srch(trial,1,&i,&dd);
+	    if(dd<1.0e-10)k=0;
+	    
 	    if(k==1){
 	        
 	        chitrial=(*call_likelihood)(trial);
