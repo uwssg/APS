@@ -1106,7 +1106,10 @@ void likelihood::gradient_sample(int in_dex){
 		if(trial[i]<gg.kptr->mins[i] || trial[i]>gg.kptr->maxs[i])k=0;
 	    }
 	    
-	    
+	    //next thing to try would be to do a while loop
+	    //so that if trial is too close to it's nearest neighbor
+	    //you temporarily increase ratio so that it takes
+	    //a larger, more interesting step
 	    gg.kptr->nn_srch(trial,1,&i,&dd);
 	    if(dd<1.0e-10)k=0;
 	    
