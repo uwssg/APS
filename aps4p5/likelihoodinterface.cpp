@@ -118,6 +118,11 @@ covariance_function *cv, chisquared *lk){
  ct_aps=0;
  ct_mcmc=0;
  
+ iteration_aps=0;
+ 
+ failed_aps=0;
+ failed_mcmc=0;
+ 
  time_aps=0.0;
  time_mcmc=0.0;
  
@@ -448,8 +453,13 @@ void likelihood::sample_pts(){
   
   before=double(time(NULL));
   
-
-
+  int p_before,l_before;
+  
+  l_before=call_likelihood->get_called();
+  p_before=gg.pts;
+  iteration_aps++;
+ 
+ 
   gg.reset_cache();
   
   sambest=new double[nparams];
@@ -462,7 +472,7 @@ void likelihood::sample_pts(){
       sampling_max[i]=-1.0e30;
   }
   
-  if(ct_aps%2==0 && ngood>2){
+  if(iteration_aps%2==0 && ngood>2){
       //printf("focusing\n");
       focusing=1;
       ngood=0;
@@ -527,7 +537,7 @@ void likelihood::sample_pts(){
       }
     }
     
-    ct_aps++;
+  
     chitrue=(*call_likelihood)(sambest);
     
     if(chitrue<chimin){
@@ -599,7 +609,10 @@ void likelihood::sample_pts(){
   delete [] sambest;
   delete [] samv;
   
- 
+  ct_aps+=call_likelihood->get_called()-l_before;
+  
+  failed_aps+=(call_likelihood->get_called()-l_before)-(gg.pts-p_before);
+  
   
 }
 
@@ -696,8 +709,8 @@ void likelihood::write_pts(){
   call_likelihood->get_time(),call_likelihood->get_called(),
   call_likelihood->get_time()/double(call_likelihood->get_called()));
   
-  fprintf(timefile,"aps %e %d %e ",time_aps,ct_aps,time_aps/double(ct_aps));
-  fprintf(timefile,"mcmc %e %d %e ",time_mcmc,ct_mcmc,time_mcmc/double(ct_mcmc));
+  fprintf(timefile,"aps %e %d %e %d ",time_aps,ct_aps,time_aps/double(ct_aps),failed_aps);
+  fprintf(timefile,"mcmc %e %d %e %d ",time_mcmc,ct_mcmc,time_mcmc/double(ct_mcmc),failed_mcmc);
   
   fprintf(timefile,"kd %d ",gg.kptr->diagnostic);
   fprintf(timefile,"chimin %e target %e volume %e \n",chimin,target,volume);
@@ -788,6 +801,7 @@ void likelihood::mcmc_sample(){
   int steps_taken=0;
   double step_size,took_a_step;
   int istart=call_likelihood->get_called();
+ 
   
   before=double(time(NULL));
   gg.reset_cache();
@@ -889,13 +903,14 @@ void likelihood::mcmc_sample(){
     delete [] dd_buff;
     delete [] nn_buff;
     
-    ct_mcmc+=call_likelihood->get_called()-istart;
+    
     
     //printf("internal ct %d ending with %e\n",steps_taken,chitrue);
     //exit(1);
   }
   
 
+  ct_mcmc+=call_likelihood->get_called()-istart;
 
   gg.optimize();
   time_mcmc+=double(time(NULL))-before;
@@ -1024,11 +1039,12 @@ void likelihood::gradient_sample(int in_dex){
     double before=double(time(NULL));
     
     double *gradient,*pt,*trial,ratio=100.0,dd,nn,chifound=-1.0;
-    int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0,istart;
+    int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0,istart,pstart;
     int has_refined=0;
     double dx0=10.0,dx1=10.0,dx2=10.0;
     
     istart=call_likelihood->get_called();
+    pstart=gg.pts;
     
     if(in_dex<0)maxdex=choose_a_candidate();
     else maxdex=in_dex;
@@ -1229,6 +1245,7 @@ void likelihood::gradient_sample(int in_dex){
     
     time_mcmc+=double(time(NULL))-before;
     ct_mcmc+=call_likelihood->get_called()-istart;
+    failed_mcmc+=(call_likelihood->get_called()-istart)-(gg.pts-pstart);
 }
 
 void likelihood::search(){

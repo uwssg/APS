@@ -16,7 +16,8 @@ class likelihood{
   double *ggx,*ggn,*samv,*sambest,start_time;
  
   
-  int ct_aps,ct_mcmc,ct_like;
+  int ct_aps,ct_mcmc,ct_like,iteration_aps;
+  int failed_aps,failed_mcmc;
   double time_mcmc,time_aps,time_like;
   
   char mufitname[letters],timingname[letters],masteroutname[letters];
