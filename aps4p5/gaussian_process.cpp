@@ -1579,68 +1579,9 @@ double fbar_model::get_coeff(int i){return coeffs[i];}
 
 void fbar_model::set_model(double **datapts, double *datafn, int dim, int npts){
 
-    double *matrix,*bvec,*soln;
-    
-    matrix=new double[(dim+1)*(dim+1)];
-    bvec=new double[dim+1];
-    soln=new double[dim+1];
-    
-    int ipt;
-    int ct,i,j;
-    
-    double **sum2,*sum1;
-    
-    
-    sum2=new double*[dim+1];
-    sum1=new double[dim+1];
-    
-    for(i=0;i<dim+1;i++)sum2[i]=new double[dim+1];
-   
-    /*for(i=0;i<dim+1;i++){
-        sum1[i]=0.0;
-	for(j=0;j<dim+1;j++)sum2[i][j]=0.0;
-    }
-   
-    for(i=0;i<dim;i++){
-        for(ipt=0;ipt<npts;ipt++){
-	    sum1[i]+=datapts[ipt][i];
-	    for(j=i;j<dim;j++)sum2[i][j]+=datapts[ipt][i]*datapts[ipt][j];
-	    sum2[i][dim]+=datafn[ipt]*datapts[ipt][i];
-	}
-
-    }
-   
-    for(ipt=0;ipt<npts;ipt++){
-        sum2[dim][dim]+=datafn[ipt]*datafn[ipt];
-	sum1[dim]+=datafn[ipt];
-    }
-    
-    double nn;
-    for(i=0;i<dim;i++){
-        for(j=0;j<dim;j++){
-	    if(i<=j)nn=sum2[i][j];
-	    else nn=sum2[j][i];
-	    
-	    matrix[i*(dim+1)+j]=nn;
-	    
-	}
-        matrix[i*(dim+1)+dim]=sum1[i];
-	bvec[i]=sum2[i][dim];
-    }
-    bvec[dim]=sum1[dim];
-    for(i=0;i<dim;i++){
-        matrix[dim*(dim+1)+i]=sum1[i];
-    }
-    matrix[dim*(dim+1)+dim]=double(npts);
-    
-    naive_gaussian_solver(matrix,bvec,soln,dim+1);
-    
-    for(i=0;i<dim+1;i++)coeffs[i]=soln[i];*/
-    
-    int nanalarm=1;
     double mean;
-    for(i=0;i<dim+1;i++)if(isnan(coeffs[i]))nanalarm=1;
-   // if(nanalarm==1){
+    int i;
+
      
       // printf("WARNING a coeff is nan\n");
        for(i=0;i<dim;i++)coeffs[i]=0;
@@ -1649,14 +1590,7 @@ void fbar_model::set_model(double **datapts, double *datafn, int dim, int npts){
        mean=mean/double(npts);
        coeffs[dim]=mean;
 	
-    //}
-    
-    delete [] matrix;
-    delete [] bvec;
-    delete [] soln;
-    for(i=0;i<dim+1;i++)delete [] sum2[i];
-    delete [] sum2;
-    delete [] sum1;
+  
 
 }
 
