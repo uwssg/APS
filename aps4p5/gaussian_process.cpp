@@ -1640,7 +1640,8 @@ void fbar_model::set_model(double **datapts, double *datafn, int dim, int npts){
     int nanalarm=1;
     double mean;
     for(i=0;i<dim+1;i++)if(isnan(coeffs[i]))nanalarm=1;
-    if(nanalarm==1){
+   // if(nanalarm==1){
+     
       // printf("WARNING a coeff is nan\n");
        for(i=0;i<dim;i++)coeffs[i]=0;
        mean=0.0;
@@ -1648,7 +1649,7 @@ void fbar_model::set_model(double **datapts, double *datafn, int dim, int npts){
        mean=mean/double(npts);
        coeffs[dim]=mean;
 	
-    }
+    //}
     
     delete [] matrix;
     delete [] bvec;
