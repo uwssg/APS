@@ -1192,7 +1192,8 @@ void likelihood::gradient_sample(int in_dex){
 	        nn=0.0;
 		dd_scalar=-1.0;
 		for(idd=0;idd<total_neighbors-1 && dd[idd]<1.0e-10;idd++);
-		while(dd_scalar<1.0e-10){
+		l=0;
+		while(dd_scalar<1.0e-10 && l<100){
 		
 	            for(i=0;i<nparams;i++){
 	                trial[i]=normal_deviate(dice,0.0,0.1);
@@ -1206,14 +1207,17 @@ void likelihood::gradient_sample(int in_dex){
 	            }
 	            
 		    gg.kptr->nn_srch(trial,1,&i,&dd_scalar);
+		    l++;
 		}
+	        
+		if(dd_scalar>1.0e-10){
+	            chitrial=(*call_likelihood)(trial);
 	    
-	        chitrial=(*call_likelihood)(trial);
-	    
-	        if(chitrial<exception){
-	            add_pt(trial,chitrial,1);
-	        }
-	        ct_fudge++;
+	            if(chitrial<exception){
+	                add_pt(trial,chitrial,1);
+	            }
+	            ct_fudge++;
+		}
 	    }
 	}
         else if(chitrial<f0){
