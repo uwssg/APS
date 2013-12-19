@@ -1038,10 +1038,17 @@ void likelihood::gradient_sample(int in_dex){
     
     double before=double(time(NULL));
     
-    double *gradient,*pt,*trial,ratio=100.0,dd,nn,chifound=-1.0;
+    double *gradient,*pt,*trial,ratio=100.0,nn,chifound=-1.0;
     int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0,istart,pstart;
     int has_refined=0;
     double dx0=10.0,dx1=10.0,dx2=10.0;
+    
+    int idd,total_neighbors,*neighbors;
+    double *dd,dd_scalar;
+    
+    total_neighbors=20;
+    neighbors=new int[20];
+    dd=new double[20];
     
     istart=call_likelihood->get_called();
     pstart=gg.pts;
@@ -1070,11 +1077,17 @@ void likelihood::gradient_sample(int in_dex){
     }
     double f0=gg.fn[maxdex];
     
-    double magnitude,chitrial;
+    double magnitude,chitrial,renormalization;
     int ii;
     
-    gg.kptr->nn_srch(pt,1,&j,&dd);
-    if(dd<1.0e-10)dd=0.01;
+    
+    
+    gg.kptr->nn_srch(pt,total_neighbors,neighbors,dd);
+    
+    for(idd=0;idd<total_neighbors-1 && dd[idd]<1.0e-10;idd++);
+    dd_scalar=dd[idd];
+    
+    
     //printf("dd %e\n",dd);
     for(ii=0;ii<nparams;ii++){
         nn=0.0;
@@ -1084,7 +1097,7 @@ void likelihood::gradient_sample(int in_dex){
 	}
 	nn=sqrt(nn);
 	for(i=0;i<nparams;i++){
-	    trial[i]*=0.1*dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
+	    trial[i]*=0.1*dd_scalar*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
 	    trial[i]+=pt[i];
 	}
 	
@@ -1099,10 +1112,10 @@ void likelihood::gradient_sample(int in_dex){
     
     for(ii=0;(ii<100 || ii-last_improved<100) && (dx1>1.0 || dx0>1.0 || dx2>1.0);ii++){
         abort=0;
-	gg.kptr->nn_srch(pt,1,&j,&dd);
+	gg.kptr->nn_srch(pt,total_neighbors,neighbors,dd);
 	//if(ii==0)printf("dd %e\n",dd);
 	try{
-	    dd=gg.actual_gradient(maxdex,gradient);
+	    dd_scalar=gg.actual_gradient(maxdex,gradient);
 	}
 	catch(int iex){
 	    abort=1;
@@ -1126,11 +1139,20 @@ void likelihood::gradient_sample(int in_dex){
 	    //so that if trial is too close to it's nearest neighbor
 	    //you temporarily increase ratio so that it takes
 	    //a larger, more interesting step
-	    gg.kptr->nn_srch(trial,1,&i,&dd);
-	    if(dd<1.0e-10)k=0;
+	    gg.kptr->nn_srch(trial,total_neighbors,neighbors,dd);
+	    
+	    if(dd[0]<1.0e-10){
+	          renormalization=fabs(1.0e-5/dd[0]);
+		  for(i=0;i<nparams && k==1;i++){
+		      trial[i]=pt[i]-ratio*renormalization*gradient[i]*
+		               (gg.kptr->maxs[i]-gg.kptr->mins[i])/magnitude;
+			       
+		      if(trial[i]<gg.kptr->mins[i] || trial[i]>gg.kptr->maxs[i])k=0;       
+		      if(isnan(trial[i]) || isinf(trial[i]))k=0;	       
+		  }
+	    }
 	    
 	    if(k==1){
-	        
 	        chitrial=(*call_likelihood)(trial);
 	        if(chifound<0.0 || chitrial<chifound){
 	            chifound=chitrial;
@@ -1173,8 +1195,11 @@ void likelihood::gradient_sample(int in_dex){
 		    nn+=trial[i]*trial[i];
 	        }
 	        nn=sqrt(nn);
+		
+		for(idd=0;idd<total_neighbors-1 && dd[idd]<1.0e-10;idd++);
+		
 	        for(i=0;i<nparams;i++){
-	            trial[i]*=0.5*dd*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
+	            trial[i]*=0.5*dd[idd]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
 		    trial[i]+=pt[i];
 	        }
 	    
@@ -1233,7 +1258,8 @@ void likelihood::gradient_sample(int in_dex){
     
     
     
-
+    delete [] neighbors;
+    delete [] dd;
     delete [] gradient;
 
     delete [] trial;
