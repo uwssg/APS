@@ -1190,19 +1190,23 @@ void likelihood::gradient_sample(int in_dex){
 	    
 	    for(j=0;j<k;j++){
 	        nn=0.0;
-	        for(i=0;i<nparams;i++){
-	            trial[i]=normal_deviate(dice,0.0,0.1);
-		    nn+=trial[i]*trial[i];
-	        }
-	        nn=sqrt(nn);
-		
+		dd_scalar=-1.0;
 		for(idd=0;idd<total_neighbors-1 && dd[idd]<1.0e-10;idd++);
+		while(dd_scalar<1.0e-10){
 		
-	        for(i=0;i<nparams;i++){
-	            trial[i]*=0.5*dd[idd]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
-		    trial[i]+=pt[i];
-	        }
-	    
+	            for(i=0;i<nparams;i++){
+	                trial[i]=normal_deviate(dice,0.0,0.1);
+		        nn+=trial[i]*trial[i];
+	            }
+	            nn=sqrt(nn);
+	
+	            for(i=0;i<nparams;i++){
+	                trial[i]*=0.5*dd[idd]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
+		        trial[i]+=pt[i];
+	            }
+	            
+		    gg.kptr->nn_srch(trial,1,&i,&dd_scalar);
+		}
 	    
 	        chitrial=(*call_likelihood)(trial);
 	    
