@@ -518,27 +518,38 @@ void likelihood::sample_pts(){
     //to feed through the actual chisquared function
     before=double(time(NULL));
     stradmax=-1.0*exception;
+    
+    int abort;
+    
     for(i=0;i<nsamples;i++){
       
-      for(j=0;j<nparams;j++){
-        samv[j]=sampling_min[j]+\
-	dice->doub()*(sampling_max[j]-sampling_min[j]);
+      abort=0;
+      dd=-1.0;
+      while(dd<1.0e-10 && abort<100){
+          for(j=0;j<nparams;j++){
+            samv[j]=sampling_min[j]+\
+	    dice->doub()*(sampling_max[j]-sampling_min[j]);
+         }
+	 gg.kptr->nn_srch(samv,1,&j,&dd);
+	 abort++;
       }
-      
   
       mu=gg.user_predict(samv,&sig,1);
    
       strad=sig-fabs(mu-target);
       
-      if(strad>stradmax){
+      if(strad>stradmax && dd>1.0e-10){
         mubest=mu;
         stradmax=strad;
 	for(j=0;j<nparams;j++)sambest[j]=samv[j];
       }
     }
     
-  
-    chitrue=(*call_likelihood)(sambest);
+    gg.kptr->nn_srch(sambest,1,&i,&dd);
+    if(dd>1.0e-10){
+        chitrue=(*call_likelihood)(sambest);
+    }
+    else chitrue=exception;
     
     if(chitrue<chimin){
         minimize_it=1;
