@@ -124,7 +124,7 @@ class gp{
     covariance_function *covariogram;
     
     int initialized,room,roomstep,allottedpts,dim;
-    double sigcap;
+    double sigcap,time_optimizing;
    
     mutable int ct_search;
     mutable double time_search;
@@ -164,6 +164,7 @@ class gp{
     void get_neighbor_range(double*,double*,double*,double*);
     
     double get_nearest_distance();
+    double get_time_optimizing();
     
     
     void optimize();

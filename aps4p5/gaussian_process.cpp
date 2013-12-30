@@ -14,6 +14,7 @@ gp::gp(){
   roomstep=10000;
   inversionerr=-1.0e10;
   time_search=0.0;
+  time_optimizing=0.0;
 
   sigcap=-1.0;
   time_dummy_search=0.0;
@@ -2085,7 +2086,7 @@ const{
 }
 
 void gp::optimize(){
-
+    
     int n_use,*use_dex;
     int i,j,k,l;
 
@@ -2200,7 +2201,7 @@ void gp::optimize(double *pt, int n_use){
 }
 
 void gp::optimize(int *use_dex, int n_use){
-    
+    double before=double(time(NULL));
     int i,j,k,l;
     
    
@@ -2285,6 +2286,10 @@ void gp::optimize(int *use_dex, int n_use){
     printf("\n");*/
     
     covariogram->set_hyper_parameters(hhbest);
-    
+    time_optimizing+=double(time(NULL))-before;
 
+}
+
+double gp::get_time_optimizing(){
+    return time_optimizing;
 }

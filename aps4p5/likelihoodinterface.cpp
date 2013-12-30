@@ -722,6 +722,7 @@ void likelihood::write_pts(){
   
   fprintf(timefile,"aps %e %d %e %d ",time_aps,ct_aps,time_aps/double(ct_aps),failed_aps);
   fprintf(timefile,"mcmc %e %d %e %d ",time_mcmc,ct_mcmc,time_mcmc/double(ct_mcmc),failed_mcmc);
+  fprintf(timefile,"optimizing %e ",gg.get_time_optimizing());
   
   fprintf(timefile,"kd %d ",gg.kptr->diagnostic);
   fprintf(timefile,"chimin %e target %e volume %e \n",chimin,target,volume);
