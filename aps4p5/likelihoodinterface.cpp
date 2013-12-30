@@ -1058,7 +1058,8 @@ void likelihood::gradient_sample(int in_dex){
 
     if(gg.pts<nparams)return;
     
-    double before=double(time(NULL));
+    double before=double(time(NULL)),fstart;
+    int good_steps=0;
     
     double *gradient,*pt,*trial,ratio=100.0,nn,chifound=-1.0;
     int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0,istart,pstart;
@@ -1103,7 +1104,7 @@ void likelihood::gradient_sample(int in_dex){
     int ii;
     
     
-    
+    fstart=f0;
     gg.kptr->nn_srch(pt,total_neighbors,neighbors,dd);
     
     for(idd=0;idd<total_neighbors-1 && dd[idd]<1.0e-10;idd++);
@@ -1257,6 +1258,7 @@ void likelihood::gradient_sample(int in_dex){
 	    maxdex=gg.pts-1;
 	    for(i=0;i<nparams;i++)pt[i]=trial[i];
 	    ratio*=2.0;
+	    good_steps++;
 	   
        }
        
@@ -1286,7 +1288,8 @@ void likelihood::gradient_sample(int in_dex){
     
     add_minimum(pt);
     
-    
+    printf("total %d good_steps %d fstart %e f0 %e\n",
+    call_likelihood->get_called()-istart,good_steps,fstart,f0);
     
     delete [] neighbors;
     delete [] dd;
