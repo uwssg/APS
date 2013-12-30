@@ -15,7 +15,11 @@ gp::gp(){
   inversionerr=-1.0e10;
   time_search=0.0;
   time_optimizing=0.0;
-
+  
+  still_optimizing=1;
+  old_hy1=NULL;
+  old_hy2=NULL;
+  
   sigcap=-1.0;
   time_dummy_search=0.0;
   ct_search=0;
@@ -29,12 +33,19 @@ gp::gp(){
 
 gp::~gp(){
   
+  if(old_hy1!=NULL)delete [] old_hy1;
+  if(old_hy2!=NULL)delete [] old_hy2;
+  
   if(kptr!=NULL) delete kptr;
   if(neighbor_storage!=NULL) delete neighbor_storage;
   if(fn!=NULL) delete [] fn;
   //printf("done deleting gp\n");
 
  
+}
+
+int gp::get_still_optimizing(){
+    return still_optimizing;
 }
 
 void gp::print_search_time(char *word){
@@ -1095,6 +1106,11 @@ void covariance_function::set_hyper_parameters(double *vin){
     exit(1);
 }
 
+void covariance_function::get_hyper_parameters(double *vin){
+    printf("calling raw covariance function get_hyper_parameters\n");
+    exit(1);
+}
+
 void covariance_function::print_hyperparams(){
     printf("sorry there are no hyper params\n");
     exit(1);
@@ -1200,6 +1216,11 @@ void nn_covariance::print_hyperparams(){
 void nn_covariance::set_hyper_parameters(double *vin){
     sigma0=vin[0];
     sigma=vin[1];
+}
+
+void nn_covariance::get_hyper_parameters(double *output){
+    output[0]=sigma0;
+    output[1]=sigma;
 }
 
 double nn_covariance::operator()
@@ -1331,6 +1352,10 @@ void gaussian_covariance::set_hyper_parameters(double *vin){
     ellsquared=vin[0];
 }
 
+void gaussian_covariance::get_hyper_parameters(double *output){
+    output[0]=ellsquared;
+}
+
 matern_covariance::matern_covariance(){
     ell=0.25;
     
@@ -1345,6 +1370,10 @@ matern_covariance::matern_covariance(){
 
 void matern_covariance::set_hyper_parameters(double *vin){
     ell=vin[0];
+}
+
+void matern_covariance::get_hyper_parameters(double *output){
+    output[0]=ell;
 }
 
 void matern_covariance::print_hyperparams(){
@@ -2087,6 +2116,8 @@ const{
 
 void gp::optimize(){
     
+    if(still_optimizing==0) return;
+    
     int n_use,*use_dex;
     int i,j,k,l;
 
@@ -2124,7 +2155,9 @@ void gp::optimize(){
 }
 
 void gp::optimize(int start, int end){
-
+    
+    if(still_optimizing==0) return;
+    
     int n_use,*use_dex;
     
     n_use=end-start;
@@ -2141,6 +2174,8 @@ void gp::optimize(int start, int end){
 }
 
 int gp::optimize(double *pt, double rr){
+    if(still_optimizing==0)return 0;
+
     int n_use,i,j,*use_dex;
     double dd;
     
@@ -2181,6 +2216,8 @@ int gp::optimize(double *pt, double rr){
 
 void gp::optimize(double *pt, int n_use){
     
+    if(still_optimizing==0)return;
+    
     int *use_dex;
     double *use_dd;
     
@@ -2201,14 +2238,46 @@ void gp::optimize(double *pt, int n_use){
 }
 
 void gp::optimize(int *use_dex, int n_use){
+
+    if(still_optimizing==0)return;
+
     double before=double(time(NULL));
     int i,j,k,l;
     
    
     int nhy=covariogram->get_n_hyper_parameters();
-    double *hh,*hhbest,*dh,nn;
     
+    if(old_hy1==NULL){
+        if(old_hy2!=NULL){
+	    printf("WARNING old_hy1 is null but old_hy2 is not\n");
+	    exit(1);
+	}
+	
+	old_hy1=new double[nhy];
+	old_hy2=new double[nhy];
+	
+	for(i=0;i<nhy;i++){
+	    old_hy1[i]=0.0;
+	    old_hy2[i]=0.0;
+	}
+    }
+    
+    double *hh;
     hh=new double[nhy];
+    covariogram->get_hyper_parameters(hh);
+    
+    if(compare_arr(old_hy1,hh,nhy)<1.0e-5 &&
+       compare_arr(old_hy2,hh,nhy)<1.0e-5){
+    
+       delete [] hh;
+       still_optimizing=0;
+       return;
+    
+    }
+ 
+    
+    double *hhbest,*dh,nn;
+
     hhbest=new double[nhy];
     dh=new double[nhy];
     

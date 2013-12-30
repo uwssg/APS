@@ -728,7 +728,7 @@ void likelihood::write_pts(){
   
   fprintf(timefile,"aps %e %d %e %d ",time_aps,ct_aps,time_aps/double(ct_aps),failed_aps);
   
-  fprintf(timefile,"optimizing %e ",gg.get_time_optimizing());
+  fprintf(timefile,"optimizing %e %d ",gg.get_time_optimizing(),gg.get_still_optimizing());
   fprintf(timefile,"searching %e ",gg.get_time_searching());
   
   fprintf(timefile,"mcmc %e %d %e %d ",time_mcmc,ct_mcmc,time_mcmc/double(ct_mcmc),failed_mcmc);

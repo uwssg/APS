@@ -36,6 +36,7 @@ public:
     ~covariance_function();
     virtual double operator()(double*,double*,double*,double*,double*,int)const;
     virtual void set_hyper_parameters(double*);
+    virtual void get_hyper_parameters(double*);
     void set_dim(int);
     void set_max(int,double);
     void set_min(int, double);
@@ -60,6 +61,7 @@ public:
     gaussian_covariance();
     virtual double operator()(double*,double*,double*,double*,double*,int)const;
     virtual void set_hyper_parameters(double*);
+    virtual void get_hyper_parameters(double*);
     
     virtual void print_hyperparams();
 
@@ -74,6 +76,7 @@ public:
     nn_covariance();
     virtual double operator()(double*,double*,double*,double*,double*,int)const;
     virtual void set_hyper_parameters(double*);
+    virtual void get_hyper_parameters(double*);
     
     virtual void print_hyperparams();
 
@@ -88,6 +91,7 @@ public:
     matern_covariance();
     virtual double operator()(double*,double*,double*,double*,double*,int)const;
     virtual void set_hyper_parameters(double*);
+    virtual void get_hyper_parameters(double*);
     
     virtual void print_hyperparams();
 
@@ -124,6 +128,7 @@ class gp{
     covariance_function *covariogram;
     
     int initialized,room,roomstep,allottedpts,dim;
+    int still_optimizing;
     double sigcap,time_optimizing;
    
     mutable int ct_search;
@@ -132,6 +137,7 @@ class gp{
     
     double self_predict(int) const;
     
+    double *old_hy1,*old_hy2;
 
     void predict(double**,double*,double*,double*,int,int,double*,double*,int) const;
     
@@ -175,6 +181,7 @@ class gp{
     
     int get_dim();
     void set_dim(int);
+    int get_still_optimizing();
     
     
 };
