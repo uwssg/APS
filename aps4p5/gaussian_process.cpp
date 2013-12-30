@@ -2266,8 +2266,8 @@ void gp::optimize(int *use_dex, int n_use){
     hh=new double[nhy];
     covariogram->get_hyper_parameters(hh);
     
-    if(compare_arr(old_hy1,hh,nhy)<1.0e-5 &&
-       compare_arr(old_hy2,hh,nhy)<1.0e-5){
+    if(compare_arr(old_hy1,hh,nhy)<1.0e-3 &&
+       compare_arr(old_hy2,hh,nhy)<1.0e-3){
     
        delete [] hh;
        still_optimizing=0;
