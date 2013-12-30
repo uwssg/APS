@@ -456,6 +456,9 @@ void likelihood::sample_pts(){
   
   int p_before,l_before;
   
+  double **samples;
+  int active_samples,nearest_sample;
+  
   l_before=call_likelihood->get_called();
   p_before=gg.pts;
   iteration_aps++;
@@ -467,6 +470,11 @@ void likelihood::sample_pts(){
   samv=new double[nparams];
   sampling_min=new double[nparams];
   sampling_max=new double[nparams];
+  
+  samples=new double*[nsamples];
+  for(i=0;i<nsamples;i++){
+      samples[i]=new double[nparams];
+  }
   
   for(i=0;i<nparams;i++){
       sampling_min[i]=1.0e30;
@@ -521,6 +529,7 @@ void likelihood::sample_pts(){
     stradmax=-1.0*exception;
     
     int abort;
+    
     
     for(i=0;i<nsamples;i++){
       
@@ -625,6 +634,10 @@ void likelihood::sample_pts(){
   
   failed_aps+=(call_likelihood->get_called()-l_before)-(gg.pts-p_before);
   
+  for(i=0;i<nsamples;i++){
+      delete [] samples[i];
+  }
+  delete [] samples;
   
 }
 
