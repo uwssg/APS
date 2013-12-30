@@ -2293,3 +2293,7 @@ void gp::optimize(int *use_dex, int n_use){
 double gp::get_time_optimizing(){
     return time_optimizing;
 }
+
+double gp::get_time_searching(){
+    return time_search;
+}

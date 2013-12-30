@@ -6,10 +6,10 @@ dimensionality MUST be the first keyword listed
 
 #dim 6 -- dimensionality of your parameter space
 
-#Ns 250 -- start with 2000 randomly sampled points
-#end 500 -- end after the algorithm has sampled 5000 points
+#Ns 1000 -- start with 2000 randomly sampled points
+#end 50000 -- end after the algorithm has sampled 5000 points
 
-#Nc 250 -- sample 250 candidates each time you use the Gaussian process
+#Nc 1000 -- sample 250 candidates each time you use the Gaussian process
 #Ng 15 -- use 15 neareast neighbors in the Gaussian process
 
 #Nw 50 -- maximum number of wanderers
@@ -29,13 +29,13 @@ run with a hard-wired target value of chi^2=1200.0)
 #write_every 3000 -- write after sampling 300 points;
                     
 
-#outputfile output/sfd_udder_4.sav --store the sampled points
+#outputfile output/udder_opt.sav --store the sampled points
 !#resumefile sfd_udder.sav -- in case you are interrupted
 			(this line is currently commented out, note the '!')
 
 
-#timingfile output/udder_timing_4.sav -- timing information
-#mufitfile output/udder_fit.sav -- file comparing Gaussian process fit to true chi^2
+#timingfile output/udder_opt_timing.sav -- timing information
+#mufitfile output/udder_opt_fit.sav -- file comparing Gaussian process fit to true chi^2
 
 
 below is you list of parameters.  The format is:

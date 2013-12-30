@@ -165,6 +165,7 @@ class gp{
     
     double get_nearest_distance();
     double get_time_optimizing();
+    double get_time_searching();
     
     
     void optimize();
