@@ -637,7 +637,7 @@ void likelihood::write_pts(){
  int tot,trapped,tried,wayoff,dontcount;
  double trappedpct;
  
- 
+ gg.refactor();
  gg.optimize();
  
  tot=0;
