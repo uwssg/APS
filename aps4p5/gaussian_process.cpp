@@ -2275,6 +2275,10 @@ void gp::optimize(int *use_dex, int n_use){
     
     }
  
+    for(i=0;i<nhy;i++){
+        old_hy2[i]=old_hy1[i];
+	old_hy1[i]=hh[i];
+    }
     
     double *hhbest,*dh,nn;
 
@@ -2353,7 +2357,7 @@ void gp::optimize(int *use_dex, int n_use){
     /*printf("chose hyper parameters ");
     for(i=0;i<nhy;i++)printf("%e ",hhbest[i]);
     printf("\n");*/
-    
+       
     covariogram->set_hyper_parameters(hhbest);
     time_optimizing+=double(time(NULL))-before;
 
