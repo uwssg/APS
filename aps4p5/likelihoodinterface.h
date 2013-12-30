@@ -11,7 +11,7 @@ class likelihood{
  private:
   
      
-  int nparams,nprinted;
+  int nparams,nprinted,last_refactored;
   
   double *ggx,*ggn,*samv,*sambest,start_time;
  

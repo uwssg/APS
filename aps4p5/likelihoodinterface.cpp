@@ -99,7 +99,8 @@ covariance_function *cv, chisquared *lk){
  
  int i,j,k,l;
  double rn;
-  
+ 
+ last_refactored=0; 
  printf("starting\n");
  
  call_likelihood=lk;
@@ -637,7 +638,10 @@ void likelihood::write_pts(){
  int tot,trapped,tried,wayoff,dontcount;
  double trappedpct;
  
- gg.refactor();
+ if(ct_mcmc>0 && ct_mcmc>last_refactored+1000){
+     gg.refactor();
+     last_refactored=ct_mcmc;
+ }
  gg.optimize();
  
  tot=0;
