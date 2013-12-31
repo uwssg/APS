@@ -448,7 +448,7 @@ void likelihood::sample_pts(){
   int i,j,k,l,ix,minimize_it=0,minimize_dex;
   int focusing=0;
   double stradmax,strad,mu,sig,chitrue,mm,xx,yy,*candidate_gradient;
-  double before,after,mubest,dd,nn;
+  double before,after,mubest,dd,nn,ddbest;
   
   double *sampling_min,*sampling_max,*sambest,*samv;
   
@@ -535,28 +535,32 @@ void likelihood::sample_pts(){
       
       abort=0;
       dd=-1.0;
-      while(dd<1.0e-10 && abort<100){
+      //while(dd<1.0e-10 && abort<100){
           for(j=0;j<nparams;j++){
             samv[j]=sampling_min[j]+\
 	    dice->doub()*(sampling_max[j]-sampling_min[j]);
          }
-	 gg.kptr->nn_srch(samv,1,&j,&dd);
-	 abort++;
-      }
+	 
+	 //gg.kptr->nn_srch(samv,1,&j,&dd);
+	 //abort++;
+      //}
   
       mu=gg.user_predict(samv,&sig,1);
    
       strad=sig-fabs(mu-target);
       
+      dd=gg.get_nearest_distance(samv);
+      
       if(strad>stradmax && dd>1.0e-10){
         mubest=mu;
         stradmax=strad;
 	for(j=0;j<nparams;j++)sambest[j]=samv[j];
+	ddbest=dd;
       }
     }
     
-    gg.kptr->nn_srch(sambest,1,&i,&dd);
-    if(dd>1.0e-10){
+    //gg.kptr->nn_srch(sambest,1,&i,&dd);
+    if(ddbest>1.0e-10){
         chitrue=(*call_likelihood)(sambest);
     }
     else chitrue=exception;
