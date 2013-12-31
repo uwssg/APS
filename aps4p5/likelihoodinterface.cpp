@@ -530,20 +530,37 @@ void likelihood::sample_pts(){
     
     int abort;
     
-    
     for(i=0;i<nsamples;i++){
-      
-      abort=0;
-      dd=-1.0;
-      //while(dd<1.0e-10 && abort<100){
-          for(j=0;j<nparams;j++){
-            samv[j]=sampling_min[j]+\
+        for(j=0;j<nparams;j++){
+	    samples[i][j]=sampling_min[j]+
 	    dice->doub()*(sampling_max[j]-sampling_min[j]);
-         }
-	 
-	 //gg.kptr->nn_srch(samv,1,&j,&dd);
-	 //abort++;
-      //}
+	}
+    }
+    active_samples=nsamples;
+    
+    while(active_samples>0){
+      
+      if(active_samples==nsamples){
+          nearest_sample=0;
+      }
+      else{
+          for(i=0;i<active_samples;i++){
+	      nn=gg.kptr->distance(samv,samples[i]);
+	      if(i==0 || nn<dd){
+	          nearest_sample=i;
+		  dd=nn;
+	      }
+	  }
+      }
+      
+      for(i=0;i<nparams;i++){
+          samv[i]=samples[nearest_sample][i];
+      }
+      
+      for(i=nearest_sample+1;i<active_samples;i++){
+          for(j=0;j<nparams;j++)samples[i-1][j]=samples[i][j];
+      }
+      active_samples--;
   
       mu=gg.user_predict(samv,&sig,1);
    
