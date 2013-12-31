@@ -1487,6 +1487,10 @@ neighbor_cache::~neighbor_cache(){
     }
 }
 
+int neighbor_cache::get_kk(){
+    return kk;
+}
+
 void neighbor_cache::set(double *newpt, double *ddin, int *neighin, int kkin){
     int i;
     
@@ -1894,6 +1898,23 @@ int gross_gp::get_dim() const{
 
 double gp::get_nearest_distance(){
     return neighbor_storage->get_dd(0);
+}
+
+double gp::get_nearest_distance(double *pt){
+    double nn,min;
+    int i;
+    
+    if(neighbor_storage->get_kk()==0){
+        kptr->nn_srch(pt,1,&i,&nn);
+	return nn;
+    }
+    
+    for(i=0;i<neighbor_storage->get_kk();i++){
+        nn=kptr->distance(pt,kptr->data[neighbor_storage->get_neigh(i)]);
+	if(i==0 || nn<min)min=nn;
+    }
+    
+    return min;
 }
 
 double gp::self_predict(int dex)

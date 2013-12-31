@@ -109,6 +109,7 @@ public:
    
    double get_dd(int);
    int get_neigh(int);
+   int get_kk();
    void reset();
 
 private:
@@ -170,6 +171,7 @@ class gp{
     void get_neighbor_range(double*,double*,double*,double*);
     
     double get_nearest_distance();
+    double get_nearest_distance(double*);
     double get_time_optimizing();
     double get_time_searching();
     
