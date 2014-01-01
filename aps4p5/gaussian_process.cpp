@@ -1522,7 +1522,7 @@ int neighbor_cache::compare(double *newpt, int kkin){
     }
     if(kk!=kkin) return 1;
     dist=kptr->distance(pt,newpt);
-    if(dist<dd[kk/2])return 0;
+    if(dist<0.5*dd[kk-1])return 0;
     else return 1;
 }
 
