@@ -1515,14 +1515,18 @@ void neighbor_cache::set(double *newpt, double *ddin, int *neighin, int kkin){
 }
 
 int neighbor_cache::compare(double *newpt, int kkin){
-    double dist;
+    double dist,ddmed;
+    
     if(kkin==0){
         printf("WARNING kkin is 0 in cache compare\n");
         exit(1);
     }
     if(kk!=kkin) return 1;
     dist=kptr->distance(pt,newpt);
-    if(dist<0.5*dd[kk-1])return 0;
+    if(dd[kk/2]>0.5*dd[kk-1])ddmed=dd[kk/2];
+    else ddmed=0.5*dd[kk-1];
+    
+    if(dist<ddmed)return 0;
     else return 1;
 }
 
