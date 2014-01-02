@@ -514,8 +514,8 @@ const{
   
   double **modelpts,*modelfn;
   
-  fbar_model fbar(dim);
-  
+  //fbar_model fbar(dim);
+  double fbar;
     
     
     neigh=new int[kk];
@@ -556,7 +556,11 @@ const{
     time_search+=after-before;
     ct_search++;
     
-    modelpts=new double*[kk];
+    fbar=0.0;
+    for(i=0;i<kk;i++)fbar+=fn[neigh[i]];
+    fbar=fbar/double(kk);
+    
+    /*modelpts=new double*[kk];
     modelfn=new double[kk];
     for(i=0;i<kk;i++)modelpts[i]=new double[dim];
     
@@ -568,7 +572,7 @@ const{
     
     delete [] modelfn;
     for(i=0;i<kk;i++)delete [] modelpts[i];
-    delete [] modelpts;
+    delete [] modelpts;*/
     
     for(i=0;i<kk;i++){
     for(j=0;j<dim;j++){
@@ -661,10 +665,10 @@ const{
     }
     fbar=fbar/double(kk);*/
     
-    mu=fbar(pt);
+    mu=fbar;
     for(i=0;i<kk;i++){
         for(j=0;j<kk;j++){
-             mu+=ggq[i]*ggin[i][j]*(fn[neigh[j]]-fbar(kptr->data[neigh[j]]));
+             mu+=ggq[i]*ggin[i][j]*(fn[neigh[j]]-fbar);
 	}
     }
     
@@ -683,13 +687,13 @@ const{
      for(i=0;i<kk;i++){
   
 
-       nn+=(fn[neigh[i]]-fbar(kptr->data[neigh[i]]))*ggin[i][i]*
-       (fn[neigh[i]]-fbar(kptr->data[neigh[i]]));
+       nn+=(fn[neigh[i]]-fbar)*ggin[i][i]*
+       (fn[neigh[i]]-fbar);
 	 
       for(j=i+1;j<kk;j++){
      
-         nn+=2.0*(fn[neigh[j]]-fbar(kptr->data[neigh[j]]))*
-	 (fn[neigh[i]]-fbar(kptr->data[neigh[i]]))*ggin[i][j];
+         nn+=2.0*(fn[neigh[j]]-fbar)*
+	 (fn[neigh[i]]-fbar)*ggin[i][j];
 	      
      }
    }
@@ -739,10 +743,10 @@ const{
           for(j=0;j<kk;j++)printf("%e ",ggin[i][j]);
 	  printf("\n");
       }
-      printf("fbar %e\n",fbar(pt));
+      printf("fbar %e\n",fbar);
       exit(1);
   }
-   if(verbose==2)printf("mu %e fbar %e nn %e\n",mu,fbar(pt),fn[neigh[0]]);
+   if(verbose==2)printf("mu %e fbar %e nn %e\n",mu,fbar,fn[neigh[0]]);
 
   delete [] neigh;
   delete [] dd;
