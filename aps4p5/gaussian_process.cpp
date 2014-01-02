@@ -677,12 +677,12 @@ const{
       nn=0.0;
       sigout[0]=0.0;
       for(i=0;i<kk;i++){
-       sigout[0]+=ggq[i]*ggq[i]*ggin[i][i];
+       sigout[0]-=ggq[i]*ggq[i]*ggin[i][i];
        
        nn+=(fn[neigh[i]]-fbar)*ggin[i][i]*
        (fn[neigh[i]]-fbar);
        for(j=i+1;j<kk;j++){
-         sigout[0]+=2.0*ggq[i]*ggq[j]*ggin[i][j];
+         sigout[0]-=2.0*ggq[i]*ggq[j]*ggin[i][j];
 	 
 	 nn+=2.0*(fn[neigh[j]]-fbar)*
 	 (fn[neigh[i]]-fbar)*ggin[i][j];
@@ -694,8 +694,8 @@ const{
    ikp=nn/double(kk);
     
     
-    sigout[0]=(*covariogram)(pt,pt,pmin,pmax,grad,0)-sigout[0];
-    sigout[0]=(ikp)*(sigout[0]); 
+    sigout[0]+=(*covariogram)(pt,pt,pmin,pmax,grad,0);
+    sigout[0]*=ikp; 
      
      if(sigout[0]>0.0)sigout[0]=sqrt(sigout[0]);
      else sigout[0]=0.0;
