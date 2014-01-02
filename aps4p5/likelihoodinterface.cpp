@@ -678,6 +678,8 @@ void likelihood::set_median(){
         if(lingerflag[i]==0)n++;
     }
     
+    printf("n %d\n",n);
+    
     inn=new int[n];
     list=new double[n];
     sorted=new double[n];
@@ -692,8 +694,14 @@ void likelihood::set_median(){
 	    
 	    inn[j]=j;
 	    list[j]=gg.fn[i];
+	    j++;
 	    
 	}
+    }
+    
+    if(j!=n){
+        printf("WARNING did not get all %d in set_median %d\n",n,j);
+	exit(1);
     }
     
     sort_and_check(list,sorted,inn,n);
