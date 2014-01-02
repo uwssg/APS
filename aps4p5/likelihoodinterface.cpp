@@ -1194,10 +1194,14 @@ void likelihood::gradient_sample(int in_dex){
     } 
     int i,j,k,l,local_min;
     double dd_min;
+    double *lowball,*highball;
     if(gg.fn[maxdex]<target+10.0 && n_minima>0){
         printf("bisecting\n");
         trial=new double[nparams];
-
+        lowball=new double[nparams];
+	highball=new double[nparams];
+	
+	for(i=0;i<nparams;i++)highball[i]=gg.kptr->data[maxdex][i];
 	
 	for(i=0;i<n_minima;i++){
 	    nn=gg.kptr->distance(gg.kptr->data[maxdex],gg.kptr->data[known_minima[i]]);
@@ -1207,12 +1211,24 @@ void likelihood::gradient_sample(int in_dex){
 	    }
 	}
 	
-	for(i=0;i<nparams;i++){
-	    trial[i]=0.5*(gg.kptr->data[maxdex][i]+gg.kptr->data[local_min][i]);
-	}
+	for(i=0;i<nparams;i++)lowball[i]=gg.kptr->data[local_min][i];
+	for(k=0;k<5;k++){
 	
-	nn=(*call_likelihood)(trial);
-	add_pt(trial,nn,1);
+	    for(i=0;i<nparams;i++){
+	        trial[i]=0.5*(lowball[i]+highball[i]);
+	    }
+	
+	    nn=(*call_likelihood)(trial);
+	    add_pt(trial,nn,1);
+	    
+	    if(nn>target){
+	        for(i=0;i<nparams;i++)highball[i]=trial[i];
+	    }
+	    else{
+	        for(i=0;i<nparams;i++)lowball[i]=trial[i];
+	    }
+	    
+	}
 	
 	printf("bisection added %e\n",nn);
 	
