@@ -14,7 +14,7 @@ class likelihood{
   int nparams,nprinted,last_refactored;
   
   double *ggx,*ggn,*samv,*sambest,start_time;
- 
+  double chi_median;
   
   int ct_aps,ct_mcmc,ct_like,iteration_aps;
   int failed_aps,failed_mcmc;
@@ -46,6 +46,8 @@ class likelihood{
 			//sampled
    
    void gradient_sample(int);
+   
+   void set_median();
    
    int choose_a_candidate();
  

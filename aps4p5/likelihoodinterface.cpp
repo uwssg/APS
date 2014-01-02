@@ -323,6 +323,8 @@ void likelihood::initialize(double **guesses, int nguess){
  npts=gg.pts;
  	
  add_candidate(mindex);
+ 
+ set_median();
        
  printf("done with initializer chimin %e\n",chimin);
  initialized=1;
@@ -418,6 +420,7 @@ char word[letters];
  npts=gg.pts;
  if(compare_char(inname,masteroutname)==1){
    nprinted=npts;
+   set_median();
  }
  else{
   nprinted=0;
@@ -666,6 +669,41 @@ void likelihood::sample_pts(){
   
 }
 
+void likelihood::set_median(){
+    int i,n,*inn;
+    double *list,*sorted;
+    
+    n=0;
+    for(i=0;i<npts;i++){
+        if(lingerflag[i]==0)n++;
+    }
+    
+    inn=new int[n];
+    list=new double[n];
+    sorted=new double[n];
+    
+    int j=0;
+    for(i=0;i<npts;i++){
+        if(lingerflag[i]==0){
+	    if(j>=n){
+	        printf("WARNING overstepped in set_median %d %d\n",j,n);
+		exit(1);
+	    }
+	    
+	    inn[j]=j;
+	    list[j]=gg.fn[i];
+	    
+	}
+    }
+    
+    sort_and_check(list,sorted,inn,n);
+    chi_median=sorted[n/2];
+    
+    delete [] inn;
+    delete [] list;
+    delete [] sorted;
+}
+
 void likelihood::write_pts(){
 
 //this routine will write the evaluated points along with
@@ -681,6 +719,8 @@ void likelihood::write_pts(){
      last_refactored=ct_mcmc;
  }
  gg.optimize();
+ 
+ set_median();
  
  tot=0;
  trapped=0;
@@ -1352,14 +1392,16 @@ void likelihood::search(){
 	//mcmc_sample();
 	
 	gradient_sample(-1);
-	write_pts();
+	
     }
     else{
         sample_pts();
-	if(npts>nprinted+writevery){
+	
+    }
+    
+    if(npts>nprinted+writevery){
 	    write_pts();
 	}
-    }
     
 }
 
