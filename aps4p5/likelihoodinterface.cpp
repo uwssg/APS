@@ -678,7 +678,7 @@ void likelihood::set_median(){
         if(lingerflag[i]==0)n++;
     }
     
-    printf("n %d\n",n);
+    //printf("n %d\n",n);
     
     inn=new int[n];
     list=new double[n];
@@ -1032,7 +1032,7 @@ int likelihood::choose_a_candidate(){
     int grad_failed=0;
     
     double *gradient,*to_min,norm,ddnormed;
-    double *nearest,best;
+    double *nearest,best,minbest,ffbest;
     
     //printf("choosing a candidate out of %d with %d min\n",n_candidates,n_minima);
     
@@ -1103,6 +1103,7 @@ int likelihood::choose_a_candidate(){
     
     */
     
+    printf("\n");
     for(i=0;i<n_candidates;i++){
         min=-1.0;
         for(j=0;j<n_minima;j++){
@@ -1118,13 +1119,20 @@ int likelihood::choose_a_candidate(){
 	
 	ff=sqrt(nparams)*(gg.fn[candidates[i]]-target)/target;
 	
-	metric=min-ff;
+	//metric=min-ff;
+	metric=min;
+	
+	//printf("metric %e min %e ff %e\n",metric,min,ff);
 	
 	if(i==0 || metric>best){
 	    ichosen=i;
 	    best=metric;
+	    minbest=min;
+	    ffbest=ff;
 	}
     }
+    
+    printf("minbest %e ffbest %e\n",minbest,ffbest);
     
     /*printf("    chose metric %.3e  -- p %.4e f %.4e\n",best,
     gg.kptr->data[candidates[ichosen]][0],gg.fn[candidates[ichosen]]);
