@@ -1193,10 +1193,10 @@ void likelihood::gradient_sample(int in_dex){
 	return;
     } 
     int i,j,k,l,local_min;
-    double *midpt,dd_min;
+    double dd_min;
     if(gg.fn[maxdex]<target+10.0 && n_minima>0){
         printf("bisecting\n");
-        midpt=new double[nparams];
+        trial=new double[nparams];
 
 	
 	for(i=0;i<n_minima;i++){
@@ -1208,15 +1208,15 @@ void likelihood::gradient_sample(int in_dex){
 	}
 	
 	for(i=0;i<nparams;i++){
-	    midpt[i]=0.5*(gg.kptr->data[maxdex][i]+gg.kptr->data[local_min][i]);
+	    trial[i]=0.5*(gg.kptr->data[maxdex][i]+gg.kptr->data[local_min][i]);
 	}
 	
-	nn=(*call_likelihood)(midpt);
-	add_pt(midpt,nn,1);
+	nn=(*call_likelihood)(trial);
+	add_pt(trial,nn,1);
 	
 	printf("bisection added %e\n",nn);
 	
-	delete [] midpt;
+	delete [] trial;
 	time_mcmc+=double(time(NULL))-before;
         ct_mcmc+=call_likelihood->get_called()-istart;
         failed_mcmc+=(call_likelihood->get_called()-istart)-(gg.pts-pstart);
