@@ -1232,6 +1232,8 @@ void likelihood::gradient_sample(int in_dex){
 	
 	printf("bisection added %e\n",nn);
 	
+	delete [] highball;
+	delete [] lowball;
 	delete [] trial;
 	time_mcmc+=double(time(NULL))-before;
         ct_mcmc+=call_likelihood->get_called()-istart;
