@@ -536,19 +536,37 @@ void likelihood::sample_pts(){
     stradmax=-1.0*exception;
     
     int abort;
+    double *avg_pt;
+    
+    avg_pt=new double[nparams];
+    for(i=0;i<nparams;i++)avg_pt[i]=0.0;
     
     for(i=0;i<nsamples;i++){
         for(j=0;j<nparams;j++){
 	    samples[i][j]=sampling_min[j]+
 	    dice->doub()*(sampling_max[j]-sampling_min[j]);
+	    
+	    avg_pt[j]+=samples[i][j];
 	}
     }
     active_samples=nsamples;
     
+    for(i=0;i<nparams;i++)avg_pt[i]=avg_pt[i]/double(nsamples);
+    
     while(active_samples>0){
       
+      
       if(active_samples==nsamples){
-          nearest_sample=0;
+          //nearest_sample=0;
+	  for(i=0;i<active_samples;i++){
+	      dd=gg.kptr->distance(avg_pt,samples[i]);
+	      if(i==0 || dd>ddbest){
+	          ddbest=dd;
+		  nearest_sample=i;
+	      }
+	  }
+	  
+	  
       }
       else{
           for(i=0;i<active_samples;i++){
@@ -647,12 +665,9 @@ void likelihood::sample_pts(){
       
     }//is this a grad wanderer situation
    
-   time_aps+=double(time(NULL))-before;
-   
-   if(minimize_it==1){
-       gradient_sample(minimize_dex);
-   } 
+
   
+  delete [] avg_pt;
   delete [] sampling_min;
   delete [] sampling_max;
   delete [] sambest;
@@ -666,6 +681,12 @@ void likelihood::sample_pts(){
       delete [] samples[i];
   }
   delete [] samples;
+  
+   time_aps+=double(time(NULL))-before;
+   
+   if(minimize_it==1){
+       gradient_sample(minimize_dex);
+   } 
   
 }
 
