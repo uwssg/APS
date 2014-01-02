@@ -633,7 +633,7 @@ void likelihood::sample_pts(){
     }
   
 
-  if(chitrue-target<grat*target && chitrue>target){
+  if(chitrue<chi_median && chitrue>target){
     //if the value of chisquared is within your set threshold, add it as a
     //new gradient wanderer.  If you are already at your maximum allowed
     //number of wanderers, only add this point if its value of chisquared
