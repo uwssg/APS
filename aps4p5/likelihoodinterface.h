@@ -18,7 +18,7 @@ class likelihood{
   
   int ct_aps,ct_mcmc,ct_like,iteration_aps;
   int failed_aps,failed_mcmc;
-  double time_mcmc,time_aps,time_like,time_predicting;
+  double time_mcmc,time_aps,time_like;
   
   char mufitname[letters],timingname[letters],masteroutname[letters];
   int calledmufit,nmufit,*ctmufit;

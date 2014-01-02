@@ -15,7 +15,7 @@ gp::gp(){
   inversionerr=-1.0e10;
   time_search=0.0;
   time_optimizing=0.0;
-  time_inverting=0.0;
+  //time_inverting=0.0;
   
   still_optimizing=1;
   old_hy1=NULL;
@@ -503,7 +503,7 @@ const{
       }
   }
   
-  double mu,nn,xx;
+  double mu,nn;
   double before,after;
 
   int *neigh;
@@ -636,10 +636,10 @@ const{
 	    
         }
 	
-	xx=double(time(NULL));
+	//xx=double(time(NULL));
 	invert_lapack(gg,ggin,kk,1);
 	nn=check_inversion(gg,ggin,kk);
-	time_inverting+=double(time(NULL))-xx;
+	//time_inverting+=double(time(NULL))-xx;
 	
 	if(nn>1.0e-5){
 	    printf("WARNING inversion err %e\n",nn);
@@ -768,9 +768,9 @@ const{
   return mu;
 }
 
-double gp::get_time_inverting(){
+/*double gp::get_time_inverting(){
     return time_inverting;
-}
+}*/
 
 double gp::actual_gradient(int dex, double *vout){
     if(dex>=pts || dex<0){

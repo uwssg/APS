@@ -556,11 +556,11 @@ void likelihood::sample_pts(){
     
     for(i=0;i<nparams;i++)avg_pt[i]=avg_pt[i]/double(nsamples);
     
-    double before_sample=double(time(NULL));
+    //double before_sample=double(time(NULL));
     
     while(active_samples>0){
       
-      before_sample=double(time(NULL));
+      //before_sample=double(time(NULL));
       if(active_samples==nsamples){
           //nearest_sample=0;
 	  for(i=0;i<active_samples;i++){
@@ -594,7 +594,7 @@ void likelihood::sample_pts(){
       
       active_samples--;
       
-      time_predicting+=double(time(NULL))-before_sample;
+      //time_predicting+=double(time(NULL))-before_sample;
       
       mu=gg.user_predict(samv,&sig,1);
      
@@ -836,7 +836,7 @@ void likelihood::write_pts(){
   
   
   fprintf(timefile,"aps %e %d %e %d ",time_aps,ct_aps,time_aps/double(ct_aps),failed_aps);
-  fprintf(timefile,"predict %e invert %e ",time_predicting,gg.get_time_inverting());
+  //fprintf(timefile,"predict %e invert %e ",time_predicting,gg.get_time_inverting());
   
   fprintf(timefile,"optimizing %e %d ",gg.get_time_optimizing(),gg.get_still_optimizing());
   fprintf(timefile,"searching %e ",gg.get_time_searching());

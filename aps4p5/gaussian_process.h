@@ -131,7 +131,7 @@ class gp{
     int initialized,room,roomstep,allottedpts,dim;
     int still_optimizing;
     double sigcap,time_optimizing;
-    mutable double time_inverting;
+    //mutable double time_inverting;
    
     mutable int ct_search;
     mutable double time_search;
@@ -175,7 +175,7 @@ class gp{
     double get_nearest_distance(double*);
     double get_time_optimizing();
     double get_time_searching();
-    double get_time_inverting();
+    //double get_time_inverting();
     
     
     void optimize();

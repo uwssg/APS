@@ -29,7 +29,7 @@ run with a hard-wired target value of chi^2=1200.0)
 #write_every 500 -- write after sampling 300 points;
                     
 
-#outputfile output/udder_optbtach_test.sav --store the sampled points
+#outputfile output/udder_optbatch_test.sav --store the sampled points
 !#resumefile sfd_udder.sav -- in case you are interrupted
 			(this line is currently commented out, note the '!')
 
