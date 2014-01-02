@@ -503,7 +503,7 @@ const{
       }
   }
   
-  double mu,nn;
+  double mu,nn,xx;
   double before,after;
 
   int *neigh;
@@ -632,13 +632,13 @@ const{
 	    
         }
 	
-	nn=double(time(NULL));
+	xx=double(time(NULL));
 	invert_lapack(gg,ggin,kk,1);
 	nn=check_inversion(gg,ggin,kk);
-	time_inverting+=double(time(NULL))-nn;
+	time_inverting+=double(time(NULL))-xx;
 	
 	if(nn>1.0e-5){
-	    printf("WRANING inversion err %e\n",nn);
+	    printf("WARNING inversion err %e\n",nn);
 	    exit(1);
 	}
         
