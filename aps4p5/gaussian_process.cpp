@@ -674,29 +674,22 @@ const{
     
     double ikp=0.0;
     
-    
+      nn=0.0;
       sigout[0]=0.0;
       for(i=0;i<kk;i++){
-       for(j=0;j<kk;j++){
-         sigout[0]+=ggq[i]*ggq[j]*ggin[i][j];
+       sigout[0]+=ggq[i]*ggq[i]*ggin[i][i];
+       
+       nn+=(fn[neigh[i]]-fbar)*ggin[i][i]*
+       (fn[neigh[i]]-fbar);
+       for(j=i+1;j<kk;j++){
+         sigout[0]+=2.0*ggq[i]*ggq[j]*ggin[i][j];
+	 
+	 nn+=2.0*(fn[neigh[j]]-fbar)*
+	 (fn[neigh[i]]-fbar)*ggin[i][j];
 
        }
       }
     
-     nn=0.0;
-     for(i=0;i<kk;i++){
-  
-
-       nn+=(fn[neigh[i]]-fbar)*ggin[i][i]*
-       (fn[neigh[i]]-fbar);
-	 
-      for(j=i+1;j<kk;j++){
-     
-         nn+=2.0*(fn[neigh[j]]-fbar)*
-	 (fn[neigh[i]]-fbar)*ggin[i][j];
-	      
-     }
-   }
   
    ikp=nn/double(kk);
     
