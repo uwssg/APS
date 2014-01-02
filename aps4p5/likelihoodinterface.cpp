@@ -556,9 +556,11 @@ void likelihood::sample_pts(){
     
     for(i=0;i<nparams;i++)avg_pt[i]=avg_pt[i]/double(nsamples);
     
+    double before_sample=double(time(NULL));
+    
     while(active_samples>0){
       
-      
+      before_sample=double(time(NULL));
       if(active_samples==nsamples){
           //nearest_sample=0;
 	  for(i=0;i<active_samples;i++){
@@ -581,6 +583,8 @@ void likelihood::sample_pts(){
 	  }
       }
       
+      
+      
       for(i=0;i<nparams;i++){
           samv[i]=samples[nearest_sample][i];
       }
@@ -588,11 +592,14 @@ void likelihood::sample_pts(){
       for(i=nearest_sample+1;i<active_samples;i++){
           for(j=0;j<nparams;j++)samples[i-1][j]=samples[i][j];
       }
+      
+      
       active_samples--;
       
-      dd=double(time(NULL));
+      time_predicting+=double(time(NULL))-before_sample;
+      
       mu=gg.user_predict(samv,&sig,1);
-      time_predicting+=double(time(NULL))-dd;
+     
    
       strad=sig-fabs(mu-target);
       
@@ -605,6 +612,8 @@ void likelihood::sample_pts(){
 	ddbest=dd;
       }
     }
+    
+    
     
     //gg.kptr->nn_srch(sambest,1,&i,&dd);
     if(ddbest>1.0e-10){
