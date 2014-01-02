@@ -452,6 +452,8 @@ void likelihood::sample_pts(){
   
   double *sampling_min,*sampling_max,*sambest,*samv;
   
+  int lingerswitch;
+  
   before=double(time(NULL));
   
   int p_before,l_before;
@@ -482,6 +484,7 @@ void likelihood::sample_pts(){
   }
   
   if(iteration_aps%2==0 && ngood>2){
+      lingerswitch=1;
       //printf("focusing\n");
       focusing=1;
       ngood=0;
@@ -512,6 +515,7 @@ void likelihood::sample_pts(){
       }
   }
   else{
+      lingerswitch=0;
       for(i=0;i<nparams;i++){
           sampling_min[i]=gg.kptr->mins[i];
           sampling_max[i]=gg.kptr->maxs[i];
@@ -602,7 +606,7 @@ void likelihood::sample_pts(){
   
     
     if(chitrue<exception){
-      add_pt(sambest,chitrue,0);
+      add_pt(sambest,chitrue,lingerswitch);
       
       if(mufitname[0]!=0){
           if(calledmufit==0){
