@@ -1144,8 +1144,10 @@ int likelihood::choose_a_candidate(){
     }
     n_candidates--;
     
+    min=sqrt(nparams)*1.0e-2;
+    
     for(i=0;i<n_candidates;i++){
-        if(gg.kptr->distance(gg.kptr->data[to_return],gg.kptr->data[candidates[i]])<1.0e-3){
+        if(gg.kptr->distance(gg.kptr->data[to_return],gg.kptr->data[candidates[i]])<min){
 	    for(j=i+1;j<n_candidates;j++){
 	        candidates[j-1]=candidates[j];
 	    }
@@ -1494,7 +1496,7 @@ void likelihood::add_minimum(double *pt){
 	}
     }
     
-    if(dd<0.05)return;
+    if(dd<1.0e-2)return;
     
     int *buffer;
     
