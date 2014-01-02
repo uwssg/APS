@@ -1532,13 +1532,58 @@ void likelihood::add_minimum(double *pt){
 	exit(1);
     }
     
-    int dex;
-    double dd,nn;
-    int i,j;
+    int dex,dex_trial;
+    double dd,nn,*midpt,chi_up,chi_down;
+    double chitrial,dd_trial;
+    int i,j,reverse=0;
+    
+    if(known_minima==NULL){
+       room_minima=10;
+       known_minima=new int[room_minima];
+       n_minima=0;
+    }
+    
     
     gg.kptr->nn_srch(pt,1,&dex,&dd);
     
-    dd=1.0;
+    midpt=new double[nparams];
+
+    for(i=0;i<n_minima;i++){
+        for(j=0;j<nparams;j++)midpt[j]=0.5*(pt[j]+gg.kptr->data[known_minima[i]][j]);
+	
+	if(gg.fn[dex]>gg.fn[known_minima[i]]){
+	    chi_up=gg.fn[dex];
+	    chi_down=gg.fn[known_minima[i]];
+	}
+	else{
+	    chi_down=gg.fn[dex];
+	    chi_up=gg.fn[known_minima[i]];
+	    reverse=1;
+	}
+	
+	gg.kptr->nn_srch(midpt,1,&dex_trial,&dd_trial);
+	
+	if(dd_trial<1.0e-6){
+	    chitrial=gg.fn[dex_trial];
+	}
+	else{
+	    chitrial=(*call_likelihood)(midpt);
+	    add_pt(midpt,chitrial,1);
+	}
+	
+	if(chitrial<chi_up){
+	    if(reverse==1){
+	        known_minima[i]=dex;
+	    }
+	    delete [] midpt;
+	    return;
+	}
+	
+    }
+    
+    delete [] midpt;
+    
+    /*dd=1.0;
     for(i=0;i<n_minima;i++){
         nn=gg.kptr->distance(pt,gg.kptr->data[known_minima[i]]);
 	if(i==0 || nn<dd){
@@ -1546,15 +1591,9 @@ void likelihood::add_minimum(double *pt){
 	}
     }
     
-    if(dd<1.0e-2)return;
+    if(dd<1.0e-2)return;*/
     
     int *buffer;
-    
-    if(known_minima==NULL){
-       room_minima=10;
-       known_minima=new int[room_minima];
-       n_minima=0;
-    }
     
     if(n_minima==room_minima){
         buffer=new int[n_minima];
