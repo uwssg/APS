@@ -1194,7 +1194,7 @@ void likelihood::gradient_sample(int in_dex){
     } 
     int i,j,k,l,local_min;
     double *midpt,dd_min;
-    if(gg.fn[maxdex]<target+0.1*(target-chimin) && n_minima>0){
+    if(gg.fn[maxdex]<target+10.0 && n_minima>0){
         printf("bisecting\n");
         midpt=new double[nparams];
 
