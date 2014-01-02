@@ -1119,8 +1119,8 @@ int likelihood::choose_a_candidate(){
 	
 	ff=sqrt(nparams)*(gg.fn[candidates[i]]-target)/target;
 	
-	//metric=min-ff;
-	metric=min;
+	metric=min-ff;
+	//metric=min;
 	
 	//printf("metric %e min %e ff %e\n",metric,min,ff);
 	
@@ -1143,6 +1143,16 @@ int likelihood::choose_a_candidate(){
         candidates[i-1]=candidates[i];
     }
     n_candidates--;
+    
+    for(i=0;i<n_candidates;i++){
+        if(gg.kptr->distance(gg.kptr->data[to_return],gg.kptr->data[candidates[i]])<1.0e-3){
+	    for(j=i+1;j<n_candidates;j++){
+	        candidates[i-1]=candidates[i];
+	    }
+	    n_candidates--;
+	}
+    
+    }
     
     return to_return;
     
@@ -1382,8 +1392,8 @@ void likelihood::gradient_sample(int in_dex){
     
     add_minimum(pt);
     
-    printf("total %d good_steps %d fstart %e f0 %e\n",
-    call_likelihood->get_called()-istart,good_steps,fstart,f0);
+    printf("total %d good_steps %d fstart %.4e f0 %.4e min %.4e\n",
+    call_likelihood->get_called()-istart,good_steps,fstart,f0,chimin);
     
     delete [] neighbors;
     delete [] dd;
