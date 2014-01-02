@@ -1192,6 +1192,35 @@ void likelihood::gradient_sample(int in_dex){
         printf("WARNING maxdex %d pts %d ; in_dex %d\n",gg.pts,in_dex);
 	return;
     } 
+    int i,j,k,l,local_min;
+    double *midpt,dd_min;
+    if(gg.fn[maxdex]<target+0.1*(target-chimin)){
+        midpt=new double[nparams];
+
+	
+	for(i=0;i<n_minima;i++){
+	    nn=gg.kptr->distance(gg.kptr->data[maxdex],gg.kptr->data[known_minima[i]]);
+	    if(i==0 || nn<dd_min){
+	        dd_min=nn;
+		local_min=known_minima[i];
+	    }
+	}
+	
+	for(i=0;i<nparams;i++){
+	    midpt[i]=0.5*(gg.kptr->data[maxdex][i]+gg.kptr->data[local_min][i]);
+	}
+	
+	nn=(*call_likelihood)(midpt);
+	add_pt(midpt,nn,1);
+	
+	printf("bisection added %e\n",nn);
+	
+	delete [] midpt;
+	
+	
+	return;
+    }
+    
     
     neighbors=new int[total_neighbors];
     dd=new double[total_neighbors];
@@ -1200,7 +1229,7 @@ void likelihood::gradient_sample(int in_dex){
     trial=new double[nparams];
     
     
-    int i,j,k,l;
+ 
     for(i=0;i<nparams;i++){
         pt[i]=gg.kptr->data[maxdex][i];
     }
