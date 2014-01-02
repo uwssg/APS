@@ -464,6 +464,8 @@ void likelihood::sample_pts(){
   double **samples;
   int active_samples,nearest_sample;
   
+  before=double(time(NULL));
+  
   l_before=call_likelihood->get_called();
   p_before=gg.pts;
   iteration_aps++;
@@ -532,7 +534,7 @@ void likelihood::sample_pts(){
     //generate nsample random samples and use the gaussian process to guess
     //their chisquared values.  Choose only the one that maximizes strad
     //to feed through the actual chisquared function
-    before=double(time(NULL));
+
     stradmax=-1.0*exception;
     
     int abort;
@@ -541,12 +543,13 @@ void likelihood::sample_pts(){
     avg_pt=new double[nparams];
     for(i=0;i<nparams;i++)avg_pt[i]=0.0;
     
-    for(i=0;i<nsamples;i++){
-        for(j=0;j<nparams;j++){
-	    samples[i][j]=sampling_min[j]+
-	    dice->doub()*(sampling_max[j]-sampling_min[j]);
+    for(i=0;i<nparams;i++){
+        dd=sampling_max[i]-sampling_min[i];
+        for(j=0;j<nsamples;j++){
+	    samples[j][i]=sampling_min[i]+
+	    dice->doub()*dd;
 	    
-	    avg_pt[j]+=samples[i][j];
+	    avg_pt[i]+=samples[j][i];
 	}
     }
     active_samples=nsamples;
