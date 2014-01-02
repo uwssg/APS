@@ -1176,9 +1176,7 @@ void likelihood::gradient_sample(int in_dex){
     double *dd,dd_scalar;
     
     total_neighbors=20;
-    neighbors=new int[20];
-    dd=new double[20];
-    
+
     istart=call_likelihood->get_called();
     pstart=gg.pts;
     
@@ -1195,6 +1193,8 @@ void likelihood::gradient_sample(int in_dex){
 	return;
     } 
     
+    neighbors=new int[total_neighbors];
+    dd=new double[total_neighbors];
     gradient=new double[nparams];
     pt=new double[nparams];
     trial=new double[nparams];
