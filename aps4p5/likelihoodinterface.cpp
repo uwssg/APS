@@ -1546,7 +1546,7 @@ void likelihood::add_minimum(double *pt){
     
     gg.kptr->nn_srch(pt,1,&dex,&dd);
     
-    midpt=new double[nparams];
+    /*midpt=new double[nparams];
 
     for(i=0;i<n_minima;i++){
         for(j=0;j<nparams;j++)midpt[j]=0.5*(pt[j]+gg.kptr->data[known_minima[i]][j]);
@@ -1581,9 +1581,9 @@ void likelihood::add_minimum(double *pt){
 	
     }
     
-    delete [] midpt;
+    delete [] midpt;*/
     
-    /*dd=1.0;
+    dd=1.0;
     for(i=0;i<n_minima;i++){
         nn=gg.kptr->distance(pt,gg.kptr->data[known_minima[i]]);
 	if(i==0 || nn<dd){
@@ -1591,7 +1591,7 @@ void likelihood::add_minimum(double *pt){
 	}
     }
     
-    if(dd<1.0e-2)return;*/
+    if(dd<1.0e-3)return;
     
     int *buffer;
     
