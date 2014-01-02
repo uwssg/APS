@@ -586,8 +586,10 @@ void likelihood::sample_pts(){
           for(j=0;j<nparams;j++)samples[i-1][j]=samples[i][j];
       }
       active_samples--;
-  
+      
+      dd=double(time(NULL));
       mu=gg.user_predict(samv,&sig,1);
+      time_predicting+=double(time(NULL))-dd;
    
       strad=sig-fabs(mu-target);
       
@@ -824,6 +826,7 @@ void likelihood::write_pts(){
   
   
   fprintf(timefile,"aps %e %d %e %d ",time_aps,ct_aps,time_aps/double(ct_aps),failed_aps);
+  fprintf(timefile,"predict %e invert %e ",time_predicting,gg.get_time_inverting());
   
   fprintf(timefile,"optimizing %e %d ",gg.get_time_optimizing(),gg.get_still_optimizing());
   fprintf(timefile,"searching %e ",gg.get_time_searching());
