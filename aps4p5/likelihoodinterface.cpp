@@ -560,7 +560,7 @@ void likelihood::sample_pts(){
           //nearest_sample=0;
 	  for(i=0;i<active_samples;i++){
 	      dd=gg.kptr->distance(avg_pt,samples[i]);
-	      if(i==0 || dd>ddbest){
+	      if(i==0 || dd<ddbest){
 	          ddbest=dd;
 		  nearest_sample=i;
 	      }
@@ -611,17 +611,7 @@ void likelihood::sample_pts(){
         minimize_it=1;
 	minimize_dex=gg.pts;
     }
-    
-    if(focusing==1){
-       for(i=0;i<nparams;i++){
-          nn=(sampling_max[i]-sampling_min[i])/(gg.kptr->maxs[i]-gg.kptr->mins[i]);
-	  if(i==0 || nn>dd)dd=nn;
-       }
-    
-    
-        //printf("focusing found %e -- %d -- %e -- %e\n",chitrue,ngood,chimin,dd);
-    }
-    
+        
     //only add the point to the set of sampled points if chisquared is
     //reasonable
   
