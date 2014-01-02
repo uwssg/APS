@@ -1147,7 +1147,7 @@ int likelihood::choose_a_candidate(){
     for(i=0;i<n_candidates;i++){
         if(gg.kptr->distance(gg.kptr->data[to_return],gg.kptr->data[candidates[i]])<1.0e-3){
 	    for(j=i+1;j<n_candidates;j++){
-	        candidates[i-1]=candidates[i];
+	        candidates[j-1]=candidates[j];
 	    }
 	    n_candidates--;
 	}
