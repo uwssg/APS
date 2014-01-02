@@ -570,8 +570,7 @@ void likelihood::sample_pts(){
 		  nearest_sample=i;
 	      }
 	  }
-	  
-	  
+  
       }
       else{
           for(i=0;i<active_samples;i++){
@@ -583,8 +582,7 @@ void likelihood::sample_pts(){
 	  }
       }
       
-      
-      
+
       for(i=0;i<nparams;i++){
           samv[i]=samples[nearest_sample][i];
       }
