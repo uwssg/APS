@@ -29,6 +29,18 @@ vv[24]=-0.4783912;
 vv[25]=17.33453;
 vv[26]=16.48477;
 
+double pp[5];
+
+for(i=0;i<5;i++){
+    pp[i]=vv[i*5+1];    
+}
+
+vv[1]=log(pp[0]);
+for(i=1;i<5;i++){
+    vv[i*5+1]=log(pp[i])-log(pp[i-1]);
+}
+
+
 double chisquared=solar_system(vv);
 printf("chisquared %e\n",chisquared);
 
@@ -50,6 +62,16 @@ vv[19]=-0.1965394;
 vv[24]=-0.5694518;
 vv[25]=17.28121;
 vv[26]=17.04971;
+
+for(i=0;i<5;i++){
+    pp[i]=vv[i*5+1];    
+}
+
+vv[1]=log(pp[0]);
+for(i=1;i<5;i++){
+    vv[i*5+1]=log(pp[i])-log(pp[i-1]);
+}
+
 
 printf("got better data\n");
 

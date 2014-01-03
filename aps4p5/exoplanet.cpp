@@ -163,7 +163,7 @@ double planet::operator()(double *vv) const{
     
     double **nu;
     int i,j;
-    double mm,bigE,xx,tt;
+    double mm,bigE,xx,lntotal;
     
     double *times;
     
@@ -173,11 +173,15 @@ double planet::operator()(double *vv) const{
     }
     
     times=new double[nplanets];
-    
+    lntotal=0.0;
     for(i=0;i<nplanets;i++){
         K[i]=vv[i*5];
 	
-	P[i]=vv[i*5+1];
+	lntotal+=vv[i*5+1];
+	
+	P[i]=exp(lntotal);
+	
+	//printf("p%d %e\n",i,P[i]);
 	
 	ee[i]=vv[i*5+2];
 	
@@ -204,7 +208,7 @@ double planet::operator()(double *vv) const{
 	   
 	   if(isnan(nu[j][i])){
 	      printf("WARNING nu %e\n",nu[j][i]);
-	      printf("mm %e tt %e %e\n",mm,tt,vv[i*5+4]);
+	      printf("mm %e  %e\n",mm,vv[i*5+4]);
 	      printf("bigE %e ee %e xx %e atan %e\n",bigE,ee[j],xx,atan(xx));
 	      printf("j %d\n",j);
 	      exit(1);
