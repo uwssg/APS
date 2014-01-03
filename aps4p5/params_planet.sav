@@ -19,7 +19,7 @@ dimensionality MUST be the first keyword listed
 	if you leave this blank, it will just use the value returned by the
 	system clock
 
-!#chitarget 1200.0 -- target chi squared 
+
 #deltachi 40.1 -- alternatively, you can ask the code to search for
 		    chi^2_min+delta chi^2
 
@@ -28,10 +28,9 @@ run with a hard-wired target value of chi^2=1200.0)
 
 #write_every 500 -- write after sampling 300 points;
                     
+#likelihood planet
 
 #outputfile output/planet_pts.sav --store the sampled points
-!#resumefile sfd_udder.sav -- in case you are interrupted
-			(this line is currently commented out, note the '!')
 
 
 #timingfile output/planet_timing.sav -- timing information
