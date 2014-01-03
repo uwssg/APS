@@ -1127,7 +1127,7 @@ int likelihood::choose_a_candidate(){
     
     */
     
-    printf("\n");
+    //printf("\n");
     for(i=0;i<n_candidates;i++){
         min=-1.0;
         for(j=0;j<n_minima;j++){
@@ -1156,7 +1156,7 @@ int likelihood::choose_a_candidate(){
 	}
     }
     
-    printf("minbest %e ffbest %e\n",minbest,ffbest);
+    //printf("minbest %e ffbest %e\n",minbest,ffbest);
     
     /*printf("    chose metric %.3e  -- p %.4e f %.4e\n",best,
     gg.kptr->data[candidates[ichosen]][0],gg.fn[candidates[ichosen]]);
@@ -1220,7 +1220,7 @@ void likelihood::gradient_sample(int in_dex){
     double dd_min;
     double *lowball,*highball;
     if(gg.fn[maxdex]<target+10.0 && n_minima>0){
-        printf("bisecting\n");
+        //printf("bisecting\n");
         trial=new double[nparams];
         lowball=new double[nparams];
 	highball=new double[nparams];
@@ -1254,7 +1254,7 @@ void likelihood::gradient_sample(int in_dex){
 	    
 	}
 	
-	printf("bisection added %e\n",nn);
+	//printf("bisection added %e\n",nn);
 	
 	delete [] highball;
 	delete [] lowball;
@@ -1468,8 +1468,8 @@ void likelihood::gradient_sample(int in_dex){
     
     add_minimum(pt);
     
-    printf("total %d good_steps %d fstart %.4e f0 %.4e min %.4e\n",
-    call_likelihood->get_called()-istart,good_steps,fstart,f0,chimin);
+    //printf("total %d good_steps %d fstart %.4e f0 %.4e min %.4e\n",
+    //call_likelihood->get_called()-istart,good_steps,fstart,f0,chimin);
     
     delete [] neighbors;
     delete [] dd;

@@ -442,7 +442,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
     }
     
     if(maxerr>1.0e-5 || isnan(maxerr)){
-        printf("WARNING gaussian solver failed %e\n",maxerr);
+        /*printf("WARNING gaussian solver failed %e\n",maxerr);
 	
 	
 	printf("\n");
@@ -455,7 +455,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	for(i=0;i<params;i++){
 	    printf("%e\n",bb_in[i]);
 	}
-	printf("\n");
+	printf("\n");*/
 	
 	delete [] buffer;
 	delete [] dexes;

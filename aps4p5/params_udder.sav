@@ -29,13 +29,13 @@ run with a hard-wired target value of chi^2=1200.0)
 #write_every 500 -- write after sampling 300 points;
                     
 
-#outputfile output/udder_optbatch_test.sav --store the sampled points
+#outputfile output/udder_optbatch_junk.sav --store the sampled points
 !#resumefile sfd_udder.sav -- in case you are interrupted
 			(this line is currently commented out, note the '!')
 
 
-#timingfile output/udder_optbatch_test_timing.sav -- timing information
-#mufitfile output/udder_optbatch_test_fit.sav -- file comparing Gaussian process fit to true chi^2
+#timingfile output/udder_optbatch_junk_timing.sav -- timing information
+#mufitfile output/udder_optbatch_junk_fit.sav -- file comparing Gaussian process fit to true chi^2
 
 
 below is you list of parameters.  The format is:
