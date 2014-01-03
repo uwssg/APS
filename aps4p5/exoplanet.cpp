@@ -2,8 +2,8 @@
 #include <time.h>
 
 planet::planet(){
-    nplanets=0;
-    ndata=0;
+    printf("sorry; cannot call this planet constructor\n");
+    exit(1);
 }
 
 planet::planet(int i) : chisquared(5*i+2){
@@ -159,6 +159,8 @@ void planet::set_k(double *kin){
 
 double planet::operator()(double *vv) const{
     
+    
+    
     double **nu;
     int i,j;
     double mm,bigE,xx,tt;
@@ -207,11 +209,13 @@ double planet::operator()(double *vv) const{
     
         for(j=0;j<nplanets;j++){
             
+	  
+	    
 	    //tt=times[j]*P[j]+datemin;
 	    
-	    tt=times[j];
+	    //tt=times[j];
 	    
-	    mm=2.0*pi*((date[i]-times[j])/P[j]);//+tt*radians_per_degree;
+	    mm=2.0*pi*(date[i]/P[j]-times[j]);//+tt*radians_per_degree;
 	    
 	    //if(fabs(mm)>1.0e6)printf("date %e tt %e P %e\n",date[i],tt,P[j]);
 	    
@@ -232,14 +236,17 @@ double planet::operator()(double *vv) const{
         }
 
     }
-
+    
+    
     double chisq,rms,rmsbest,ans;
     double nn;
     FILE *output;
 
-
     chisq=0.0;
     rms=0.0;
+    
+    //printf("chisq %e\n",chisq);
+    
     //output=fopen("planet_test_junk.sav","w");
     for(i=0;i<ndata;i++){
     
@@ -272,13 +279,12 @@ double planet::operator()(double *vv) const{
        }
     }
     //fclose(output);
-
+    
     
     for(i=0;i<nplanets;i++)delete [] nu[i];
     delete [] nu;
-
     
-    //printf("returning %e\n",chisq);
+    
     
     if(isnan(chisq))chisq=1.0e10;
     
@@ -297,16 +303,17 @@ double planet::operator()(double *vv) const{
     
     delete [] times;
     
+    //printf("deleted times %e\n",chisq);
+    
     return chisq;
 
     
 }
 
 double planet::find_E(double m, double ee) const{
-
+    
     double estart;
 
-    
     estart=m-2.0*fabs(ee);
     
     double de=0.00001,etrial,ebest,dd,ddbest;
@@ -401,6 +408,7 @@ double planet::find_E(double m, double ee) const{
        printf("ebest %e up %e %e down %e %e\n",ebest,eup,ddup,edown,dddown);
        exit(1);
     }
+    
     return ebest;
 
 }
@@ -417,7 +425,7 @@ void planet::read_data(){
      double nn,xx;
      char tt;
      
-     for(i=0;fscanf(input,"%le",&nn);i++){
+     for(i=0;fscanf(input,"%le",&nn)>0;i++){
          fscanf(input,"%le %le %s",&nn,&nn,&tt);
      }
      fclose(input);
@@ -439,7 +447,7 @@ void planet::read_data(){
 
          }
     
-         date[i]+=2440000;
+         //date[i]+=2440000;
          //date[i]-=2453094.762;
     
          if(i==0 || date[i]<datemin)datemin=date[i];
