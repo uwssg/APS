@@ -63,6 +63,15 @@ eigen_wrapper.o
 chisq.o: chisq.h chisq.cpp wmap_wrapper.o camb_wrapper_wmap.o goto_tools.o
 	$(gg) -c chisq.cpp goto_tools.o wmap_wrapper.o camb_wrapper_wmap.o \
 	$(LIBRARIES) $(INCLUDES)
+	
+exoplanet.o: chisq.o exoplanet.h exoplanet.cpp
+	$(gg) -c exoplanet.cpp goto_tools.o wmap_wrapper.o camb_wrapper_wmap.o \
+	chisq.o $(LIBRARIES) $(INCLUDES)
+
+test_exoplanet: exoplanet.o test_exoplanet.cpp
+	$(gg) -o test_exoplanet test_exoplanet.cpp exoplanet.o goto_tools.o chisq.o \
+	wmap_wrapper.o camb_wrapper_wmap.o \
+	$(LIBRARIES) $(INCLUDES)
 
 likelihoodinterface.o: camb_wrapper_wmap.o likelihoodinterface.h \
 likelihoodinterface.cpp kd.o goto_tools.o eigen_wrapper.o wmap_wrapper.o \
@@ -89,4 +98,4 @@ udder: udder_test.cpp likelihoodinterface.o chisq.o
 	-Wno-deprecated
 
 clean:
-	rm aps4p5 udder *.o
+	rm aps4p5 test_exoplanet udder *.o

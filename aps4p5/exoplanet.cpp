@@ -16,26 +16,36 @@ planet::planet(int i) : chisquared(5*i+2){
     vk=0.0;
     vl=0.0;
     
+    date=NULL;
+    sig2=NULL;
+    velocity=NULL;
+    label=NULL;
+    
+    read_data();
+    
+    
 }
 
 planet::~planet(){
-    if(nplanets>0){
-        delete [] ee;
-	delete [] omega;
-	delete [] P;
-	delete [] K;
-    }
+    if(ee!=NULL)delete [] ee;
+    if(omega!=NULL)delete [] omega;
+    if(P!=NULL)delete [] P;
+    if(K!=NULL)delete [] K;
     
-    if(ndata>0){
-        delete [] date;
-	delete [] sig2;
-	delete [] velocity;
-	delete [] label;
-    }
+    if(date!=NULL)delete [] date;
+    if(sig2!=NULL)delete [] sig2;
+    if(velocity!=NULL)delete [] velocity;
+    if(label!=NULL)delete [] label;
     
 }
 
 void planet::set_ndata(int i){
+
+    if(date!=NULL)delete [] date;
+    if(sig2!=NULL)delete [] sig2;
+    if(velocity!=NULL)delete [] velocity;
+    if(label!=NULL)delete [] label;
+
     ndata=i;
     date=new double[ndata];
     velocity=new double[ndata];
@@ -55,6 +65,12 @@ void planet::set_vl(double kk){
 
 void planet::set_label(char *word){
     int i;
+    
+    if(label==NULL){
+        printf("WARNING label is null\n");
+	exit(1);
+    }
+    
     for(i=0;i<ndata;i++)label[i]=word[i];
 }
 
@@ -64,6 +80,12 @@ int planet::get_ndata(){
 
 void planet::set_date(double *d){
     int i;
+    
+    if(date==NULL){
+        printf("WARNING date is null\n");
+	exit(1);
+    }
+    
     for(i=0;i<ndata;i++){
         date[i]=d[i];
 	if(i==0 || date[i]<datemin)datemin=date[i];
@@ -72,31 +94,65 @@ void planet::set_date(double *d){
 
 void planet::set_velocity(double *v){
     int i;
+    
+    if(velocity==NULL){
+        printf("WARNING velocity is null\n");
+    }
+    
     for(i=0;i<ndata;i++)velocity[i]=v[i];
 }
 
 void planet::set_sig2(double *s){
     int i;
+    
+    if(sig2==NULL){
+        printf("WARNING sig2 is null\n");
+    }
+    
     for(i=0;i<ndata;i++)sig2[i]=s[i];
 }
 
 void planet::set_ee(double *ein){
     int i;
+    
+    if(ee==NULL){
+        printf("WARNING ee is null\n");
+	exit(1);
+    }
+    
     for(i=0;i<nplanets;i++)ee[i]=ein[i];
 }
 
 void planet::set_omega(double *oin){
     int i;
+    
+    if(omega==NULL){
+        printf("WARNING omega is null\n");
+	exit(1);
+    }
+    
     for(i=0;i<nplanets;i++)omega[i]=oin[i];
 }
 
 void planet::set_p(double *pin){
     int i;
+    
+    if(P==NULL){
+        printf("WARNING P is null\n");
+	exit(1);
+    }
+    
     for(i=0;i<nplanets;i++)P[i]=pin[i];
 }
 
 void planet::set_k(double *kin){
     int i;
+    
+    if(K==NULL){
+        printf("WARNING K is null\n");
+	exit(1);
+    } 
+    
     for(i=0;i<nplanets;i++)K[i]=kin[i];
 }
 
@@ -108,6 +164,11 @@ double planet::operator()(double *vv) const{
     double mm,bigE,xx,tt;
     
     double *times;
+    
+    if(date==NULL){
+        printf("cannot call operator; date is null\n");
+	exit(1);
+    }
     
     //printf("in planet operator %d\n",nplanets);
     
@@ -123,12 +184,12 @@ double planet::operator()(double *vv) const{
         K[i]=vv[i*5];
 	//P[i]=vv[i*nplanets+1];
 	
-	if(i==0)P[i]=vv[i*5+1];
+	/*if(i==0)P[i]=vv[i*5+1];
 	else{
 	    P[i]=P[i-1]+vv[i*5+1];
-	}
+	}*/
 	
-	//P[i]=vv[i*5+1];
+	P[i]=vv[i*5+1];
 	
 	ee[i]=vv[i*5+2];
 	
@@ -138,15 +199,10 @@ double planet::operator()(double *vv) const{
 	times[i]=vv[i*5+4];
 	//printf("times %d %e\n",i,times[i]);
     }
-    
-    
 
-    
     nu=new double*[nplanets];
     for(i=0;i<nplanets;i++)nu[i]=new double[ndata];
-    
-    
-    
+
     for(i=0;i<ndata;i++){
     
         for(j=0;j<nplanets;j++){
@@ -338,7 +394,7 @@ double planet::find_E(double m, double ee) const{
 	ebest=edown;
     }
     
-    if(ddworst<0.0 || ddbest/fabs(m)>ddworst)ddworst=ddbest/fabs(m);
+    //if(ddworst<0.0 || ddbest/fabs(m)>ddworst)ddworst=ddbest/fabs(m);
     
     if(fabs(ddbest/m)>1.0e-2 ){
        printf("WARNING ddbest %e m %e\n",ddbest,m);
@@ -349,30 +405,49 @@ double planet::find_E(double m, double ee) const{
 
 }
 
-void find_periods::set_planet(planet *inplanet){
-    solar_system=inplanet;
-    printf("this is the correct set_planet\n");
-}
-
-double find_periods::Up() const{
-    return 1.0;
-}
-
-double find_periods::operator()(double *vv) {
-    
-    std::vector<double> arg;
-    int i;
-    
-    for(i=0;i<5*solar_system->get_nplanets()+2;i++){
-        arg.push_back(vv[i]);
-    }
-    
-    return (*solar_system)(arg);
-    
-}
-
 int planet::get_nplanets(){
     return nplanets;
+}
+
+void planet::read_data(){
+     FILE *input;
+     
+     input=fopen("exoplanet_data/datafile_Fischer_2008_readable.txt","r");
+     int i;
+     double nn,xx;
+     char tt;
+     
+     for(i=0;fscanf(input,"%le",&nn);i++){
+         fscanf(input,"%le %le %s",&nn,&nn,&tt);
+     }
+     fclose(input);
+     
+     set_ndata(i);
+     
+     printf("set ndata to %d\n",ndata);
+     
+     
+     input=fopen("exoplanet_data/datafile_Fischer_2008_readable.txt","r");
+     for(i=0;i<ndata;i++){
+         fscanf(input,"%le %le %le %s",&date[i],&velocity[i],&nn,&label[i]);
+         if(label[i]=='L'){
+             xx=3.0;
+
+         }
+         else{
+              xx=1.5;
+
+         }
+    
+         date[i]+=2440000;
+         //date[i]-=2453094.762;
+    
+         if(i==0 || date[i]<datemin)datemin=date[i];
+    
+         sig2[i]=(nn*nn+xx*xx);
+     }
+     fclose(input);
+
 }
 
 /*

@@ -17,7 +17,7 @@ private:
     double *ee,*omega,*P,*K;
     double *sig2,*date,*velocity,vl,vk;
     char *label;
-    double datemin;
+    mutable double datemin;
 
 public:
     ~planet();
@@ -41,7 +41,7 @@ public:
     
     int get_ndata();
     int get_nplanets();
-
+    void read_data();
 
 };
 
