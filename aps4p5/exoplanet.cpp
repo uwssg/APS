@@ -185,7 +185,7 @@ double planet::operator()(double *vv) const{
 	
 	ee[i]=vv[i*5+2];
 	
-	if(ee[i]>1.0 || ee[i]<0.0)return 1.0e10;
+	if(ee[i]>1.0 || ee[i]<0.0)return exception;
 	
 	omega[i]=vv[i*5+3];
 	times[i]=vv[i*5+4];
