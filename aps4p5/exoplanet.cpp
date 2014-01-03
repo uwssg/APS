@@ -172,24 +172,10 @@ double planet::operator()(double *vv) const{
 	exit(1);
     }
     
-    //printf("in planet operator %d\n",nplanets);
-    
     times=new double[nplanets];
-    
-    /*for(i=0;i<nplanets*5+2;i++){
-        printf("%e\n",vv[i]);
-    }*/
-    
-    
     
     for(i=0;i<nplanets;i++){
         K[i]=vv[i*5];
-	//P[i]=vv[i*nplanets+1];
-	
-	/*if(i==0)P[i]=vv[i*5+1];
-	else{
-	    P[i]=P[i-1]+vv[i*5+1];
-	}*/
 	
 	P[i]=vv[i*5+1];
 	
@@ -199,7 +185,6 @@ double planet::operator()(double *vv) const{
 	
 	omega[i]=vv[i*5+3];
 	times[i]=vv[i*5+4];
-	//printf("times %d %e\n",i,times[i]);
     }
 
     nu=new double*[nplanets];
@@ -208,16 +193,9 @@ double planet::operator()(double *vv) const{
     for(i=0;i<ndata;i++){
     
         for(j=0;j<nplanets;j++){
-            
-	  
-	    
-	    //tt=times[j]*P[j]+datemin;
-	    
-	    //tt=times[j];
+       
 	    
 	    mm=2.0*pi*(date[i]/P[j]-times[j]);//+tt*radians_per_degree;
-	    
-	    //if(fabs(mm)>1.0e6)printf("date %e tt %e P %e\n",date[i],tt,P[j]);
 	    
 	    bigE=find_E(mm,ee[j]);
 	    xx=sqrt((1.0+ee[j])/(1.0-ee[j]))*tan(0.5*bigE);
@@ -240,14 +218,10 @@ double planet::operator()(double *vv) const{
     
     double chisq,rms,rmsbest,ans;
     double nn;
-    FILE *output;
 
     chisq=0.0;
     rms=0.0;
     
-    //printf("chisq %e\n",chisq);
-    
-    //output=fopen("planet_test_junk.sav","w");
     for(i=0;i<ndata;i++){
     
        ans=0.0;
@@ -270,40 +244,23 @@ double planet::operator()(double *vv) const{
 	
         nn=ans-velocity[i];
         rms+=nn*nn;
-        
-	//fprintf(output,"%e %e %e\n",date[i],velocity[i],ans);
 	
         chisq+=nn*nn/sig2[i];
         if(isnan(chisq)){
            printf("sig2 %e nn %e ans %e\n",sig2[i],nn,ans);
        }
     }
-    //fclose(output);
-    
+
     
     for(i=0;i<nplanets;i++)delete [] nu[i];
     delete [] nu;
     
     
     
-    if(isnan(chisq))chisq=1.0e10;
+    if(isnan(chisq))chisq=exception;
     
-    /*printf("planet operator about to retrun %e\n",chisq);
-    //for(i=0;i<nplanets*5+2;i++)printf("%e\n",vv[i]);
-    //printf("nplanets %d\n",nplanets);
-    //for(i=0;i<nplanets;i++)printf("%e\n",P[i]);
-    
-    for(i=0;i<nplanets;i++){
-        printf("\n%e %e %e %e %e\n",
-	K[i],P[i],ee[i],omega[i],times[i]);
-    }
-    
-    
-    exit(1);*/
     
     delete [] times;
-    
-    //printf("deleted times %e\n",chisq);
     
     return chisq;
 
