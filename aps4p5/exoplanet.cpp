@@ -158,7 +158,9 @@ void planet::set_k(double *kin){
 
 
 double planet::operator()(double *vv) const{
+    called++;
     
+    double before=double(time(NULL));
     
     
     double **nu;
@@ -265,6 +267,8 @@ double planet::operator()(double *vv) const{
     
     
     delete [] times;
+    
+    time_spent+=double(time(NULL))-before;
     
     return chisq;
 
