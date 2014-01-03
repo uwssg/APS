@@ -369,9 +369,9 @@ double planet::find_E(double m, double ee) const{
 	
 	etrial=(slope*etrial-dtrial)/slope;*/
 	
-	//if(etrial<mine || etrial>maxe){
-	    etrial=0.5*(eup+edown);
-	//}
+
+	etrial=0.5*(eup+edown);
+	
 	
         dtrial=etrial-ee*sin(etrial)-m;
 	
