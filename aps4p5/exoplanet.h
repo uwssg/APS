@@ -2,26 +2,13 @@
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
+#include "chisq.h"
 
 #define radians_per_degree 1.745329252e-2
 
-#include "Minuit2/FCNBase.h"
-#include "Minuit2/FunctionMinimum.h"
-#include "Minuit2/MnUserParameters.h"
-#include "Minuit2/MnPrint.h"
-#include "Minuit2/MnMigrad.h"
-#include "Minuit2/MnMinimize.h"
-#include "Minuit2/MnMinos.h"
-#include "Minuit2/MnContours.h"
-#include "Minuit2/MnPlot.h"
-#include "Minuit2/MnSimplex.h"
-#include "Minuit2/MnStrategy.h"
 
-#include <vector>
 
-using namespace ROOT::Minuit2;
-
-class planet : public FCNBase {
+class planet : public chisquared {
 
 private:
     double find_E(double,double) const;
@@ -37,8 +24,7 @@ public:
     planet();
     planet(int);
 
-    double Up() const;
-    double operator()(const std::vector<double>&) const;
+    double operator()(double*) const;
     
     void set_ee(double*);
     void set_omega(double*);

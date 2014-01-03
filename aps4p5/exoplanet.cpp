@@ -1,14 +1,12 @@
-#include "likelihoodinterface.h"
+#include "exoplanet.h"
 #include <time.h>
-
-double ddworst=-1.0;
 
 planet::planet(){
     nplanets=0;
     ndata=0;
 }
 
-planet::planet(int i){
+planet::planet(int i) : chisquared(5*i+2){
     nplanets=i;
     ndata=0;
     ee=new double[i];
@@ -102,11 +100,8 @@ void planet::set_k(double *kin){
     for(i=0;i<nplanets;i++)K[i]=kin[i];
 }
 
-double planet::Up() const{
-    return 1.0;
-}
 
-double planet::operator()(const std::vector<double> &vv) const{
+double planet::operator()(double *vv) const{
     
     double **nu;
     int i,j;
