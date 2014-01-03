@@ -1,8 +1,12 @@
+#include "chisq.h"
+
+#ifndef EXOPLANET_H
+#define EXOPLANET_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <iostream>
-#include "chisq.h"
+
 
 #define radians_per_degree 1.745329252e-2
 
@@ -45,3 +49,4 @@ public:
 
 };
 
+#endif

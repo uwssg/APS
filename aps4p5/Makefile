@@ -83,10 +83,10 @@ gaussian_process.o chisq.o
 
 aps4p5: aps_interface.cpp goto_tools.o eigen_wrapper.o \
 likelihoodinterface.o kd.o gaussian_process.o wmap_wrapper.o \
-camb_wrapper_wmap.o chisq.o 
+camb_wrapper_wmap.o chisq.o exoplanet.o
 	$(gg) -o aps4p5 aps_interface.cpp goto_tools.o eigen_wrapper.o kd.o \
 	 likelihoodinterface.o gaussian_process.o \
-	 camb_wrapper_wmap.o wmap_wrapper.o chisq.o \
+	 camb_wrapper_wmap.o wmap_wrapper.o chisq.o exoplanet.o \
 	 $(LIBRARIES) $(INCLUDES) \
 	 -Wno-deprecated
 

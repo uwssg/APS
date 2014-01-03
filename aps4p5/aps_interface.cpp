@@ -3,6 +3,7 @@
 #include <time.h>
 #include <math.h>
 #include "likelihoodinterface.h"
+#include "exoplanet.h"
 
 main(int iargc, char *argv[]){
    
@@ -87,6 +88,9 @@ main(int iargc, char *argv[]){
 	   }
 	   else if(compare_char(word,"s_curve")==1){
 	       lk=new s_curve(dim,2);
+	   }
+	   else if(compare_char(word,"planet")==1){
+	       lk=new planet((dim-2)/5);
 	   }
 	   else{
 	       lk=new udder_likelihood();

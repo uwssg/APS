@@ -1,0 +1,81 @@
+A parameter file for the udder likelihood function
+Note: all keywords must be prefixed with a #
+!#keyword will comment out that line
+
+dimensionality MUST be the first keyword listed
+
+#dim 27 -- dimensionality of your parameter space
+
+#Ns 1000 -- start with 2000 randomly sampled points
+#end 50000 -- end after the algorithm has sampled 5000 points
+
+#Nc 1000 -- sample 250 candidates each time you use the Gaussian process
+#Ng 15 -- use 15 neareast neighbors in the Gaussian process
+
+#Nw 50 -- maximum number of wanderers
+#grat 0.1 -- threshold at which wanderer is created
+
+#seed 99 -- if you want to specify the seed for the random number generator
+	if you leave this blank, it will just use the value returned by the
+	system clock
+
+!#chitarget 1200.0 -- target chi squared 
+#deltachi 40.1 -- alternatively, you can ask the code to search for
+		    chi^2_min+delta chi^2
+
+(note that deltachi is currently commented out; this configuration will
+run with a hard-wired target value of chi^2=1200.0)
+
+#write_every 500 -- write after sampling 300 points;
+                    
+
+#outputfile output/planet_pts.sav --store the sampled points
+!#resumefile sfd_udder.sav -- in case you are interrupted
+			(this line is currently commented out, note the '!')
+
+
+#timingfile output/planet_timing.sav -- timing information
+#mufitfile output/planet_fit.sav -- file comparing Gaussian process fit to true chi^2
+
+
+below is you list of parameters.  The format is:
+kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum
+
+#param 0 K0 -100 100 -- the density of baryons
+#param 1 P0 -10.0 10.0 -- the density fo dark matter
+#param 2 E0 0.0 10.0 -- the hubble parameter in units of 100 km/s/Mpc
+#param 3 omega0 0.0 360.0 -- optical depth to last scattering
+#param 4 time0 -1.0 1.0 -- scalar index controlling primordial power spectrum
+
+#param 5 K1 -100 100 -- the density of baryons
+#param 6 P1 -10.0 10.0 -- the density fo dark matter
+#param 7 E1 0.0 10.0 -- the hubble parameter in units of 100 km/s/Mpc
+#param 8 omega1 0.0 360.0 -- optical depth to last scattering
+#param 9 time1 -1.0 1.0 -- scalar index controlling primordial power spectrum
+
+#param 10 K2 -100 100 -- the density of baryons
+#param 11 P2 -10.0 10.0 -- the density fo dark matter
+#param 12 E2 0.0 10.0 -- the hubble parameter in units of 100 km/s/Mpc
+#param 13 omega2 0.0 360.0 -- optical depth to last scattering
+#param 14 time2 -1.0 1.0 -- scalar index controlling primordial power spectrum
+
+#param 15 K3 -100 100 -- the density of baryons
+#param 16 P3 -10.0 10.0 -- the density fo dark matter
+#param 17 E3 0.0 10.0 -- the hubble parameter in units of 100 km/s/Mpc
+#param 18 omega3 0.0 360.0 -- optical depth to last scattering
+#param 19 time3 -1.0 1.0 -- scalar index controlling primordial power spectrum
+
+#param 20 K4 -100 100 -- the density of baryons
+#param 21 P4 -10.0 10.0 -- the density fo dark matter
+#param 22 E4 0.0 10.0 -- the hubble parameter in units of 100 km/s/Mpc
+#param 23 omega4 0.0 360.0 -- optical depth to last scattering
+#param 24 time4 -1.0 1.0 -- scalar index controlling primordial power spectrum
+
+#param 25 vL 5.0 25.0
+#param 26 vK 5.0 25.0
+
+
+if you have an idea where the minimum of your function might be, you can also
+include that as a guess
+
+
