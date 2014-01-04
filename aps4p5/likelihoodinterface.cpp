@@ -1490,7 +1490,7 @@ void likelihood::gradient_sample(int in_dex){
 void likelihood::search(){
     
     int i;
-    if(time_mcmc<time_aps && n_candidates>0){
+    if(ct_mcmc<ct_aps && n_candidates>0){
 	//mcmc_sample();
 	
 	gradient_sample(-1);
