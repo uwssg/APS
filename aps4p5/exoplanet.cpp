@@ -299,10 +299,16 @@ double planet::find_E(double m, double ee) const{
        dddown=edown-ee*sin(edown)-m;
     }
     
-    if(ddup*dddown>0.0){
+    /*if(ddup*dddown>0.0){
        printf("WARNING starting with dddown %e ddup %e\n",
        dddown,ddup);
        exit(1);
+    }*/
+    
+    while(ddup*dddown>0.0){
+       dd=ddup-dddown;
+       ddup+=0.1*dd;
+       dddown-=dd;
     }
     
     //printf("starting %e %e\n",dddown,ddup);

@@ -410,7 +410,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
     }
     
     if(maxerr>1.0e-6 || isnan(maxerr)){
-        printf("tridiagonalization: maxerr %e mindiag %e\n",maxerr,mindiag);
+        //printf("tridiagonalization: maxerr %e mindiag %e\n",maxerr,mindiag);
 	//exit(1);
     }
  
@@ -437,7 +437,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	if(bb_in[ii]!=0.0)err=err/fabs(bb_in[ii]);
 	if(err>maxerr || ii==0){
 	    maxerr=err;
-	    if(maxerr>1.0e-6)printf("maxerr %e -- %e %e\n",maxerr,nn,bb_in[ii]);
+	    //if(maxerr>1.0e-6)printf("maxerr %e -- %e %e\n",maxerr,nn,bb_in[ii]);
 	}
     }
     
