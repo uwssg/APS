@@ -1,6 +1,10 @@
 #include "exoplanet.h"
 #include <time.h>
 
+//re-factor so that planets are ranked by amplitude
+//try putting the 3-4 highest amplitude planets very near
+//their true values
+
 planet::planet(){
     printf("sorry; cannot call this planet constructor\n");
     exit(1);
