@@ -189,6 +189,13 @@ double planet::operator()(double *vv) const{
 	}
 	//lntotal+=vv[i*5+1];
 	
+	if(K[i]<0.0){
+	    delete [] times;
+	    called++;
+	    time_spent+=double(time(NULL))-before;
+	    return exception;
+	}
+	
 	//P[i]=exp(lntotal);
 	P[i]=exp(vv[i*5+1]);
 	

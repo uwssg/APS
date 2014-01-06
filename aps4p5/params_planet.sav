@@ -30,39 +30,41 @@ run with a hard-wired target value of chi^2=1200.0)
                     
 #likelihood planet
 
-#outputfile output/planet_pts.sav --store the sampled points
+#outputfile output/planet_prior_pts.sav --store the sampled points
 
 
-#timingfile output/planet_timing.sav -- timing information
-#mufitfile output/planet_fit.sav -- file comparing Gaussian process fit to true chi^2
+#timingfile output/planet_prior_timing.sav -- timing information
+#mufitfile output/planet_prior_fit.sav -- file comparing Gaussian process fit to true chi^2
 
 
 below is you list of parameters.  The format is:
 kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum
 
-#param 0 K0 -100 100 -- the density of baryons
-#param 1 P0 -10.0 10.0 -- the density fo dark matter
-#param 2 E0 0.0 1.0 -- the hubble parameter in units of 100 km/s/Mpc
-#param 3 omega0 0.0 360.0 -- optical depth to last scattering
-#param 4 time0 -1.0 1.0 -- scalar index controlling primordial power spectrum
+#param 0 K0 4.0 6.0 -- the density of baryons
+#param 1 P0 4.0 7.0  -- the density fo dark matter
+#param 2 E0 0.1 0.4 -- the hubble parameter in units of 100 km/s/Mpc
+#param 3 omega0 150.0 200.0 -- optical depth to last scattering
+#param 4 time0 -0.3 0.0 -- scalar index controlling primordial power spectrum
 
-#param 5 K1 -100 100 -- the density of baryons
-#param 6 P1 0.0 10.0 -- the density fo dark matter
-#param 7 E1 0.0 1.0 -- the hubble parameter in units of 100 km/s/Mpc
-#param 8 omega1 0.0 360.0 -- optical depth to last scattering
-#param 9 time1 -1.0 1.0 -- scalar index controlling primordial power spectrum
+#param 5 K1 0.0 10.0 -- the density of baryons
+#param 6 P1 2.0 5.0 -- the density fo dark matter
+#param 7 E1 0.0 0.1 -- the hubble parameter in units of 100 km/s/Mpc
+#param 8 omega1 200.0 360.0 -- optical depth to last scattering
+#param 9 time1 -0.1 0.5 -- scalar index controlling primordial power spectrum
 
-#param 10 K2 -100 100 -- the density of baryons
-#param 11 P2 0.0 10.0 -- the density fo dark matter
-#param 12 E2 0.0 1.0 -- the hubble parameter in units of 100 km/s/Mpc
-#param 13 omega2 0.0 360.0 -- optical depth to last scattering
-#param 14 time2 -1.0 1.0 -- scalar index controlling primordial power spectrum
+#param 10 K3 1.0 40.0 -- the density of baryons
+#param 11 P3 6.0 10.0 -- the density fo dark matter
+#param 12 E3 0.0 0.1 -- the hubble parameter in units of 100 km/s/Mpc
+#param 13 omega3 100.0 320.0 -- optical depth to last scattering
+#param 14 time3 -0.8 -0.3 -- scalar index controlling primordial power spectrum
 
-#param 15 K3 -100 100 -- the density of baryons
-#param 16 P3 0.0 10.0 -- the density fo dark matter
-#param 17 E3 0.0 1.0 -- the hubble parameter in units of 100 km/s/Mpc
-#param 18 omega3 0.0 360.0 -- optical depth to last scattering
-#param 19 time3 -1.0 1.0 -- scalar index controlling primordial power spectrum
+
+#param 15 K3 20.0 50.0 -- the density of baryons
+#param 16 P3 1.5 3.5 -- the density fo dark matter
+#param 17 E3 0.0 0.1 -- the hubble parameter in units of 100 km/s/Mpc
+#param 18 omega3 120.0 180.0 -- optical depth to last scattering
+#param 19 time3 -0.4 -0.1 -- scalar index controlling primordial power spectrum
+
 
 #param 20 K4 -100 100 -- the density of baryons
 #param 21 P4 0.0 10.0 -- the density fo dark matter
