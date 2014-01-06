@@ -29,15 +29,19 @@ vv[24]=-0.4783912;
 vv[25]=17.33453;
 vv[26]=16.48477;
 
-double pp[5];
+double pp[5],amp[5];
 
 for(i=0;i<5;i++){
-    pp[i]=vv[i*5+1];    
+    pp[i]=vv[i*5+1];
+    amp[i]=vv[i*5];    
 }
 
 vv[1]=log(pp[0]);
+vv[0]=amp[0];
 for(i=1;i<5;i++){
-    vv[i*5+1]=log(pp[i])-log(pp[i-1]);
+    //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
+    vv[i*5+1]=log(pp[i]);
+    vv[i*5]=amp[i]-amp[i-1];
 }
 
 
@@ -64,12 +68,16 @@ vv[25]=17.28121;
 vv[26]=17.04971;
 
 for(i=0;i<5;i++){
-    pp[i]=vv[i*5+1];    
+    pp[i]=vv[i*5+1];  
+    amp[i]=vv[i*5];  
 }
 
 vv[1]=log(pp[0]);
+vv[0]=amp[0];
 for(i=1;i<5;i++){
-    vv[i*5+1]=log(pp[i])-log(pp[i-1]);
+    //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
+    vv[i*5+1]=log(pp[i]);
+    vv[i*5]=amp[i]-amp[i-1];
 }
 
 

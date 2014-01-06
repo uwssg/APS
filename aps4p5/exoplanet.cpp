@@ -181,11 +181,16 @@ double planet::operator()(double *vv) const{
     times=new double[nplanets];
     lntotal=0.0;
     for(i=0;i<nplanets;i++){
-        K[i]=vv[i*5];
+        if(i==0){
+	    K[i]=vv[0];
+	}
+	else{
+	    K[i]=vv[i*5]+K[i-1];
+	}
+	//lntotal+=vv[i*5+1];
 	
-	lntotal+=vv[i*5+1];
-	
-	P[i]=exp(lntotal);
+	//P[i]=exp(lntotal);
+	P[i]=exp(vv[i*5+1]);
 	
 	//printf("p%d %e\n",i,P[i]);
 	
