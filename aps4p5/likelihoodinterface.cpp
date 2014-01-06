@@ -558,6 +558,8 @@ void likelihood::sample_pts(){
     
     //double before_sample=double(time(NULL));
     
+    int strad_set=-1;
+    
     while(active_samples>0){
       
       //before_sample=double(time(NULL));
@@ -603,7 +605,8 @@ void likelihood::sample_pts(){
       
       dd=gg.get_nearest_distance(samv);
       
-      if(strad>stradmax && dd>1.0e-10){
+      if((strad_set<0 ||strad>stradmax) && dd>1.0e-10){
+        strad_set=1;
         mubest=mu;
         stradmax=strad;
 	for(j=0;j<nparams;j++)sambest[j]=samv[j];
