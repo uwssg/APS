@@ -13,10 +13,12 @@ main(int iargc, char *argv[]){
    char resumename[letters];
    double nn,mm,*min,*max,exc;
    
-   double **guess,**buff;
+   double **guess,**buff,*wgt;
    int nguess;
    
    nguess=0;
+   
+   wgt=NULL;
    
    likelihood *likeness;
    covariance_function *cv;
@@ -96,16 +98,36 @@ main(int iargc, char *argv[]){
 	       lk=new udder_likelihood();
 	   }
        }
+       else if(compare_char(keyword,"#wgt")==1){
+           if(wgt==NULL){
+	       wgt=new double[dim];
+	       for(i=0;i<dim;i++)wgt[i]=-1.0;
+	   }
+	   fscanf(input,"%d %le",&i,&nn);
+	   wgt[i]=nn;
+       }
+       
      }
    }
    fclose(input);
+   
+   if(wgt!=NULL){
+       for(i=0;i<dim;i++){
+           if(wgt[i]<0.0)wgt[i]=max[i]-min[i];
+       }
+   }
    
    if(setcovar==0)cv=new gaussian_covariance();
    if(setlike==0){
        lk=new udder_likelihood();
    }
-
-   likeness=new likelihood(dim,min,max,cv,lk);
+   
+   if(wgt==NULL){
+       likeness=new likelihood(dim,min,max,cv,lk);
+   }
+   else{
+       likeness=new likelihood(dim,min,max,cv,lk,wgt);
+   }
    
    likeness->pnames=new char*[dim];
    for(i=0;i<dim;i++)likeness->pnames[i]=new char[letters];

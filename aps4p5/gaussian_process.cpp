@@ -77,7 +77,11 @@ double *mx, double *mn){
   		//with your data points (chisquared for APS)
   
   for(i=0;i<pin;i++)fn[i]=seedfn[i];
-
+  
+  for(i=0;i<dim;i++){
+      printf("gp %d %e %e\n",i,mn[i],mx[i]);
+  }
+  
   kptr=new kd_tree(dim,pin,seed,mn,mx);//store data points in a kd tree
   kptr->check_tree(-1);//make sure kd tree is properly constructed
   printf("tree diagnostic %d\n",kptr->diagnostic);

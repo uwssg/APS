@@ -75,6 +75,11 @@ kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum
 #param 25 vL 5.0 25.0
 #param 26 vK 5.0 25.0
 
+#wgt 1 0.1
+#wgt 6 0.1
+#wgt 11 0.1
+#wgt 16 0.1
+#wgt 21 0.1
 
 if you have an idea where the minimum of your function might be, you can also
 include that as a guess
