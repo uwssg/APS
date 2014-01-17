@@ -36,11 +36,11 @@ for(i=0;i<5;i++){
     amp[i]=vv[i*5];    
 }
 
-vv[1]=log(pp[0]);
+vv[1]=pp[0];
 vv[0]=amp[0];
 for(i=1;i<5;i++){
     //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
-    vv[i*5+1]=log(pp[i]);
+    vv[i*5+1]=pp[i];
     vv[i*5]=amp[i]-amp[i-1];
 }
 
@@ -72,11 +72,11 @@ for(i=0;i<5;i++){
     amp[i]=vv[i*5];  
 }
 
-vv[1]=log(pp[0]);
+vv[1]=pp[0];
 vv[0]=amp[0];
 for(i=1;i<5;i++){
     //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
-    vv[i*5+1]=log(pp[i]);
+    vv[i*5+1]=pp[i];
     vv[i*5]=amp[i]-amp[i-1];
 }
 

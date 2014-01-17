@@ -197,7 +197,8 @@ double planet::operator()(double *vv) const{
 	}
 	
 	//P[i]=exp(lntotal);
-	P[i]=exp(vv[i*5+1]);
+	//P[i]=exp(vv[i*5+1]);
+	P[i]=vv[i*5+1];
 	
 	//printf("p%d %e\n",i,P[i]);
 	

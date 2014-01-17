@@ -281,7 +281,7 @@ void likelihood::initialize(double **guesses, int nguess){
            base[j][i]=mnn[i]+dice->doub()*(mxx[i]-mnn[i]);
        }
        chisq[j]=(*call_likelihood)(base[j]);
-       printf("reset chi to %e\n",chisq[j]);
+       //printf("reset chi to %e\n",chisq[j]);
    }
    
    

@@ -66,7 +66,7 @@ kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum
 #param 19 time3 -0.4 -0.1 -- scalar index controlling primordial power spectrum
 
 
-#param 20 K4 -100 100 -- the density of baryons
+#param 20 K4 -106.0 100 -- the density of baryons
 #param 21 P4 0.0 10.0 -- the density fo dark matter
 #param 22 E4 0.0 1.0 -- the hubble parameter in units of 100 km/s/Mpc
 #param 23 omega4 0.0 360.0 -- optical depth to last scattering
