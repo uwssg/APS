@@ -73,6 +73,11 @@ test_exoplanet: exoplanet.o test_exoplanet.cpp
 	wmap_wrapper.o camb_wrapper_wmap.o \
 	$(LIBRARIES) $(INCLUDES)
 
+test_1_exoplanet: exoplanet.o test_1_exoplanet.cpp
+	$(gg) -o test_1_exoplanet test_1_exoplanet.cpp exoplanet.o goto_tools.o chisq.o \
+	wmap_wrapper.o camb_wrapper_wmap.o \
+	$(LIBRARIES) $(INCLUDES)
+
 likelihoodinterface.o: camb_wrapper_wmap.o likelihoodinterface.h \
 likelihoodinterface.cpp kd.o goto_tools.o eigen_wrapper.o wmap_wrapper.o \
 gaussian_process.o chisq.o
