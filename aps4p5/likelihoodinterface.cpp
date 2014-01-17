@@ -576,8 +576,8 @@ void likelihood::sample_pts(){
   else{
       lingerswitch=0;
       for(i=0;i<nparams;i++){
-          sampling_min[i]=gg.kptr->mins[i];
-          sampling_max[i]=gg.kptr->maxs[i];
+          sampling_min[i]=range_min[i];
+          sampling_max[i]=range_max[i];
       }
   }
   
