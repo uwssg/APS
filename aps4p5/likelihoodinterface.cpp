@@ -45,6 +45,9 @@ likelihood::~likelihood(){
   if(candidates!=NULL)delete [] candidates;
   
   if(known_minima!=NULL)delete [] known_minima;
+  
+  delete [] mxx;
+  delete [] mnn;
 
   //printf("done deleting aps\n");
 }
