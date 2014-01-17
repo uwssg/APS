@@ -83,6 +83,29 @@ void likelihood::set_seed(int ii){
 
 likelihood::likelihood(int nn,double *mns,double *mxs,
 covariance_function *cv, chisquared *lk){
+    double *wgt_in;
+    int i;
+    
+    wgt_in=new double[nn];
+    for(i=0;i<nn;i++){
+        wgt_in[i]=mxs[i]-mns[i];
+    }
+    
+    build(nn,mns,mxs,cv,lk,wgt_in);
+    
+    delete [] wgt_in;
+
+}
+
+likelihood::likelihood(int nn,double *mns,double *mxs,
+covariance_function *cv, chisquared *lk, double *wgt_in){
+
+    build(nn,mns,mxs,cv,lk,wgt_in);
+
+}
+
+void likelihood::build(int nn,double *mns,double *mxs,
+covariance_function *cv, chisquared *lk, double *wgt_in){
 
  //This routine doesn't actually do much.
  //It just builds some of the necessary matrices
@@ -184,6 +207,11 @@ covariance_function *cv, chisquared *lk){
  gg.set_dim(nparams);
  
  
+ 
+ wgt=new double[nparams];
+ for(i=0;i<nparams;i++){
+     wgt[i]=wgt_in[i];
+ }
 
  mxx=new double[nparams];
  mnn=new double[nparams];
@@ -303,8 +331,19 @@ void likelihood::initialize(double **guesses, int nguess){
  //here we initialize the gaussian process.  From now on, chisquared will
  //be stored in the member array gg.fn[]
  //Sampled points will be stored in gg.kptr->data[][]
- gg.initialize(npts,base,chisq,mxx,mnn);
  
+ double *vmax,*vmin;
+ vmax=new double[nparams];
+ vmin=new double[nparams];
+ for(i=0;i<nparams;i++){
+     vmin[i]=0.0;
+     vmax[i]=wgt[i];
+ }
+ 
+ gg.initialize(npts,base,chisq,vmax,vmin);
+ 
+ delete [] vmin;
+ delete [] vmax;
  
  lingerflag=new int[npts];//if a given point was sampled using sample_pts()
  			//lingerflag[i]=0
@@ -418,7 +457,19 @@ char word[letters];
      target=chimin+deltachi;
  }
  
- gg.initialize(npts,base,chisq,mxx,mnn);
+ double *vmax,*vmin;
+ vmax=new double[nparams];
+ vmin=new double[nparams];
+ 
+ for(i=0;i<nparams;i++){
+     vmin[i]=0.0;
+     vmax[i]=wgt[i];
+ }
+ 
+ gg.initialize(npts,base,chisq,vmax,vmin);
+  
+ delete [] vmin;
+ delete [] vmax; 
   
  npts=gg.pts;
  if(compare_char(inname,masteroutname)==1){

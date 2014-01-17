@@ -24,6 +24,8 @@ class likelihood{
   int calledmufit,nmufit,*ctmufit;
   double *chimufit,*mumufit,*diffmufit,deltachi;
   
+  double *wgt;
+  
   Ran *dice;
   
   chisquared *call_likelihood;
@@ -65,9 +67,16 @@ class likelihood{
    int writevery,*ndinn,initialized;
    
    likelihood();
+   likelihood(int,double*,double*,covariance_function*,chisquared*,double*);
    likelihood(int,double*,double*,covariance_function*,chisquared*);
    ~likelihood();
+   
+   void build(int,double*,double*,covariance_function*,chisquared*,double*);
+   
    void initialize(double**,int);
+   
+   
+   
    void resume(char*);//resume an interrupted APS search
    		//the argument is the name of the file containing the data
 		//for the search to be resumed
