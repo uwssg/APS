@@ -46,8 +46,8 @@ likelihood::~likelihood(){
   
   if(known_minima!=NULL)delete [] known_minima;
   
-  delete [] mxx;
-  delete [] mnn;
+  delete [] range_max;
+  delete [] range_min;
 
   //printf("done deleting aps\n");
 }
@@ -213,11 +213,11 @@ covariance_function *cv, chisquared *lk, double *wgt_in){
      wgt[i]=wgt_in[i];
  }
 
- mxx=new double[nparams];
- mnn=new double[nparams];
+ range_max=new double[nparams];
+ range_min=new double[nparams];
  for(i=0;i<nparams;i++){
-   mxx[i]=mxs[i];
-   mnn[i]=mns[i];
+   range_max[i]=mxs[i];
+   range_min[i]=mns[i];
  }
  minpt=new double[nparams];//what is the point corresponding to the minimum
  			//chisquared that you found? 
@@ -227,7 +227,7 @@ covariance_function *cv, chisquared *lk, double *wgt_in){
  
  if(call_likelihood->get_type()==LK_TYPE_WMAP){
      printf("setting mins and maxes for wmap\n");
-     call_likelihood->set_max_min(nparams,mnn,mxx);
+     call_likelihood->set_max_min(nparams,range_min,range_max);
  }
  
  
@@ -294,7 +294,7 @@ void likelihood::initialize(double **guesses, int nguess){
  for(;j<npts;j++){
   for(i=0;i<nparams;i++){
    rn=dice->doub();
-   base[j][i]=(mxx[i]-mnn[i])*rn+mnn[i];
+   base[j][i]=(range_max[i]-range_min[i])*rn+range_min[i];
   }
  }
  
@@ -309,7 +309,7 @@ void likelihood::initialize(double **guesses, int nguess){
    while(!(chisq[j]<exception)){
        
        for(i=0;i<nparams;i++){
-           base[j][i]=mnn[i]+dice->doub()*(mxx[i]-mnn[i]);
+           base[j][i]=range_min[i]+dice->doub()*(range_max[i]-range_min[i]);
        }
        chisq[j]=(*call_likelihood)(base[j]);
        //printf("reset chi to %e\n",chisq[j]);
@@ -1392,7 +1392,7 @@ void likelihood::gradient_sample(int in_dex){
 	    k=1;
 	    for(i=0;i<nparams;i++){
 	        trial[i]=pt[i]-ratio*gradient[i]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/magnitude;
-		if(trial[i]<gg.kptr->mins[i] || trial[i]>gg.kptr->maxs[i])k=0;
+		if(trial[i]<range_min[i] || trial[i]>range_max[i])k=0;
 	    }
 	    
 	    //next thing to try would be to do a while loop
@@ -1407,7 +1407,7 @@ void likelihood::gradient_sample(int in_dex){
 		      trial[i]=pt[i]-ratio*renormalization*gradient[i]*
 		               (gg.kptr->maxs[i]-gg.kptr->mins[i])/magnitude;
 			       
-		      if(trial[i]<gg.kptr->mins[i] || trial[i]>gg.kptr->maxs[i])k=0;       
+		      if(trial[i]<range_min[i] || trial[i]>range_max[i])k=0;       
 		      if(isnan(trial[i]) || isinf(trial[i]))k=0;	       
 		  }
 	    }

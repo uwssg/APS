@@ -57,7 +57,7 @@ class likelihood{
    char **pnames;
    
    double chimin,junk;
-   double *minpt,*mxx,*mnn,proximity,grat;
+   double *minpt,*range_max,*range_min,proximity,grat;
    
    int *lingerflag,lingerroom,seed;
      
