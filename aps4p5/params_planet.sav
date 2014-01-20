@@ -6,8 +6,8 @@ dimensionality MUST be the first keyword listed
 
 #dim 27 -- dimensionality of your parameter space
 
-#Ns 1000 -- start with 2000 randomly sampled points
-#end 50000 -- end after the algorithm has sampled 5000 points
+#Ns 10000 -- start with 2000 randomly sampled points
+#end 1000000 -- end after the algorithm has sampled 5000 points
 
 #Nc 250 -- sample 250 candidates each time you use the Gaussian process
 #Ng 15 -- use 15 neareast neighbors in the Gaussian process
@@ -75,11 +75,11 @@ kewyord, parameter_index, parameter_name, parameter_minimum, parameter_maximum
 #param 25 vL 5.0 25.0
 #param 26 vK 5.0 25.0
 
-#wgt 1 0.1
-#wgt 6 0.1
-#wgt 11 0.1
-#wgt 16 0.1
-#wgt 21 0.1
+!#wgt 1 0.1
+!#wgt 6 0.1
+!#wgt 11 0.1
+!#wgt 16 0.1
+!#wgt 21 0.1
 
 if you have an idea where the minimum of your function might be, you can also
 include that as a guess
