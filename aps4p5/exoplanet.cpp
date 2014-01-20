@@ -161,7 +161,7 @@ void planet::set_k(double *kin){
 }
 
 
-double planet::operator()(double *vv) const{
+double planet::true_chisq(double *amp_and_period, double *angles) const{
     called++;
     
     double before=double(time(NULL));
@@ -182,10 +182,10 @@ double planet::operator()(double *vv) const{
     lntotal=0.0;
     for(i=0;i<nplanets;i++){
         if(i==0){
-	    K[i]=vv[0];
+	    K[i]=amp_and_period[0];
 	}
 	else{
-	    K[i]=vv[i*5]+K[i-1];
+	    K[i]=amp_and_period[i*2]+K[i-1];
 	}
 	//lntotal+=vv[i*5+1];
 	
@@ -196,18 +196,15 @@ double planet::operator()(double *vv) const{
 	    return exception;
 	}
 	
-	//P[i]=exp(lntotal);
-	//P[i]=exp(vv[i*5+1]);
-	P[i]=vv[i*5+1];
 	
-	//printf("p%d %e\n",i,P[i]);
+	P[i]=amp_and_period[i*2+1];
 	
-	ee[i]=vv[i*5+2];
+	ee[i]=angles[i*3];
 	
 	if(ee[i]>1.0 || ee[i]<0.0)return exception;
 	
-	omega[i]=vv[i*5+3];
-	times[i]=vv[i*5+4];
+	omega[i]=angles[i*3+1];
+	times[i]=angles[i*3+2];
     }
 
     nu=new double*[nplanets];
@@ -227,7 +224,7 @@ double planet::operator()(double *vv) const{
 	   
 	   if(isnan(nu[j][i])){
 	      printf("WARNING nu %e\n",nu[j][i]);
-	      printf("mm %e  %e\n",mm,vv[i*5+4]);
+	      printf("mm %e  %e\n",mm,angles[i*3+2]);
 	      printf("bigE %e ee %e xx %e atan %e\n",bigE,ee[j],xx,atan(xx));
 	      printf("j %d\n",j);
 	      exit(1);
@@ -262,8 +259,8 @@ double planet::operator()(double *vv) const{
 	    
         }
         
-	if(label[i]=='L')ans+=vv[nplanets*5];
-	else ans+=vv[nplanets*5+1];
+	if(label[i]=='L')ans+=angles[nplanets*3];
+	else ans+=angles[nplanets*3+1];
 	
         nn=ans-velocity[i];
         rms+=nn*nn;
@@ -291,6 +288,158 @@ double planet::operator()(double *vv) const{
 
     
 }
+
+double planet::operator()(double *vv) const{
+  
+  //accepts a list of amplitudes and periods
+  //optimizes on the other parameters (angles and the two telescope velocities)
+  
+  int dim=nplanets*3+2;
+  gp gg;
+  double **seed,*seedfn,*current,*trial,*max,*min,*grad,*pt;
+  Ran chaos(43);
+  
+  pt=new double[nplanets*5];
+  current=new double[dim];
+  trial=new double[dim];
+  grad=new double[dim];
+  max=new double[dim];
+  min=new double[dim];
+  seed=new double*[2*dim];
+  seedfn=new double[2*dim];
+  int i,j;
+  
+  for(i=0;i<nplanets;i++){
+      min[i*3]=0.0;
+      min[i*3+1]=0.0;
+      min[i*3+2]=-1.0;
+      max[i*3]=1.0;
+      max[i*3+1]=360.0;
+      max[i*3+2]=1.0;
+  }
+  
+  min[nplanets*3]=0.0;
+  min[nplanets*3+1]=0.0;
+  max[nplanets*3]=20.0;
+  max[nplanets*3]=20.0;
+  
+  for(i=0;i<dim;i++){
+      current[i]=0.5*(max[i]-min[i]);
+  } 
+  
+  int useable;
+  for(i=0;i<2*dim;i++){
+      seed[i]=new double[dim];
+      
+      useable=0;
+      while(useable==0){
+          for(j=0;j<dim;j++){
+              seed[i][j]=current[j]+0.05*chaos.doub()*(max[j]-min[j]);
+          }
+	  useable=1;
+	  for(j=0;useable==1 && j<dim;j++){
+	      if(seed[i][j]<min[j])useable=0;
+	      if(seed[i][j]>max[j])useable=0;
+	  }
+	  
+      }
+      seedfn[i]=true_chisq(vv,seed[i]);
+      
+  }
+  
+  gaussian_covariance cv;
+  cv.set_dim(dim);
+  
+  gg.set_dim(dim);
+  gg.assign_covariogram(&cv);
+  gg.initialize(2*dim,seed,seedfn,max,min);
+  
+  int aborted=0,target_dex=0;;
+  double chitrue,norm,chimin,nn;
+  
+  chimin=true_chisq(vv,current);
+  
+  while(aborted<200){
+      try{
+          gg.actual_gradient(target_dex,grad);
+      }
+      catch(int iex){
+          printf("gradient failed\n");
+	  aborted=1000;
+      }
+      
+      norm=0.0;
+      for(i=0;i<dim;i++){
+          norm+=grad[i]*grad[i];
+      }
+      norm=sqrt(norm);
+      
+      for(i=0;i<dim;i++){
+          trial[i]=current[i]+0.1*grad[i]/norm;
+      }
+  
+      chitrue=true_chisq(vv,trial);
+      
+      if(chitrue<exception){
+          gg.add_pt(trial,chitrue);
+      }
+      
+      if(chitrue<chimin){
+          for(i=0;i<dim;i++){
+	      current[i]=trial[i];
+	  }
+	  chimin=chitrue;
+	  
+	  target_dex=gg.pts-1;
+      }
+      else{
+          for(i=0;i<dim;i++){
+	      norm=fabs(normal_deviate(&chaos,0.01,0.02));
+	      nn=0.0;
+	      for(j=0;j<dim;j++){
+	          trial[j]=normal_deviate(&chaos,0.0,1.0);
+		  nn+=trial[j]*trial[j];
+	      }
+	      nn=sqrt(nn);
+	      
+	      for(j=0;j<dim;j++){
+	          trial[j]=trial[j]*norm*(max[j]-min[j])/nn;
+		  trial[j]+=current[j];
+	      }
+	      
+	      chitrue=true_chisq(vv,trial);
+	      if(chitrue<exception){
+	          gg.add_pt(trial,chitrue);
+	      }
+	  }
+      
+      }
+      
+  
+  }
+  
+  
+   for(i=0;i<nplanets;i++){
+      printf("    %e %e %e\n",current[i*3],
+      current[i*3+1],current[i*3]+2);
+  }
+  printf("    %e %e\n",current[nplanets*3],current[nplanets*3+1]);
+  
+  delete [] pt;
+  delete [] current;
+  delete [] trial;
+  delete [] max;
+  delete [] min;
+  delete [] grad;
+  delete [] seedfn;
+  for(i=0;i<2*dim;i++)delete [] seed[i];
+  delete [] seed;  
+  
+  return chimin;
+  
+
+}
+
 
 double planet::find_E(double m, double ee) const{
     

@@ -40,8 +40,8 @@ vv[1]=pp[0];
 vv[0]=amp[0];
 for(i=1;i<5;i++){
     //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
-    vv[i*5+1]=pp[i];
-    vv[i*5]=amp[i]-amp[i-1];
+    vv[i*2+1]=pp[i];
+    vv[i*2]=amp[i]-amp[i-1];
 }
 
 
@@ -76,8 +76,8 @@ vv[1]=pp[0];
 vv[0]=amp[0];
 for(i=1;i<5;i++){
     //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
-    vv[i*5+1]=pp[i];
-    vv[i*5]=amp[i]-amp[i-1];
+    vv[i*2+1]=pp[i];
+    vv[i*2]=amp[i]-amp[i-1];
 }
 
 

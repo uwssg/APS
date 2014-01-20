@@ -64,12 +64,15 @@ chisq.o: chisq.h chisq.cpp wmap_wrapper.o camb_wrapper_wmap.o goto_tools.o
 	$(gg) -c chisq.cpp goto_tools.o wmap_wrapper.o camb_wrapper_wmap.o \
 	$(LIBRARIES) $(INCLUDES)
 	
-exoplanet.o: chisq.o exoplanet.h exoplanet.cpp
+exoplanet.o: chisq.o exoplanet.h exoplanet.cpp kd.o gaussian_process.o \
+eigen_wrapper.o
 	$(gg) -c exoplanet.cpp goto_tools.o wmap_wrapper.o camb_wrapper_wmap.o \
-	chisq.o $(LIBRARIES) $(INCLUDES)
+	chisq.o kd.o eigen_wrapper.o gaussian_process.o $(LIBRARIES) $(INCLUDES)
 
-test_exoplanet: exoplanet.o test_exoplanet.cpp
+test_exoplanet: exoplanet.o test_exoplanet.cpp kd.o gaussian_process.o \
+eigen_wrapper.o
 	$(gg) -o test_exoplanet test_exoplanet.cpp exoplanet.o goto_tools.o chisq.o \
+	kd.o eigen_wrapper.o gaussian_process.o \
 	wmap_wrapper.o camb_wrapper_wmap.o \
 	$(LIBRARIES) $(INCLUDES)
 

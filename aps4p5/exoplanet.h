@@ -1,4 +1,6 @@
 #include "chisq.h"
+#include "kd.h"
+#include "gaussian_process.h"
 
 #ifndef EXOPLANET_H
 #define EXOPLANET_H
@@ -22,7 +24,10 @@ private:
     double *sig2,*date,*velocity,vl,vk;
     char *label;
     mutable double datemin;
-
+    
+    double true_chisq(double*,double*) const;
+    
+    
 public:
     ~planet();
     planet();
