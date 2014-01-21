@@ -385,10 +385,15 @@ double planet::operator()(double *vv) const{
   double chitrue,norm,nn,dd=1.0,step=0.1;
   
   int *neigh;
-  double *ddneigh;
+  double *ddneigh,**bases;
   
   ddneigh=new double[dim];
   neigh=new int[dim];
+  
+  bases=new double*[dim];
+  for(i=0;i<dim;i++){
+      bases[i]=new double[dim];
+  }
  
   for(i=0;i<dim;i++)current[i]=seed[target_dex][i];
   
@@ -469,6 +474,30 @@ double planet::operator()(double *vv) const{
 	      }
 	      
 	  }
+	  
+	  if(updated==1){
+	      for(i=0;i<dim;i++)bases[0][i]=grad[i]/norm;
+	      try{
+	          get_orthogonal_bases(bases,dim,&chaos,1.0e-4);
+		  
+		  for(i=0;i<dim;i++){
+		      for(j=0;j<dim;j++){
+		          trial[j]=current[j]+0.5*step*bases[i][j]*(max[j]-min[j]);
+		      }
+		      chitrue=true_chisq(vv,trial);
+		      if(chitrue<exception){
+		          gg.add_pt(trial,chitrue);
+		      }
+		  }
+		  
+	      }
+	      catch(int iex){
+	          exit(1);
+	      }
+	      
+	      
+	  }
+	  
       }
       else{
           chitrue=exception;
@@ -526,6 +555,9 @@ double planet::operator()(double *vv) const{
   
   delete [] neigh;
   delete [] ddneigh;
+  
+  for(i=0;i<dim;i++)delete [] bases[i];
+  delete [] bases;
   
   return chimin;
   
