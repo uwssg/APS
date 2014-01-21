@@ -615,7 +615,7 @@ double planet::find_E(double m, double ee) const{
 	dtrial=dddown;
     }
     dstart=dtrial;
-    for(istep=0;istep<100;istep++){
+    for(istep=0;istep<100 && fabs(eup-edown)>1.0e-9;istep++){
         
 	/*if(eup>edown){
 	    maxe=eup;
