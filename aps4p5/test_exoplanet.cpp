@@ -48,7 +48,7 @@ for(i=1;i<5;i++){
 double chisquared=solar_system(vv);
 printf("chisquared %e\n",chisquared);
 
-
+exit(1);
 
 input=fopen("exoplanet_data/planet_file_better.sav","r");
 for(i=0;fscanf(input,"%le",&vv[i*5])>0;i++){

@@ -772,6 +772,10 @@ const{
   return mu;
 }
 
+void gp::nn_srch(double *pt, int ii, int *neigh, double *dd){
+    kptr->nn_srch(pt,ii,neigh,dd);
+} 
+
 /*double gp::get_time_inverting(){
     return time_inverting;
 }*/
@@ -813,7 +817,11 @@ double gp::actual_gradient(int dex, double *vout){
    to_return=dd[1];
    
    if(neighbors[0]!=dex){
-	printf("WARNING gradient did not find self\n");
+	printf("WARNING gradient did not find self %d %d\n",dex,total_neighbors);
+	for(i=0;i<total_neighbors;i++){
+	    printf("%d %e\n",neighbors[i],dd[i]);
+	}
+	printf("%e\n",kptr->distance(kptr->data[dex],kptr->data[dex]));
 	exit(1);
     }
 	

@@ -178,6 +178,7 @@ class gp{
     double get_time_searching();
     //double get_time_inverting();
     
+    void nn_srch(double*,int,int*,double*);
     
     void optimize();
     void optimize(int,int);
