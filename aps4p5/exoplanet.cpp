@@ -449,7 +449,7 @@ double planet::operator()(double *vv) const{
           
 	  nn=chimin;
 	  chitrue=exception;
-	  for(step=0.1;step>1.0e-10 && updated==0;step*=0.5){
+	  for(step=4.0*dd;step>1.0e-10 && updated==0;step*=0.5){
 	  
               for(i=0;i<dim;i++){
                   trial[i]=current[i]-step*grad[i]*(max[i]-min[i])/norm;
@@ -457,9 +457,7 @@ double planet::operator()(double *vv) const{
   
               chitrue=true_chisq(vv,trial);
 	      called++;
-              printf("   chitrue %e chimin %e dd %e %d %e %e\n",
-	      chitrue,chimin,dd,called,double(time(NULL))-before,
-	      (double(time(NULL))-before)/double(called));
+              
       
               if(chitrue<exception){
                   gg.add_pt(trial,chitrue);
@@ -471,6 +469,11 @@ double planet::operator()(double *vv) const{
 	          chimin=chitrue;
 		  target_dex=gg.pts-1;
 		  for(i=0;i<dim;i++)current[i]=trial[i];
+		  
+		  printf("   chimin %e dd %e step %e %e norm %e %d %e %e\n",
+	      chimin,dd,step,step/dd,norm,called,double(time(NULL))-before,
+	      (double(time(NULL))-before)/double(called));
+		  
 	      }
 	      
 	  }
@@ -615,7 +618,7 @@ double planet::find_E(double m, double ee) const{
 	dtrial=dddown;
     }
     dstart=dtrial;
-    for(istep=0;istep<100 && fabs(eup-edown)>1.0e-9;istep++){
+    for(istep=0;istep<100 && fabs(eup-edown)>1.0e-7;istep++){
         
 	/*if(eup>edown){
 	    maxe=eup;

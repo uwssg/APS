@@ -884,6 +884,8 @@ double gp::actual_gradient(int dex, double *vout){
 	
     }
     
+    
+    
     delete [] delta_matrix;
     delete [] f_vector;
     delete [] neighbors;
