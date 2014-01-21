@@ -49,4 +49,6 @@ void naive_gaussian_solver(double*,double*,double*,int);
 
 double compare_arr(double *v1, double *v2, int dim);
 
+void get_orthogonal_bases(double**,int,Ran*,double);
+
 #endif

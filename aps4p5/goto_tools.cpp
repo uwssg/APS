@@ -503,3 +503,87 @@ double compare_arr(double *v1, double *v2, int dim){
     
 }
 
+void get_orthogonal_bases(double **matrix, int dim, Ran *chaos, double tol){
+
+    double norm;
+    int i;
+    norm=0.0;
+    for(i=0;i<dim;i++){
+        norm+=matrix[0][i]*matrix[0][i];
+    }
+    if(fabs(norm-1.0)>tol){
+        norm=0.0;
+	for(i=0;i<dim;i++){
+	    matrix[0][i]=(chaos->doub()-0.5);
+	    norm+=matrix[0][i]*matrix[0][i];
+	}
+	norm=sqrt(norm);
+	for(i=0;i<dim;i++){
+	    matrix[0][i]=matrix[0][i]/norm;
+	}
+    }
+    
+    int j,ix,useable;
+   
+    for(i=1;i<dim;i++){
+        
+	useable=0;
+	while(useable==0){
+	    useable=1;
+	    for(ix=0;ix<dim;ix++)matrix[i][ix]=(chaos->doub()-0.5);
+	
+            for(j=0;j<i;j++){
+	        norm=0.0;
+	        for(ix=0;ix<dim;ix++){
+	            norm+=matrix[i][ix]*matrix[j][ix];
+	        }
+	    
+	        for(ix=0;ix<dim;ix++){
+	            matrix[i][ix]-=norm*matrix[j][ix];
+	        }
+	    }
+	    
+	    norm=0.0;
+	    for(ix=0;ix<dim;ix++){
+	        norm+=matrix[i][ix]*matrix[i][ix];
+	    }
+	    
+	    if(norm<1.0e-15){
+	        useable=0;
+	    }
+	    else{
+	        norm=sqrt(norm);
+		for(ix=0;ix<dim;ix++)matrix[i][ix]=matrix[i][ix]/norm;
+	    }
+	   
+	
+	}
+
+    }
+    
+    for(i=0;i<dim;i++){
+        norm=0.0;
+	for(ix=0;ix<dim;ix++){
+	    norm+=matrix[i][ix]*matrix[i][ix];
+	}
+	if(fabs(norm-1.0)>tol){
+	    j=1;
+	    printf("WARNING norm %e\n",norm);
+	    throw j;
+	}
+	
+	for(j=i+1;j<dim;j++){
+	    norm=0.0;
+	    for(ix=0;ix<dim;ix++){
+	        norm+=matrix[i][ix]*matrix[j][ix];
+	    }
+	    
+	    if(fabs(norm)>tol){
+	       j=1;
+	       printf("WARNING orth %e\n",norm);
+	       throw j;
+	    }
+	}
+    }
+
+}
