@@ -198,7 +198,7 @@ double planet::true_chisq(double *amp_and_period, double *angles) const{
 	
 	if(K[i]<0.0){
 	    delete [] times;
-	    called++;
+	    
 	    time_spent+=double(time(NULL))-before;
 	    return exception;
 	}
@@ -298,6 +298,7 @@ double planet::true_chisq(double *amp_and_period, double *angles) const{
 
 double planet::operator()(double *vv) const{
   
+  double before=double(time(NULL));
   //accepts a list of amplitudes and periods
   //optimizes on the other parameters (angles and the two telescope velocities)
   
@@ -383,7 +384,7 @@ double planet::operator()(double *vv) const{
   //and in directions perpendicular thereto
   
    chimin=true_chisq(vv,current);
-   double dd=1.0e-2,step,norm;
+   double dd=1.0e-1,step,norm;
    while(aborted<200){
        for(i=0;i<dim;i++){
            bases[0][i]=(chaos.doub()-0.5);
@@ -435,10 +436,10 @@ double planet::operator()(double *vv) const{
 	       for(i=0;i<dim;i++)current[i]=trial[i];
 	       aborted=0;
 	       
-	       printf("chimin %e norm %e step %e dd %e\n",
-	       chimin,norm,step,dd);
+	       printf("chimin %e norm %.3e step %.3e dd %.3e called %d time %.3e\n",
+	       chimin,norm,step,dd,called,double(time(NULL))-before);
 	       
-	       if(norm>1.0)dd=0.01;
+	       if(norm>1.0 || norm<0.1)dd=0.1;
 	       else dd=norm;
 	       
 	       for(i=0;i<dim;i++){
@@ -448,13 +449,13 @@ double planet::operator()(double *vv) const{
 	       bound_ct++;
 	   }
 	   else{
-	       dd*=0.5;
+	      if(dd>1.0e-6)dd*=0.5;
 	   }
 	   
        }
        catch(int iex){
            aborted++;
-           dd*=0.5;
+           if(dd>1.0e-6)dd*=0.5;
        }
        
        
