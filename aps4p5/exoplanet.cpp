@@ -385,12 +385,24 @@ double planet::operator()(double *vv) const{
   
    chimin=true_chisq(vv,current);
    double dd=1.0e-1,step,norm;
+   int got_bases=0;
+   
    while(aborted<200){
        for(i=0;i<dim;i++){
            bases[0][i]=(chaos.doub()-0.5);
        }
        
-       get_orthogonal_bases(bases,dim,&chaos,1.0e-4);
+       got_bases=0;
+       while(got_bases==0){
+           got_bases=1;
+           try{
+	       get_orthogonal_bases(bases,dim,&chaos,1.0e-4);
+	   }
+	   catch(int iex){
+	       got_bases=0;
+	   }
+       
+       }
        
        for(i=0;i<dim;i++){
            for(j=0;j<dim;j++){
