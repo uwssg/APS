@@ -494,7 +494,9 @@ double planet::operator()(double *vv) const{
       printf("    %e %e %e\n",current[i*3],
       current[i*3+1],current[i*3+2]);
   }
-  printf("    %e %e -- %d\n",current[nplanets*3],current[nplanets*3+1],aborted);
+  printf("    %e %e -- %d %d %e\n",
+  current[nplanets*3],current[nplanets*3+1],aborted,called,
+  double(time(NULL))-before);
   
   delete [] aa;
   delete [] matrix;
