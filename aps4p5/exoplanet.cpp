@@ -305,18 +305,17 @@ double planet::operator()(double *vv) const{
   
   int dim=nplanets*3+2,nseed=2*dim;
   gp gg;
-  double **seed,*seedfn,*current,*trial,*max,*min,*grad,*pt;
+  double *current,*trial,*max,*min,*grad;
   Ran chaos(43);
   
-  pt=new double[nplanets*5];
+ 
   current=new double[dim];
   trial=new double[dim];
   grad=new double[dim];
   max=new double[dim];
   min=new double[dim];
-  seed=new double*[nseed];
-  seedfn=new double[nseed];
-  int i,j;
+  
+  int i,j,aborted=0;
   
   for(i=0;i<nplanets;i++){
       min[i*3]=0.0;
@@ -337,66 +336,17 @@ double planet::operator()(double *vv) const{
   } 
   
   int useable,target_dex;
-  double chimin;
+  double chimin,chitrue;
+  double **bases,*matrix,*aa;
   
-  for(i=0;i<nseed;i++){
-      seed[i]=new double[dim];
-      //printf("seeding %d\n",i);
-      useable=0;
-      seedfn[i]=2.0*exception;
-      
-      while(seedfn[i]>=exception){
-          while(useable==0){
-              for(j=0;j<dim;j++){
-                  seed[i][j]=current[j]+0.01*chaos.doub()*(max[j]-min[j]);
-              }
-	      useable=1;
-	      for(j=0;useable==1 && j<dim;j++){
-	          if(seed[i][j]<min[j]){
-	              printf("understepped\n");
-	              useable=0;
-	          }
-	          if(seed[i][j]>max[j]){
-	              printf("oversetpped %d %e %e\n",j,seed[i][j],max[j]);
-	              useable=0;
-                  }
-	      }
-	  
-          }
-          //printf("getting seedfn\n");
-          seedfn[i]=true_chisq(vv,seed[i]);
-          if(i==0 || seedfn[i]<chimin){
-              chimin=seedfn[i];
-	      target_dex=i;
-          }
-      }
-  }
-  
- 
-  
-  gaussian_covariance cv;
-  cv.set_dim(dim);
-  
-  gg.set_dim(dim);
-  gg.assign_covariogram(&cv);
-  gg.initialize(nseed,seed,seedfn,max,min);
-  
-  int aborted=0;
-  double chitrue,norm,nn,dd=1.0,step=0.1;
-  
-  int *neigh;
-  double *ddneigh,**bases;
-  
-  ddneigh=new double[dim];
-  neigh=new int[dim];
+  aa=new double[dim];
+  matrix=new double[dim*dim];
   
   bases=new double*[dim];
   for(i=0;i<dim;i++){
       bases[i]=new double[dim];
   }
- 
-  for(i=0;i<dim;i++)current[i]=seed[target_dex][i];
-  
+   
   /*current[0]=0.066;
   current[1]=238.0;
   current[3]=0.014;
@@ -421,124 +371,71 @@ double planet::operator()(double *vv) const{
   //step along previous gradient
   //and in directions perpendicular thereto
   
-  int ifail=0,updated;
+   chimin=true_chisq(vv,current);
+   double dd=1.0e-2,step,norm;
+   while(aborted<200){
+       for(i=0;i<dim;i++){
+           bases[0][i]=(chaos.doub()-0.5);
+       }
+       
+       get_orthogonal_bases(bases,dim,&chaos,1.0e-4);
+       
+       for(i=0;i<dim;i++){
+           for(j=0;j<dim;j++){
+	       trial[j]=current[j]+bases[i][j]*(max[j]-min[j])*dd;
+	   }
+	   
+	   chitrue=true_chisq(vv,trial);
+	   
+	   aa[i]=chitrue-chimin;
+	   for(j=0;j<dim;j++){
+	       matrix[i*dim+j]=bases[i][j];
+	   }
+       }
+       
+       try{
+           naive_gaussian_solver(matrix,aa,grad,dim);
+	   
+	   norm=0.0;
+	   for(i=0;i<dim;i++){
+	       norm+=grad[i]*grad[i];
+           }
+	   norm=sqrt(norm);
+	   
+	   chitrue=chimin+100.0;
+	   
+	   
+	   for(step=dd;step>1.0e-6 && chitrue>chimin;step*=0.5){
+	       for(i=0;i<dim;i++)trial[i]=current[i]-step*(max[i]-min[i])*grad[i]/norm;
+	       
+	       chitrue=true_chisq(vv,trial);
+	       
+	       aborted++;
+	       
+	   }
+	   
+	   if(chitrue<chimin){
+	       
+	       chimin=chitrue;
+	       for(i=0;i<dim;i++)current[i]=trial[i];
+	       aborted=0;
+	       dd=0.01;
+	       
+	       printf("chimin %e norm %e step %e dd %e\n",
+	       chimin,norm,step,dd);
+	       
+	   }
+	   else{
+	       dd*=0.5;
+	   }
+	   
+       }
+       catch(int iex){
+           aborted++;
+           dd*=0.5;
+       }
   
-  int called=0;
-  double before=double(time(NULL));
-  
-  printf("chimin %e %e\n",chimin,true_chisq(vv,current));
-  //exit(1);
-  while(aborted<1000){
-      ifail=0;
-      updated=0;
-      try{
-          dd=gg.actual_gradient(target_dex,grad);
-	  
-      }
-      catch(int iex){
-          dd=1.0e-5;
-          ifail=1;
-      }
-      
-      if(ifail==0){
-          norm=0.0;
-          for(i=0;i<dim;i++){
-              norm+=grad[i]*grad[i];
-          }
-          norm=sqrt(norm);
-          
-	  nn=chimin;
-	  chitrue=exception;
-	  for(step=4.0*dd;step>1.0e-10 && updated==0;step*=0.5){
-	  
-              for(i=0;i<dim;i++){
-                  trial[i]=current[i]-step*grad[i]*(max[i]-min[i])/norm;
-              }
-  
-              chitrue=true_chisq(vv,trial);
-	      called++;
-              
-      
-              if(chitrue<exception){
-                  gg.add_pt(trial,chitrue);
-              }
-	      
-	      if(chitrue<chimin){
-	          updated=1;
-		  aborted=0;
-	          chimin=chitrue;
-		  target_dex=gg.pts-1;
-		  for(i=0;i<dim;i++)current[i]=trial[i];
-		  
-		  printf("   chimin %e dd %e step %e %e norm %e %d %e %e\n",
-	      chimin,dd,step,step/dd,norm,called,double(time(NULL))-before,
-	      (double(time(NULL))-before)/double(called));
-		  
-	      }
-	      
-	  }
-	  
-	  if(updated==1){
-	      for(i=0;i<dim;i++)bases[0][i]=grad[i]/norm;
-	      try{
-	          get_orthogonal_bases(bases,dim,&chaos,1.0e-4);
-		  
-		  for(i=0;i<dim;i++){
-		      for(j=0;j<dim;j++){
-		          trial[j]=current[j]+0.5*step*bases[i][j]*(max[j]-min[j]);
-		      }
-		      chitrue=true_chisq(vv,trial);
-		      if(chitrue<exception){
-		          gg.add_pt(trial,chitrue);
-		      }
-		  }
-		  
-	      }
-	      catch(int iex){
-	          exit(1);
-	      }
-	      
-	      
-	  }
-	  
-      }
-      else{
-          chitrue=exception;
-      }
-      
-      if(ifail==1 || updated==0){
-          
-	  gg.nn_srch(current,dim,neigh,ddneigh);
-	  dd=ddneigh[dim/2];
-	  
-          aborted++;
-          for(i=0;i<dim;i++){
-	      norm=fabs(normal_deviate(&chaos,dd,0.5*dd));
-	      nn=0.0;
-	      for(j=0;j<dim;j++){
-	          trial[j]=normal_deviate(&chaos,0.0,1.0);
-		  nn+=trial[j]*trial[j];
-	      }
-	      nn=sqrt(nn);
-	      
-	      for(j=0;j<dim;j++){
-	          trial[j]=trial[j]*norm*(max[j]-min[j])/nn;
-		  trial[j]+=current[j];
-	      }
-	      
-	      chitrue=true_chisq(vv,trial);
-	      called++;
-	      if(chitrue<exception){
-	          gg.add_pt(trial,chitrue);
-	      }
-	  }
-	  printf("    now pts %d\n",gg.pts);
-      
-      }
-      
-  
-  }
-  
+   }
   
    for(i=0;i<nplanets;i++){
       printf("    %e %e %e\n",current[i*3],
@@ -546,18 +443,14 @@ double planet::operator()(double *vv) const{
   }
   printf("    %e %e -- %d\n",current[nplanets*3],current[nplanets*3+1],aborted);
   
-  delete [] pt;
+  delete [] aa;
+  delete [] matrix;
   delete [] current;
   delete [] trial;
   delete [] max;
   delete [] min;
   delete [] grad;
-  delete [] seedfn;
-  for(i=0;i<nseed;i++)delete [] seed[i];
-  delete [] seed;  
-  
-  delete [] neigh;
-  delete [] ddneigh;
+
   
   for(i=0;i<dim;i++)delete [] bases[i];
   delete [] bases;
