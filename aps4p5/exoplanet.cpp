@@ -306,9 +306,15 @@ double planet::operator()(double *vv) const{
   int dim=nplanets*3+2,nseed=2*dim;
   gp gg;
   double *current,*trial,*max,*min,*grad;
+  double *newmax,*newmin,*true_max,*true_min;
   Ran chaos(43);
   
- 
+  int bound_ct=0;
+  
+  true_max=new double[dim];
+  true_min=new double[dim];
+  newmax=new double[dim];
+  newmin=new double[dim];
   current=new double[dim];
   trial=new double[dim];
   grad=new double[dim];
@@ -330,6 +336,11 @@ double planet::operator()(double *vv) const{
   min[nplanets*3+1]=15.0;
   max[nplanets*3]=20.0;
   max[nplanets*3+1]=20.0;
+  
+  for(i=0;i<dim;i++){
+       true_max[i]=max[i];
+       true_min[i]=min[i];
+  }
   
   for(i=0;i<dim;i++){
       current[i]=0.5*(max[i]+min[i]);
@@ -402,11 +413,15 @@ double planet::operator()(double *vv) const{
            }
 	   norm=sqrt(norm);
 	   
+	   if(norm>1.0){
+	       for(i=0;i<dim;i++)grad[i]=grad[i]/norm;
+	   }
+	   
 	   chitrue=chimin+100.0;
 	   
 	   
-	   for(step=dd;step>1.0e-6 && chitrue>chimin;step*=0.5){
-	       for(i=0;i<dim;i++)trial[i]=current[i]-step*(max[i]-min[i])*grad[i]/norm;
+	   for(step=2.0*dd;step>1.0e-6 && chitrue>chimin;step*=0.5){
+	       for(i=0;i<dim;i++)trial[i]=current[i]-step*(max[i]-min[i])*grad[i];
 	       
 	       chitrue=true_chisq(vv,trial);
 	       
@@ -419,11 +434,16 @@ double planet::operator()(double *vv) const{
 	       chimin=chitrue;
 	       for(i=0;i<dim;i++)current[i]=trial[i];
 	       aborted=0;
-	       dd=0.01;
 	       
 	       printf("chimin %e norm %e step %e dd %e\n",
 	       chimin,norm,step,dd);
 	       
+	       dd=0.01;
+	       for(i=0;i<dim;i++){
+	           if(bound_ct==0 || current[i]<newmin[i])newmin[i]=current[i];
+		   if(bound_ct==0 || current[i]>newmax[i])newmax[i]=current[i];
+	       }
+	       bound_ct++;
 	   }
 	   else{
 	       dd*=0.5;
@@ -433,6 +453,23 @@ double planet::operator()(double *vv) const{
        catch(int iex){
            aborted++;
            dd*=0.5;
+       }
+       
+       
+       if(bound_ct>=100){
+           for(i=0;i<dim;i++){
+	       max[i]=newmax[i];
+	       min[i]=newmin[i];
+	       
+	       if(max[i]<=current[i])max[i]=current[i]+0.01*(true_max[i]-true_min[i]);
+	       if(min[i]>=current[i])min[i]=current[i]-0.01*(true_max[i]-true_min[i]);
+	       
+	       if(max[i]>true_max[i])max[i]=true_max[i];
+	       if(min[i]<true_min[i])min[i]=true_min[i];
+	       
+	       
+	   }
+	   bound_ct=0;
        }
   
    }
@@ -450,7 +487,10 @@ double planet::operator()(double *vv) const{
   delete [] max;
   delete [] min;
   delete [] grad;
-
+  delete [] newmax;
+  delete [] newmin;
+  delete [] true_max;
+  delete [] true_min;
   
   for(i=0;i<dim;i++)delete [] bases[i];
   delete [] bases;
