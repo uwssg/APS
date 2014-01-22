@@ -400,6 +400,7 @@ double planet::operator()(double *vv) const{
 	   }
 	   catch(int iex){
 	       got_bases=0;
+	       for(i=0;i<dim;i++)bases[0][i]=(chaos.doub()-0.5);
 	   }
        
        }
