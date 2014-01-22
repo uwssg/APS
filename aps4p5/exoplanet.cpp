@@ -438,7 +438,9 @@ double planet::operator()(double *vv) const{
 	       printf("chimin %e norm %e step %e dd %e\n",
 	       chimin,norm,step,dd);
 	       
-	       dd=0.01;
+	       if(norm>1.0)dd=0.01;
+	       else dd=norm;
+	       
 	       for(i=0;i<dim;i++){
 	           if(bound_ct==0 || current[i]<newmin[i])newmin[i]=current[i];
 		   if(bound_ct==0 || current[i]>newmax[i])newmax[i]=current[i];
@@ -456,7 +458,7 @@ double planet::operator()(double *vv) const{
        }
        
        
-       if(bound_ct>=100){
+       if(aborted%10==0 && bound_ct>2){
            for(i=0;i<dim;i++){
 	       max[i]=newmax[i];
 	       min[i]=newmin[i];
