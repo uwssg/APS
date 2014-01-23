@@ -390,9 +390,11 @@ double planet::operator()(double *vv) const{
    double dd=1.0e-1,step,norm;
    int got_bases=0;
    
+   for(i=0;i<dim;i++)grad[i]=(chaos.doub()-0.5);
+   
    while(aborted<200){
        for(i=0;i<dim;i++){
-           bases[0][i]=(chaos.doub()-0.5);
+           bases[0][i]=-1.0*grad[i];
        }
        
        got_bases=0;
@@ -476,12 +478,14 @@ double planet::operator()(double *vv) const{
 	   else{
 	      //printf("    chisq did not improve\n");
 	      if(dd>1.0e-6)dd*=0.5;
+	      for(i=0;i<dim;i++)grad[i]=(chaos.doub()-0.5);
 	   }
 	   
        }
        catch(int iex){
            aborted++;
            if(dd>1.0e-6)dd*=0.5;
+	   for(i=0;i<dim;i++)grad[i]=(chaos.doub()-0.5);
 	   
 	   //printf("solver failed\n");
 	   //for(i=0;i<dim;i++){
