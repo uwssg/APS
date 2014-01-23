@@ -1243,20 +1243,11 @@ int likelihood::choose_a_candidate(){
 
 void likelihood::gradient_sample(int in_dex){
 
-    if(gg.pts<nparams)return;
+    if(gg.pts<nparams+1)return;
     
-    double before=double(time(NULL)),fstart;
-    int good_steps=0;
+    double before=double(time(NULL));
     
-    double *gradient,*pt,*trial,ratio=100.0,nn,chifound=-1.0;
-    int maxdex,abort,last_improved=0,ct_abort=0,ct_fudge=0,istart,pstart;
-    int has_refined=0;
-    double dx0=10.0,dx1=10.0,dx2=10.0;
-    
-    int idd,total_neighbors,*neighbors;
-    double *dd,dd_scalar;
-    
-    total_neighbors=20;
+    int pstart,istart,maxdex;
 
     istart=call_likelihood->get_called();
     pstart=gg.pts;
@@ -1274,8 +1265,8 @@ void likelihood::gradient_sample(int in_dex){
 	return;
     } 
     int i,j,k,l,local_min;
-    double dd_min;
-    double *lowball,*highball;
+    double dd_min,nn;
+    double *lowball,*highball,*trial;
     if(gg.fn[maxdex]<target+10.0 && n_minima>0){
         //printf("bisecting\n");
         trial=new double[nparams];
@@ -1323,221 +1314,179 @@ void likelihood::gradient_sample(int in_dex){
 	return;
     }
     
+    int *neighbors;
+    double *dd;
     
-    neighbors=new int[total_neighbors];
-    dd=new double[total_neighbors];
-    gradient=new double[nparams];
-    pt=new double[nparams];
+    neighbors=new int[nparams+1];
+    dd=new double[nparams+1];
+    
     trial=new double[nparams];
+    for(i=0;i<nparams;i++)trial[i]=gg.kptr->data[maxdex][i];
     
+    gg.kptr->nn_srch(trial,nparams+1,neighbors,dd);
     
- 
-    for(i=0;i<nparams;i++){
-        pt[i]=gg.kptr->data[maxdex][i];
+    delete [] trial;
+    
+    double **simplex,*pbar,*pstarstar,*pstar,*true_pt;
+    double *fsimplex,fstar,fstarstar;
+    
+    double alpha=1.1,beta=0.9,gamma=1.1;
+    int ih,il;
+    
+    simplex=new double*[nparams+1];
+    pbar=new double[nparams];
+    pstar=new double[nparams];
+    pstarstar=new double[nparams];
+    
+    true_pt=new double[nparams];
+    
+    fsimplex=new double[nparams+1];
+    
+    for(i=0;i<nparams+1;i++){
+        for(j=0;j<nparams;j++){
+	    simplex[i][j]=(gg.kptr->data[neighbors[i]][j]-range_min[j])/(range_max[j]-range_min[j]);
+	}
+	fsimplex[i]=gg.fn[neighbors[i]];
+	
+	if(i==0 || fsimplex[i]<fsimplex[il])il=i;
+	
+	if(i==0 || fsimplex[i]>fsimplex[ih])ih=i;
     }
-    double f0=gg.fn[maxdex];
     
-    double magnitude,chitrial,renormalization;
-    int ii;
+    double sig=1.0,mu,chitrue;
     
     
-    fstart=f0;
-    gg.kptr->nn_srch(pt,total_neighbors,neighbors,dd);
-    
-    for(idd=0;idd<total_neighbors-1 && dd[idd]<1.0e-10;idd++);
-    dd_scalar=dd[idd];
-    
-    
-    //printf("dd %e\n",dd);
-    for(ii=0;ii<nparams;ii++){
-        nn=0.0;
+    while(sig>1.0e-4){
         for(i=0;i<nparams;i++){
-	    trial[i]=normal_deviate(dice,0.0,1.0);
-	    nn+=trial[i]*trial[i];
-	}
-	nn=sqrt(nn);
-	for(i=0;i<nparams;i++){
-	    trial[i]*=0.1*dd_scalar*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
-	    trial[i]+=pt[i];
-	}
-	
-	
-	chitrial=(*call_likelihood)(trial);
-	//printf("adding %e\n",chitrial);
-	if(chitrial<exception){
-	    add_pt(trial,chitrial,1);
-	}
-    }
-    
-    
-    for(ii=0;(ii<100 || ii-last_improved<100) && (dx1>1.0 || dx0>1.0 || dx2>1.0);ii++){
-        abort=0;
-	gg.kptr->nn_srch(pt,total_neighbors,neighbors,dd);
-	//if(ii==0)printf("dd %e\n",dd);
-	try{
-	    dd_scalar=gg.actual_gradient(maxdex,gradient);
-	}
-	catch(int iex){
-	    abort=1;
-	}
-	
-	k=1;
-	if(abort==0){
-	    magnitude=0.0;
-	    for(i=0;i<nparams;i++){
-	        magnitude+=gradient[i]*gradient[i];
+	    pbar[i]=0.0;
+	    for(j=0;j<nparams+1;j++){
+	        if(j!=ih){
+		    pbar[i]+=simplex[j][i];
+		}
 	    }
-	    magnitude=sqrt(magnitude);
-	    
-	    k=1;
-	    for(i=0;i<nparams;i++){
-	        trial[i]=pt[i]-ratio*gradient[i]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/magnitude;
-		if(trial[i]<range_min[i] || trial[i]>range_max[i])k=0;
-	    }
-	    
-	    //next thing to try would be to do a while loop
-	    //so that if trial is too close to it's nearest neighbor
-	    //you temporarily increase ratio so that it takes
-	    //a larger, more interesting step
-	    gg.kptr->nn_srch(trial,total_neighbors,neighbors,dd);
-	    
-	    if(dd[0]<1.0e-10){
-	          renormalization=fabs(1.0e-5/dd[0]);
-		  for(i=0;i<nparams && k==1;i++){
-		      trial[i]=pt[i]-ratio*renormalization*gradient[i]*
-		               (gg.kptr->maxs[i]-gg.kptr->mins[i])/magnitude;
-			       
-		      if(trial[i]<range_min[i] || trial[i]>range_max[i])k=0;       
-		      if(isnan(trial[i]) || isinf(trial[i]))k=0;	       
-		  }
-	    }
-	    
-	    if(k==1){
-	        chitrial=(*call_likelihood)(trial);
-	        if(chifound<0.0 || chitrial<chifound){
-	            chifound=chitrial;
-	        }
-	    }
-	    else{
-	        abort=1;
-	    }
+	    pbar[i]=pbar[i]/double(nparams);
 	}
         
-	if(abort==1){
-	    ct_abort++;
-	    chitrial=exception;
+	for(i=0;i<nparams;i++){
+	    pstar[i]=(1.0+alpha)*pbar[i]-alpha*simplex[ih][i];
+	    true_pt[i]=range_min[i]+pstar[i]*(range_max[i]-range_min[i]);
 	}
 	
-	if(chitrial<exception){
-	    //printf("adding\n");
-	    add_pt(trial,chitrial,1);
-	   
-	    //printf("added\n");
-	   
+	fstar=(*call_likelihood)(true_pt);
+        if(fstar<exception){
+	    add_pt(true_pt,fstar,1);
 	}
 	
-	if(chitrial>f0-precision){
-	    //if(fabs(chitrial-f0)<1.0e-4)printf("I think %e > %e\n",chitrial,f0);
-	    if(ratio>0.01)ratio*=0.5;
-	    
-	    if(dx0<1.0 && has_refined==0){
-	        k=nparams;
-		has_refined=1;
-            }
-	    else{
-	        k=1;
+	if(fstar>fsimplex[il] && fstar<fsimplex[ih]){
+	    for(i=0;i<nparams;i++)simplex[ih][i]=pstar[i];
+	    fsimplex[ih]=fstar;
+	}
+	else if(fstar<fsimplex[il]){
+	    for(i=0;i<nparams;i++){
+	        pstarstar[i]=gamma*pstar[i]+(1.0-gamma)*pbar[i];
+		true_pt[i]=range_min[i]+pstarstar[i]*(range_max[i]-range_min[i]);
 	    }
 	    
-	    for(j=0;j<k;j++){
-	        nn=0.0;
-		dd_scalar=-1.0;
-		for(idd=0;idd<total_neighbors-1 && dd[idd]<1.0e-10;idd++);
-		l=0;
-		while(dd_scalar<1.0e-10 && l<100){
-		
-	            for(i=0;i<nparams;i++){
-	                trial[i]=normal_deviate(dice,0.0,0.1);
-		        nn+=trial[i]*trial[i];
-	            }
-	            nn=sqrt(nn);
+	    fstarstar=(*call_likelihood)(true_pt);
+	    if(fstarstar<exception){
+	        add_pt(true_pt,fstarstar,1);
+	    }
+	    
+	    if(fstarstar<fsimplex[il]){
+	        for(i=0;i<nparams;i++)simplex[ih][i]=pstarstar[i];
+		fsimplex[ih]=fstarstar;
+	    }
+	    else{
+	        for(i=0;i<nparams;i++)simplex[ih][i]=pstar[i];
+		fsimplex[ih]=fstar;
+	    }
+	}
 	
-	            for(i=0;i<nparams;i++){
-	                trial[i]*=0.5*dd[idd]*(gg.kptr->maxs[i]-gg.kptr->mins[i])/nn;
-		        trial[i]+=pt[i];
-	            }
-	            
-		    gg.kptr->nn_srch(trial,1,&i,&dd_scalar);
-		    l++;
+	j=1;
+	for(i=0;i<nparams+1;i++){
+	    if(fstar<fsimplex[i] && i!=ih){
+	        j=0;
+	    }
+	}
+	
+	if(j==1){
+	    for(i=0;i<nparams;i++){
+	        pstarstar[i]=beta*simplex[ih][i]+(1.0-beta)*pbar[i];
+		true_pt[i]=range_min[i]+pstarstar[i]*(range_max[i]-range_min[i]);
+	    }
+	    
+	    fstarstar=(*call_likelihood)(true_pt);
+	    if(fstarstar<exception){
+	        add_pt(true_pt,fstarstar,1);
+	    }
+	    
+	    if(fstarstar<fsimplex[ih]){
+	        for(i=0;i<nparams;i++)simplex[ih][i]=pstarstar[i];
+		fsimplex[ih]=fstarstar;
+	    }
+	    else{
+	        for(i=0;i<nparams+1;i++){
+		    if(i==0 || fsimplex[i]<fsimplex[il]){
+		        il=i;
+		    }
 		}
 	        
-		if(dd_scalar>1.0e-10){
-	            chitrial=(*call_likelihood)(trial);
-	    
-	            if(chitrial<exception){
-	                add_pt(trial,chitrial,1);
-	            }
-	            ct_fudge++;
+		for(i=0;i<nparams+1;i++){
+		    if(i!=il){
+		        for(j=0;j<nparams;j++){
+		            mu=0.5*(simplex[i][j]+simplex[il][j]);
+			    simplex[i][j]=mu;
+			    true_pt[j]=range_min[j]+simplex[i][j]*(range_max[j]-range_min[j]);
+		        }
+			
+			fsimplex[i]=(*call_likelihood)(true_pt);
+			if(fsimplex[i]<exception){
+			    add_pt(true_pt,fsimplex[i],1);
+			}
+			
+		    }
 		}
+	    
+	    }   
+	}
+	
+	mu=0.0;
+	for(i=0;i<nparams+1;i++){
+	    mu+=fsimplex[i];
+	}
+	mu=mu/double(nparams+1);
+	sig=0.0;
+	for(i=0;i<nparams+1;i++){
+	    sig+=power(mu-fsimplex[i],2);
+	}
+	sig=sig/double(nparams+1);
+	sig=sqrt(sig);
+	
+	for(i=0;i<nparams+1;i++){
+	    if(i==0 || fsimplex[i]<fsimplex[il]){
+	        il=i;
+	    }
+	    
+	    if(i==0 || fsimplex[i]>fsimplex[ih]){
+	        ih=i;
 	    }
 	}
-        else if(chitrial<f0){
-	    //printf("    found %e on %d %d -- %e -- %e\n",
-	    //chitrial,ii,call_likelihood->get_called()-istart,chitrial-f0,dd);
-	    
-	    dx2=dx1;
-	    dx1=dx0;
-	    dx0=f0-chitrial;
-	    
-	    if(dx0>1.0)has_refined=0;
-	    
-	    last_improved=ii;
-	    f0=chitrial;
-	    maxdex=gg.pts-1;
-	    for(i=0;i<nparams;i++)pt[i]=trial[i];
-	    ratio*=2.0;
-	    good_steps++;
-	   
-       }
-       
-       
-       /*if(abort==1){
-           for(i=0;i<1;i++){
-	       nn=0.0;
-	       for(j=0;j<nparams;j++){
-	           trial[j]=normal_deviate(dice,0.0,0.1);
-		   nn+=trial[j]*trial[j];
-	       }
-	       for(j=0;j<nparams;j++){
-	           trial[j]*=0.5*dd*(gg.kptr->maxs[j]-gg.kptr->mins[j])/nn;
-		   trial[j]+=pt[j];
-	       }
-	       
-	      
-	       chitrial=(*call_likelihood)(trial);
-	       if(chitrial<exception){
-	           add_pt(trial,chitrial,1);
-	       }
-	   }
-       }*/
-
+	
     }
-    //exit(1);
-    
-    add_minimum(pt);
-    
-    //printf("total %d good_steps %d fstart %.4e f0 %.4e min %.4e\n",
-    //call_likelihood->get_called()-istart,good_steps,fstart,f0,chimin);
     
     delete [] neighbors;
     delete [] dd;
-    delete [] gradient;
-
-    delete [] trial;
     
-    //printf("after gradient chimin is %.4e -- found %.4e %.4e abort %d fudge %d tot %d %d\n\n",
-    //chimin,pt[0],chifound,ct_abort,ct_fudge,ii,call_likelihood->get_called()-istart);
+    delete [] pbar;
+    delete [] pstar;
+    delete [] pstarstar;
     
-    delete [] pt;
+    delete [] true_pt;
+    delete [] fsimplex;
+    for(i=0;i<nparams+1;i++){
+        delete [] simplex[i];
+    }
+    delete [] simplex;
     
     time_mcmc+=double(time(NULL))-before;
     ct_mcmc+=call_likelihood->get_called()-istart;

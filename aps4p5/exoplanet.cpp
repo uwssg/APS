@@ -317,7 +317,7 @@ double planet::operator()(double *vv) const{
   int i,j;
   
   double tol=1.0e-6;
-  double alpha=1.1,beta=0.9,gamma=1.1;
+  double alpha=1.0,beta=0.9,gamma=1.1;
   
   Ran chaos(43);
   
@@ -475,6 +475,14 @@ double planet::operator()(double *vv) const{
 		      for(j=0;j<dim;j++){
 		          mu=0.5*(pts[i][j]+pts[il][j]);
 			  pts[i][j]=mu;
+			  
+			  true_var[j]=min[j]+pts[i][j]*(max[j]-min[j]);
+		      }
+		      
+		      ff[i]=true_chisq(vv,true_var);
+		      if(ff[i]<chimin){
+		          chimin=ff[i];
+			  for(j=0;j<dim;j++)minpt[j]=true_var[j];
 		      }
 		      
 		  }
