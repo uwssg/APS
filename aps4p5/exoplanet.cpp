@@ -298,6 +298,8 @@ double planet::true_chisq(double *amp_and_period, double *angles) const{
 
 double planet::operator()(double *vv) const{
   
+  //use simplex
+  
   double before=double(time(NULL));
   //accepts a list of amplitudes and periods
   //optimizes on the other parameters (angles and the two telescope velocities)
@@ -306,26 +308,36 @@ double planet::operator()(double *vv) const{
   
   int dim=nplanets*3+2,nseed=2*dim;
   gp gg;
-  double *current,*trial,*max,*min,*grad;
-  double *newmax,*newmin,*true_max,*true_min;
+  double *min,*max,*true_var;
+  
+  double **pts,*pbar,*ff,*minpt,chimin,*pstar,*pstarstar;
+  double fstar,fstarstar;
+  int ih,il;
+  
+  int i,j;
   
   double tol=1.0e-6;
+  double alpha=1.1,beta=0.9,gamma=1.1;
   
   Ran chaos(43);
   
   int bound_ct=0;
   
-  true_max=new double[dim];
-  true_min=new double[dim];
-  newmax=new double[dim];
-  newmin=new double[dim];
-  current=new double[dim];
-  trial=new double[dim];
-  grad=new double[dim];
+  true_var=new double[dim];
   max=new double[dim];
   min=new double[dim];
+  minpt=new double[dim];
   
-  int i,j,aborted=0;
+  pstar=new double[dim];
+  pstarstar=new double[dim];
+  pts=new double*[dim+1];
+  pbar=new double[dim];
+  ff=new double[dim+1];
+  for(i=0;i<dim+1;i++){
+      pts[i]=new double[dim];
+  }
+  
+  int aborted=0;
   
   for(i=0;i<nplanets;i++){
       min[i*3]=0.0;
@@ -341,210 +353,185 @@ double planet::operator()(double *vv) const{
   max[nplanets*3]=20.0;
   max[nplanets*3+1]=20.0;
   
-  for(i=0;i<dim;i++){
-       true_max[i]=max[i];
-       true_min[i]=min[i];
+  
+  il=-1;
+  ih=-1;
+  for(i=0;i<dim+1;i++){
+      for(j=0;j<dim;j++){
+          pts[i][j]=chaos.doub();
+	  
+	  true_var[j]=min[j]+pts[i][j]*(max[j]-min[j]);
+	  
+      }
+      ff[i]=true_chisq(vv,true_var);
+      
+      if(il<0 || ff[i]<ff[il]){
+          il=i;
+      }
+      if(ih<0 || ff[i]>ff[ih]){
+          ih=i;
+      }
   }
   
+  chimin=ff[il];
   for(i=0;i<dim;i++){
-      current[i]=0.5*(max[i]+min[i]);
-  } 
-  
-  int useable,target_dex;
-  double chimin,chitrue;
-  double **bases,*matrix,*aa;
-  
-  aa=new double[dim];
-  matrix=new double[dim*dim];
-  
-  bases=new double*[dim];
-  for(i=0;i<dim;i++){
-      bases[i]=new double[dim];
+      minpt[i]=min[i]+pts[il][i]*(max[i]-min[i]);
   }
-   
-  /*current[0]=0.066;
-  current[1]=238.0;
-  current[3]=0.014;
-  current[4]=135.0;
-  current[6]=0.09;
-  current[7]=66.0;
-  current[9]=0.4;
-  current[10]=182.0;
-  current[12]=0.015;
-  current[13]=223.0;
   
-  current[2]=-0.2742881;
-  current[5]=-0.2729630;
-  current[8]=0.2048294;
-  current[11]=-0.1645573;
-  current[14]=-0.4783912;
-  current[15]=17.33453;
-  current[16]=16.48477;*/
+  printf("    chimin %e %e\n",chimin,double(time(NULL))-before);
   
-  //spock
-  //try sampling new steps by default after each improvement
-  //step along previous gradient
-  //and in directions perpendicular thereto
-  
-   chimin=true_chisq(vv,current);
-   double dd=1.0e-1,step,norm;
-   int got_bases=0;
-   
-   for(i=0;i<dim;i++)grad[i]=(chaos.doub()-0.5);
-   
-   while(aborted<200){
-       for(i=0;i<dim;i++){
-           bases[0][i]=-1.0*grad[i];
-       }
-       
-       got_bases=0;
-       while(got_bases==0){
-           got_bases=1;
-           try{
-	       get_orthogonal_bases(bases,dim,&chaos,1.0e-4);
-	   }
-	   catch(int iex){
-	       got_bases=0;
-	       for(i=0;i<dim;i++)bases[0][i]=(chaos.doub()-0.5);
-	   }
-       
-       }
-       
-       for(i=0;i<dim;i++){
-           for(j=0;j<dim;j++){
-	       trial[j]=current[j]+bases[i][j]*(max[j]-min[j])*dd;
-	       
-	       if(trial[j]>true_max[j])trial[j]=true_max[j]-0.00001;
-	       if(trial[j]<true_min[j])trial[j]=true_min[j]+0.00001;
-	       
-	   }
-	   
-	   chitrue=true_chisq(vv,trial);
-	   
-	   if(!(chitrue<exception)){
-	       printf("chitrue %e\n",chitrue);
-	       exit(1);
-	   }
-	   
-	   aa[i]=chitrue-chimin;
-	   for(j=0;j<dim;j++){
-	       matrix[i*dim+j]=(trial[j]-current[j])/(max[j]-min[j]);
-	   }
-       }
-       
-       try{
-           naive_gaussian_solver(matrix,aa,grad,dim);
-	   
-	   norm=0.0;
-	   for(i=0;i<dim;i++){
-	       norm+=grad[i]*grad[i];
-           }
-	   norm=sqrt(norm);
-	   
-	   if(norm>1.0){
-	       for(i=0;i<dim;i++)grad[i]=grad[i]/norm;
-	   }
-	   
-	   chitrue=chimin+100.0;
-	   
-	   
-	   for(step=2.0*dd;step>1.0e-6 && chitrue>chimin;step*=0.5){
-	       for(i=0;i<dim;i++)trial[i]=current[i]-step*(max[i]-min[i])*grad[i];
-	       
-	       chitrue=true_chisq(vv,trial);
-	       
-	       aborted++;
-	       
-	   }
-	   
-	   if(chitrue<chimin){
-	       
-	       chimin=chitrue;
-	       for(i=0;i<dim;i++)current[i]=trial[i];
-	       aborted=0;
-	       
-	       printf("chimin %e norm %.3e step %.3e dd %.3e called %d time %.3e\n",
-	       chimin,norm,step,dd,called,double(time(NULL))-before);
-	       
-	       if(norm>1.0 || norm<0.1)dd=0.1;
-	       else dd=norm;
-	       
-	       for(i=0;i<dim;i++){
-	           if(bound_ct==0 || current[i]<newmin[i])newmin[i]=current[i];
-		   if(bound_ct==0 || current[i]>newmax[i])newmax[i]=current[i];
-	       }
-	       bound_ct++;
-	   }
-	   else{
-	      //printf("    chisq did not improve\n");
-	      if(dd>1.0e-6)dd*=0.5;
-	      for(i=0;i<dim;i++)grad[i]=(chaos.doub()-0.5);
-	   }
-	   
-       }
-       catch(int iex){
-           aborted++;
-           if(dd>1.0e-6)dd*=0.5;
-	   for(i=0;i<dim;i++)grad[i]=(chaos.doub()-0.5);
-	   
-	   //printf("solver failed\n");
-	   //for(i=0;i<dim;i++){
-	   //    printf("%e %e -- %e %e -- %d\n",min[i],max[i],true_max[i],true_min[i],(max[i]>min[i]));
-           //}
-	   //exit(1);
-       }
-       
-       
-       if(aborted%10==0 && bound_ct>2){
-           for(i=0;i<dim;i++){
-	       max[i]=newmax[i];
-	       min[i]=newmin[i];
-	       
-	       if(max[i]<=current[i])max[i]=current[i]+0.01*(true_max[i]-true_min[i]);
-	       if(min[i]>=current[i])min[i]=current[i]-0.01*(true_max[i]-true_min[i]);
-	       
-	       if(max[i]-min[i]<tol){
-	           max[i]+=1.0e-4*(true_max[i]-true_min[i]);
-		   min[i]-=1.0e-4*(true_max[i]-true_min[i]);
-	       }
-	       
-	       
-	       if(max[i]>true_max[i])max[i]=true_max[i];
-	       if(min[i]<true_min[i])min[i]=true_min[i];
-	       
-	      
-	       
-	       
-	   }
-	   bound_ct=0;
-       }
-  
-   }
-  
-   for(i=0;i<nplanets;i++){
-      printf("    %e %e %e\n",current[i*3],
-      current[i*3+1],current[i*3+2]);
+  double sig=1.0,mu=1.0e4;
+  while(sig>1.0e-4){
+      
+      for(i=0;i<dim;i++){
+          pbar[i]=0.0;
+	  for(j=0;j<dim+1;j++){
+	      if(j!=ih){
+	          pbar[i]+=pts[j][i];
+	      }
+	  }
+	  pbar[i]=pbar[i]/double(dim);
+      } 
+      
+      for(i=0;i<dim;i++){
+          pstar[i]=(1.0+alpha)*pbar[i]-alpha*pts[ih][i];
+      }
+      
+      for(i=0;i<dim;i++){
+          true_var[i]=min[i]+pstar[i]*(max[i]-min[i]);
+      }
+      
+      fstar=true_chisq(vv,true_var);
+      if(fstar<chimin){
+          chimin=fstar;
+	  for(i=0;i<dim;i++)minpt[i]=true_var[i];
+      }
+      
+      if(fstar>ff[il] && fstar<ff[ih]){
+          for(i=0;i<dim;i++){
+	      pts[ih][i]=pstar[i];
+	  }
+	  ff[ih]=fstar;
+      }
+      else if(fstar<ff[il]){
+          for(i=0;i<dim;i++){
+	      pstarstar[i]=gamma*pstar[i]+(1.0-gamma)*pbar[i];
+	  }
+	  
+	  for(i=0;i<dim;i++){
+	      true_var[i]=min[i]+pstarstar[i]*(max[i]-min[i]);
+	  }
+	  
+	  fstarstar=true_chisq(vv,true_var);
+	  if(fstarstar<chimin){
+	      chimin=fstarstar;
+	      for(i=0;i<dim;i++)minpt[i]=true_var[i];
+	  }
+	  
+	  if(fstarstar<ff[il]){
+	      for(i=0;i<dim;i++)pts[ih][i]=pstarstar[i];
+	      ff[ih]=fstarstar;
+	  }
+	  else{
+	      for(i=0;i<dim;i++)pts[ih][i]=pstar[i];
+	      ff[ih]=fstar;
+	  }
+      }
+      
+      j=1;
+      for(i=0;i<dim+1;i++){
+          if(fstar<ff[i] && i!=ih){
+	      j=0;
+	  }
+      }
+      
+      if(j==1){
+          for(i=0;i<dim;i++){
+	      pstarstar[i]=beta*pts[ih][i]+(1.0-beta)*pbar[i];
+	  }
+	  
+	  for(i=0;i<dim;i++){
+	      true_var[i]=min[i]+pstarstar[i]*(max[i]-min[i]);
+	  }
+	  
+	  fstarstar=true_chisq(vv,true_var);
+	  if(fstarstar<chimin){
+	      chimin=fstarstar;
+	      for(i=0;i<dim;i++)minpt[i]=true_var[i];
+	  }
+	  
+	  if(fstarstar<ff[ih]){
+	      for(i=0;i<dim;i++)pts[ih][i]=pstarstar[i];
+	      ff[ih]=fstarstar;
+	  }
+	  else{
+	      for(i=0;i<dim+1;i++){
+	          if(i==0 || ff[i]<ff[il]){
+		      il=i;
+		  }
+	      }
+	      for(i=0;i<dim+1;i++){
+	          if(i!=il){
+		      for(j=0;j<dim;j++){
+		          mu=0.5*(pts[i][j]+pts[il][j]);
+			  pts[i][j]=mu;
+		      }
+		      
+		  }
+	      }
+	  }
+	  
+      }
+      
+      
+      mu=0.0;
+      for(i=0;i<dim+1;i++){
+          mu+=ff[i];
+      }
+      mu=mu/double(dim+1);
+      //printf("mu %e\n",mu);
+      sig=0.0;
+      for(i=0;i<dim+1;i++){
+          sig+=power(mu-ff[i],2);
+      }
+      sig=sig/double(dim+1);
+      sig=sqrt(sig);
+      
+      for(i=0;i<dim+1;i++){
+          if(i==0 || ff[i]<ff[il]){
+	      il=i;
+	  }
+	  
+	  if(i==0 || ff[i]>ff[ih]){
+	      ih=i;
+	  }
+      }
+      
+      printf("    chimin %e %e %e\n",chimin,double(time(NULL))-before,sig);
   }
-  printf("    %e %e -- %d %d %e\n",
-  current[nplanets*3],current[nplanets*3+1],aborted,called,
-  double(time(NULL))-before);
   
-  delete [] aa;
-  delete [] matrix;
-  delete [] current;
-  delete [] trial;
-  delete [] max;
+  
+  
   delete [] min;
-  delete [] grad;
-  delete [] newmax;
-  delete [] newmin;
-  delete [] true_max;
-  delete [] true_min;
+  delete [] max;
+  delete [] ff;
+  delete [] pbar;
+  delete [] pstar;
+  delete [] pstarstar;
+  for(i=0;i<dim+1;i++){
+      delete [] pts[i];
+  }
+  delete [] pts;
   
-  for(i=0;i<dim;i++)delete [] bases[i];
-  delete [] bases;
+  for(i=0;i<nplanets;i++){
+      printf("%e %e %e \n",minpt[i*3],minpt[i*3+1],minpt[i*3+2]);
+  }
+  printf("%e %e -- %e\n",minpt[dim-2],minpt[dim-1],double(time(NULL))-before);
+  
+  delete [] minpt;
   
   return chimin;
+  
   
 
 }
