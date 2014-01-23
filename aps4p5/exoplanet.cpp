@@ -180,8 +180,8 @@ double planet::true_chisq(double *amp_and_period, double *angles) const{
     
     for(i=0;i<nplanets;i++){
         if(angles[i*3]< 0.0 || angles[i*3]>1.0)return exception;
-	if(angles[i*3+1]<0.0 || angles[i*3+1]>360.0) return exception;
-	if(angles[i*3+2]<-1.0 || angles[i*3+2]>1.0) return exception;
+	//if(angles[i*3+1]<0.0 || angles[i*3+1]>360.0) return exception;
+	//if(angles[i*3+2]<-1.0 || angles[i*3+2]>1.0) return exception;
     }
     
     
@@ -378,7 +378,7 @@ double planet::operator()(double *vv) const{
       minpt[i]=min[i]+pts[il][i]*(max[i]-min[i]);
   }
   
-  printf("    chimin %e %e\n",chimin,double(time(NULL))-before);
+  //printf("    chimin %e %e\n",chimin,double(time(NULL))-before);
   
   double sig=1.0,mu=1.0e4;
   while(sig>1.0e-4){
@@ -507,7 +507,7 @@ double planet::operator()(double *vv) const{
 	  }
       }
       
-      printf("    chimin %e %e %e\n",chimin,double(time(NULL))-before,sig);
+      //printf("    chimin %e %e %e\n",chimin,double(time(NULL))-before,sig);
   }
   
   
