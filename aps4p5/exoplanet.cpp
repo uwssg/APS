@@ -304,7 +304,7 @@ double planet::operator()(double *vv) const{
   //accepts a list of amplitudes and periods
   //optimizes on the other parameters (angles and the two telescope velocities)
   
-  printf("we are in the operator now\n");
+  //printf("we are in the operator now\n");
   
   int dim=nplanets*3+2,nseed=2*dim;
   gp gg;
@@ -523,10 +523,10 @@ double planet::operator()(double *vv) const{
   }
   delete [] pts;
   
-  for(i=0;i<nplanets;i++){
+  /*for(i=0;i<nplanets;i++){
       printf("%e %e %e \n",minpt[i*3],minpt[i*3+1],minpt[i*3+2]);
   }
-  printf("%e %e -- %e\n",minpt[dim-2],minpt[dim-1],double(time(NULL))-before);
+  printf("%e %e -- %e -- %d\n",minpt[dim-2],minpt[dim-1],double(time(NULL))-before,called);*/
   
   delete [] minpt;
   
