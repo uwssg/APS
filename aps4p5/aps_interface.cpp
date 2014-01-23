@@ -92,7 +92,7 @@ main(int iargc, char *argv[]){
 	       lk=new s_curve(dim,2);
 	   }
 	   else if(compare_char(word,"planet")==1){
-	       lk=new planet((dim-2)/5);
+	       lk=new planet((dim)/2);
 	   }
 	   else{
 	       lk=new udder_likelihood();
