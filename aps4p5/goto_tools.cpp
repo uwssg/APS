@@ -409,10 +409,10 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	}
     }
     
-    if(maxerr>1.0e-6 || isnan(maxerr)){
-        //printf("tridiagonalization: maxerr %e mindiag %e\n",maxerr,mindiag);
+    /*if(maxerr>1.0e-6 || isnan(maxerr)){
+        printf("tridiagonalization: maxerr %e mindiag %e\n",maxerr,mindiag);
 	//exit(1);
-    }
+    }*/
  
     for(ii=params-1;ii>=0;ii--){
         buffer[ii]=bb[ii];
@@ -437,6 +437,11 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	if(bb_in[ii]!=0.0)err=err/fabs(bb_in[ii]);
 	if(err>maxerr || ii==0){
 	    maxerr=err;
+	    
+	    /*if(maxerr>1.0e-5 || isnan(maxerr)){
+	        printf("%e %e\n",nn,bb_in[ii]);
+	    }*/
+	    
 	    //if(maxerr>1.0e-6)printf("maxerr %e -- %e %e\n",maxerr,nn,bb_in[ii]);
 	}
     }
@@ -455,7 +460,11 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	for(i=0;i<params;i++){
 	    printf("%e\n",bb_in[i]);
 	}
-	printf("\n");*/
+	printf("\n");
+	
+	//exit(1);
+	
+	*/
 	
 	delete [] buffer;
 	delete [] dexes;

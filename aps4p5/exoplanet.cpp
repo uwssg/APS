@@ -308,6 +308,9 @@ double planet::operator()(double *vv) const{
   gp gg;
   double *current,*trial,*max,*min,*grad;
   double *newmax,*newmin,*true_max,*true_min;
+  
+  double tol=1.0e-6;
+  
   Ran chaos(43);
   
   int bound_ct=0;
@@ -408,13 +411,22 @@ double planet::operator()(double *vv) const{
        for(i=0;i<dim;i++){
            for(j=0;j<dim;j++){
 	       trial[j]=current[j]+bases[i][j]*(max[j]-min[j])*dd;
+	       
+	       if(trial[j]>true_max[j])trial[j]=true_max[j]-0.00001;
+	       if(trial[j]<true_min[j])trial[j]=true_min[j]+0.00001;
+	       
 	   }
 	   
 	   chitrue=true_chisq(vv,trial);
 	   
+	   if(!(chitrue<exception)){
+	       printf("chitrue %e\n",chitrue);
+	       exit(1);
+	   }
+	   
 	   aa[i]=chitrue-chimin;
 	   for(j=0;j<dim;j++){
-	       matrix[i*dim+j]=bases[i][j];
+	       matrix[i*dim+j]=(trial[j]-current[j])/(max[j]-min[j]);
 	   }
        }
        
@@ -462,6 +474,7 @@ double planet::operator()(double *vv) const{
 	       bound_ct++;
 	   }
 	   else{
+	      //printf("    chisq did not improve\n");
 	      if(dd>1.0e-6)dd*=0.5;
 	   }
 	   
@@ -469,6 +482,12 @@ double planet::operator()(double *vv) const{
        catch(int iex){
            aborted++;
            if(dd>1.0e-6)dd*=0.5;
+	   
+	   //printf("solver failed\n");
+	   //for(i=0;i<dim;i++){
+	   //    printf("%e %e -- %e %e -- %d\n",min[i],max[i],true_max[i],true_min[i],(max[i]>min[i]));
+           //}
+	   //exit(1);
        }
        
        
@@ -480,8 +499,16 @@ double planet::operator()(double *vv) const{
 	       if(max[i]<=current[i])max[i]=current[i]+0.01*(true_max[i]-true_min[i]);
 	       if(min[i]>=current[i])min[i]=current[i]-0.01*(true_max[i]-true_min[i]);
 	       
+	       if(max[i]-min[i]<tol){
+	           max[i]+=1.0e-4*(true_max[i]-true_min[i]);
+		   min[i]-=1.0e-4*(true_max[i]-true_min[i]);
+	       }
+	       
+	       
 	       if(max[i]>true_max[i])max[i]=true_max[i];
 	       if(min[i]<true_min[i])min[i]=true_min[i];
+	       
+	      
 	       
 	       
 	   }
@@ -569,7 +596,7 @@ double planet::find_E(double m, double ee) const{
 	dtrial=dddown;
     }
     dstart=dtrial;
-    for(istep=0;istep<100 && fabs(eup-edown)>1.0e-7;istep++){
+    for(istep=0;istep<100 && fabs(eup-edown)>1.0e-4;istep++){
         
 	/*if(eup>edown){
 	    maxe=eup;
