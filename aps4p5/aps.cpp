@@ -434,7 +434,14 @@ void aps::find_global_minimum(){
 
 }
 
-void aps::find_global_minimum(array_1d<double> &pt){
+void aps::find_global_minimum(array_1d<double> &vv_in){
+    
+    if(dim!=gg.get_dim()){
+        printf("WARNING in find_global_minimum dim %d but gg says %d\n",
+        dim,gg.get_dim());
+        
+        exit(1);
+    }
     
     set_where("find_global_minimum");
     
@@ -444,7 +451,189 @@ void aps::find_global_minimum(array_1d<double> &pt){
     }
     
     //write some code to do simplex search here
-
+    array_1d<int> neigh;
+    array_1d<double> ddneigh,vv;
+    
+    vv.set_name("find_global_min_vv");
+    neigh.set_name("find_global_min_neigh");
+    ddneigh.set_name("find_global_min_ddneigh");
+    
+    array_2d<double> pts;
+    array_1d<double> pbar,ff,pstar,pstarstar;
+    array_1d<double> min,max,true_var;
+    
+    pts.set_name("find_global_min_pts");
+    pbar.set_name("find_global_min_pbar");
+    ff.set_name("find_global_min_ff");
+    pstar.set_name("find_global_min_pstar");
+    pstarstar.set_name("find_global_min_pstarstar");
+    min.set_name("find_global_min_min");
+    max.set_name("find_global_min_max");
+    true_var.set_name("find_global_min_true_var");
+    
+    double fstar,fstarstar;
+    int ih,il,i,j;
+    double alpha=1.0,beta=0.9,gamma=1.1;
+    
+    gg.nn_srch(vv_in,dim+1,neigh,ddneigh);
+    true_var.set_dim(dim);
+    max.set_dim(dim);
+    min.set_dim(dim);
+  
+    pstar.set_dim(dim);
+    pstarstar.set_dim(dim);
+    pts.set_dim(dim+1,dim);
+    pbar.set_dim(dim);
+    ff.set_dim(dim+1);
+    
+    for(i=0;i<dim;i++){
+        max.set(i,gg.get_max(i));
+        min.set(i,gg.get_min(i));
+    }
+    
+    double nn;
+    for(i=0;i<dim+1;i++){
+        for(j=0;j<dim;j++)vv.set(j,gg.get_pt(neigh.get_data(i),j));
+        for(j=0;j<dim;j++){
+            nn=(vv.get_data(j)-min.get_data(j))/(max.get_data(j)-min.get_data(j));
+            pts.set(i,j,nn);
+        }
+        ff.set(i,gg.get_fn(neigh.get_data(i)));
+        if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
+        if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
+    }
+    
+    double mu,sig=1.0,chimin;
+    
+    chimin=ff.get_data(il);
+    
+    while(sig>1.0e-4 && chimin<exception){
+        for(i=0;i<dim;i++){
+            pbar.set(i,0.0);
+            for(j=0;j<dim+1;j++){
+                if(j!=ih){
+                    pbar.add_val(i,pts.get_data(j,i));
+                }
+            }
+            pbar.divide_val(i,double(dim));
+        }
+        
+        for(i=0;i<dim;i++){
+            pstar.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
+            true_var.set(i,min.get_data(i)+pstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
+        }
+        fstar=(*chisq)(true_var);
+        
+        if(fstar<exception){
+            add_pt(true_var,fstar);
+        }
+        if(fstar<chimin){
+            chimin=fstar;
+        }
+        
+        if(fstar>ff.get_data(il) && fstar<ff.get_data(ih)){
+            for(i=0;i<dim;i++){
+                pts.set(ih,ih,pstar.get_data(i));
+            }
+            ff.set(ih,fstar);
+        }
+        else if(fstar<ff.get_data(il)){
+            for(i=0;i<dim;i++){
+                pstarstar.set(i,gamma*pstar.get_data(i)+(1.0-gamma)*pbar.get_data(i));
+                true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
+            }
+            
+            fstarstar=(*chisq)(true_var);
+            if(fstarstar<exception){
+                add_pt(pstarstar,fstarstar);
+            }
+            
+            if(fstarstar<chimin){
+                chimin=fstarstar;
+            }
+            
+            if(fstarstar<ff.get_data(il)){
+                for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
+                ff.set(ih,fstarstar);
+            }
+            else{
+                for(i=0;i<dim;i++)pts.set(ih,i,pstar.get_data(i));
+                ff.set(ih,fstar);
+            }
+            
+        }
+        
+        j=1;
+        for(i=0;i<dim+1;i++){
+            if(fstar<ff.get_data(i) && i!=ih){
+                j=0;
+            }
+        }
+        
+        if(j==1){
+            for(i=0;i<dim;i++){
+                pstarstar.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
+                true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
+            }
+            fstarstar=(*chisq)(true_var);
+            if(fstarstar<exception){
+                add_pt(true_var,fstarstar);
+            }
+            if(fstarstar<chimin){
+                chimin=fstarstar;
+            }
+            
+            if(fstarstar<ff.get_data(ih)){
+                for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
+                ff.set(ih,fstarstar);
+            }
+            else{
+                for(i=0;i<dim+1;i++){
+                    if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                        il=i;
+                    }
+                }
+                for(i=0;i<dim+1;i++){
+                    if(i!=il){
+                        for(j=0;j<dim;j++){
+                            mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
+                            pts.set(i,j,mu);
+                            true_var.set(j,min.get_data(j)+pts.get_data(i,j)*(max.get_data(j)-min.get_data(j)));
+                        }
+                        ff.set(i,(*chisq)(true_var));
+                        if(ff.get_data(i)<exception){
+                            add_pt(true_var,ff.get_data(i));
+                        }
+                        if(ff.get_data(i)<chimin)chimin=ff.get_data(i);
+                    }
+                }
+            }
+        }
+        
+        mu=0.0;
+        for(i=0;i<dim+1;i++){
+            mu+=ff.get_data(i);
+        }
+        mu=mu/double(dim+1);
+        sig=0.0;
+        for(i=0;i<dim+1;i++){
+            sig+=power(mu-ff.get_data(i),2);
+        }
+        sig=sig/double(dim+1);
+        sig=sqrt(sig);
+        
+        for(i=0;i<dim+1;i++){
+            if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                il=i;
+            }
+            if(i==0 || ff.get_data(i)>ff.get_data(ih)){
+                ih=i;
+            }
+        }
+        
+    
+    }
+    
     set_where("nowhere");
 }
 
