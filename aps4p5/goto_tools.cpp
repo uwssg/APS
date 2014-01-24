@@ -20,19 +20,7 @@ double normal_deviate(Ran *chaos, double mu, double sig){
  
 }
 
-int compare_char(char *s1, char *s2){
- //are two character strings the same?
- //if so, return 1
- //if not, return 0
 
- int i;
- //printf("\ncomparing %s %s\n",s1,s2);
- for(i=0;i<letters && (s1[i]!=0 || s2[i]!=0);i++){
-  if(s1[i]!=s2[i])return 0;
- }
- return 1;
- 
-}
 
 double power(double arg,int raised){
 
@@ -313,24 +301,33 @@ void sort_and_check(double *list, double *sorted, int *inn, int n){
 
 
 
-void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params){
+void naive_gaussian_solver(
+array_1d<double> &aa_in, array_1d<double> &bb_in, 
+array_1d<double> &xx, int params){
 
 
-    double *buffer,*aa,*bb;
-    buffer=new double[params];
-    aa=new double[params*params];
-    bb=new double[params];
+    array_1d<double> buffer,aa,bb;
+    buffer.set_dim(params);
+    aa.set_dim(params*params);
+    bb.set_dim(params);
     
-    int *dexes;
-    dexes=new int[params];
+    buffer.set_name("naive_buffer");
+    aa.set_name("naive_aa");
+    bb.set_name("naive_bb");
+    
+    array_1d<int> dexes;
+    dexes.set_dim(params);
+    
+    dexes.set_name("naive_dexes");
     
     int i,k;
     for(i=0;i<params*params;i++){
-        aa[i]=aa_in[i];
+        aa.set(i,aa_in.get_data(i));
+       
     }
     for(i=0;i<params;i++){
-        bb[i]=bb_in[i];
-	dexes[i]=i;
+        bb.set(i,bb_in.get_data(i));
+        dexes.set(i,i);
     }
     
     double amax,nn;
@@ -340,7 +337,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
     for(ii=0;ii<params;ii++){
         for(row=ii;row<params;row++){
 	    for(col=ii;col<params;col++){
-	        nn=fabs(aa[row*params+col]);
+	        nn=fabs(aa.get_data(row*params+col));
 		if((row==ii && col==ii) || nn>amax){
 		    
 		    amax=nn;
@@ -352,34 +349,37 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	}
 	
 	if(rowmax!=ii){
-	    for(i=0;i<params;i++)buffer[i]=aa[ii*params+i];
-	    for(i=0;i<params;i++)aa[ii*params+i]=aa[rowmax*params+i];
-	    for(i=0;i<params;i++)aa[rowmax*params+i]=buffer[i];
-	    
-	    nn=bb[ii];
-	    bb[ii]=bb[rowmax];
-	    bb[rowmax]=nn;
+	    for(i=0;i<params;i++)buffer.set(i,aa.get_data(ii*params+i));
+	    for(i=0;i<params;i++)aa.set(ii*params+i,aa.get_data(rowmax*params+i));
+	    for(i=0;i<params;i++)aa.set(rowmax*params+i,buffer.get_data(i));
+	
+	    nn=bb.get_data(ii);
+	    bb.set(ii,bb.get_data(rowmax));
+	    bb.set(rowmax,nn);
+	  
 	}
 	
 	if(colmax!=ii){
-	    for(i=0;i<params;i++)buffer[i]=aa[i*params+ii];
-	    for(i=0;i<params;i++)aa[i*params+ii]=aa[i*params+colmax];
-	    for(i=0;i<params;i++)aa[i*params+colmax]=buffer[i];
+	    for(i=0;i<params;i++)buffer.set(i,aa.get_data(i*params+ii));
+	    for(i=0;i<params;i++)aa.set(i*params+ii,aa.get_data(i*params+colmax));
+	    for(i=0;i<params;i++)aa.set(i*params+colmax,buffer.get_data(i));
+	
+	    j=dexes.get_data(ii);
+	    dexes.set(ii,dexes.get_data(colmax));
+	    dexes.set(colmax,j);
 	    
-	    j=dexes[ii];
-	    dexes[ii]=dexes[colmax];
-	    dexes[colmax]=j;
 	
 	}
 	
 	for(row=ii+1;row<params;row++){
-	    nn=aa[row*params+ii]/aa[ii*params+ii];
+	    nn=aa.get_data(row*params+ii)/aa.get_data(ii*params+ii);
+
 	    for(col=0;col<params;col++){
-	        aa[row*params+col]-=aa[ii*params+col]*nn;
+	        aa.subtract_val(row*params+col,aa.get_data(ii*params+col)*nn);
+		
 	    }
 	    
-	    bb[row]-=bb[ii]*nn;
-	    
+	    bb.subtract_val(row,bb.get_data(ii)*nn);	    
 	}
 	
 	/*printf("\n");
@@ -392,84 +392,58 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	
     }
     
-    double err,maxerr,mindiag=-1.0,minfail;
+    double err,maxerr,mindiag=-1.0,minfail,mm;
     int ifail;
     
     maxerr=-1.0;
     for(row=0;row<params;row++){
         for(col=0;col<params;col++){
 	    if(row>col){
-	        err=fabs(aa[row*params+col]);
+	        err=fabs(aa.get_data(row*params+col));
 		if(err>maxerr)maxerr=err;
 	    }
 	    else if(row==col){
-	        err=fabs(aa[row*params+col]);
+	        err=fabs(aa.get_data(row*params+col));
 		if(mindiag<0.0 || err<mindiag)mindiag=err;
 	    }
 	}
     }
     
     /*if(maxerr>1.0e-6 || isnan(maxerr)){
-        printf("tridiagonalization: maxerr %e mindiag %e\n",maxerr,mindiag);
+        //printf("tridiagonalization: maxerr %e mindiag %e\n",maxerr,mindiag);
 	//exit(1);
     }*/
  
     for(ii=params-1;ii>=0;ii--){
-        buffer[ii]=bb[ii];
+        buffer.set(ii,bb.get_data(ii));
 	for(row=params-1;row>ii;row--){
-	    buffer[ii]-=buffer[row]*aa[ii*params+row];
+	    buffer.subtract_val(ii,buffer.get_data(row)*aa.get_data(ii*params+row));
 	}
-	buffer[ii]=buffer[ii]/aa[ii*params+ii];
+	mm=buffer.get_data(ii)/aa.get_data(ii*params+ii);
+	buffer.set(ii,mm);
     
     }
     
     for(i=0;i<params;i++){
-        xx[dexes[i]]=buffer[i];
+        xx.set(dexes.get_data(i),buffer.get_data(i));
     }
     
     for(ii=0;ii<params;ii++){
         nn=0.0;
 	for(col=0;col<params;col++){
-	    nn+=xx[col]*aa_in[ii*params+col];
+	    nn+=xx.get_data(col)*aa_in.get_data(ii*params+col);
 	}
 	
-	err=fabs(nn-bb_in[ii]);
-	if(bb_in[ii]!=0.0)err=err/fabs(bb_in[ii]);
+	err=fabs(nn-bb_in.get_data(ii));
+	if(bb_in.get_data(ii)!=0.0)err=err/fabs(bb_in.get_data(ii));
 	if(err>maxerr || ii==0){
 	    maxerr=err;
-	    
-	    /*if(maxerr>1.0e-5 || isnan(maxerr)){
-	        printf("%e %e\n",nn,bb_in[ii]);
-	    }*/
-	    
-	    //if(maxerr>1.0e-6)printf("maxerr %e -- %e %e\n",maxerr,nn,bb_in[ii]);
+	    //if(maxerr>1.0e-6)printf("maxerr %e -- %e %e\n",maxerr,nn,bb_in.get_data(ii));
 	}
     }
     
-    if(maxerr>1.0e-5 || isnan(maxerr)){
-        /*printf("WARNING gaussian solver failed %e\n",maxerr);
-	
-	
-	printf("\n");
-	for(i=0;i<params;i++){
-	    for(j=0;j<params;j++)printf("%.3e ",aa_in[i*params+j]);
-	    printf("\n");
-	}
-	printf("\n");
-	
-	for(i=0;i<params;i++){
-	    printf("%e\n",bb_in[i]);
-	}
-	printf("\n");
-	
-	//exit(1);
-	
-	*/
-	
-	delete [] buffer;
-	delete [] dexes;
-	delete [] aa;
-	delete [] bb;
+    if(maxerr>1.0e-5 || isnan(maxerr) || isinf(maxerr)){
+
 	
 	nn=0.0;
 	minfail=-10.0;
@@ -477,7 +451,7 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	    for(j=i+1;j<params;j++){
 	       nn=0.0;
 	       for(k=0;k<params;k++){
-	           nn+=power(aa_in[i*params+k]+aa_in[j*params+k],2);
+	           nn+=power(aa_in.get_data(i*params+k)+aa_in.get_data(j*params+k),2);
 	       }
 	       if(minfail<0.0 || nn<minfail){
 	           minfail=nn;
@@ -489,22 +463,31 @@ void naive_gaussian_solver(double *aa_in, double *bb_in, double *xx, int params)
 	throw ifail;
     }
     
-    
-    delete [] buffer;
-    delete [] dexes;
-    delete [] aa;
-    delete [] bb;
-
+ 
+   //printf("naive gaussian solver maxerr %e\n",maxerr);
 }
 
 
-double compare_arr(double *v1, double *v2, int dim){
+double compare_arr(array_1d<double> &v1, array_1d<double> &v2){
     double err=0.0,maxerr=-1.0;
-    int i;
+    int i,dim;
+    
+    if(v1.get_dim()!=v2.get_dim()){
+        //printf("WARNING in compare_arr the two arrays do not have same dim\n");
+	//printf("%d %d\n",v1.get_dim(),v2.get_dim());
+        maxerr=exception;
+    }
+    
+    if(v1.get_dim()<v2.get_dim()){
+        dim=v1.get_dim();
+    }
+    else{
+        dim=v2.get_dim();
+    }
     
     for(i=0;i<dim;i++){
-        err=fabs(v1[i]-v2[i]);
-	if(v1[i]!=0.0)err=err/fabs(v1[i]);
+        err=fabs(v1.get_data(i)-v2.get_data(i));
+	if(v1.get_data(i)!=0.0)err=err/fabs(v1.get_data(i));
 	if(err>maxerr)maxerr=err;
     }
     
@@ -512,87 +495,3 @@ double compare_arr(double *v1, double *v2, int dim){
     
 }
 
-void get_orthogonal_bases(double **matrix, int dim, Ran *chaos, double tol){
-
-    double norm;
-    int i;
-    norm=0.0;
-    for(i=0;i<dim;i++){
-        norm+=matrix[0][i]*matrix[0][i];
-    }
-    if(fabs(norm-1.0)>tol){
-        norm=0.0;
-	for(i=0;i<dim;i++){
-	    matrix[0][i]=(chaos->doub()-0.5);
-	    norm+=matrix[0][i]*matrix[0][i];
-	}
-	norm=sqrt(norm);
-	for(i=0;i<dim;i++){
-	    matrix[0][i]=matrix[0][i]/norm;
-	}
-    }
-    
-    int j,ix,useable;
-   
-    for(i=1;i<dim;i++){
-        
-	useable=0;
-	while(useable==0){
-	    useable=1;
-	    for(ix=0;ix<dim;ix++)matrix[i][ix]=(chaos->doub()-0.5);
-	
-            for(j=0;j<i;j++){
-	        norm=0.0;
-	        for(ix=0;ix<dim;ix++){
-	            norm+=matrix[i][ix]*matrix[j][ix];
-	        }
-	    
-	        for(ix=0;ix<dim;ix++){
-	            matrix[i][ix]-=norm*matrix[j][ix];
-	        }
-	    }
-	    
-	    norm=0.0;
-	    for(ix=0;ix<dim;ix++){
-	        norm+=matrix[i][ix]*matrix[i][ix];
-	    }
-	    
-	    if(norm<1.0e-15){
-	        useable=0;
-	    }
-	    else{
-	        norm=sqrt(norm);
-		for(ix=0;ix<dim;ix++)matrix[i][ix]=matrix[i][ix]/norm;
-	    }
-	   
-	
-	}
-
-    }
-    
-    for(i=0;i<dim;i++){
-        norm=0.0;
-	for(ix=0;ix<dim;ix++){
-	    norm+=matrix[i][ix]*matrix[i][ix];
-	}
-	if(fabs(norm-1.0)>tol){
-	    j=1;
-	    printf("WARNING norm %e\n",norm);
-	    throw j;
-	}
-	
-	for(j=i+1;j<dim;j++){
-	    norm=0.0;
-	    for(ix=0;ix<dim;ix++){
-	        norm+=matrix[i][ix]*matrix[j][ix];
-	    }
-	    
-	    if(fabs(norm)>tol){
-	       j=1;
-	       printf("WARNING orth %e\n",norm);
-	       throw j;
-	    }
-	}
-    }
-
-}

@@ -1,16 +1,17 @@
+#include "containers.h"
+
 #ifndef GOTO_H
 #define GOTO_H
 #define pi 3.141592654
-#define letters 500
-#define exception 1.0e30
 
+#define exception 1.0e30
 
 
 void kill(char*);
 
 double raiseup(double,double);
 
-int compare_char(char*,char*);
+
 
 double power(double,int);
 
@@ -45,10 +46,9 @@ void sort_and_check(double*,double*,int*,int);
 
 double normal_deviate(Ran*,double,double);
 
-void naive_gaussian_solver(double*,double*,double*,int);
+void naive_gaussian_solver(array_1d<double>&,array_1d<double>&,
+array_1d<double>&,int);
 
-double compare_arr(double *v1, double *v2, int dim);
-
-void get_orthogonal_bases(double**,int,Ran*,double);
+double compare_arr(array_1d<double>&,array_1d<double>&);
 
 #endif
