@@ -182,7 +182,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    K.set(i,amp_and_period.get_data(0));
 	}
 	else{
-	    mm=K.get_data(i-1)+amp_and_period.get_data(i*2);
+	    mm=K.get_data(i-1)*amp_and_period.get_data(i*2);
 	    K.set(i,mm);
 	}
 	//lntotal+=vv[i*5+1];

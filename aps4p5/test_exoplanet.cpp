@@ -49,7 +49,7 @@ vv.set(0,amp.get_data(0));
 for(i=1;i<5;i++){
     //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
     vv.set(i*2+1,pp.get_data(i));
-    vv.set(i*2,amp.get_data(i)-amp.get_data(i-1));
+    vv.set(i*2,amp.get_data(i)/amp.get_data(i-1));
 }
 
 
@@ -91,7 +91,7 @@ vv.set(0,amp.get_data(0));
 for(i=1;i<5;i++){
     //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
     vv.set(i*2+1,pp.get_data(i));
-    vv.set(i*2,amp.get_data(i)-amp.get_data(i-1));
+    vv.set(i*2,amp.get_data(i)/amp.get_data(i-1));
 }
 
 
