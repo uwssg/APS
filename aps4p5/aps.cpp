@@ -92,10 +92,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     good_min.set_dim(gg.get_dim());
     
     
-    mu_min.assign_gp(&gg);
-    strad_max.assign_gp(&gg);
-    strad_max.assign_strad(&strad);
-    
     delta_chisquared=dd;
     n_candidates=0;
     
@@ -158,11 +154,6 @@ void aps::assign_covariogram(covariance_function *cc){
 
 void aps::assign_chisquared(chisquared *cc){
     chisq=cc;
-    
-    chisq_min.assign_chisq(chisq);
-   
-    chisq_min.set_dim(dim);
-    
 }
 
 void aps::initialize(int npts,array_1d<double> &min, array_1d<double> &max){
@@ -576,7 +567,7 @@ void aps::search(){
     else{
         //printf("aps searching\n");
         //aps_scatter_search();
-	aps_search();
+	aps_search(250);
 	//printf("done aps searching\n");
     }
     

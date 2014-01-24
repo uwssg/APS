@@ -65,21 +65,20 @@ test_exoplanet: test_exoplanet.cpp exoplanet.o
 	goto_tools.o containers.o chisq_1311.o exoplanet.o \
 	$(LIBRARIES) $(INCLUDE)
 
-aps.o: aps.h node.o\
-aps.cpp kd.o goto_tools.o eigen_wrapper.o gaussian_process.o \
+aps.o: aps.h aps.cpp kd.o goto_tools.o eigen_wrapper.o gaussian_process.o \
 chisq_1311.o containers.o
-	$(gg) -c aps.cpp goto_tools.o node.o \
+	$(gg) -c aps.cpp goto_tools.o \
 	eigen_wrapper.o kd.o gaussian_process.o \
 	chisq_1311.o containers.o $(LIBRARIES) \
 	$(INCLUDE) -Wno-deprecated
 
 aps_test: aps_tester.cpp aps.o
-	$(gg) -o aps_test aps_tester.cpp goto_tools.o kd.o node.o \
+	$(gg) -o aps_test aps_tester.cpp goto_tools.o kd.o \
 	eigen_wrapper.o gaussian_process.o chisq_1311.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
 aps_run: aps_runner.cpp aps.o
-	$(gg) -o aps_run aps_runner.cpp goto_tools.o kd.o node.o \
+	$(gg) -o aps_run aps_runner.cpp goto_tools.o kd.o \
 	eigen_wrapper.o gaussian_process.o chisq_1311.o aps.o \
 	containers.o \
 	$(LIBRARIES) $(INCLUDE)
