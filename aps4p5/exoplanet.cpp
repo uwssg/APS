@@ -151,11 +151,13 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
     
     double before=double(time(NULL));
     
-    array_2d<double> nu;
+    //array_2d<double> nu;
     //array_1d<double> times;
     
-    nu.set_name("exoplanet_true_chisq_nu");
+    //nu.set_name("exoplanet_true_chisq_nu");
     //times.set_name("exoplanet_true_chisq_times");
+    
+    double nu;
     
     int i,j;
     double mm,bigE,xx,lntotal;
@@ -212,11 +214,14 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 
     }
     
-    nu.set_dim(nplanets,ndata);
-    
+   
+    double chisq,rms,rmsbest,ans;
+    double nn;
+    chisq=0.0;
+    rms=0.0;    
 
     for(i=0;i<ndata;i++){
-    
+        ans=0.0;
         for(j=0;j<nplanets;j++){
        
 	    
@@ -224,46 +229,26 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    
 	    bigE=find_E(mm,angles.get_data(j*3));
 	    xx=sqrt((1.0+angles.get_data(j*3))/(1.0-angles.get_data(j*3)))*tan(0.5*bigE);
-	    nu.set(j,i,2.0*atan(xx));
+	    nu=2.0*atan(xx);
 	    
 	   
-	   if(isnan(nu.get_data(j,i))){
-	      printf("WARNING nu %e\n",nu.get_data(j,i));
+	   if(isnan(nu)){
+	      printf("WARNING nu %e\n",nu);
 	      printf("mm %e  %e\n",mm,angles.get_data(i*3+2));
 	      printf("bigE %e ee %e xx %e atan %e\n",bigE,angles.get_data(j*3),xx,atan(xx));
 	      printf("j %d\n",j);
 	      exit(1);
 	   }
-	    
+	   
+	   ans+=K.get_data(j)*cos(nu+angles.get_data(j*3+1)*radians_per_degree);
+	   ans+=K.get_data(j)*angles.get_data(j*3)*cos(angles.get_data(j*3+1)*radians_per_degree);
+	   if(isnan(ans)){
+	       printf("WARNING ans is nan\n");
+	       exit(1);
+	   } 
 
         }
 
-    }
-    
-    
-    double chisq,rms,rmsbest,ans;
-    double nn;
-
-    chisq=0.0;
-    rms=0.0;
-    
-    for(i=0;i<ndata;i++){
-    
-       ans=0.0;
-    
-        for(j=0;j<nplanets;j++){
-	
-	
-	    ans+=K.get_data(j)*cos(nu.get_data(j,i)+angles.get_data(j*3+1)*radians_per_degree);
-	    ans+=K.get_data(j)*angles.get_data(j*3)*cos(angles.get_data(j*3+1)*radians_per_degree);
-	    
-	    if(isnan(ans)){
-	        printf("%e %e %e %e\n",
-		K.get_data(j),nu.get_data(j,i),angles.get_data(j*3+1),angles.get_data(j*3));
-		exit(1);
-	    }
-	    
-        }
         
 	if(label[i]=='L')ans+=angles.get_data(nplanets*3);
 	else ans+=angles.get_data(nplanets*3+1);
@@ -274,7 +259,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
         chisq+=nn*nn/sig2.get_data(i);
         if(isnan(chisq)){
            printf("sig2 %e nn %e ans %e\n",sig2.get_data(i),nn,ans);
-       }
+        }
     }
   
     if(isnan(chisq))chisq=exception;
