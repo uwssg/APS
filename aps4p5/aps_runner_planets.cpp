@@ -6,13 +6,14 @@
 
 main(int iargc, char *argv[]){
 
-int seed=-1;
+int seed=99;
 int dim;
 
 if(iargc>1){
     seed=atoi(argv[1]);
 }
-else{
+
+if(seed<0){
     seed=int(time(NULL));
 }
 

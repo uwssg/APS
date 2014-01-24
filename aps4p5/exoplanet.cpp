@@ -10,7 +10,7 @@ planet::planet(){
     exit(1);
 }
 
-planet::planet(int i) : chisquared(5*i+2){
+planet::planet(int i) : chisquared(5*2){
     nplanets=i;
     ndata=0;
     
@@ -166,7 +166,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    set_where("exoplanet_operator");
 	    angles.set_where("nowhere");
 	    amp_and_period.set_where("nowhere");
-	    return exception;
+	    return 2.0*exception;
 	}
 	//if(angles[i*3+1]<0.0 || angles[i*3+1]>360.0) return exception;
 	//if(angles[i*3+2]<-1.0 || angles[i*3+2]>1.0) return exception;
@@ -190,8 +190,8 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    amp_and_period.set_where("nowhere");
 	    set_where("exoplanet_operator");
 	    
-	    time_spent+=double(time(NULL))-before;
-	    return exception;
+	    //time_spent+=double(time(NULL))-before;
+	    return 2.0*exception;
 	}
 	
 	
@@ -203,7 +203,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    amp_and_period.set_where("nowhere");
 	    set_where("exoplanet_operator");
 	    
-	    return exception;
+	    return 2.0*exception;
 	
 	}
 	
@@ -279,7 +279,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
   
     if(isnan(chisq))chisq=exception;
     
-    time_spent+=double(time(NULL))-before;
+    //time_spent+=double(time(NULL))-before;
     
     amp_and_period.set_where("nowhere");
     angles.set_where("nowhere");
@@ -532,12 +532,13 @@ double planet::operator()(array_1d<double> &vv) const{
   }
   printf("%e %e -- %e -- %d\n",minpt[dim-2],minpt[dim-1],double(time(NULL))-before,called);*/
     
-  called++;
+  if(chimin<exception)called++;
   time_spent+=double(time(NULL))-before;
   
   if(called>0){
-      printf("    called %d %e %e\n",
-      called,time_spent,time_spent/double(called));
+      printf("    called %d %e %e -- %e\n",
+      called,time_spent,time_spent/double(called),
+      chimin);
   }
   
   set_where("nowhere");
