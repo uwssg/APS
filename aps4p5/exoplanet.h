@@ -20,8 +20,8 @@ private:
     double find_E(double,double) const;
     
     int nplanets,ndata;
-    mutable array_1d<double> ee,omega,P,K;
-    
+   
+    mutable array_1d<double> K;
     array_1d<double> sig2,date,velocity;
     double vl,vk;
     
@@ -38,11 +38,6 @@ public:
     planet(int);
 
     double operator()(array_1d<double>&) const;
-    
-    void set_ee(array_1d<double>&);
-    void set_omega(array_1d<double>&);
-    void set_p(array_1d<double>&);
-    void set_k(array_1d<double>&);
     
     void set_ndata(int);
     void set_velocity(array_1d<double>&);

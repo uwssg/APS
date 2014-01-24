@@ -14,23 +14,11 @@ planet::planet(int i) : chisquared(5*2){
     nplanets=i;
     ndata=0;
     
-    ee.set_dim(i);
-    omega.set_dim(i);
-    P.set_dim(i);
-    K.set_dim(i);
-    
-    
     vk=0.0;
     vl=0.0;
     
     label=NULL;
     time_spent=0.0;
-    
-    
-    ee.set_name("exoplanet_ee");
-    omega.set_name("exoplanet_omega");
-    P.set_name("exoplanet_P");
-    K.set_name("exoplanet_K");
     
     sig2.set_name("exoplanet_sig2");
     date.set_name("exoplanet_date");
@@ -107,35 +95,7 @@ void planet::set_sig2(array_1d<double> &s){
     for(i=0;i<ndata;i++)sig2.set(i,s.get_data(i));
 }
 
-void planet::set_ee(array_1d<double> &ein){
-    int i;
-
-    for(i=0;i<nplanets;i++)ee.set(i,ein.get_data(i));
-}
-
-void planet::set_omega(array_1d<double> &oin){
-    int i;
-
-    for(i=0;i<nplanets;i++)omega.set(i,oin.get_data(i));
-}
-
-void planet::set_p(array_1d<double> &pin){
-    int i;
-    
-    for(i=0;i<nplanets;i++)P.set(i,pin.get_data(i));
-}
-
-void planet::set_k(array_1d<double> &kin){
-    int i;
-
-    for(i=0;i<nplanets;i++)K.set(i,kin.get_data(i));
-}
-
 void planet::set_where(char *word) const{
-    ee.set_where(word);
-    P.set_where(word);
-    omega.set_where(word);
-    K.set_where(word);
     
     sig2.set_where(word);
     date.set_where(word);
@@ -161,7 +121,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
     
     int i,j;
     double mm,bigE,xx,lntotal;
-
+    
 
     for(i=0;i<nplanets;i++){
         if(angles.get_data(i*3)< 0.0 || angles.get_data(i*3)>1.0){
@@ -196,10 +156,6 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    return 2.0*exception;
 	}
 	
-	
-	//P.set(i,amp_and_period.get_data(i*2+1));
-        //ee.set(i,angles.get_data(i*3));
-	
 	if(angles.get_data(i*3)>1.0 || angles.get_data(i*3)<0.0){
 	    angles.set_where("nowhere");
 	    amp_and_period.set_where("nowhere");
@@ -208,9 +164,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    return 2.0*exception;
 	
 	}
-	
-	//omega.set(i,angles.get_data(i*3+1));
-	//times.set(i,angles.get_data(i*3+2));
+
 
     }
     
