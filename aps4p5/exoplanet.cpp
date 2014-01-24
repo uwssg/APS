@@ -13,19 +13,28 @@ planet::planet(){
 planet::planet(int i) : chisquared(5*i+2){
     nplanets=i;
     ndata=0;
-    ee=new double[i];
-    omega=new double[i];
-    P=new double[i];
-    K=new double[i];
+    
+    ee.set_dim(i);
+    omega.set_dim(i);
+    P.set_dim(i);
+    K.set_dim(i);
+    
+    
     vk=0.0;
     vl=0.0;
     
-    date=NULL;
-    sig2=NULL;
-    velocity=NULL;
     label=NULL;
-    
     time_spent=0.0;
+    
+    
+    ee.set_name("exoplanet_ee");
+    omega.set_name("exoplanet_omega");
+    P.set_name("exoplanet_P");
+    K.set_name("exoplanet_K");
+    
+    sig2.set_name("exoplanet_sig2");
+    date.set_name("exoplanet_date");
+    velocity.set_name("exoplanet_velocity");
     
     read_data();
     
@@ -33,29 +42,22 @@ planet::planet(int i) : chisquared(5*i+2){
 }
 
 planet::~planet(){
-    if(ee!=NULL)delete [] ee;
-    if(omega!=NULL)delete [] omega;
-    if(P!=NULL)delete [] P;
-    if(K!=NULL)delete [] K;
-    
-    if(date!=NULL)delete [] date;
-    if(sig2!=NULL)delete [] sig2;
-    if(velocity!=NULL)delete [] velocity;
+
     if(label!=NULL)delete [] label;
     
 }
 
 void planet::set_ndata(int i){
 
-    if(date!=NULL)delete [] date;
-    if(sig2!=NULL)delete [] sig2;
-    if(velocity!=NULL)delete [] velocity;
+
     if(label!=NULL)delete [] label;
 
     ndata=i;
-    date=new double[ndata];
-    velocity=new double[ndata];
-    sig2=new double[ndata];
+    
+    date.set_dim(ndata);
+    velocity.set_dim(ndata);
+    sig2.set_dim(ndata);
+    
     label=new char[ndata];
     
     printf("you just successfully set ndata\n");
@@ -84,157 +86,151 @@ int planet::get_ndata(){
    return ndata;
 }
 
-void planet::set_date(double *d){
+void planet::set_date(array_1d<double> &d){
     int i;
-    
-    if(date==NULL){
-        printf("WARNING date is null\n");
-	exit(1);
-    }
     
     for(i=0;i<ndata;i++){
-        date[i]=d[i];
-	if(i==0 || date[i]<datemin)datemin=date[i];
+        date.set(i,d.get_data(i));
+	if(i==0 || date.get_data(i)<datemin)datemin=date.get_data(i);
     }
 }
 
-void planet::set_velocity(double *v){
+void planet::set_velocity(array_1d<double> &v){
     int i;
-    
-    if(velocity==NULL){
-        printf("WARNING velocity is null\n");
-    }
-    
-    for(i=0;i<ndata;i++)velocity[i]=v[i];
+
+    for(i=0;i<ndata;i++)velocity.set(i,v.get_data(i));
 }
 
-void planet::set_sig2(double *s){
+void planet::set_sig2(array_1d<double> &s){
     int i;
-    
-    if(sig2==NULL){
-        printf("WARNING sig2 is null\n");
-    }
-    
-    for(i=0;i<ndata;i++)sig2[i]=s[i];
+
+    for(i=0;i<ndata;i++)sig2.set(i,s.get_data(i));
 }
 
-void planet::set_ee(double *ein){
+void planet::set_ee(array_1d<double> &ein){
     int i;
-    
-    if(ee==NULL){
-        printf("WARNING ee is null\n");
-	exit(1);
-    }
-    
-    for(i=0;i<nplanets;i++)ee[i]=ein[i];
+
+    for(i=0;i<nplanets;i++)ee.set(i,ein.get_data(i));
 }
 
-void planet::set_omega(double *oin){
+void planet::set_omega(array_1d<double> &oin){
     int i;
-    
-    if(omega==NULL){
-        printf("WARNING omega is null\n");
-	exit(1);
-    }
-    
-    for(i=0;i<nplanets;i++)omega[i]=oin[i];
+
+    for(i=0;i<nplanets;i++)omega.set(i,oin.get_data(i));
 }
 
-void planet::set_p(double *pin){
+void planet::set_p(array_1d<double> &pin){
     int i;
     
-    if(P==NULL){
-        printf("WARNING P is null\n");
-	exit(1);
-    }
-    
-    for(i=0;i<nplanets;i++)P[i]=pin[i];
+    for(i=0;i<nplanets;i++)P.set(i,pin.get_data(i));
 }
 
-void planet::set_k(double *kin){
+void planet::set_k(array_1d<double> &kin){
     int i;
-    
-    if(K==NULL){
-        printf("WARNING K is null\n");
-	exit(1);
-    } 
-    
-    for(i=0;i<nplanets;i++)K[i]=kin[i];
+
+    for(i=0;i<nplanets;i++)K.set(i,kin.get_data(i));
 }
 
+void planet::set_where(char *word) const{
+    ee.set_where(word);
+    P.set_where(word);
+    omega.set_where(word);
+    K.set_where(word);
+    
+    sig2.set_where(word);
+    date.set_where(word);
+    velocity.set_where(word);
+}
 
-double planet::true_chisq(double *amp_and_period, double *angles) const{
+double planet::true_chisq(array_1d<double> &amp_and_period, 
+               array_1d<double> &angles) const{
    
+    set_where("exoplanet_true_chisq");
+    amp_and_period.set_where("exoplanet_true_chisq");
+    angles.set_where("exoplanet_true_chisq");
     
     double before=double(time(NULL));
     
+    array_2d<double> nu;
+    array_1d<double> times;
     
-    double **nu;
+    nu.set_name("exoplanet_true_chisq_nu");
+    times.set_name("exoplanet_true_chisq_times");
+    
     int i,j;
     double mm,bigE,xx,lntotal;
-    
-    double *times;
-    
-    if(date==NULL){
-        printf("cannot call operator; date is null\n");
-	exit(1);
-    }
-    
+
+
     for(i=0;i<nplanets;i++){
-        if(angles[i*3]< 0.0 || angles[i*3]>1.0)return exception;
+        if(angles.get_data(i*3)< 0.0 || angles.get_data(i*3)>1.0){
+	    set_where("exoplanet_operator");
+	    angles.set_where("nowhere");
+	    amp_and_period.set_where("nowhere");
+	    return exception;
+	}
 	//if(angles[i*3+1]<0.0 || angles[i*3+1]>360.0) return exception;
 	//if(angles[i*3+2]<-1.0 || angles[i*3+2]>1.0) return exception;
     }
     
-    
-    times=new double[nplanets];
+    times.set_dim(nplanets);
+
     lntotal=0.0;
     for(i=0;i<nplanets;i++){
         if(i==0){
-	    K[i]=amp_and_period[0];
+	    K.set(i,amp_and_period.get_data(0));
 	}
 	else{
-	    K[i]=amp_and_period[i*2]+K[i-1];
+	    mm=K.get_data(i-1)+amp_and_period.get_data(i*2);
+	    K.set(i,mm);
 	}
 	//lntotal+=vv[i*5+1];
 	
-	if(K[i]<0.0){
-	    delete [] times;
+	if(K.get_data(i)<0.0){
+	    angles.set_where("nowhere");
+	    amp_and_period.set_where("nowhere");
+	    set_where("exoplanet_operator");
 	    
 	    time_spent+=double(time(NULL))-before;
 	    return exception;
 	}
 	
 	
-	P[i]=amp_and_period[i*2+1];
+	P.set(i,amp_and_period.get_data(i*2+1));
+        ee.set(i,angles.get_data(i*3));
 	
-	ee[i]=angles[i*3];
+	if(ee.get_data(i)>1.0 || ee.get_data(i)<0.0){
+	    angles.set_where("nowhere");
+	    amp_and_period.set_where("nowhere");
+	    set_where("exoplanet_operator");
+	    
+	    return exception;
 	
-	if(ee[i]>1.0 || ee[i]<0.0)return exception;
+	}
 	
-	omega[i]=angles[i*3+1];
-	times[i]=angles[i*3+2];
-    }
+	omega.set(i,angles.get_data(i*3+1));
+	times.set(i,angles.get_data(i*3+2));
 
-    nu=new double*[nplanets];
-    for(i=0;i<nplanets;i++)nu[i]=new double[ndata];
+    }
+    
+    nu.set_dim(nplanets,ndata);
+    
 
     for(i=0;i<ndata;i++){
     
         for(j=0;j<nplanets;j++){
        
 	    
-	    mm=2.0*pi*(date[i]/P[j]-times[j]);//+tt*radians_per_degree;
+	    mm=2.0*pi*(date.get_data(i)/P.get_data(j)-times.get_data(j));//+tt*radians_per_degree;
 	    
-	    bigE=find_E(mm,ee[j]);
-	    xx=sqrt((1.0+ee[j])/(1.0-ee[j]))*tan(0.5*bigE);
-	    nu[j][i]=2.0*atan(xx);
+	    bigE=find_E(mm,ee.get_data(j));
+	    xx=sqrt((1.0+ee.get_data(j))/(1.0-ee.get_data(j)))*tan(0.5*bigE);
+	    nu.set(j,i,2.0*atan(xx));
 	    
 	   
-	   if(isnan(nu[j][i])){
-	      printf("WARNING nu %e\n",nu[j][i]);
-	      printf("mm %e  %e\n",mm,angles[i*3+2]);
-	      printf("bigE %e ee %e xx %e atan %e\n",bigE,ee[j],xx,atan(xx));
+	   if(isnan(nu.get_data(j,i))){
+	      printf("WARNING nu %e\n",nu.get_data(j,i));
+	      printf("mm %e  %e\n",mm,angles.get_data(i*3+2));
+	      printf("bigE %e ee %e xx %e atan %e\n",bigE,ee.get_data(j),xx,atan(xx));
 	      printf("j %d\n",j);
 	      exit(1);
 	   }
@@ -258,48 +254,44 @@ double planet::true_chisq(double *amp_and_period, double *angles) const{
         for(j=0;j<nplanets;j++){
 	
 	
-	    ans+=K[j]*cos(nu[j][i]+omega[j]*radians_per_degree);
-	    ans+=K[j]*ee[j]*cos(omega[j]*radians_per_degree);
+	    ans+=K.get_data(j)*cos(nu.get_data(j,i)+omega.get_data(j)*radians_per_degree);
+	    ans+=K.get_data(j)*ee.get_data(j)*cos(omega.get_data(j)*radians_per_degree);
 	    
 	    if(isnan(ans)){
-	        printf("%e %e %e %e\n",K[j],nu[j][i],omega[j],ee[j]);
+	        printf("%e %e %e %e\n",
+		K.get_data(j),nu.get_data(j,i),omega.get_data(j),ee.get_data(j));
 		exit(1);
 	    }
 	    
         }
         
-	if(label[i]=='L')ans+=angles[nplanets*3];
-	else ans+=angles[nplanets*3+1];
+	if(label[i]=='L')ans+=angles.get_data(nplanets*3);
+	else ans+=angles.get_data(nplanets*3+1);
 	
-        nn=ans-velocity[i];
+        nn=ans-velocity.get_data(i);
         rms+=nn*nn;
 	
-        chisq+=nn*nn/sig2[i];
+        chisq+=nn*nn/sig2.get_data(i);
         if(isnan(chisq)){
-           printf("sig2 %e nn %e ans %e\n",sig2[i],nn,ans);
+           printf("sig2 %e nn %e ans %e\n",sig2.get_data(i),nn,ans);
        }
     }
-
-    
-    for(i=0;i<nplanets;i++)delete [] nu[i];
-    delete [] nu;
-    
-    
-    
+  
     if(isnan(chisq))chisq=exception;
     
-    
-    delete [] times;
-    
     time_spent+=double(time(NULL))-before;
+    
+    amp_and_period.set_where("nowhere");
+    angles.set_where("nowhere");
     
     return chisq;
 
     
 }
 
-double planet::operator()(double *vv) const{
-  printf("in exoplanet operator\n");
+double planet::operator()(array_1d<double> &vv) const{
+
+  set_where("exoplanet_operator");
   //use simplex
   
   double before=double(time(NULL));
@@ -310,10 +302,24 @@ double planet::operator()(double *vv) const{
   
   int dim=nplanets*3+2,nseed=2*dim;
   gp gg;
-  double *min,*max,*true_var;
+
   
-  double **pts,*pbar,*ff,*minpt,chimin,*pstar,*pstarstar;
-  double fstar,fstarstar;
+  array_2d<double> pts;
+  
+  array_1d<double> pbar,ff,minpt,pstar,pstarstar;
+  array_1d<double> min,max,true_var;  
+  
+  pts.set_name("exo_operator_pts");
+  pbar.set_name("exo_operator_pbar");
+  ff.set_name("exo_operator_ff");
+  minpt.set_name("exo_operator_minpt");
+  pstar.set_name("exo_operator_pstar");
+  pstarstar.set_name("exo_operator_pstarstar");
+  min.set_name("exo_operator_min");
+  max.set_name("exo_operator_max");
+  true_var.set_name("exo_operator_true_var");
+
+  double fstar,fstarstar,chimin;
   int ih,il;
   
   int i,j;
@@ -325,166 +331,165 @@ double planet::operator()(double *vv) const{
   
   int bound_ct=0;
   
-  true_var=new double[dim];
-  max=new double[dim];
-  min=new double[dim];
-  minpt=new double[dim];
+  true_var.set_dim(dim);
+  max.set_dim(dim);
+  min.set_dim(dim);
+  minpt.set_dim(dim);
   
-  pstar=new double[dim];
-  pstarstar=new double[dim];
-  pts=new double*[dim+1];
-  pbar=new double[dim];
-  ff=new double[dim+1];
-  for(i=0;i<dim+1;i++){
-      pts[i]=new double[dim];
-  }
+  pstar.set_dim(dim);
+  pstarstar.set_dim(dim);
+  pts.set_dim(dim+1,dim);
+  pbar.set_dim(dim);
+  ff.set_dim(dim+1);
+  
   
   int aborted=0;
   
   for(i=0;i<nplanets;i++){
-      min[i*3]=0.0;
-      min[i*3+1]=0.0;
-      min[i*3+2]=-1.0;
-      max[i*3]=1.0;
-      max[i*3+1]=360.0;
-      max[i*3+2]=1.0;
+      min.set(i*3,0.0);
+      min.set(i*3+1,0.0);
+      min.set(i*3+2,-1.0);
+      max.set(i*3,1.0);
+      max.set(i*3+1,360.0);
+      max.set(i*3+2,1.0);
   }
   
-  min[nplanets*3]=15.0;
-  min[nplanets*3+1]=15.0;
-  max[nplanets*3]=20.0;
-  max[nplanets*3+1]=20.0;
+  min.set(nplanets*3,15.0);
+  min.set(nplanets*3+1,15.0);
+  max.set(nplanets*3,20.0);
+  max.set(nplanets*3+1,20.0);
   
   
   il=-1;
   ih=-1;
   for(i=0;i<dim+1;i++){
       for(j=0;j<dim;j++){
-          pts[i][j]=chaos.doub();
+          pts.set(i,j,chaos.doub());
 	  
-	  true_var[j]=min[j]+pts[i][j]*(max[j]-min[j]);
+	  true_var.set(j,min.get_data(j)+pts.get_data(i,j)*(max.get_data(j)-min.get_data(j)));
 	  
       }
-      ff[i]=true_chisq(vv,true_var);
+      ff.set(i,true_chisq(vv,true_var));
       
-      if(il<0 || ff[i]<ff[il]){
+      if(il<0 || ff.get_data(i)<ff.get_data(il)){
           il=i;
       }
-      if(ih<0 || ff[i]>ff[ih]){
+      if(ih<0 || ff.get_data(i)>ff.get_data(ih)){
           ih=i;
       }
   }
   
-  chimin=ff[il];
+  chimin=ff.get_data(il);
   for(i=0;i<dim;i++){
-      minpt[i]=min[i]+pts[il][i]*(max[i]-min[i]);
+      minpt.set(i,min.get_data(i)+pts.get_data(il,i)*(max.get_data(i)-min.get_data(i)));
   }
   
   //printf("    chimin %e %e\n",chimin,double(time(NULL))-before);
   
-  double sig=1.0,mu=1.0e4;
+  double sig=1.0,mu=1.0e4,nn;
   while(sig>1.0e-4 && chimin<exception){
       
       for(i=0;i<dim;i++){
-          pbar[i]=0.0;
+          pbar.set(i,0.0);
 	  for(j=0;j<dim+1;j++){
 	      if(j!=ih){
-	          pbar[i]+=pts[j][i];
+	          pbar.add_val(i,pts.get_data(j,i));
 	      }
 	  }
-	  pbar[i]=pbar[i]/double(dim);
+	  pbar.divide_val(i,double(dim));
       } 
       
       for(i=0;i<dim;i++){
-          pstar[i]=(1.0+alpha)*pbar[i]-alpha*pts[ih][i];
+          pstar.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
+
       }
       
       for(i=0;i<dim;i++){
-          true_var[i]=min[i]+pstar[i]*(max[i]-min[i]);
+          true_var.set(i,min.get_data(i)+pstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
       }
       
       fstar=true_chisq(vv,true_var);
       if(fstar<chimin){
           chimin=fstar;
-	  for(i=0;i<dim;i++)minpt[i]=true_var[i];
+	  for(i=0;i<dim;i++)minpt.set(i,true_var.get_data(i));
       }
       
-      if(fstar>ff[il] && fstar<ff[ih]){
+      if(fstar>ff.get_data(il) && fstar<ff.get_data(ih)){
           for(i=0;i<dim;i++){
-	      pts[ih][i]=pstar[i];
+	      pts.set(ih,i,pstar.get_data(i));
 	  }
-	  ff[ih]=fstar;
+	  ff.set(ih,fstar);
       }
-      else if(fstar<ff[il]){
+      else if(fstar<ff.get_data(il)){
           for(i=0;i<dim;i++){
-	      pstarstar[i]=gamma*pstar[i]+(1.0-gamma)*pbar[i];
+	      pstarstar.set(i,gamma*pstar.get_data(i)+(1.0-gamma)*pbar.get_data(i));
 	  }
 	  
 	  for(i=0;i<dim;i++){
-	      true_var[i]=min[i]+pstarstar[i]*(max[i]-min[i]);
+	      true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
 	  }
 	  
 	  fstarstar=true_chisq(vv,true_var);
 	  if(fstarstar<chimin){
 	      chimin=fstarstar;
-	      for(i=0;i<dim;i++)minpt[i]=true_var[i];
+	      for(i=0;i<dim;i++)minpt.set(i,true_var.get_data(i));
 	  }
 	  
-	  if(fstarstar<ff[il]){
-	      for(i=0;i<dim;i++)pts[ih][i]=pstarstar[i];
-	      ff[ih]=fstarstar;
+	  if(fstarstar<ff.get_data(il)){
+	      for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
+	      ff.set(ih,fstarstar);
 	  }
 	  else{
-	      for(i=0;i<dim;i++)pts[ih][i]=pstar[i];
-	      ff[ih]=fstar;
+	      for(i=0;i<dim;i++)pts.set(ih,i,pstar.get_data(i));
+	      ff.set(ih,fstar);
 	  }
       }
       
       j=1;
       for(i=0;i<dim+1;i++){
-          if(fstar<ff[i] && i!=ih){
+          if(fstar<ff.get_data(i) && i!=ih){
 	      j=0;
 	  }
       }
       
       if(j==1){
           for(i=0;i<dim;i++){
-	      pstarstar[i]=beta*pts[ih][i]+(1.0-beta)*pbar[i];
+	      pstarstar.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
 	  }
 	  
 	  for(i=0;i<dim;i++){
-	      true_var[i]=min[i]+pstarstar[i]*(max[i]-min[i]);
+	      true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
 	  }
 	  
 	  fstarstar=true_chisq(vv,true_var);
 	  if(fstarstar<chimin){
 	      chimin=fstarstar;
-	      for(i=0;i<dim;i++)minpt[i]=true_var[i];
+	      for(i=0;i<dim;i++)minpt.set(i,true_var.get_data(i));
 	  }
 	  
-	  if(fstarstar<ff[ih]){
-	      for(i=0;i<dim;i++)pts[ih][i]=pstarstar[i];
-	      ff[ih]=fstarstar;
+	  if(fstarstar<ff.get_data(ih)){
+	      for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
+	      ff.set(ih,fstarstar);
 	  }
 	  else{
 	      for(i=0;i<dim+1;i++){
-	          if(i==0 || ff[i]<ff[il]){
+	          if(i==0 || ff.get_data(i)<ff.get_data(il)){
 		      il=i;
 		  }
 	      }
 	      for(i=0;i<dim+1;i++){
 	          if(i!=il){
 		      for(j=0;j<dim;j++){
-		          mu=0.5*(pts[i][j]+pts[il][j]);
-			  pts[i][j]=mu;
+		          mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
+			  pts.set(i,j,mu);
 			  
-			  true_var[j]=min[j]+pts[i][j]*(max[j]-min[j]);
+			  true_var.set(j,min.get_data(j)+pts.get_data(i,j)*(max.get_data(j)-min.get_data(j)));
 		      }
 		      
-		      ff[i]=true_chisq(vv,true_var);
-		      if(ff[i]<chimin){
-		          chimin=ff[i];
-			  for(j=0;j<dim;j++)minpt[j]=true_var[j];
+		      ff.set(i,true_chisq(vv,true_var));
+		      if(ff.get_data(i)<chimin){
+		          chimin=ff.get_data(i);
+			  for(j=0;j<dim;j++)minpt.set(j,true_var.get_data(j));
 		      }
 		      
 		  }
@@ -496,23 +501,23 @@ double planet::operator()(double *vv) const{
       
       mu=0.0;
       for(i=0;i<dim+1;i++){
-          mu+=ff[i];
+          mu+=ff.get_data(i);
       }
       mu=mu/double(dim+1);
       //printf("mu %e\n",mu);
       sig=0.0;
       for(i=0;i<dim+1;i++){
-          sig+=power(mu-ff[i],2);
+          sig+=power(mu-ff.get_data(i),2);
       }
       sig=sig/double(dim+1);
       sig=sqrt(sig);
       
       for(i=0;i<dim+1;i++){
-          if(i==0 || ff[i]<ff[il]){
+          if(i==0 || ff.get_data(i)<ff.get_data(il)){
 	      il=i;
 	  }
 	  
-	  if(i==0 || ff[i]>ff[ih]){
+	  if(i==0 || ff.get_data(i)>ff.get_data(ih)){
 	      ih=i;
 	  }
       }
@@ -523,24 +528,11 @@ double planet::operator()(double *vv) const{
   
   
   
-  delete [] min;
-  delete [] max;
-  delete [] ff;
-  delete [] pbar;
-  delete [] pstar;
-  delete [] pstarstar;
-  for(i=0;i<dim+1;i++){
-      delete [] pts[i];
-  }
-  delete [] pts;
-  
   /*for(i=0;i<nplanets;i++){
       printf("%e %e %e \n",minpt[i*3],minpt[i*3+1],minpt[i*3+2]);
   }
   printf("%e %e -- %e -- %d\n",minpt[dim-2],minpt[dim-1],double(time(NULL))-before,called);*/
-  
-  delete [] minpt;
-  
+    
   called++;
   time_spent+=double(time(NULL))-before;
   
@@ -549,8 +541,7 @@ double planet::operator()(double *vv) const{
       called,time_spent,time_spent/double(called));
   }
   
-  printf("leaving exoplanet operator\n");
-  
+  set_where("nowhere");
   return chimin;
   
   
@@ -676,7 +667,7 @@ void planet::read_data(){
      
      input=fopen("exoplanet_data/datafile_Fischer_2008_readable.txt","r");
      int i;
-     double nn,xx;
+     double nn,xx,mm,yy,zz;
      char tt;
      
      for(i=0;fscanf(input,"%le",&nn)>0;i++){
@@ -691,7 +682,12 @@ void planet::read_data(){
      
      input=fopen("exoplanet_data/datafile_Fischer_2008_readable.txt","r");
      for(i=0;i<ndata;i++){
-         fscanf(input,"%le %le %le %s",&date[i],&velocity[i],&nn,&label[i]);
+         fscanf(input,"%le %le %le %s",&zz,&yy,&nn,&label[i]);
+	 date.set(i,zz);
+	 velocity.set(i,yy);
+	 
+	 
+	 
          if(label[i]=='L'){
              xx=3.0;
 
@@ -704,266 +700,11 @@ void planet::read_data(){
          //date[i]+=2440000;
          //date[i]-=2453094.762;
     
-         if(i==0 || date[i]<datemin)datemin=date[i];
+         if(i==0 || date.get_data(i)<datemin)datemin=date.get_data(i);
     
-         sig2[i]=(nn*nn+xx*xx);
+         sig2.set(i,nn*nn+xx*xx);
      }
      fclose(input);
 
 }
 
-/*
-main(int iargc, char *argv[]){
-
-FILE *planetfile,*data;
-char planetname[100],dataname[100];
-double vl,vk;
-
-int nplanets,i;
-
-vl=6.8;
-vk=5.9;
-
-sprintf(dataname,"data/datafile_Fischer_2008_readable.txt");
-
-for(i=0;argv[1][i]!=0;i++)planetname[i]=argv[1][i];
-planetname[i]=0;
-
-double nn;
-
-printf("atan %e %e\n",atan(-100000.0),atan(100000.0));
-
-planetfile=fopen(planetname,"r");
-for(nplanets=0;fscanf(planetfile,"%le",&nn)>0;nplanets++){
-    for(i=0;i<3;i++)fscanf(planetfile,"%le",&nn);
-}
-fclose(planetfile);
-
-double *ee,*pp,*omega,*Tp,*kk;
-
-ee=new double[nplanets];
-pp=new double[nplanets];
-Tp=new double[nplanets];
-kk=new double[nplanets];
-omega=new double[nplanets];
-
-planetfile=fopen(planetname,"r");
-for(i=0;i<nplanets;i++){
-    fscanf(planetfile,"%le %le %le %le",
-    &kk[i],&pp[i],&ee[i],&omega[i]);
-    
-    Tp[i]=2453094.762;
-}
-fclose(planetfile);
-
-int ndata;
-char *telescope;
-
-telescope=new char[1];
-
-printf("dataname %s\n",dataname);
-data=fopen(dataname,"r");
-for(ndata=0;fscanf(data,"%le",&nn)>0;ndata++){
-    //printf("nn %e\n",nn);
-    fscanf(data,"%le %le %s",&nn,&nn,&telescope[0]);
-    //printf("tel %s\n",telescope);
-}
-fclose(data);
-
-delete [] telescope;
-telescope=new char[ndata];
-
-printf("ndata %d\n",ndata);
-
-int ilick=0;
-double *date,*v,*sigma2,xx,datemin;
-date=new double[ndata];
-v=new double[ndata];
-sigma2=new double[ndata];
-data=fopen(dataname,"r");
-for(i=0;i<ndata;i++){
-    fscanf(data,"%le %le %le %s",&date[i],&v[i],&nn,&telescope[i]);
-    if(telescope[i]=='L'){
-        xx=3.0;
-	ilick++;
-	
-	
-    }
-    else{
-         xx=1.5;
-
-    }
-    
-    date[i]+=2440000;
-    //date[i]-=2453094.762;
-    
-    if(i==0 || date[i]<datemin)datemin=date[i];
-    
-    sigma2[i]=(nn*nn+xx*xx);
-}
-fclose(data);
-printf("ilick %d ndata %d\n",ilick,ndata);
-
-
-planet solar_system(5);
-
-printf("initialized solar system\n");
-
-solar_system.set_ee(ee);
-solar_system.set_k(kk);
-solar_system.set_p(pp);
-solar_system.set_omega(omega);
-
-printf("set planet properties\n");
-
-solar_system.set_ndata(ndata);
-solar_system.set_date(date);
-solar_system.set_velocity(v);
-solar_system.set_sig2(sigma2);
-solar_system.set_label(telescope);
-
-printf("time to start the craziness\n");
-\
-
-//MnUserParameters paramsin,paramsout;
-find_periods period_search;
-period_search.set_planet(&solar_system);
-
-
-char word[100];
-int j;
-
-double *pans;
-pans=new double[10];
-
-pans[0]=pp[0];
-for(i=1;i<5;i++)pans[i]=(pp[i]-pp[i-1]);
-for(i=0;i<5;i++)pans[i+5]=kk[i];
-
-printf("pans0 %e %e\n",pans[0],pp[0]);
-
-double before=double(time(NULL));
-printf("real answer %e\n",period_search(pans));
-double after=double(time(NULL));
-printf("that took %e\n",after-before);
-
-printf("ddworst %e\n",ddworst);
-
-/*
-paramsin.Add("P1",1.0,0.1);
-paramsin.Add("P2",1.0,0.1);
-paramsin.Add("P3",1.0,0.1);
-paramsin.Add("P4",1.0,0.1);
-paramsin.Add("P5",1.0,0.1);
-paramsin.Add("K1",1.0,0.1);
-paramsin.Add("K2",1.0,0.1);
-paramsin.Add("K3",1.0,0.1);
-paramsin.Add("K4",1.0,0.1);
-paramsin.Add("K5",1.0,0.1);
-
-unsigned int iu;
-
-for(iu=0;iu<10;iu++){
-    paramsin.SetLowerLimit(iu,0.0);
-}
-
-
-
-MnMinimize sfd(period_search,paramsin,2);
-
-FunctionMinimum min=sfd(1000000,0.1);
-paramsout=min.UserParameters();
-std::cout<<paramsout<<"\n";
-printf("true min chi %e\n",min.Fval());
-
-
-/*for(i=0;i<nplanets;i++){
-    //sprintf(word,"planet%d,",i);
-    //paramsin.Add(word,startpt[i],1.0);
-    
-    sprintf(word,"K%d",i);
-    paramsin.Add(word,(i+1)*1.0,1.0);
-    
-    sprintf(word,"P%d",i);
-    paramsin.Add(word,1.0,1.0);
-    
-    sprintf(word,"e%d",i);
-    paramsin.Add(word,0.01,0.01);
-    
-    sprintf(word,"w%d",i);
-    paramsin.Add(word,180.0,0.1);
-    
-    sprintf(word,"T%d",i);
-    paramsin.Add(word,1000.0,10.0);
-    
-}
-paramsin.Add("vL",17.0,0.1);
-paramsin.Add("vK",17.0,0.1);
-
-Tp[0]=1000.1547;
-Tp[1]=996.09673;
-Tp[2]=991.48048;
-Tp[3]=854.85825;
-Tp[4]=2937.6795;
-
-for(i=0;i<nplanets;i++){
-    paramsin.SetValue(i*nplanets,kk[i]);
-    paramsin.Fix(i*nplanets);
-    
-    if(i==0){
-      paramsin.SetValue(i*nplanets+1,pp[i]);
-      paramsin.Fix(i*nplanets+1);
-    }
-    else if(i!=0){
-        paramsin.SetValue(i*nplanets+1,pp[i]-pp[i-1]);
-	paramsin.Fix(i*nplanets+1);
-	
-    }
-    
-    paramsin.SetValue(i*nplanets+2,ee[i]);
-    paramsin.Fix(i*nplanets+2);
-    
-    //paramsin.SetValue(i*nplanets+3,omega[i]);
-    //paramsin.Fix(i*nplanets+3);
-    
-    paramsin.SetValue(i*nplanets+4,Tp[i]);
-    paramsin.Fix(i*nplanets+4);
-}
-
-
-
-
-std::cout<<paramsin<<"\n";
-
-for(iu=2;iu<nplanets*5+2;iu+=5){
-    paramsin.SetLimits(iu,0.0,1.0);
-}
-for(iu=3;iu<nplanets*5+3;iu+=5){
-    paramsin.SetLimits(iu,0.0,360.0);
-}
-for(iu=1;iu<nplanets*5+1;iu+=5){
-    paramsin.SetLowerLimit(iu,0.0);
-    if(i==0)paramsin.SetUpperLimit(iu,3.0);
-}
-for(iu=4;iu<nplanets*5+4;iu+=5){
-    paramsin.SetLowerLimit(iu,0.0);
-}
-paramsin.SetLimits(25,-10.0,100.0);
-paramsin.SetLimits(26,-10.0,100.0);
-
-
-MnMinimize sfd(solar_system,paramsin,2);
-
-FunctionMinimum min=sfd(1000000,0.1);
-paramsout=min.UserParameters();
-std::cout<<min<<"\n";
-
-std::vector<double> answer;
-
-for(iu=0;iu<nplanets*5+2;iu++)answer.push_back(paramsout.Value(iu));
-printf("chi is %e\n",solar_system(answer));
-printf("is %e\n",min.Fval());
-
-
-
-}*/
