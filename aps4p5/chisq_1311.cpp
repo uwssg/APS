@@ -402,6 +402,7 @@ chisquared::chisquared(int id){
     time_spent=0.0;
     
     boundary=NULL;
+    dice=NULL;
     
     rr_max=-1.0;
     called=0;
@@ -413,7 +414,9 @@ chisquared::chisquared(int id, int ic){
     dim=id;
     ncenters=ic;
  
-    boundary=NULL;    
+    boundary=NULL;   
+    dice=NULL;
+     
     rr_max=-1.0;
     called=0;
     

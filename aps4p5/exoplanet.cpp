@@ -564,45 +564,17 @@ double planet::find_E(double m, double ee) const{
        exit(1);
     }*/
     
-    while(ddup*dddown>0.0){
-       dd=ddup-dddown;
-       ddup+=0.1*dd;
-       dddown-=dd;
-    }
+    
     
     //printf("starting %e %e\n",dddown,ddup);
     
     int istep;
     double slope,bb,dtrial,dstart,maxe,mine;
     
-    if(fabs(ddup)<fabs(dddown)){
-      etrial=eup;
-      dtrial=ddup;
-    }
-    else{
-        etrial=edown;
-	dtrial=dddown;
-    }
-    dstart=dtrial;
     for(istep=0;istep<100 && fabs(eup-edown)>1.0e-4;istep++){
         
-	/*if(eup>edown){
-	    maxe=eup;
-	    mine=edown;
-	}
-	else{
-	    maxe=edown;
-	    mine=eup;
-	}
-	
-	slope=1.0-ee*cos(etrial);
-	
-	etrial=(slope*etrial-dtrial)/slope;*/
-	
-
 	etrial=0.5*(eup+edown);
-	
-	
+
         dtrial=etrial-ee*sin(etrial)-m;
 	
 	if(dtrial<0.0){
