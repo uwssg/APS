@@ -152,10 +152,10 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
     double before=double(time(NULL));
     
     array_2d<double> nu;
-    array_1d<double> times;
+    //array_1d<double> times;
     
     nu.set_name("exoplanet_true_chisq_nu");
-    times.set_name("exoplanet_true_chisq_times");
+    //times.set_name("exoplanet_true_chisq_times");
     
     int i,j;
     double mm,bigE,xx,lntotal;
@@ -172,7 +172,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	//if(angles[i*3+2]<-1.0 || angles[i*3+2]>1.0) return exception;
     }
     
-    times.set_dim(nplanets);
+    //times.set_dim(nplanets);
 
     lntotal=0.0;
     for(i=0;i<nplanets;i++){
@@ -195,10 +195,10 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	}
 	
 	
-	P.set(i,amp_and_period.get_data(i*2+1));
-        ee.set(i,angles.get_data(i*3));
+	//P.set(i,amp_and_period.get_data(i*2+1));
+        //ee.set(i,angles.get_data(i*3));
 	
-	if(ee.get_data(i)>1.0 || ee.get_data(i)<0.0){
+	if(angles.get_data(i*3)>1.0 || angles.get_data(i*3)<0.0){
 	    angles.set_where("nowhere");
 	    amp_and_period.set_where("nowhere");
 	    set_where("exoplanet_operator");
@@ -207,8 +207,8 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	
 	}
 	
-	omega.set(i,angles.get_data(i*3+1));
-	times.set(i,angles.get_data(i*3+2));
+	//omega.set(i,angles.get_data(i*3+1));
+	//times.set(i,angles.get_data(i*3+2));
 
     }
     
@@ -220,17 +220,17 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
         for(j=0;j<nplanets;j++){
        
 	    
-	    mm=2.0*pi*(date.get_data(i)/P.get_data(j)-times.get_data(j));//+tt*radians_per_degree;
+	    mm=2.0*pi*(date.get_data(i)/amp_and_period.get_data(j*2+1)-angles.get_data(j*3+2));//+tt*radians_per_degree;
 	    
-	    bigE=find_E(mm,ee.get_data(j));
-	    xx=sqrt((1.0+ee.get_data(j))/(1.0-ee.get_data(j)))*tan(0.5*bigE);
+	    bigE=find_E(mm,angles.get_data(j*3));
+	    xx=sqrt((1.0+angles.get_data(j*3))/(1.0-angles.get_data(j*3)))*tan(0.5*bigE);
 	    nu.set(j,i,2.0*atan(xx));
 	    
 	   
 	   if(isnan(nu.get_data(j,i))){
 	      printf("WARNING nu %e\n",nu.get_data(j,i));
 	      printf("mm %e  %e\n",mm,angles.get_data(i*3+2));
-	      printf("bigE %e ee %e xx %e atan %e\n",bigE,ee.get_data(j),xx,atan(xx));
+	      printf("bigE %e ee %e xx %e atan %e\n",bigE,angles.get_data(j*3),xx,atan(xx));
 	      printf("j %d\n",j);
 	      exit(1);
 	   }
@@ -254,12 +254,12 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
         for(j=0;j<nplanets;j++){
 	
 	
-	    ans+=K.get_data(j)*cos(nu.get_data(j,i)+omega.get_data(j)*radians_per_degree);
-	    ans+=K.get_data(j)*ee.get_data(j)*cos(omega.get_data(j)*radians_per_degree);
+	    ans+=K.get_data(j)*cos(nu.get_data(j,i)+angles.get_data(j*3+1)*radians_per_degree);
+	    ans+=K.get_data(j)*angles.get_data(j*3)*cos(angles.get_data(j*3+1)*radians_per_degree);
 	    
 	    if(isnan(ans)){
 	        printf("%e %e %e %e\n",
-		K.get_data(j),nu.get_data(j,i),omega.get_data(j),ee.get_data(j));
+		K.get_data(j),nu.get_data(j,i),angles.get_data(j*3+1),angles.get_data(j*3));
 		exit(1);
 	    }
 	    
