@@ -533,7 +533,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
         
         if(fstar>ff.get_data(il) && fstar<ff.get_data(ih)){
             for(i=0;i<dim;i++){
-                pts.set(ih,ih,pstar.get_data(i));
+                pts.set(ih,i,pstar.get_data(i));
             }
             ff.set(ih,fstar);
         }
