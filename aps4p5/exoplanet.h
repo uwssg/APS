@@ -24,7 +24,6 @@ private:
     double *sig2,*date,*velocity,vl,vk;
     char *label;
     mutable double datemin;
-    mutable double time_spent;
     
     double true_chisq(double*,double*) const;
     

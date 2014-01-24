@@ -35,6 +35,10 @@ test_kd: test_kd.cpp kd.o
 chisq_1311.o: goto_tools.o chisq_1311.h chisq_1311.cpp containers.o
 	$(gg) -c chisq_1311.cpp goto_tools.o containers.o $(LIBRARIES) $(INCLUDE)
 
+chisq_aps4p5.o: chisq_1311.o
+	$(gg) -c chisq_aps4p5.cpp goto_tools.o containers.o chisq_1311.o \
+	$(LIBRARIES) $(INCLUDE)
+
 #sne.o: chisq_1311.o sne.h sne.cpp
 #	$(gg) -c sne.cpp goto_tools.o chisq_1311.o $(LIBRARIES) $(INCLUDE)
 

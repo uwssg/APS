@@ -11,6 +11,7 @@ class chisquared{
 protected:
     int dim,ncenters;
     mutable int called;
+    mutable double time_spent;
   
     array_2d<double> bases,widths,centers;
     array_1d<double> maxs,mins;
@@ -53,6 +54,11 @@ public:
     int get_dim();
     int get_called();
     void decrement_called();
+    
+    void set_max(int,double);
+    void set_min(int,double);
+    
+    double get_time_spent();
 };
 
 

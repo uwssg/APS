@@ -52,6 +52,18 @@ void chisquared::allot_arrays(){
     
 }
 
+void chisquared::set_max(int dex, double nn){
+    maxs.set(dex,nn);
+}
+
+void chisquared::set_min(int dex, double nn){
+    mins.set(dex,nn);
+}
+
+double chisquared::get_time_spent(){
+    return time_spent;
+}
+
 void chisquared::reset_boundary(){
     int i;
     for(i=0;i<dim*dim;i++)nboundary.set(i,0);
@@ -263,10 +275,12 @@ void chisquared::add_to_boundary(array_1d<double> &alpha, int ix, int iy,double 
         printf("WARNING nn %e rr %e\n",nn,rr);
     }
     
-    for(i=0;i<dim;i++){
+    //not sure why this is here
+    //I think I was using it for analysis of cartoons
+    /*for(i=0;i<dim;i++){
         if(pt.get_data(i)<mins.get_data(i))mins.set(i,pt.get_data(i));
 	if(pt.get_data(i)>maxs.get_data(i))maxs.set(i,pt.get_data(i));
-    }
+    }*/
     
 }
 
@@ -384,7 +398,9 @@ chisquared::chisquared(){
 chisquared::chisquared(int id){
     ncenters=1;
     dim=id;
-
+    
+    time_spent=0.0;
+    
     boundary=NULL;
     
     rr_max=-1.0;
