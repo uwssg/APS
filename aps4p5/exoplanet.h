@@ -22,6 +22,10 @@ private:
     int nplanets,ndata;
    
     mutable array_1d<double> K;
+    
+    array_1d<double> ee_max,ee_min,omega_max,omega_min,time_max,time_min;
+    double vlmax,vlmin,vkmax,vkmin;
+    
     array_1d<double> sig2,date,velocity;
     double vl,vk;
     

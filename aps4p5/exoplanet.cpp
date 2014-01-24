@@ -20,6 +20,39 @@ planet::planet(int i) : chisquared(5*2){
     label=NULL;
     time_spent=0.0;
     
+    ee_max.set_dim(nplanets);
+    ee_min.set_dim(nplanets);
+    omega_max.set_dim(nplanets);
+    omega_min.set_dim(nplanets);
+    time_max.set_dim(nplanets);
+    time_min.set_dim(nplanets);
+    
+    ee_max.set_name("exo_ee_max");
+    ee_min.set_name("exo_ee_min");
+    omega_max.set_name("exo_omega_max");
+    omega_min.set_name("exo_omega_min");
+    time_max.set_name("exo_time_max");
+    time_min.set_name("exo_time_min");
+    
+    int j;
+    for(j=0;j<nplanets;j++){
+        ee_max.set(j,1.0);
+	ee_min.set(j,0.0);
+	
+	omega_max.set(j,360.0);
+	omega_min.set(j,0.0);
+	
+	time_max.set(j,1.0);
+	time_min.set(j,-1.0);
+    }
+    
+    
+    vkmax=20.0;
+    vkmin=0.0;
+    
+    vlmax=20.0;
+    vlmin=0.0;
+    
     sig2.set_name("exoplanet_sig2");
     date.set_name("exoplanet_date");
     velocity.set_name("exoplanet_velocity");
@@ -283,18 +316,19 @@ double planet::operator()(array_1d<double> &vv) const{
   int aborted=0;
   
   for(i=0;i<nplanets;i++){
-      min.set(i*3,0.0);
-      min.set(i*3+1,0.0);
-      min.set(i*3+2,-1.0);
-      max.set(i*3,1.0);
-      max.set(i*3+1,360.0);
-      max.set(i*3+2,1.0);
+      min.set(i*3,ee_min.get_data(i));
+      min.set(i*3+1,omega_min.get_data(i));
+      min.set(i*3+2,time_min.get_data(i));
+      
+      max.set(i*3,ee_max.get_data(i));
+      max.set(i*3+1,omega_max.get_data(i));
+      max.set(i*3+2,time_max.get_data(i));
   }
   
-  min.set(nplanets*3,0.0);
-  min.set(nplanets*3+1,0.0);
-  max.set(nplanets*3,20.0);
-  max.set(nplanets*3+1,20.0);
+  min.set(nplanets*3,vlmin);
+  min.set(nplanets*3+1,vkmin);
+  max.set(nplanets*3,vlmax);
+  max.set(nplanets*3+1,vkmax);
   
   
   il=-1;
