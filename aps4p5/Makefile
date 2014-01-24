@@ -1,109 +1,115 @@
+LAPACK_LIB =-L/Users/noldor/physics/lapack-3.1.1/ -llapack
+BLAS_LIB =-L/Users/noldor/physics/BLAS/ -lblas
 
-#directory where you can find the libraries for the LAPACK linear
-#algebra package
-LAPACK_LIB = -L/Users/noldor/physics/lapack-3.1.1/
+ARPACK_LIB = -L/Users/noldor/physics/ARPACK/ -larpack
 
-#directory where you can find the libraries for the BLAS linear algebra package
-BLAS_LIB = -L/Users/noldor/physics/BLAS/
+FORTRAN_LIB = -L/opt/local/lib/ -lf95 -lgfortran
 
-#directory where you can find the libraries that link fortran to c++
-FORTRAN_LIB = -L/opt/local/lib/
+R_PATH = /Users/noldor/physics/lib/
 
-############below are directories and libraries for the WMAP7 likelihood
+LIBRARIES = $(LAPACK_LIB) $(BLAS_LIB) $(ARPACK_LIB) $(FORTRAN_LIB) \
 
-CAMB_LIB = -L/Users/noldor/physics/CAMB_110419/camb/ -lcamb
-CAMB_INC = -I/Users/noldor/physics/CAMB_110419/camb/
+INCLUDE = 
 
-WMAP7_LIB = -L/Users/noldor/physics/WMAP7likelihood/ -lpthread -lwmap7
-WMAP7_INC = -I/Users/noldor/physics/WMAP7likelihood/
+gg = g++ -Wno-write-strings -O3
 
-CFITSIO = -L/Users/noldor/physics/cfitsio -lcfitsio
+ff = gfortran -O3
 
-###########################
 
-LIBRARIES = $(LAPACK_LIB) \
-$(BLAS_LIB) \
-$(FORTRAN_LIB) \
-$(CAMB_LIB) \
-$(WMAP7_LIB) \
-$(CFITSIO) \
--lblas -llapack -lf95 -lgfortran 
+containers.o: containers.cpp containers.h
+	$(gg) -c containers.cpp
 
-INCLUDES = $(CAMB_INC) $(WMAP_INC)
+goto_tools.o: goto_tools.h goto_tools.cpp containers.o
+	$(gg) -c goto_tools.cpp containers.o $(LIBRARIES) $(INCLUDE)
 
-#C++ compiler
-gg = /usr/local/bin/g++ -Wno-write-strings -D_WMAP7_
+test_containers: containers.o test_containers.cpp goto_tools.o
+	$(gg) -o test_containers test_containers.cpp containers.o goto_tools.o
 
-#Fortran compiler
-ff = /usr/local/bin/gfortran -D_WMAP7_
-
-goto_tools.o: goto_tools.h goto_tools.cpp
-	$(gg) -c goto_tools.cpp $(LIBRARIES) $(INCLUDES)
-
-eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h
-	$(gg) -c eigen_wrapper.cpp goto_tools.o $(LIBARIES) \
-	$(INCLUDES) -Wno-deprecated
-
-camb_wrapper_wmap.o: camb_wrapper_wmap.F90
-	$(ff) -c camb_wrapper_wmap.F90 $(LIBRARIES) $(INCLUDES)
-	
-wmap_wrapper.o: wmap_wrapper.F90
-	$(ff) -c wmap_wrapper.F90 -I/Users/noldor/physics/WMAP7likelihood/ \
-	$(LIBRARIES) $(INCLUDES) -lgfortran
-
-kd.o: kd.cpp kd.h goto_tools.o
-	$(gg) -c kd.cpp goto_tools.o $(LIBRARIES) $(INCLUDES) \
+kd.o: kd.cpp kd.h goto_tools.o containers.o
+	$(gg) -c kd.cpp goto_tools.o containers.o $(LIBRARIES) $(INCLUDE) \
          -Wno-deprecated
 
+test_kd: test_kd.cpp kd.o
+	$(gg) -o test_kd test_kd.cpp containers.o goto_tools.o kd.o
+
+chisq_1311.o: goto_tools.o chisq_1311.h chisq_1311.cpp containers.o
+	$(gg) -c chisq_1311.cpp goto_tools.o containers.o $(LIBRARIES) $(INCLUDE)
+
+#sne.o: chisq_1311.o sne.h sne.cpp
+#	$(gg) -c sne.cpp goto_tools.o chisq_1311.o $(LIBRARIES) $(INCLUDE)
+
+eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h containers.o
+	$(gg) -c eigen_wrapper.cpp goto_tools.o $(LIBRARIES) \
+	$(INCLUDE) -Wno-deprecated
+
+test_eigen: test_eigen.cpp eigen_wrapper.o
+	$(gg) -o test_eigen test_eigen.cpp goto_tools.o containers.o \
+	eigen_wrapper.o $(LIBRARIES) $(INCLUDE) -Wno-deprecated
+
 gaussian_process.o: gaussian_process.cpp gaussian_process.h kd.o goto_tools.o \
-eigen_wrapper.o
+eigen_wrapper.o containers.o
 	$(gg) -c gaussian_process.cpp goto_tools.o kd.o eigen_wrapper.o \
-	$(LIBRARIES) $(INCLUDES)
+	containers.o \
+	$(LIBRARIES) $(INCLUDE)
 
-chisq.o: chisq.h chisq.cpp wmap_wrapper.o camb_wrapper_wmap.o goto_tools.o
-	$(gg) -c chisq.cpp goto_tools.o wmap_wrapper.o camb_wrapper_wmap.o \
-	$(LIBRARIES) $(INCLUDES)
-	
-exoplanet.o: chisq.o exoplanet.h exoplanet.cpp kd.o gaussian_process.o \
-eigen_wrapper.o
-	$(gg) -c exoplanet.cpp goto_tools.o wmap_wrapper.o camb_wrapper_wmap.o \
-	chisq.o kd.o eigen_wrapper.o gaussian_process.o $(LIBRARIES) $(INCLUDES)
+node.o: node.h node.cpp gaussian_process.o chisq_1311.o containers.o
+	$(gg) -c node.cpp goto_tools.o kd.o eigen_wrapper.o \
+	chisq_1311.o gaussian_process.o containers.o \
+	$(LIBRARIES) $(INCLUDE)
 
-test_exoplanet: exoplanet.o test_exoplanet.cpp kd.o gaussian_process.o \
-eigen_wrapper.o
-	$(gg) -o test_exoplanet test_exoplanet.cpp exoplanet.o goto_tools.o chisq.o \
-	kd.o eigen_wrapper.o gaussian_process.o \
-	wmap_wrapper.o camb_wrapper_wmap.o \
-	$(LIBRARIES) $(INCLUDES)
+node_test: node_tester.cpp node.o
+	$(gg) -o node_test node_tester.cpp goto_tools.o kd.o \
+	eigen_wrapper.o gaussian_process.o node.o chisq_1311.o \
+	$(LIBRARIES) $(INCLUDE)
 
-test_1_exoplanet: exoplanet.o test_1_exoplanet.cpp
-	$(gg) -o test_1_exoplanet test_1_exoplanet.cpp exoplanet.o goto_tools.o chisq.o \
-	wmap_wrapper.o camb_wrapper_wmap.o \
-	$(LIBRARIES) $(INCLUDES)
+aps.o: aps.h node.o\
+aps.cpp kd.o goto_tools.o eigen_wrapper.o gaussian_process.o \
+chisq_1311.o containers.o
+	$(gg) -c aps.cpp goto_tools.o node.o \
+	eigen_wrapper.o kd.o gaussian_process.o \
+	chisq_1311.o containers.o $(LIBRARIES) \
+	$(INCLUDE) -Wno-deprecated
 
-likelihoodinterface.o: camb_wrapper_wmap.o likelihoodinterface.h \
-likelihoodinterface.cpp kd.o goto_tools.o eigen_wrapper.o wmap_wrapper.o \
-gaussian_process.o chisq.o
-	$(gg) -D CMB -c likelihoodinterface.cpp goto_tools.o \
-	eigen_wrapper.o camb_wrapper_wmap.o kd.o wmap_wrapper.o \
-	gaussian_process.o chisq.o \
-	$(LIBRARIES) $(INCLUDES) -Wno-deprecated
+aps_test: aps_tester.cpp aps.o
+	$(gg) -o aps_test aps_tester.cpp goto_tools.o kd.o node.o \
+	eigen_wrapper.o gaussian_process.o chisq_1311.o aps.o \
+	$(LIBRARIES) $(INCLUDE)
 
-aps4p5: aps_interface.cpp goto_tools.o eigen_wrapper.o \
-likelihoodinterface.o kd.o gaussian_process.o wmap_wrapper.o \
-camb_wrapper_wmap.o chisq.o exoplanet.o
-	$(gg) -o aps4p5 aps_interface.cpp goto_tools.o eigen_wrapper.o kd.o \
+aps_run: aps_runner.cpp aps.o
+	$(gg) -o aps_run aps_runner.cpp goto_tools.o kd.o node.o \
+	eigen_wrapper.o gaussian_process.o chisq_1311.o aps.o \
+	containers.o \
+	$(LIBRARIES) $(INCLUDE)
+
+
+
+apsForceGibbs: aps_interface.cpp goto_tools.o eigen_wrapper.o \
+likelihoodinterface.o kd.o gaussian_process.o \
+chisq_1311.o 
+	$(gg) -o apsForceGibbs aps_interface.cpp goto_tools.o eigen_wrapper.o kd.o \
 	 likelihoodinterface.o gaussian_process.o \
-	 camb_wrapper_wmap.o wmap_wrapper.o chisq.o exoplanet.o \
-	 $(LIBRARIES) $(INCLUDES) \
+	 chisq_1311.o  $(LIBRARIES) \
+	 $(INCLUDE) -Wno-deprecated
+
+
+wp: write_params.cpp
+	$(gg) -o wp write_params.cpp
+
+#cartoon compilation statement
+#aps2: aps_interface.cpp goto_tools.o eigen_wrapper.o gaussian_process.o \
+likelihoodinterface.o kd.o 
+#	$(gg) -o aps2 aps_interface.cpp goto_tools.o eigen_wrapper.o kd.o \
+	 likelihoodinterface.o gaussian_process.o \
+	 $(LAPACK) $(BLAS) $(FORTRAN) \
 	 -Wno-deprecated
 
-udder: udder_test.cpp likelihoodinterface.o chisq.o
-	$(gg) -o udder udder_test.cpp goto_tools.o eigen_wrapper.o kd.o \
-	likelihoodinterface.o gaussian_process.o chisq.o camb_wrapper_wmap.o \
-	wmap_wrapper.o \
-	$(LIBRARIES) $(INCLUDE) \
-	-Wno-deprecated
+test: test_gp.cpp goto_tools.o eigen_wrapper.o \
+likelihoodinterface.o kd.o camb_wrapper_wmap.o wmap_wrapper.o gaussian_process.o
+	$(gg) -o test test_gp.cpp goto_tools.o eigen_wrapper.o kd.o \
+	 likelihoodinterface.o camb_wrapper_wmap.o wmap_wrapper.o \
+	 gaussian_process.o \
+	 $(LAPACK) $(BLAS) $(FORTRAN) $(CAMB) $(WMAP) $(WMAPLIBS) \
+	 -Wno-deprecated
 
 clean:
-	rm aps4p5 test_exoplanet udder *.o
+	rm *.o aps_run aps_test test_containers test_kd
