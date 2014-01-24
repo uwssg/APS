@@ -25,6 +25,8 @@ planet::planet(int i) : chisquared(5*i+2){
     velocity=NULL;
     label=NULL;
     
+    time_spent=0.0;
+    
     read_data();
     
     
@@ -162,7 +164,7 @@ void planet::set_k(double *kin){
 
 
 double planet::true_chisq(double *amp_and_period, double *angles) const{
-    called++;
+   
     
     double before=double(time(NULL));
     
@@ -297,7 +299,7 @@ double planet::true_chisq(double *amp_and_period, double *angles) const{
 }
 
 double planet::operator()(double *vv) const{
-  
+  printf("in exoplanet operator\n");
   //use simplex
   
   double before=double(time(NULL));
@@ -381,7 +383,7 @@ double planet::operator()(double *vv) const{
   //printf("    chimin %e %e\n",chimin,double(time(NULL))-before);
   
   double sig=1.0,mu=1.0e4;
-  while(sig>1.0e-4){
+  while(sig>1.0e-4 && chimin<exception){
       
       for(i=0;i<dim;i++){
           pbar[i]=0.0;
@@ -515,7 +517,8 @@ double planet::operator()(double *vv) const{
 	  }
       }
       
-      //printf("    chimin %e %e %e\n",chimin,double(time(NULL))-before,sig);
+      //printf("    chimin %e %e %e %d\n",
+      //chimin,double(time(NULL))-before,sig,called);
   }
   
   
@@ -537,6 +540,16 @@ double planet::operator()(double *vv) const{
   printf("%e %e -- %e -- %d\n",minpt[dim-2],minpt[dim-1],double(time(NULL))-before,called);*/
   
   delete [] minpt;
+  
+  called++;
+  time_spent+=double(time(NULL))-before;
+  
+  if(called>0){
+      printf("    called %d %e %e\n",
+      called,time_spent,time_spent/double(called));
+  }
+  
+  printf("leaving exoplanet operator\n");
   
   return chimin;
   
