@@ -6,7 +6,7 @@ dimensionality MUST be the first keyword listed
 
 #dim 10 -- dimensionality of your parameter space
 
-#Ns 10000 -- start with 2000 randomly sampled points
+#Ns 100 -- start with 2000 randomly sampled points
 #end 1000000 -- end after the algorithm has sampled 5000 points
 
 #Nc 250 -- sample 250 candidates each time you use the Gaussian process
@@ -26,7 +26,7 @@ dimensionality MUST be the first keyword listed
 (note that deltachi is currently commented out; this configuration will
 run with a hard-wired target value of chi^2=1200.0)
 
-#write_every 500 -- write after sampling 300 points;
+#write_every 50 -- write after sampling 300 points;
                     
 #likelihood planet
 
