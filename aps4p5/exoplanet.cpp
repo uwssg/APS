@@ -301,8 +301,6 @@ double planet::operator()(array_1d<double> &vv) const{
   //printf("we are in the operator now\n");
   
   int dim=nplanets*3+2,nseed=2*dim;
-  gp gg;
-
   
   array_2d<double> pts;
   

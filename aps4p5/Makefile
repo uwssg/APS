@@ -58,7 +58,12 @@ eigen_wrapper.o containers.o
 
 exoplanet.o: exoplanet.h exoplanet.cpp chisq_1311.o
 	$(gg) -c exoplanet.cpp goto_tools.o containers.o chisq_1311.o \
-	$(LIBRARIEs) $(INCLUDE)
+	$(LIBRARIES) $(INCLUDE)
+
+test_exoplanet: test_exoplanet.cpp exoplanet.o
+	$(gg) -o test_exoplanet test_exoplanet.cpp \
+	goto_tools.o containers.o chisq_1311.o exoplanet.o \
+	$(LIBRARIES) $(INCLUDE)
 
 aps.o: aps.h node.o\
 aps.cpp kd.o goto_tools.o eigen_wrapper.o gaussian_process.o \
