@@ -352,8 +352,8 @@ double planet::operator()(array_1d<double> &vv) const{
       max.set(i*3+2,1.0);
   }
   
-  min.set(nplanets*3,15.0);
-  min.set(nplanets*3+1,15.0);
+  min.set(nplanets*3,0.0);
+  min.set(nplanets*3+1,0.0);
   max.set(nplanets*3,20.0);
   max.set(nplanets*3+1,20.0);
   
@@ -386,6 +386,7 @@ double planet::operator()(array_1d<double> &vv) const{
   
   double sig=1.0,mu=1.0e4,nn;
   while(sig>1.0e-4 && chimin<exception){
+      
       
       for(i=0;i<dim;i++){
           pbar.set(i,0.0);
@@ -646,7 +647,7 @@ double planet::find_E(double m, double ee) const{
     
     //if(ddworst<0.0 || ddbest/fabs(m)>ddworst)ddworst=ddbest/fabs(m);
     
-    if(fabs(ddbest/m)>1.0e-2 ){
+    if(fabs(ddbest)>1.0e-2){
        printf("WARNING ddbest %e m %e\n",ddbest,m);
        printf("ebest %e up %e %e down %e %e\n",ebest,eup,ddup,edown,dddown);
        exit(1);
