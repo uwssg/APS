@@ -72,6 +72,12 @@ chisq_1311.o containers.o
 	chisq_1311.o containers.o $(LIBRARIES) \
 	$(INCLUDE) -Wno-deprecated
 
+planet: aps_runner_planets.cpp aps.o exoplanet.o
+	$(gg) -o planet aps_runner_planets.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq_1311.o exoplanet.o aps.o \
+	$(LIBRARIES) $(INCLUDE)
+
 aps_test: aps_tester.cpp aps.o
 	$(gg) -o aps_test aps_tester.cpp goto_tools.o kd.o \
 	eigen_wrapper.o gaussian_process.o chisq_1311.o aps.o \
