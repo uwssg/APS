@@ -19,11 +19,11 @@ if(seed<0){
 
 Ran chaos(seed);
 
-dim=10;
+dim=2;
 
 matern_covariance cv;
 
-planet chisq(5);
+planet chisq(1);
 
 aps aps_test(dim,20,33.93,seed);
 
@@ -39,7 +39,14 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-min.set(0,4.0);
+min.set(0,0.0);
+max.set(0,100.0);
+
+min.set(1,0.0);
+max.set(1,100.0);
+
+
+/*min.set(0,4.0);
 max.set(0,6.0);
 
 min.set(1,240.0);
@@ -67,9 +74,9 @@ min.set(8,-106.0);
 max.set(8,100.0);
 
 min.set(9,0.0);
-max.set(9,10.0);
+max.set(9,10.0);*/
 
-aps_test.initialize(100,min,max);
+aps_test.initialize(50,min,max);
 double chival,chivaltest,err,maxerr;
 
 int i;

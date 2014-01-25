@@ -10,7 +10,7 @@ planet::planet(){
     exit(1);
 }
 
-planet::planet(int i) : chisquared(5*2){
+planet::planet(int i) : chisquared(i*2){
     nplanets=i;
     ndata=0;
     
@@ -509,9 +509,9 @@ double planet::operator()(array_1d<double> &vv) const{
   time_spent+=double(time(NULL))-before;
   
   if(called>0){
-      printf("    called %d %e %e -- %e\n",
+      printf("    called %d %.3e %.3e -- %.3e -- %e %e\n",
       called,time_spent,time_spent/double(called),
-      chimin);
+      chimin,vv.get_data(0),vv.get_data(1));
   }
   
   set_where("nowhere");

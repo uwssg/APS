@@ -10,8 +10,12 @@ planet solar_system(5);
 
 array_1d<double> vv,ee_min,ee_max,omega_min,omega_max,time_min,time_max;
 
+//ee_min.set(0,0.0);
+//ee_max.set(0,0.3);
+
 ee_min.set(0,0.0);
-ee_max.set(0,0.3);
+ee_max.set(0,1.0);
+
 ee_min.set(1,0.0);
 ee_max.set(1,0.1);
 ee_min.set(2,0.0);
@@ -21,8 +25,12 @@ ee_max.set(3,0.6);
 ee_min.set(4,0.0);
 ee_max.set(4,0.1);
 
-omega_min.set(0,150.0);
-omega_max.set(0,300.0);
+//omega_min.set(0,150.0);
+//omega_max.set(0,300.0);
+
+omega_min.set(1,0.0);
+omega_max.set(1,360.0);
+
 omega_min.set(1,110.0);
 omega_max.set(1,160.0);
 omega_min.set(2,50.0);
@@ -32,8 +40,12 @@ omega_max.set(3,200.0);
 omega_min.set(4,170.0);
 omega_max.set(4,240.0);
 
-time_min.set(0,-0.4);
-time_max.set(0,-0.1);
+//time_min.set(0,-0.4);
+//time_max.set(0,-0.1);
+
+time_min.set(0,-1.0);
+time_max.set(0,1.0);
+
 time_min.set(1,-0.4);
 time_max.set(1,-0.1);
 time_min.set(2,0.1);

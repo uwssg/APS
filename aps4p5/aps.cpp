@@ -777,8 +777,8 @@ array_1d<double> &sampling_max){
     
     if(called%2==0 && ngood>1){
         for(i=0;i<gg.get_dim();i++){
-	    sampling_max.set(i,good_max.get_data(i)+0.1*(gg.get_max(i)-gg.get_min(i)));
-	    sampling_min.set(i,good_min.get_data(i)-0.1*(gg.get_max(i)-gg.get_min(i)));
+	    sampling_max.set(i,good_max.get_data(i)+0.1*(good_max.get_data(i)-good_min.get_data(i)));
+	    sampling_min.set(i,good_min.get_data(i)-0.1*(good_max.get_data(i)-good_min.get_data(i)));
 	}
     }
     else{
@@ -793,7 +793,19 @@ array_1d<double> &sampling_max){
 	    sampling_max.add_val(i,0.05*(gg.get_max(i)-gg.get_min(i)));
 	    sampling_min.subtract_val(i,0.05*(gg.get_max(i)-gg.get_min(i)));
 	}
+	
+	if(sampling_min.get_data(i)<gg.get_min(i)){
+	    sampling_min.set(i,gg.get_min(i));
+	}
+	
+	if(sampling_max.get_data(i)>gg.get_max(i)){
+	    sampling_max.set(i,gg.get_max(i));
+	}
+	
     }
+    
+    
+    
 
 
 }
@@ -836,6 +848,15 @@ void aps::aps_search(int n_samples){
         for(j=0;j<gg.get_dim();j++){
 	    nn=sampling_min.get_data(j)+dice->doub()*(sampling_max.get_data(j)-sampling_min.get_data(j));
 	    samples.set(i,j,nn);
+	    
+	    if(nn<gg.get_min(j) || nn>gg.get_max(j)){
+	        printf("WARNING aps sampled outside of bounds\n");
+		printf("%e\n",nn);
+		printf("%e %e\n",gg.get_min(j),gg.get_max(j));
+		printf("%e %e\n",sampling_min.get_data(j),sampling_max.get_data(j));
+		exit(1);
+	    }
+	    
 	}
     }
     
