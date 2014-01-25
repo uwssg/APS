@@ -36,6 +36,9 @@ private:
     
     void set_where(char*) const;
     
+    void set_bounds(array_1d<double>&,array_1d<double>&,array_1d<double>&,
+         array_1d<double>&);
+    
 public:
     ~planet();
     planet();
@@ -54,6 +57,12 @@ public:
     int get_ndata();
     int get_nplanets();
     void read_data();
+    
+    void set_ee_bounds(array_1d<double>&,array_1d<double>&);
+    void set_omega_bounds(array_1d<double>&,array_1d<double>&);
+    void set_time_bounds(array_1d<double>&,array_1d<double>&);
+    void set_vk_bounds(double,double);
+    void set_vl_bounds(double,double);
 
 };
 

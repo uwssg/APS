@@ -653,3 +653,56 @@ void planet::read_data(){
 
 }
 
+void planet::set_bounds(array_1d<double> &minin, array_1d<double> &maxin,
+    array_1d<double> &mintarget, array_1d<double> &maxtarget){
+    int i;
+    double nn;
+    for(i=0;i<minin.get_dim();i++){
+        mintarget.set(i,minin.get_data(i));
+    } 
+    for(i=0;i<maxin.get_dim();i++){
+        maxtarget.set(i,maxin.get_data(i));
+    }
+    
+    for(i=0;i<nplanets;i++){
+        if(mintarget.get_data(i)>maxtarget.get_data(i)){
+	    nn=mintarget.get_data(i);
+	    mintarget.set(i,maxtarget.get_data(i));
+	    maxtarget.set(i,nn);
+	}
+    }
+}
+
+void planet::set_ee_bounds(array_1d<double> &n, array_1d<double> &x){
+    set_bounds(n,x,ee_min,ee_max);
+}
+
+void planet::set_omega_bounds(array_1d<double> &n, array_1d<double> &x){
+    set_bounds(n,x,omega_min,omega_max);
+}
+
+void planet::set_time_bounds(array_1d<double> &n, array_1d<double> &x){
+    set_bounds(n,x,time_min,time_max);
+} 
+
+void planet::set_vk_bounds(double n, double x){
+    if(n<x){
+        vkmin=n;
+	vkmax=x;
+    }
+    else{
+        vkmin=x;
+	vkmin=n;
+    }
+}
+
+void planet::set_vl_bounds(double n, double x){
+    if(n<x){
+        vlmin=n;
+	vlmax=x;
+    }
+    else{
+        vlmin=x;
+	vlmax=n;
+    }
+}
