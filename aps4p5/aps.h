@@ -107,7 +107,7 @@ private:
     
     int add_pt(array_1d<double>&,double);
     
-    void set_sampling_range(array_1d<double>&,array_1d<double>&);
+    int set_sampling_range(array_1d<double>&,array_1d<double>&);
 
     void start_timingfile();
     

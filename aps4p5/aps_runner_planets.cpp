@@ -19,11 +19,11 @@ if(seed<0){
 
 Ran chaos(seed);
 
-dim=2;
+dim=4;
 
 matern_covariance cv;
 
-planet chisq(1);
+planet chisq(2);
 
 aps aps_test(dim,20,33.93,seed);
 
@@ -44,6 +44,12 @@ max.set(0,100.0);
 
 min.set(1,0.0);
 max.set(1,100.0);
+
+min.set(2,0.0);
+max.set(2,5.0);
+
+min.set(3,0.0);
+max.set(3,6000.0);
 
 
 /*min.set(0,4.0);

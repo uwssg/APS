@@ -767,10 +767,11 @@ void aps::search(){
     time_total+=double(time(NULL))-before;
 }
 
-void aps::set_sampling_range(array_1d<double> &sampling_min,
+int aps::set_sampling_range(array_1d<double> &sampling_min,
 array_1d<double> &sampling_max){
 
     int i;
+    int do_focus=0;
     
     sampling_max.set_dim(gg.get_dim());
     sampling_min.set_dim(gg.get_dim());
@@ -780,6 +781,7 @@ array_1d<double> &sampling_max){
 	    sampling_max.set(i,good_max.get_data(i)+0.1*(good_max.get_data(i)-good_min.get_data(i)));
 	    sampling_min.set(i,good_min.get_data(i)-0.1*(good_max.get_data(i)-good_min.get_data(i)));
 	}
+	do_focus=1;
     }
     else{
         for(i=0;i<gg.get_dim();i++){
@@ -804,7 +806,7 @@ array_1d<double> &sampling_max){
 	
     }
     
-    
+    return do_focus;
     
 
 
@@ -821,13 +823,15 @@ void aps::aps_search(int n_samples){
 
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
+    int do_focus=0;
+    
     
     array_1d<double> sampling_min,sampling_max;
     
     sampling_min.set_name("aps_scatter_seacrh_sampling_min");
     sampling_max.set_name("aps_scatter_search_sampling_max");
 
-    set_sampling_range(sampling_min,sampling_max);
+    do_focus=set_sampling_range(sampling_min,sampling_max);
     
     array_2d<double> samples;
     array_1d<double> sambest,samv;
@@ -903,7 +907,7 @@ void aps::aps_search(int n_samples){
     if(chitrue<exception){
         actually_added=add_pt(sambest,chitrue);
 	
-	if(actually_added==1){
+	if(actually_added==1 && do_focus==0){
 	    add_aps_pt(gg.get_pts()-1,mu,sig);
 	}
 	else{
