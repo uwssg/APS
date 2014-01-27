@@ -25,7 +25,7 @@ matern_covariance cv;
 
 planet chisq(2);
 
-aps aps_test(dim,20,33.93,seed);
+aps aps_test(dim,20,18.32,seed);
 
 aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);

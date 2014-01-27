@@ -824,10 +824,18 @@ array_1d<double> &sampling_max){
     sampling_max.set_dim(gg.get_dim());
     sampling_min.set_dim(gg.get_dim());
     
-    if(called%2==0 && ngood>1){
-        for(i=0;i<gg.get_dim();i++){
-	    sampling_max.set(i,good_max.get_data(i)+0.1*(good_max.get_data(i)-good_min.get_data(i)));
-	    sampling_min.set(i,good_min.get_data(i)-0.1*(good_max.get_data(i)-good_min.get_data(i)));
+    if(called%2==0 && ngood>0){
+        if(ngood>1){
+            for(i=0;i<gg.get_dim();i++){
+	        sampling_max.set(i,good_max.get_data(i)+0.1*(good_max.get_data(i)-good_min.get_data(i)));
+	        sampling_min.set(i,good_min.get_data(i)-0.1*(good_max.get_data(i)-good_min.get_data(i)));
+	    }
+	}
+	else{
+	    for(i=0;i<gg.get_dim()i++){
+	        sampling_max.set(i,good_max.get_data(i)+0.01*(gg.get_max(i)-gg.get_min(i)));
+		sampling_min.set(i,good_min.get_data(i)+0.01*(gg.get_max(i)-gg.get_min(i)));
+	    }
 	}
 	do_focus=1;
     }
