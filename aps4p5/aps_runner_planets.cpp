@@ -46,7 +46,7 @@ min.set(1,0.0);
 max.set(1,100.0);
 
 min.set(2,0.0);
-max.set(2,5.0);
+max.set(2,100.0);
 
 min.set(3,0.0);
 max.set(3,6000.0);
