@@ -832,7 +832,7 @@ array_1d<double> &sampling_max){
 	    }
 	}
 	else{
-	    for(i=0;i<gg.get_dim()i++){
+	    for(i=0;i<gg.get_dim();i++){
 	        sampling_max.set(i,good_max.get_data(i)+0.01*(gg.get_max(i)-gg.get_min(i)));
 		sampling_min.set(i,good_min.get_data(i)+0.01*(gg.get_max(i)-gg.get_min(i)));
 	    }
