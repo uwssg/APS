@@ -263,13 +263,14 @@ double planet::operator()(array_1d<double> &vv) const{
   array_1d<double> tosort,sorted;
   array_1d<double> kbuffer,pbuffer;
   
-  for(i=1;i<nplanets && must_sort==0;i++){
-      if(vv.get_data(i*2)<vv.get_data((i-1)*2)){
+  for(i=0;i<nplanets-1 && must_sort==0;i++){
+      if(vv.get_data(i*2)<vv.get_data((i+1)*2)){
           must_sort=1;
       }
   }
   
   if(must_sort==1){
+      //printf("sorting\n");
       for(i=0;i<nplanets;i++){
           inn.set(i,i);
 	  tosort.set(i,vv.get_data(i*2));
@@ -279,16 +280,20 @@ double planet::operator()(array_1d<double> &vv) const{
       
       sort_and_check(tosort,sorted,inn);
       
+      //printf("%e %e %d %d\n",sorted.get_data(0),sorted.get_data(1),
+      //inn.get_data(0),inn.get_data(1));
+      
       for(i=0;i<nplanets;i++){
-          vv.set(i*2,kbuffer.get_data(inn.get_data(i)));
-	  vv.set(i*2+1,pbuffer.get_data(inn.get_data(i)));
+          j=nplanets-1-i;
+          vv.set(j*2,kbuffer.get_data(inn.get_data(i)));
+	  vv.set(j*2+1,pbuffer.get_data(inn.get_data(i)));
       }
   
   }
   
-  /*for(i=0;i<nplanets;i++){
+  for(i=0;i<nplanets;i++){
       printf("%e %e\n",vv.get_data(i*2),vv.get_data(i*2+1));
-  }*/
+  }
   
   array_2d<double> pts;
   
