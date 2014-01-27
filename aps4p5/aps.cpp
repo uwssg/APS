@@ -387,23 +387,42 @@ int aps::choose_a_candidate(){
 	exit(1);
     }
     
-    int i,ichoice=-1;
+    int i,ichoice=-1,j;
     double minval,ddmin,dd,ddmax=-1.0;
     
     array_1d<double> vv,uu;
     vv.set_name("choose_a_candidate_vv");
     uu.set_name("choose_a_candidate_uu");
     
-
-    for(i=0;i<n_candidates;i++){
-        if(is_it_a_candidate(candidates.get_data(i))>0){
-	    if(ichoice<0 || gg.get_fn(candidates.get_data(i))<minval){
-		minval=gg.get_fn(candidates.get_data(i));
-		ichoice=i;
-            }
-	}
+    if(known_minima.get_dim()==0){
+        for(i=0;i<n_candidates;i++){
+            if(is_it_a_candidate(candidates.get_data(i))>0){
+	        if(ichoice<0 || gg.get_fn(candidates.get_data(i))<minval){
+		    minval=gg.get_fn(candidates.get_data(i));
+		    ichoice=i;
+                }
+	    }
+        }
     }
-
+    else{
+        for(i=0;i<n_candidates;i++){
+	    for(j=0;j<known_minima.get_dim();j++){
+	        dd=gg.distance((*gg.get_pt(candidates.get_data(i))),(*gg.get_pt(known_minima.get_data(j))));
+		
+		if(j==0 || dd<ddmin){
+		    ddmin=dd;
+		}
+	    }
+	    
+	    if(i==0 || ddmin>ddmax){
+	        ddmax=ddmin;
+		ichoice=i;
+	    }
+	    
+	}
+    
+    }
+    
     int to_return;
     if(ichoice>=0){
         to_return=candidates.get_data(ichoice);
@@ -486,7 +505,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     true_var.set_name("find_global_min_true_var");
     
     double fstar,fstarstar;
-    int ih,il,i,j;
+    int ih,il,i,j,mindex=-1,actually_added;
     double alpha=1.0,beta=0.9,gamma=1.1;
     
     gg.nn_srch(vv_in,dim+1,neigh,ddneigh);
@@ -520,6 +539,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     double mu,sig=1.0,chimin;
     
     chimin=ff.get_data(il);
+    mindex=neigh.get_data(il);
     
     while(sig>1.0e-4 && chimin<exception){
         for(i=0;i<dim;i++){
@@ -539,10 +559,11 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
         fstar=(*chisq)(true_var);
         
         if(fstar<exception){
-            add_pt(true_var,fstar);
+            actually_added=add_pt(true_var,fstar);
         }
         if(fstar<chimin){
             chimin=fstar;
+	    if(actually_added==1)mindex=gg.get_pts()-1;
         }
         
         if(fstar>ff.get_data(il) && fstar<ff.get_data(ih)){
@@ -559,11 +580,14 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
             
             fstarstar=(*chisq)(true_var);
             if(fstarstar<exception){
-                add_pt(pstarstar,fstarstar);
+                actually_added=add_pt(pstarstar,fstarstar);
             }
             
             if(fstarstar<chimin){
                 chimin=fstarstar;
+		if(actually_added==1){
+		    mindex=gg.get_pts()-1;
+		}
             }
             
             if(fstarstar<ff.get_data(il)){
@@ -591,10 +615,13 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
             }
             fstarstar=(*chisq)(true_var);
             if(fstarstar<exception){
-                add_pt(true_var,fstarstar);
+                actually_added=add_pt(true_var,fstarstar);
             }
             if(fstarstar<chimin){
                 chimin=fstarstar;
+		if(actually_added==1){
+		    mindex=gg.get_pts()-1;
+		}
             }
             
             if(fstarstar<ff.get_data(ih)){
@@ -616,9 +643,14 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
                         }
                         ff.set(i,(*chisq)(true_var));
                         if(ff.get_data(i)<exception){
-                            add_pt(true_var,ff.get_data(i));
+                            actually_added=add_pt(true_var,ff.get_data(i));
                         }
-                        if(ff.get_data(i)<chimin)chimin=ff.get_data(i);
+                        if(ff.get_data(i)<chimin){
+			    chimin=ff.get_data(i);
+			    if(actually_added==1){
+			        mindex=gg.get_pts()-1;
+			    }
+			}
                     }
                 }
             }
@@ -645,8 +677,10 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
             }
         }
         
-    
+        printf("    sig %e\n",sig);
     }
+    
+    known_minima.add(mindex);
     
     set_where("nowhere");
 }
