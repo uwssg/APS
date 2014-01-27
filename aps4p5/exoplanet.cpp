@@ -309,8 +309,8 @@ double planet::operator()(array_1d<double> &vv) const{
   int ih,il;
   
   for(i=0;i<nplanets;i++){
-      if(vv.get_data(i*2)<0.0){
-          vv.multiply_val(i*2,-1.0);
+      if(vv.get_data(i*2+1)<0.0){
+          vv.multiply_val(i*2+1,-1.0);
       }
   }
   
