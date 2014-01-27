@@ -17,12 +17,20 @@ int i,j;
 vv.set(0,71.4);
 vv.set(1,14.65);
 
-vv.set(2,0.753);
+vv.set(2,46.9);
 vv.set(3,5200.0);
 
 
 
 double chisquared=solar_system(vv);
 printf("chisq %e\n",chisquared);
+
+vv.set(2,71.4);
+vv.set(3,14.65);
+
+vv.set(0,46.9);
+vv.set(1,5200.0);
+
+printf("chisquared %e\n",solar_system(vv));
 
 }

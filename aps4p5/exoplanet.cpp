@@ -171,25 +171,7 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 
     lntotal=0.0;
     for(i=0;i<nplanets;i++){
-        if(i==0){
-	    K.set(i,amp_and_period.get_data(0));
-	}
-	else{
-	    mm=K.get_data(i-1)*amp_and_period.get_data(i*2);
-	    K.set(i,mm);
-	}
-	
-	
-	//lntotal+=vv[i*5+1];
-	
-	if(K.get_data(i)<0.0){
-	    angles.set_where("nowhere");
-	    amp_and_period.set_where("nowhere");
-	    set_where("exoplanet_operator");
-	    
-	    //time_spent+=double(time(NULL))-before;
-	    return 2.0*exception;
-	}
+
 	
 	if(angles.get_data(i*3)>1.0 || angles.get_data(i*3)<0.0){
 	    angles.set_where("nowhere");
@@ -229,8 +211,8 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	      exit(1);
 	   }
 	   
-	   ans+=K.get_data(j)*cos(nu+angles.get_data(j*3+1)*radians_per_degree);
-	   ans+=K.get_data(j)*angles.get_data(j*3)*cos(angles.get_data(j*3+1)*radians_per_degree);
+	   ans+=amp_and_period.get_data(j*2)*cos(nu+angles.get_data(j*3+1)*radians_per_degree);
+	   ans+=amp_and_period.get_data(j*2)*angles.get_data(j*3)*cos(angles.get_data(j*3+1)*radians_per_degree);
 	   if(isnan(ans)){
 	       printf("WARNING ans is nan\n");
 	       exit(1);
@@ -275,6 +257,38 @@ double planet::operator()(array_1d<double> &vv) const{
   //printf("we are in the operator now\n");
   
   int dim=nplanets*3+2,nseed=2*dim;
+  int i,j,must_sort=0;
+  
+  array_1d<int> inn;
+  array_1d<double> tosort,sorted;
+  array_1d<double> kbuffer,pbuffer;
+  
+  for(i=1;i<nplanets && must_sort==0;i++){
+      if(vv.get_data(i*2)<vv.get_data((i-1)*2)){
+          must_sort=1;
+      }
+  }
+  
+  if(must_sort==1){
+      for(i=0;i<nplanets;i++){
+          inn.set(i,i);
+	  tosort.set(i,vv.get_data(i*2));
+	  kbuffer.set(i,vv.get_data(i*2));
+	  pbuffer.set(i,vv.get_data(i*2+1));
+      }
+      
+      sort_and_check(tosort,sorted,inn);
+      
+      for(i=0;i<nplanets;i++){
+          vv.set(i*2,kbuffer.get_data(inn.get_data(i)));
+	  vv.set(i*2+1,pbuffer.get_data(inn.get_data(i)));
+      }
+  
+  }
+  
+  /*for(i=0;i<nplanets;i++){
+      printf("%e %e\n",vv.get_data(i*2),vv.get_data(i*2+1));
+  }*/
   
   array_2d<double> pts;
   
@@ -293,8 +307,6 @@ double planet::operator()(array_1d<double> &vv) const{
 
   double fstar,fstarstar,chimin;
   int ih,il;
-  
-  int i,j;
   
   for(i=0;i<nplanets;i++){
       if(vv.get_data(i*2)<0.0){

@@ -20,8 +20,6 @@ private:
     double find_E(double,double) const;
     
     int nplanets,ndata;
-   
-    mutable array_1d<double> K;
     
     array_1d<double> ee_max,ee_min,omega_max,omega_min,time_max,time_min;
     double vlmax,vlmin,vkmax,vkmin;

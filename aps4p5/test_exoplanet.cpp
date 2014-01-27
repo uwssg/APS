@@ -55,9 +55,9 @@ time_max.set(3,0.0);
 time_min.set(4,-0.7);
 time_max.set(4,-0.3);
 
-solar_system.set_ee_bounds(ee_min,ee_max);
-solar_system.set_omega_bounds(omega_min,omega_max);
-solar_system.set_time_bounds(time_min,time_max);
+//solar_system.set_ee_bounds(ee_min,ee_max);
+//solar_system.set_omega_bounds(omega_min,omega_max);
+//solar_system.set_time_bounds(time_min,time_max);
 
 vv.set_dim(5*5+2);
 
@@ -98,7 +98,7 @@ vv.set(0,amp.get_data(0));
 for(i=1;i<5;i++){
     //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
     vv.set(i*2+1,pp.get_data(i));
-    vv.set(i*2,amp.get_data(i)/amp.get_data(i-1));
+    vv.set(i*2,amp.get_data(i));
 }
 
 
@@ -140,7 +140,7 @@ vv.set(0,amp.get_data(0));
 for(i=1;i<5;i++){
     //vv[i*5+1]=log(pp[i])-log(pp[i-1]);
     vv.set(i*2+1,pp.get_data(i));
-    vv.set(i*2,amp.get_data(i)/amp.get_data(i-1));
+    vv.set(i*2,amp.get_data(i));
 }
 
 
