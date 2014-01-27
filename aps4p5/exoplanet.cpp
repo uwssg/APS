@@ -163,6 +163,14 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    amp_and_period.set_where("nowhere");
 	    return 2.0*exception;
 	}
+	
+	if(amp_and_period.get_data(i*2)<0.0){
+	    set_where("exoplanet_operator");
+	    angles.set_where("nowhere");
+	    amp_and_period.set_where("nowhere");
+	    return 2.0*exception;
+	}
+	
 	//if(angles[i*3+1]<0.0 || angles[i*3+1]>360.0) return exception;
 	//if(angles[i*3+2]<-1.0 || angles[i*3+2]>1.0) return exception;
     }
@@ -265,31 +273,10 @@ double planet::operator()(array_1d<double> &vv) const{
   
   for(i=0;i<nplanets-1 && must_sort==0;i++){
       if(vv.get_data(i*2)<vv.get_data((i+1)*2)){
-          must_sort=1;
+          return 2.0*exception;
       }
   }
-  
-  if(must_sort==1){
-      //printf("sorting\n");
-      for(i=0;i<nplanets;i++){
-          inn.set(i,i);
-	  tosort.set(i,vv.get_data(i*2));
-	  kbuffer.set(i,vv.get_data(i*2));
-	  pbuffer.set(i,vv.get_data(i*2+1));
-      }
-      
-      sort_and_check(tosort,sorted,inn);
-      
-      //printf("%e %e %d %d\n",sorted.get_data(0),sorted.get_data(1),
-      //inn.get_data(0),inn.get_data(1));
-      
-      for(i=0;i<nplanets;i++){
-          j=nplanets-1-i;
-          vv.set(j*2,kbuffer.get_data(inn.get_data(i)));
-	  vv.set(j*2+1,pbuffer.get_data(inn.get_data(i)));
-      }
-  
-  }
+
   
   /*for(i=0;i<nplanets;i++){
       printf("%e %e\n",vv.get_data(i*2),vv.get_data(i*2+1));
