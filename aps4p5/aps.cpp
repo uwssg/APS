@@ -266,7 +266,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
 	}
     }
     
-    if(nn<chimin || chimin<0.0)set_chimin(nn);
+    if(nn<chimin || chimin<0.0)set_chimin(nn,(*gg.get_pt(j)));
 
     ct_gradient=chisq->get_called()-before_grad;
     
@@ -275,8 +275,14 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     set_where("nowhere");
 }
 
-void aps::set_chimin(double cc){
+void aps::set_chimin(double cc,array_1d<double> &pt){
     chimin=cc;
+    
+    int i;
+    for(i=0;i<pt.get_dim();i++){
+        minpt.set(i,pt.get_data(i));
+    }
+    
     strad.set_target(cc+delta_chisquared);
         
     //printf("set chimin to %e target %e\n",chimin,strad.get_target());
@@ -536,12 +542,14 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
         if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
     }
     
-    double mu,sig=1.0,chimin;
+    double mu,sig=1.0,simplex_min;
     
-    chimin=ff.get_data(il);
+    simplex_min=ff.get_data(il);
     mindex=neigh.get_data(il);
     
-    while(sig>1.0e-4 && chimin<exception){
+    printf("    starting %e\n",simplex_min);
+    
+    while(sig>1.0e-4 && simplex_min<exception){
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
             for(j=0;j<dim+1;j++){
@@ -561,8 +569,8 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
         if(fstar<exception){
             actually_added=add_pt(true_var,fstar);
         }
-        if(fstar<chimin){
-            chimin=fstar;
+        if(fstar<simplex_min){
+            simplex_min=fstar;
 	    if(actually_added==1)mindex=gg.get_pts()-1;
         }
         
@@ -583,8 +591,8 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
                 actually_added=add_pt(pstarstar,fstarstar);
             }
             
-            if(fstarstar<chimin){
-                chimin=fstarstar;
+            if(fstarstar<simplex_min){
+                simplex_min=fstarstar;
 		if(actually_added==1){
 		    mindex=gg.get_pts()-1;
 		}
@@ -617,8 +625,8 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
             if(fstarstar<exception){
                 actually_added=add_pt(true_var,fstarstar);
             }
-            if(fstarstar<chimin){
-                chimin=fstarstar;
+            if(fstarstar<simplex_min){
+                simplex_min=fstarstar;
 		if(actually_added==1){
 		    mindex=gg.get_pts()-1;
 		}
@@ -645,8 +653,8 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
                         if(ff.get_data(i)<exception){
                             actually_added=add_pt(true_var,ff.get_data(i));
                         }
-                        if(ff.get_data(i)<chimin){
-			    chimin=ff.get_data(i);
+                        if(ff.get_data(i)<simplex_min){
+			    simplex_min=ff.get_data(i);
 			    if(actually_added==1){
 			        mindex=gg.get_pts()-1;
 			    }
@@ -682,6 +690,13 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     
     known_minima.add(mindex);
     
+    printf("    ending %e\n",simplex_min);
+    printf("    ");
+    for(i=0;i<gg.get_dim();i++){
+        printf("%e ",minpt.get_data(i));
+    }
+    printf(" -- %e\n",chimin);
+    
     set_where("nowhere");
 }
 
@@ -703,7 +718,7 @@ int aps::add_pt(array_1d<double> &vv, double chitrue){
         failed_to_add++;
     }
     
-    if(chitrue<chimin || chimin<0.0)set_chimin(chitrue);
+    if(chitrue<chimin || chimin<0.0)set_chimin(chitrue,vv);
     
     if(chitrue<strad.get_target()){
         if(ngood==0){
@@ -970,7 +985,7 @@ void aps::aps_search(int n_samples){
 	    aps_failed++;
 	}
 	
-	if(chitrue<chimin || chimin<0.0)set_chimin(chitrue);
+	if(chitrue<chimin || chimin<0.0)set_chimin(chitrue,sambest);
 	
 	if(actually_added==1 && do_focus==0){
 	    i=is_it_a_candidate(gg.get_pts()-1);

@@ -83,7 +83,7 @@ private:
     int n_candidates;
     
     array_1d<double> mu_storage,sig_storage,good_max,good_min;
-    array_1d<double> old_hyper_1,old_hyper_2,wgt;
+    array_1d<double> old_hyper_1,old_hyper_2,wgt,minpt;
     
     double time_node,time_aps,time_gradient,time_total,start_time;
     double time_cleaning,time_writing;
@@ -100,7 +100,7 @@ private:
     void find_global_minimum();
     void find_global_minimum(array_1d<double>&);
     
-    void set_chimin(double);
+    void set_chimin(double,array_1d<double>&);
     void add_aps_pt(int,double,double);
     int is_it_a_candidate(int);
     void set_as_candidate(int);
