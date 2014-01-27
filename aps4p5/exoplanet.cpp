@@ -178,6 +178,8 @@ double planet::true_chisq(array_1d<double> &amp_and_period,
 	    mm=K.get_data(i-1)*amp_and_period.get_data(i*2);
 	    K.set(i,mm);
 	}
+	
+	
 	//lntotal+=vv[i*5+1];
 	
 	if(K.get_data(i)<0.0){
@@ -293,6 +295,12 @@ double planet::operator()(array_1d<double> &vv) const{
   int ih,il;
   
   int i,j;
+  
+  for(i=0;i<nplanets;i++){
+      if(vv.get_data(i*2)<0.0){
+          vv.multiply_val(i*2,-1.0);
+      }
+  }
   
   double tol=1.0e-6;
   double alpha=1.0,beta=0.9,gamma=1.1;
@@ -509,9 +517,9 @@ double planet::operator()(array_1d<double> &vv) const{
   time_spent+=double(time(NULL))-before;
   
   if(called>0){
-      printf("    called %d %.3e %.3e -- %.3e -- %e %e\n",
+      printf("    called %d %.3e %.3e -- %.3e -- %e %e %e %e\n",
       called,time_spent,time_spent/double(called),
-      chimin,vv.get_data(1),vv.get_data(3));
+      chimin,vv.get_data(0),vv.get_data(1),vv.get_data(2),vv.get_data(3));
   }
   
   set_where("nowhere");
