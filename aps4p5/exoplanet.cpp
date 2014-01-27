@@ -291,9 +291,9 @@ double planet::operator()(array_1d<double> &vv) const{
   
   }
   
-  for(i=0;i<nplanets;i++){
+  /*for(i=0;i<nplanets;i++){
       printf("%e %e\n",vv.get_data(i*2),vv.get_data(i*2+1));
-  }
+  }*/
   
   array_2d<double> pts;
   
