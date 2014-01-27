@@ -916,7 +916,7 @@ void aps::aps_search(int n_samples){
 	
 	if(chitrue<chimin || chimin<0.0)set_chimin(chitrue);
 	
-	if(actually_added==1){
+	if(actually_added==1 && do_focus==0){
 	    i=is_it_a_candidate(gg.get_pts()-1);
 	    if(i==1)set_as_candidate(gg.get_pts()-1);   
 	}
