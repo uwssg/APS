@@ -112,6 +112,9 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     if(seed<-1)seed=int(time(NULL));
     dice=new Ran(seed);
     
+    wgt.set_dim(dim);
+    for(i=0;i<dim;i++)wgt.set(i,1.0);
+    
     start_timingfile();
     printf("dim is %d dd %d\n",dim,dim_in);
     
@@ -128,6 +131,17 @@ void aps::start_timingfile(){
 
 void aps::set_write_every(int ii){
     write_every=ii;
+}
+
+void aps::set_wgt(int dex, double nn){
+    if(dex<0 || dex>=dim || dex>=gg.get_dim()){
+        printf("WARNING wanted to set dim %d but %d (%d)\n",
+	dex,dim,gg.get_dim());
+	
+	exit(1);
+    } 
+    
+    wgt.set(dex,nn);
 }
 
 void aps::set_outname(char *word){
@@ -495,7 +509,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     for(i=0;i<dim+1;i++){
         for(j=0;j<dim;j++)vv.set(j,gg.get_pt(neigh.get_data(i),j));
         for(j=0;j<dim;j++){
-            nn=(vv.get_data(j)-min.get_data(j))/(max.get_data(j)-min.get_data(j));
+            nn=(vv.get_data(j)-min.get_data(j))/wgt.get_data(j);
             pts.set(i,j,nn);
         }
         ff.set(i,gg.get_fn(neigh.get_data(i)));
@@ -520,7 +534,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
         
         for(i=0;i<dim;i++){
             pstar.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
-            true_var.set(i,min.get_data(i)+pstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
+            true_var.set(i,min.get_data(i)+pstar.get_data(i)*wgt.get_data(i));
         }
         fstar=(*chisq)(true_var);
         
@@ -540,7 +554,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
         else if(fstar<ff.get_data(il)){
             for(i=0;i<dim;i++){
                 pstarstar.set(i,gamma*pstar.get_data(i)+(1.0-gamma)*pbar.get_data(i));
-                true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
+                true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*wgt.get_data(i));
             }
             
             fstarstar=(*chisq)(true_var);
@@ -573,7 +587,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
         if(j==1){
             for(i=0;i<dim;i++){
                 pstarstar.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
-                true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
+                true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*wgt.get_data(i));
             }
             fstarstar=(*chisq)(true_var);
             if(fstarstar<exception){
@@ -598,7 +612,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
                         for(j=0;j<dim;j++){
                             mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
                             pts.set(i,j,mu);
-                            true_var.set(j,min.get_data(j)+pts.get_data(i,j)*(max.get_data(j)-min.get_data(j)));
+                            true_var.set(j,min.get_data(j)+pts.get_data(i,j)*wgt.get_data(j));
                         }
                         ff.set(i,(*chisq)(true_var));
                         if(ff.get_data(i)<exception){

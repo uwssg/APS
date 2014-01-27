@@ -65,6 +65,7 @@ public:
     int get_called();
     
     void write_pts();
+    void set_wgt(int,double);
     
 private:
     Ran *dice;
@@ -82,7 +83,7 @@ private:
     int n_candidates;
     
     array_1d<double> mu_storage,sig_storage,good_max,good_min;
-    array_1d<double> old_hyper_1,old_hyper_2;
+    array_1d<double> old_hyper_1,old_hyper_2,wgt;
     
     double time_node,time_aps,time_gradient,time_total,start_time;
     double time_cleaning,time_writing;
