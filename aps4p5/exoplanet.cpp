@@ -520,11 +520,11 @@ double planet::operator()(array_1d<double> &vv) const{
   if(chimin<exception)called++;
   time_spent+=double(time(NULL))-before;
   
-  if(called>0){
+  /*if(called>0){
       printf("    called %d %.3e %.3e -- %.3e -- %e %e %e %e\n",
       called,time_spent,time_spent/double(called),
       chimin,vv.get_data(0),vv.get_data(1),vv.get_data(2),vv.get_data(3));
-  }
+  }*/
   
   set_where("nowhere");
   return chimin;

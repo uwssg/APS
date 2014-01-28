@@ -685,7 +685,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
             }
         }
         
-        printf("    sig %e\n",sig);
+        //printf("    sig %e\n",sig);
     }
     
     known_minima.add(mindex);
