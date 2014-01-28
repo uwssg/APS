@@ -284,7 +284,13 @@ void aps::set_chimin(double cc,array_1d<double> &pt){
     }
     
     strad.set_target(cc+delta_chisquared);
-        
+    
+    printf("    chimin %e\n    ",chimin);
+    for(i=0;i<pt.get_dim();i++){
+        printf("%e ",minpt.get_data(i));
+    }
+    printf("\n");
+    
     //printf("set chimin to %e target %e\n",chimin,strad.get_target());
 }
 
