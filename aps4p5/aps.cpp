@@ -124,8 +124,8 @@ void aps::start_timingfile(){
     FILE *output;
     output=fopen(timingname,"a");
     fprintf(output,"\n# pts called time ct_aps time_aps ");
-    fprintf(output,"ct_node time_node ct_grad time_grad ");
-    fprintf(output,"median n_nodes chimin target\n");
+    fprintf(output," ct_grad time_grad ");
+    fprintf(output,"median chimin target\n");
     fclose(output);
 }
 
@@ -1087,69 +1087,14 @@ void aps::write_pts(){
     fclose(output);
    
     output=fopen(timingname,"a");
+    fprintf(output,"%d %d %e ",
+    gg.get_pts(),chisq->get_called(),double(time(NULL))-start_time);
     
-    /*
-     //fprintf(output,"# pts called time ct_aps time_aps ct_node time_node ct_grad time_grad median\n");
-    fprintf(output,"%d ",gg.get_pts());
-    fprintf(output,"%d ",chisq->get_called());
-    //fprintf(output,"%d ",gg.get_pts()-chisq->get_called());
-    //fprintf(output,"%d ",failed_to_add);
-   // fprintf(output,
-   // "%d %d %d %d ",aps_failed,node_failed,minuit_failed,assess_failed);
-    //fprintf(output,"called %d ",called);
-    fprintf(output,"%e ",double(time(NULL))-start_time);
     fprintf(output,"%d %e ",ct_aps,time_aps);
-    fprintf(output,"%d %e ",ct_node,time_node);
     fprintf(output,"%d %e ",ct_gradient,time_gradient);
-    fprintf(output,"%e %d %e %e -- ",global_median,n_nodes,chimin,strad.get_target());
-    for(i=0;i<n_nodes;i++)fprintf(output,"%d ",nodes[i].get_n_associates());
-    fprintf(output," -- ");
-    for(i=0;i<n_nodes;i++)fprintf(output,"%e ",nodes[i].get_farthest_associate());
     
-    fprintf(output,"\n");
-    
-    array_1d<double> v1,v2;
-    v1.set_name("aps_write_pts_v1");
-    v2.set_name("aps_write_pts_v2");
-    double dd,ddmin;
-    if(n_nodes>1){
-      
-	
-	for(i=0;i<n_nodes;i++){
-	    nodes[i].get_center(v1);
-	    for(j=i+1;j<n_nodes;j++){
-	        nodes[j].get_center(v2);
-		dd=gg.distance(v1,v2);
-		if((i==0 && j==1) || dd<ddmin)ddmin=dd;
-	    }
-	}
-	
-	fprintf(output,"min distance between nodes %e\n\n",ddmin);
-    }
-    */
-    
-    
-    /*for(i=0;i<n_nodes;i++){
-        fprintf(output,"%d ",nodes[i].get_pts());
-    }
-    fprintf(output,"\n");*/
-
-    fprintf(output," -- %d %d -- %d %e %e %e ",
-    ct_aps,ct_gradient,chisq->get_called(),
-    double(time(NULL))-start_time,time_total,
-    (double(time(NULL))-start_time)/double(chisq->get_called()));
-    
-    fprintf(output," -- %d %e %d %e ",
-    gg.get_ct_predict(),gg.get_time_predict(),
-    gg.get_ct_search(),gg.get_time_search());
-    
-    fprintf(output,"-- %e %e %e %e -- ",
-    time_aps,time_gradient,time_cleaning,time_writing);
-    
-    gg.get_hyper_parameters(hyper_params);
-    for(i=0;i<hyper_params.get_dim();i++){
-        fprintf(output,"%e ",hyper_params.get_data(i));
-    }
+    fprintf(output,"%e %e %e ",
+    global_median,chimin,strad.get_target());
     
     fprintf(output,"\n");
     
@@ -1210,13 +1155,6 @@ void aps::write_pts(){
     
     if(gg.get_pts()>gg.get_last_refactored()+i && gg.get_pts()<20000){
         gg.refactor();
-	
-	output=fopen(timingname,"a");
-	fprintf(output,"refactored at %d next %d\n",
-	gg.get_last_refactored(),3*gg.get_last_refactored()/2);
-	
-	fclose(output);
-	
     }
     
     if(gg.get_pts()>gg.get_last_optimized()+1000){
@@ -1261,10 +1199,7 @@ void aps::write_pts(){
 	        gg.optimize(to_optimize,j);
 	   
 	    }
-	    
-	    output=fopen(timingname,"a");
-	    fprintf(output,"    time optimizing %e\n",double(time(NULL))-nn);
-	    fclose(output);
+
 	}
     }
        

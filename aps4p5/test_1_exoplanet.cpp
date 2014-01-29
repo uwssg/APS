@@ -23,13 +23,6 @@ vv.set(3,5200.0);
 vv.set(4,10.0);
 vv.set(5,44.34);
 
-vv.set(0,6.556583);
-vv.set(1,4.64917);
-vv.set(2,8.699905);
-vv.set(3,10.44031);
-vv.set(4,17.202424);
-vv.set(5,825.6225);
-
 
 double chisquared=solar_system(vv);
 printf("chisq %e\n",chisquared);
