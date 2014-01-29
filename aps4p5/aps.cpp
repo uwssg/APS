@@ -592,7 +592,7 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
             
             fstarstar=(*chisq)(true_var);
             if(fstarstar<exception){
-                actually_added=add_pt(pstarstar,fstarstar);
+                actually_added=add_pt(true_var,fstarstar);
             }
             
             if(fstarstar<simplex_min){

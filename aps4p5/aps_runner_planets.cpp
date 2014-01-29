@@ -85,7 +85,7 @@ max.set(8,100.0);
 min.set(9,0.0);
 max.set(9,10.0);*/
 
-aps_test.initialize(100,min,max);
+aps_test.initialize(50,min,max);
 
 //aps_test.set_wgt(2,0.1);
 
