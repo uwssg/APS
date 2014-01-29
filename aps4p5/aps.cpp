@@ -546,14 +546,14 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
         if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
     }
     
-    double mu,sig=1.0,simplex_min;
+    double mu=0.1,sig=1.0,simplex_min;
     
     simplex_min=ff.get_data(il);
     mindex=neigh.get_data(il);
     
     printf("    starting %e\n",simplex_min);
     
-    while(sig>1.0e-4 && simplex_min<exception){
+    while(sig/mu>1.0e-4 && simplex_min<exception){
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
             for(j=0;j<dim+1;j++){

@@ -369,8 +369,8 @@ double planet::operator()(array_1d<double> &vv) const{
   
   //printf("    chimin %e %e\n",chimin,double(time(NULL))-before);
   
-  double sig=1.0,mu=1.0e4,nn;
-  while(sig>1.0e-4 && chimin<exception){
+  double sig=1.0,mu=0.1,nn;
+  while(sig/mu>1.0e-4 && chimin<exception){
       
       
       for(i=0;i<dim;i++){
