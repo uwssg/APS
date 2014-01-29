@@ -267,9 +267,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     }
     
     if(nn<chimin || chimin<0.0)set_chimin(nn,(*gg.get_pt(j)));
-
-    ct_gradient=chisq->get_called()-before_grad;
-    
+        
     write_pts();
     
     set_where("nowhere");
