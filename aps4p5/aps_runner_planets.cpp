@@ -19,13 +19,12 @@ if(seed<0){
 
 Ran chaos(seed);
 
-dim=4;
-
 matern_covariance cv;
 
-planet chisq(2);
+planet chisq(3);
+dim=6;
 
-aps aps_test(dim,20,18.32,seed);
+aps aps_test(dim,20,25.0,seed);
 
 aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);
@@ -39,19 +38,23 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-min.set(0,0.0);
-max.set(0,100.0);
+min.set(0,60.0);
+max.set(0,80.0);
 
-min.set(1,0.0);
-max.set(1,50.0);
+min.set(1,10.0);
+max.set(1,17.0);
 
-min.set(2,0.0);
-max.set(2,100.0);
+min.set(2,40.0);
+max.set(2,50.0);
 
-min.set(3,3000.0);
-max.set(3,6000.0);
+min.set(3,5100.0);
+max.set(3,5300.0);
 
+min.set(4,0.0);
+max.set(4,40.0);
 
+min.set(5,0.0);
+max.set(5,1000.0);
 /*min.set(0,4.0);
 max.set(0,6.0);
 
