@@ -71,7 +71,7 @@ private:
     Ran *dice;
     chisquared *chisq;
     
-    int write_every,n_printed,called,ngood,dim;
+    int write_every,n_printed,called,ngood,dim,last_optimized;
     
     int failed_to_add;
     int aps_failed,minuit_failed,assess_failed;

@@ -592,6 +592,27 @@ double kd_tree::distance(int dex, array_1d<double> &vv){
     return distance(vv,dex);
 }
 
+double kd_tree::distance(int dex1, int dex2){
+
+    if(dex1<0 || dex2<0 || dex1>=data.get_rows() || dex2>=data.get_rows()){
+        printf("WARNING asked for distance between pts %d %d\n",dex1,dex2);
+	printf("pts %d\n",data.get_rows());
+	
+	exit(1);
+	
+    }
+    
+    double dd=0.0;
+    int i;
+    
+    for(i=0;i<data.get_cols();i++){
+        dd+=power((data.get_data(dex1,i)-data.get_data(dex2,i))/(maxs.get_data(i)-mins.get_data(i)),2);
+    }
+    dd=sqrt(dd);
+    return dd;
+
+}
+
 double kd_tree::distance(array_1d<double> &vv, int dex){
     if(dex<0 || dex>=data.get_rows()){
         printf("WARNING asked for distance to %d but pts %d\n",dex,data.get_rows());

@@ -58,6 +58,7 @@ class kd_tree{
  double distance(array_1d<double>&,array_1d<double>&);
  double distance(array_1d<double>&,int);
  double distance(int,array_1d<double>&);
+ double distance(int,int);
 
  
  void get_pt(int,array_1d<double>&);

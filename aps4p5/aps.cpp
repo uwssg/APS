@@ -69,6 +69,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     chimin=-1.0;
     
+    last_optimized=0;
     failed_to_add=0;
     aps_failed=0;
     minuit_failed=0;
@@ -291,6 +292,16 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
         
     write_pts();
     
+    for(i=0;i<gg.get_pts();i++){
+        j=is_it_a_candidate(i);
+	if(j==1){
+	    set_as_candidate(i);
+	    /*if(gg.get_pt(i,11)<400.0){
+	        printf("set candidate at %e\n",gg.get_pt(i,11));
+	    }*/
+	}
+    }
+    
     set_where("nowhere");
 }
 
@@ -304,11 +315,11 @@ void aps::set_chimin(double cc,array_1d<double> &pt){
     
     strad.set_target(cc+delta_chisquared);
     
-    printf("    chimin %e\n    ",chimin);
-    for(i=0;i<pt.get_dim();i++){
-        printf("%e ",minpt.get_data(i));
+    /*printf("    chimin %e\n    ",chimin);
+    for(i=0;i<(pt.get_dim()-2)/5;i++){
+        printf("%e ",minpt.get_data(i*5+1));
     }
-    printf("\n");
+    printf("\n");*/
     
     //printf("set chimin to %e target %e\n",chimin,strad.get_target());
 }
@@ -365,7 +376,7 @@ int aps::is_it_a_candidate(int dex){
     }
     
     int i,use_it;
-    if(gg.get_fn(dex)<grat*global_median){
+    if(gg.get_fn(dex)<chimin+grat*(global_median-chimin)){
       
 	use_it=1;
 	for(i=0;i<n_candidates && use_it==1;i++){
@@ -426,6 +437,7 @@ int aps::choose_a_candidate(){
     uu.set_name("choose_a_candidate_uu");
     
     if(known_minima.get_dim()==0){
+        printf("    choosing based solely on candidate f\n");
         for(i=0;i<n_candidates;i++){
             if(is_it_a_candidate(candidates.get_data(i))>0){
 	        if(ichoice<0 || gg.get_fn(candidates.get_data(i))<minval){
@@ -436,21 +448,29 @@ int aps::choose_a_candidate(){
         }
     }
     else{
+        printf("    choosing on distance to known minima\n");
         for(i=0;i<n_candidates;i++){
-	    for(j=0;j<known_minima.get_dim();j++){
-	        dd=gg.distance((*gg.get_pt(candidates.get_data(i))),(*gg.get_pt(known_minima.get_data(j))));
+	    if(is_it_a_candidate(candidates.get_data(i))>0){
+	        for(j=0;j<known_minima.get_dim();j++){
+	            dd=gg.distance((*gg.get_pt(candidates.get_data(i))),(*gg.get_pt(known_minima.get_data(j))));
 		
-		if(j==0 || dd<ddmin){
-		    ddmin=dd;
-		}
-	    }
+		    if(j==0 || dd<ddmin){
+		        ddmin=dd;
+		    }
+	        }
 	    
-	    if(i==0 || ddmin>ddmax){
-	        ddmax=ddmin;
-		ichoice=i;
-	    }
 	    
+	    /*if((*gg.get_pt(candidates.get_data(i))).get_data(11)<400.0){
+	        printf("    %e %e\n",(*gg.get_pt(candidates.get_data(i))).get_data(11),ddmin);
+	    }*/
+	     
+	        if(ichoice<0 || ddmin>ddmax){
+	            ddmax=ddmin;
+		    ichoice=i;
+	        }
+	    }
 	}
+	printf("    ddmax %e\n",ddmax);
     
     }
     
@@ -573,10 +593,10 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     mindex=neigh.get_data(il);
     
     printf("    starting %e\n    ",simplex_min);
-    for(i=0;i<dim;i++)printf("%e ",pts.get_data(il,i)*wgt.get_data(i)+min.get_data(i));
+    for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*5+1)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
     printf("\n");
     
-    while(sig/mu>1.0e-4 && simplex_min<exception){
+    while(sig>1.0e-4 && simplex_min<exception){
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
             for(j=0;j<dim+1;j++){
@@ -719,13 +739,13 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     
     printf("    ending %e\n",simplex_min);
     printf("    ");
-    for(i=0;i<dim;i++)printf("%e ",pts.get_data(il,i)*wgt.get_data(i)+min.get_data(i));
+    for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*5+1)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
     printf("\n\n");
     printf("    ");
-    for(i=0;i<gg.get_dim();i++){
-        printf("%e ",minpt.get_data(i));
-    }
-    printf(" -- %e\n",chimin);
+    //for(i=0;i<gg.get_dim();i++){
+    //    printf("%e ",minpt.get_data(i));
+   // }
+    printf("    chimin %e\n",chimin);
     
     set_where("nowhere");
 }
@@ -885,14 +905,17 @@ array_1d<double> &sampling_max){
 	do_focus=1;
     }
     else{
+        //printf("setting full range\n");
         for(i=0;i<gg.get_dim();i++){
 	    sampling_max.set(i,range_max.get_data(i));
 	    sampling_min.set(i,range_min.get_data(i));
 	}
+	//printf("%e %e %d\n",sampling_min.get_data(11),sampling_max.get_data(11),gg.get_dim());
     }
     
     for(i=0;i<gg.get_dim();i++){
         while(sampling_max.get_data(i)-sampling_min.get_data(i)<1.0e-10){
+	  
 	    sampling_max.add_val(i,0.05*(range_max.get_data(i)-range_min.get_data(i)));
 	    sampling_min.subtract_val(i,0.05*(range_max.get_data(i)-range_min.get_data(i)));
 	}
@@ -965,6 +988,7 @@ void aps::aps_search(int n_samples){
 	    }
 	    
 	}
+
     }
     
     int i_sample;
@@ -993,7 +1017,16 @@ void aps::aps_search(int n_samples){
 	for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
 	
 	mu=gg.user_predict(samv,&sig,0);
+	
+	
 	stradval=strad(mu,sig);
+
+	
+	/*if(sampling_min.get_data(11)<500.0 && samv.get_data(11)<500.0){
+	    printf("    I did try %e -- %e %e -- %e\n",samv.get_data(11),mu,sig,stradval);
+	}*/
+
+
 	if(samples.get_rows()==n_samples || stradval>stradmax){
 	    stradmax=stradval;
 	    for(i=0;i<gg.get_dim();i++)sambest.set(i,samv.get_data(i));
@@ -1002,6 +1035,8 @@ void aps::aps_search(int n_samples){
 	samples.remove_row(i_sample);
 	
     }
+    
+    //printf("    stradbest %e\n",stradmax);
     
     double chitrue=(*chisq)(sambest);
     
@@ -1033,7 +1068,7 @@ void aps::aps_search(int n_samples){
 }
 
 void aps::gradient_search(){
-    printf("gradient searching\n");
+    printf("\ngradient searching\n");
     set_where("gradient_search");
     
     if(n_candidates!=candidates.get_dim()){
@@ -1185,7 +1220,7 @@ void aps::write_pts(){
         gg.refactor();
     }
     
-    if(gg.get_pts()>gg.get_last_optimized()+1000){
+    if(n_aps_pts>last_optimized+1000){
         
 	
 	nn=double(time(NULL));
@@ -1208,7 +1243,7 @@ void aps::write_pts(){
 	
 	if(go_ahead_and_optimize==1){
 	    nn=double(time(NULL));
-	    
+	    //printf("\n    OPTIMIZING\n");
 	    
             if(n_aps_pts<3000){
 	        gg.optimize(aps_pts,n_aps_pts);
@@ -1227,7 +1262,8 @@ void aps::write_pts(){
 	        gg.optimize(to_optimize,j);
 	   
 	    }
-
+            
+	    last_optimized=n_aps_pts;
 	}
     }
        

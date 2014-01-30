@@ -647,6 +647,8 @@ const{
     
     double ikp=0.0;
     
+    double mu_alg,sig_alg,ddmax;
+    
     if(get_sig==1){
           sigout[0]=0.0;
           for(i=0;i<kk;i++){
@@ -680,7 +682,33 @@ const{
         sigout[0]=(ikp)*(sigout[0]); 
      
          if(sigout[0]>0.0)sigout[0]=sqrt(sigout[0]);
-         else sigout[0]=0.0;
+         else{
+	     mu_alg=0.0;
+	     sig_alg=0.0;
+	     
+	     for(i=0;i<kk;i++)mu_alg+=fn.get_data(neigh.get_data(i));
+	     mu_alg=mu_alg/double(kk);
+	     for(i=0;i<kk;i++){
+	         sig_alg+=power(mu_alg-fn.get_data(neigh.get_data(i)),2);
+	     }
+	     sig_alg=sig_alg/double(kk);
+	     
+	     
+	     /*for(i=0;i<kk;i++){
+	         for(j=i+1;j<kk;j++){
+		     nn=kptr->distance(neigh.get_data(i),neigh.get_data(j));
+		     
+		     if((i==0 && j==1) || nn>ddmax){
+		         ddmax=nn;
+		     }
+		 }
+	     }
+	     
+	     sig_alg*=dd.get_data(0)/ddmax;*/
+	     sig_alg=sqrt(sig_alg);
+	     
+	     sigout[0]=sig_alg;
+	 }
    
          if(sigcap>0.0){
               if(sigout[0]>sigcap)sigout[0]=sigcap;

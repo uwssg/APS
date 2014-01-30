@@ -17,12 +17,14 @@ if(seed<0){
     seed=int(time(NULL));
 }
 
+//printf("seed %d\n",seed);
+
 Ran chaos(seed);
 
 matern_covariance cv;
 
 planet chisq(3);
-dim=6;
+dim=17;
 
 aps aps_test(dim,20,25.0,seed);
 
@@ -40,63 +42,64 @@ min.set_dim(dim);
 
 printf("about to set weights\n");
 
-aps_test.set_wgt(0,20.0);
-aps_test.set_wgt(1,7.0);
-aps_test.set_wgt(2,10.0);
-aps_test.set_wgt(3,200.0);
-aps_test.set_wgt(4,40.0);
-aps_test.set_wgt(5,1000.0);
 
 printf("set weights\n");
 
 min.set(0,60.0);
 max.set(0,80.0);
 
-min.set(1,10.0);
-max.set(1,17.0);
+min.set(1,13.0);
+max.set(1,15.0);
+//aps_test.set_wgt(1,7.0);
 
-min.set(2,40.0);
-max.set(2,50.0);
+min.set(2,0.001);
+max.set(2,0.3);
 
-min.set(3,5100.0);
-max.set(3,5300.0);
+min.set(3,100.0);
+max.set(3,200.0);
 
-min.set(4,0.0);
-max.set(4,40.0);
+min.set(4,-0.4);
+max.set(4,0.0);
 
-min.set(5,0.0);
-max.set(5,1000.0);
-/*min.set(0,4.0);
-max.set(0,6.0);
+min.set(5,20.0);
+max.set(5,50.0);
 
-min.set(1,240.0);
-max.set(1,270.0);
+min.set(6,5100.0);
+max.set(6,5300.0);
+//aps_test.set_wgt(6,200.0);
 
-min.set(2,0.0);
-max.set(2,10.0);
+min.set(7,0.001);
+max.set(7,0.1);
 
-min.set(3,30.0);
-max.set(3,50.0);
+min.set(8,180.0);
+max.set(8,260.0);
 
-min.set(4,1.0);
-max.set(4,40.0);
+min.set(9,-0.7);
+max.set(9, -0.3);
 
-min.set(5,5000.0);
-max.set(5,5300.0);
+min.set(10,0.0);
+max.set(10,20.0);
 
-min.set(6,20.0);
-max.set(6,50.0);
+min.set(11,0.0);
+max.set(11,1000.0);
+//aps_test.set_wgt(11,1000.0);
 
-min.set(7,7.0);
-max.set(7,21.0);
+min.set(12,0.001);
+max.set(12,0.999);
 
-min.set(8,-106.0);
-max.set(8,100.0);
+min.set(13,0.0);
+max.set(13,360.0);
 
-min.set(9,0.0);
-max.set(9,10.0);*/
+min.set(14,-1.0);
+max.set(14,1.0);
 
+min.set(15,10.0);
+max.set(15,20.0);
 
+min.set(16,10.0);
+max.set(16,20.0);
+
+aps_test.set_grat(0.5);
 
 aps_test.initialize(50,min,max);
 
@@ -106,7 +109,7 @@ double chival,chivaltest,err,maxerr;
 
 int i;
 i=-1;
-while(aps_test.get_n_pts()<500000){
+while(aps_test.get_n_pts()<200000){
     aps_test.search();
     
     
