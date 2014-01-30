@@ -7,7 +7,7 @@ main(){
 
 printf("hello world\n");
 
-planet solar_system(3);
+planet solar_system(2);
 
 array_1d<double> vv;
 
@@ -15,43 +15,24 @@ array_1d<double> vv;
 
 int i,j;
 
-vv.set(0,71.4);
-vv.set(1,14.65);
+vv.set(0,71.3);
+vv.set(1,14.65164);
+vv.set(2,0.014);
+vv.set(3,135.0);
+vv.set(4,-0.2729630);
+vv.set(5,46.9);
+vv.set(6,5191.0);
+vv.set(7,0.015);
+vv.set(8,223.0);
+vv.set(9,-0.4783912);
+vv.set(10,17.33453);
+vv.set(11,16.48477);
 
-vv.set(2,46.9);
-vv.set(3,5200.0);
-
-vv.set(4,10.0);
-vv.set(5,44.34);
 
 double before=double(time(NULL));
 double chisquared=solar_system(vv);
 printf("chisq %e -- %e\n",chisquared,double(time(NULL))-before);
 
-before=double(time(NULL));
-Ran chaos(43);
-for(i=0;i<50;i++){
-    vv.set(0,chaos.doub()*100.0+50.0);
-    vv.set(1,chaos.doub()*30.0);
-    
-    vv.set(2,chaos.doub()*30.0+20.0);
-    vv.set(3,chaos.doub()*6000.0);
-    
-    vv.set(4,chaos.doub()*10.0);
-    vv.set(5,chaos.doub()*60.0);
-    
-    chisquared=solar_system(vv);
-}
 
-printf("50 took %e\n",double(time(NULL))-before);
-
-
-vv.set(2,71.4);
-vv.set(3,14.65);
-
-vv.set(0,46.9);
-vv.set(1,5200.0);
-
-printf("chisquared %e\n",solar_system(vv));
 
 }
