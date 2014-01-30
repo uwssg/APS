@@ -84,6 +84,7 @@ private:
     
     array_1d<double> mu_storage,sig_storage,good_max,good_min;
     array_1d<double> old_hyper_1,old_hyper_2,wgt,minpt;
+    array_1d<double> range_max,range_min;
     
     double time_node,time_aps,time_gradient,time_total,start_time;
     double time_cleaning,time_writing;
