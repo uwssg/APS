@@ -1121,3 +1121,11 @@ double kd_tree::get_max(int ix){
 double kd_tree::get_min(int ix){
     return mins.get_data(ix);
 }
+
+void kd_tree::set_max(int dex, double nn){
+    maxs.set(dex,nn);
+}
+
+void kd_tree::set_min(int dex, double nn){
+    mins.set(dex,nn);
+}

@@ -38,6 +38,13 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
+aps_test.set_wgt(0,20.0);
+aps_test.set_wgt(1,7.0);
+aps_test.set_wgt(2,10.0);
+aps_test.set_wgt(3,200.0);
+aps_test.set_wgt(4,40.0);
+aps_test.set_wgt(5,1000.0);
+
 min.set(0,60.0);
 max.set(0,80.0);
 
@@ -84,6 +91,8 @@ max.set(8,100.0);
 
 min.set(9,0.0);
 max.set(9,10.0);*/
+
+
 
 aps_test.initialize(50,min,max);
 

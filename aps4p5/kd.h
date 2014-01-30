@@ -50,6 +50,9 @@ class kd_tree{
    void build_tree(array_2d<double>&);
    void build_tree(array_2d<double>&,array_1d<double>&,array_1d<double>&);
  
+ void set_max(int,double);
+ void set_min(int,double);
+ 
  void check_tree();
  void check_tree(int);
  double distance(array_1d<double>&,array_1d<double>&);

@@ -185,7 +185,7 @@ class gp{
 
     double inversionerr;
     double dav,dsig,ctav;
-    
+  
     gp();
     ~gp();
     void initialize(array_2d<double>&,array_1d<double>&,array_1d<double>&,
@@ -194,6 +194,9 @@ class gp{
     void initialize(array_2d<double>&,array_1d<double>&);
     
     int is_kptr_null();
+    
+    void set_max(int,double);
+    void set_min(int,double);
        
     double user_predict(array_1d<double>&,double*,int) const;
     double user_predict(array_1d<double>&,int) const;

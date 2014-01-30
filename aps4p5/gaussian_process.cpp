@@ -38,6 +38,22 @@ gp::~gp(){
  
 }
 
+void gp::set_max(int dex, double nn){
+    if(kptr==NULL){
+        return;
+    }
+    
+    kptr->set_max(dex,nn);
+}
+
+void gp::set_min(int dex, double nn){
+    if(kptr==NULL){
+        return;
+    }
+    
+    kptr->set_min(dex,nn);
+}
+
 int gp::is_kptr_null(){
     if(kptr==NULL)return 1;
     else return 0;

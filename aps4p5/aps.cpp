@@ -142,6 +142,12 @@ void aps::set_wgt(int dex, double nn){
     } 
     
     wgt.set(dex,nn);
+    
+    double min,max;
+    min=0.0;
+    max=(gg.get_min(dex)-gg.get_max(dex))/nn;
+    gg.set_min(dex,min);
+    gg.set_max(dex,max);
 }
 
 void aps::set_outname(char *word){
@@ -562,7 +568,9 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     simplex_min=ff.get_data(il);
     mindex=neigh.get_data(il);
     
-    printf("    starting %e\n",simplex_min);
+    printf("    starting %e\n    ",simplex_min);
+    for(i=0;i<dim;i++)printf("%e ",pts.get_data(il,i)*wgt.get_data(i)+min.get_data(i));
+    printf("\n");
     
     while(sig/mu>1.0e-4 && simplex_min<exception){
         for(i=0;i<dim;i++){
@@ -706,6 +714,9 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     known_minima.add(mindex);
     
     printf("    ending %e\n",simplex_min);
+    printf("    ");
+    for(i=0;i<dim;i++)printf("%e ",pts.get_data(il,i)*wgt.get_data(i)+min.get_data(i));
+    printf("\n\n");
     printf("    ");
     for(i=0;i<gg.get_dim();i++){
         printf("%e ",minpt.get_data(i));
