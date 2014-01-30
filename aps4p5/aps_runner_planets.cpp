@@ -38,12 +38,16 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
+printf("about to set weights\n");
+
 aps_test.set_wgt(0,20.0);
 aps_test.set_wgt(1,7.0);
 aps_test.set_wgt(2,10.0);
 aps_test.set_wgt(3,200.0);
 aps_test.set_wgt(4,40.0);
 aps_test.set_wgt(5,1000.0);
+
+printf("set weights\n");
 
 min.set(0,60.0);
 max.set(0,80.0);

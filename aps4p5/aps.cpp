@@ -134,7 +134,7 @@ void aps::set_write_every(int ii){
 }
 
 void aps::set_wgt(int dex, double nn){
-    if(dex<0 || dex>=dim || dex>=gg.get_dim()){
+    if(dex<0 || dex>=dim){
         printf("WARNING wanted to set dim %d but %d (%d)\n",
 	dex,dim,gg.get_dim());
 	
@@ -143,11 +143,15 @@ void aps::set_wgt(int dex, double nn){
     
     wgt.set(dex,nn);
     
+    //printf("set wegiht\n");
+    
     double min,max;
     min=0.0;
     max=(gg.get_min(dex)-gg.get_max(dex))/nn;
+    //printf("about to set gg min\n");
     gg.set_min(dex,min);
     gg.set_max(dex,max);
+    //printf("done\n");
 }
 
 void aps::set_outname(char *word){
@@ -242,7 +246,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
         ggmax.set(i,(range_max.get_data(i)-range_min.get_data(i))/wgt.get_data(i));
     }
     
-    gg.initialize(data,ff,max,min);
+    gg.initialize(data,ff,ggmax,ggmin);
     
     if(gg.get_dim()!=dim){
         printf("WARNING gg.get_dim %d dim %d\n",
@@ -893,11 +897,13 @@ array_1d<double> &sampling_max){
 	    sampling_min.subtract_val(i,0.05*(range_max.get_data(i)-range_min.get_data(i)));
 	}
 	
-	if(sampling_min.get_data(i)<range_min.get_data(i)){
+	if(sampling_min.get_data(i)<range_min.get_data(i) || 
+	    sampling_min.get_data(i)>range_max.get_data(i)){
 	    sampling_min.set(i,range_min.get_data(i));
 	}
 	
-	if(sampling_max.get_data(i)>range_max.get_data(i)){
+	if(sampling_max.get_data(i)>range_max.get_data(i) ||
+	   sampling_max.get_data(i)<range_min.get_data(i)){
 	    sampling_max.set(i,range_max.get_data(i));
 	}
 	

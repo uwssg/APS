@@ -70,6 +70,8 @@ array_1d<double>&dd){
 }
 
 double gp::get_max(int dex){
+    if(kptr==NULL) return 0.0;
+
     if(dex>=dim || dex<0){
         printf("WARNING asked for gp max %d but dim %d\n",dex,dim);
 	exit(1);
@@ -79,6 +81,8 @@ double gp::get_max(int dex){
 }
 
 double gp::get_min(int dex){
+    if(kptr==NULL)return 0.0;
+
     if(dex>=dim || dex<0){
         printf("WARNING asked for gp min %d but dim %d\n",dex,dim);
 	exit(1);
@@ -88,6 +92,7 @@ double gp::get_min(int dex){
 }
 
 double gp::distance(int dex, array_1d<double> &p){
+    
     if(dex>=pts || dex<0){
         printf("WARNING asked for gp distance on dex %d but pts %d\n",
 	dex,pts);
@@ -217,7 +222,11 @@ array_1d<double> &mx, array_1d<double> &mn){
       uu.set(dim,seedfn.get_data(i));
       paranoia.add_pt(uu);
   }
-
+  
+  for(i=0;i<dim;i++){
+      printf("gp minmax %d %e %e\n",i,get_min(i),get_max(i));
+  }
+  
   seed.set_where("nowhere");
   seedfn.set_where("nowhere");
   mx.set_where("nowhere");
