@@ -259,264 +259,28 @@ double planet::operator()(array_1d<double> &vv) const{
   //use simplex
   
   double before=double(time(NULL));
-  //accepts a list of amplitudes and periods
-  //optimizes on the other parameters (angles and the two telescope velocities)
   
-  //printf("we are in the operator now\n");
+  array_1d<double> amp_and_period,angles;
   
-  int dim=nplanets*3+2,nseed=2*dim;
-  int i,j,must_sort=0;
+  double chimin;
   
-  array_1d<int> inn;
-  array_1d<double> tosort,sorted;
-  array_1d<double> kbuffer,pbuffer;
-  
-  for(i=0;i<nplanets-1 && must_sort==0;i++){
-      if(vv.get_data(i*2)<vv.get_data((i+1)*2)){
-          return 2.0*exception;
-      }
-  }
-
-  
-  /*for(i=0;i<nplanets;i++){
-      printf("%e %e\n",vv.get_data(i*2),vv.get_data(i*2+1));
-  }*/
-  
-  array_2d<double> pts;
-  
-  array_1d<double> pbar,ff,minpt,pstar,pstarstar;
-  array_1d<double> min,max,true_var;  
-  
-  pts.set_name("exo_operator_pts");
-  pbar.set_name("exo_operator_pbar");
-  ff.set_name("exo_operator_ff");
-  minpt.set_name("exo_operator_minpt");
-  pstar.set_name("exo_operator_pstar");
-  pstarstar.set_name("exo_operator_pstarstar");
-  min.set_name("exo_operator_min");
-  max.set_name("exo_operator_max");
-  true_var.set_name("exo_operator_true_var");
-
-  double fstar,fstarstar,chimin;
-  int ih,il;
-  
+  int i;
   for(i=0;i<nplanets;i++){
-      if(vv.get_data(i*2+1)<0.0){
-          vv.multiply_val(i*2+1,-1.0);
-      }
+  
+      amp_and_period.set(i*2,vv.get_data(i*5));
+      amp_and_period.set(i*2+1,vv.get_data(i*5+1));
+      
+      angles.set(i*3,vv.get_data(i*5+2));
+      angles.set(i*3+1,vv.get_data(i*5+3));
+      angles.set(i*3+2,vv.get_data(i*5+4));
+  
   }
   
-  double tol=1.0e-6;
-  double alpha=1.0,beta=0.9,gamma=1.1;
+  angles.set(nplanets*3,vv.get_data(nplanets*5));
+  angles.set(nplanets*3+1,vv.get_data(nplanets*5+1));
   
-  Ran chaos(43);
-  
-  int bound_ct=0;
-  
-  true_var.set_dim(dim);
-  max.set_dim(dim);
-  min.set_dim(dim);
-  minpt.set_dim(dim);
-  
-  pstar.set_dim(dim);
-  pstarstar.set_dim(dim);
-  pts.set_dim(dim+1,dim);
-  pbar.set_dim(dim);
-  ff.set_dim(dim+1);
-  
-  
-  int aborted=0;
-  
-  for(i=0;i<nplanets;i++){
-      min.set(i*3,ee_min.get_data(i));
-      min.set(i*3+1,omega_min.get_data(i));
-      min.set(i*3+2,time_min.get_data(i));
-      
-      max.set(i*3,ee_max.get_data(i));
-      max.set(i*3+1,omega_max.get_data(i));
-      max.set(i*3+2,time_max.get_data(i));
-  }
-  
-  min.set(nplanets*3,vlmin);
-  min.set(nplanets*3+1,vkmin);
-  max.set(nplanets*3,vlmax);
-  max.set(nplanets*3+1,vkmax);
-  
-  
-  il=-1;
-  ih=-1;
-  for(i=0;i<dim+1;i++){
-      for(j=0;j<dim;j++){
-          pts.set(i,j,chaos.doub());
-	  
-	  true_var.set(j,min.get_data(j)+pts.get_data(i,j)*(max.get_data(j)-min.get_data(j)));
-	  
-      }
-      ff.set(i,true_chisq(vv,true_var));
-      
-      if(il<0 || ff.get_data(i)<ff.get_data(il)){
-          il=i;
-      }
-      if(ih<0 || ff.get_data(i)>ff.get_data(ih)){
-          ih=i;
-      }
-  }
-  
-  chimin=ff.get_data(il);
-  for(i=0;i<dim;i++){
-      minpt.set(i,min.get_data(i)+pts.get_data(il,i)*(max.get_data(i)-min.get_data(i)));
-  }
-  
-  //printf("    chimin %e %e\n",chimin,double(time(NULL))-before);
-  
-  double sig=1.0,mu=0.1,nn;
-  while(sig/mu>1.0e-4 && chimin<exception){
-      
-      
-      for(i=0;i<dim;i++){
-          pbar.set(i,0.0);
-	  for(j=0;j<dim+1;j++){
-	      if(j!=ih){
-	          pbar.add_val(i,pts.get_data(j,i));
-	      }
-	  }
-	  pbar.divide_val(i,double(dim));
-      } 
-      
-      for(i=0;i<dim;i++){
-          pstar.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
-
-      }
-      
-      for(i=0;i<dim;i++){
-          true_var.set(i,min.get_data(i)+pstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
-      }
-      
-      fstar=true_chisq(vv,true_var);
-      if(fstar<chimin){
-          chimin=fstar;
-	  for(i=0;i<dim;i++)minpt.set(i,true_var.get_data(i));
-      }
-      
-      if(fstar>ff.get_data(il) && fstar<ff.get_data(ih)){
-          for(i=0;i<dim;i++){
-	      pts.set(ih,i,pstar.get_data(i));
-	  }
-	  ff.set(ih,fstar);
-      }
-      else if(fstar<ff.get_data(il)){
-          for(i=0;i<dim;i++){
-	      pstarstar.set(i,gamma*pstar.get_data(i)+(1.0-gamma)*pbar.get_data(i));
-	  }
-	  
-	  for(i=0;i<dim;i++){
-	      true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
-	  }
-	  
-	  fstarstar=true_chisq(vv,true_var);
-	  if(fstarstar<chimin){
-	      chimin=fstarstar;
-	      for(i=0;i<dim;i++)minpt.set(i,true_var.get_data(i));
-	  }
-	  
-	  if(fstarstar<ff.get_data(il)){
-	      for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
-	      ff.set(ih,fstarstar);
-	  }
-	  else{
-	      for(i=0;i<dim;i++)pts.set(ih,i,pstar.get_data(i));
-	      ff.set(ih,fstar);
-	  }
-      }
-      
-      j=1;
-      for(i=0;i<dim+1;i++){
-          if(fstar<ff.get_data(i) && i!=ih){
-	      j=0;
-	  }
-      }
-      
-      if(j==1){
-          for(i=0;i<dim;i++){
-	      pstarstar.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
-	  }
-	  
-	  for(i=0;i<dim;i++){
-	      true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*(max.get_data(i)-min.get_data(i)));
-	  }
-	  
-	  fstarstar=true_chisq(vv,true_var);
-	  if(fstarstar<chimin){
-	      chimin=fstarstar;
-	      for(i=0;i<dim;i++)minpt.set(i,true_var.get_data(i));
-	  }
-	  
-	  if(fstarstar<ff.get_data(ih)){
-	      for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
-	      ff.set(ih,fstarstar);
-	  }
-	  else{
-	      for(i=0;i<dim+1;i++){
-	          if(i==0 || ff.get_data(i)<ff.get_data(il)){
-		      il=i;
-		  }
-	      }
-	      for(i=0;i<dim+1;i++){
-	          if(i!=il){
-		      for(j=0;j<dim;j++){
-		          mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
-			  pts.set(i,j,mu);
-			  
-			  true_var.set(j,min.get_data(j)+pts.get_data(i,j)*(max.get_data(j)-min.get_data(j)));
-		      }
-		      
-		      ff.set(i,true_chisq(vv,true_var));
-		      if(ff.get_data(i)<chimin){
-		          chimin=ff.get_data(i);
-			  for(j=0;j<dim;j++)minpt.set(j,true_var.get_data(j));
-		      }
-		      
-		  }
-	      }
-	  }
-	  
-      }
-      
-      
-      mu=0.0;
-      for(i=0;i<dim+1;i++){
-          mu+=ff.get_data(i);
-      }
-      mu=mu/double(dim+1);
-      //printf("mu %e\n",mu);
-      sig=0.0;
-      for(i=0;i<dim+1;i++){
-          sig+=power(mu-ff.get_data(i),2);
-      }
-      sig=sig/double(dim+1);
-      sig=sqrt(sig);
-      
-      for(i=0;i<dim+1;i++){
-          if(i==0 || ff.get_data(i)<ff.get_data(il)){
-	      il=i;
-	  }
-	  
-	  if(i==0 || ff.get_data(i)>ff.get_data(ih)){
-	      ih=i;
-	  }
-      }
-      
-      //printf("    chimin %e %e %e %d\n",
-      //chimin,double(time(NULL))-before,sig,called);
-  }
-  
-  
-  
-  /*for(i=0;i<nplanets;i++){
-      printf("%e %e %e \n",minpt[i*3],minpt[i*3+1],minpt[i*3+2]);
-  }
-  printf("%e %e -- %e -- %d\n",minpt[dim-2],minpt[dim-1],double(time(NULL))-before,called);*/
-    
+  chimin=true_chisq(amp_and_period,angles); 
+   
   if(chimin<exception)called++;
   time_spent+=double(time(NULL))-before;
   
