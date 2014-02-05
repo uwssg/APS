@@ -504,6 +504,14 @@ int aps::choose_a_candidate(){
 
 }
 
+void aps::find_global_minimum(array_1d<double> &vv){
+    array_1d<int> neigh;
+    array_1d<double> dd;
+    
+    gg.nn_srch(vv,dim+1,neigh,dd);
+    find_global_minimum(vv,neigh);
+}
+
 void aps::find_global_minimum(){
     int i;
     
@@ -513,13 +521,8 @@ void aps::find_global_minimum(){
     for(i=0;i<gg.get_dim();i++){
         vv.set(i,range_min.get_data(i)+dice->doub()*(range_max.get_data(i)-range_min.get_data(i)));
     }
-    
-    array_1d<double> dd;
-    array_1d<int> neigh;
-    
-    gg.nn_srch(vv,dim+1,neigh,dd);
-    
-    find_global_minimum(vv,neigh);
+
+    find_global_minimum(vv);
 
 }
 
@@ -1101,18 +1104,13 @@ void aps::gradient_search(){
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
     
-    array_1d<int> neigh;
-    array_1d<double> ddneigh;
-    
     ix=choose_a_candidate();
     
     if(ix>=0){
        
        gg.get_pt(ix,vv);
        
-       gg.nn_srch(vv,dim+1,neigh,ddneigh);
-       
-       find_global_minimum(vv,neigh);
+       find_global_minimum(vv);
     
     }
     
