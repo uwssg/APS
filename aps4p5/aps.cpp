@@ -504,12 +504,39 @@ int aps::choose_a_candidate(){
 
 }
 
+void aps::find_global_minimum_meta(){
+
+    if(known_minima.get_dim()<dim+1){
+        return;
+    }
+    
+    array_1d<double> ff,ffsorted;
+    array_1d<int> inn;
+    int i;
+    
+    for(i=0;i<known_minima.get_dim();i++){
+        inn.add(known_minima.get_data(i));
+        ff.add(gg.get_fn(known_minima.get_data(i)));
+    }
+    
+    sort_and_check(ff,ffsorted,inn);
+    
+    array_1d<int> neigh;
+    for(i=0;i<dim+1;i++){
+        neigh.add(inn.get_data(i));
+    }
+    
+    find_global_minimum(neigh);
+    
+
+}
+
 void aps::find_global_minimum(array_1d<double> &vv){
     array_1d<int> neigh;
     array_1d<double> dd;
     
     gg.nn_srch(vv,dim+1,neigh,dd);
-    find_global_minimum(vv,neigh);
+    find_global_minimum(neigh);
 }
 
 void aps::find_global_minimum(){
@@ -526,7 +553,7 @@ void aps::find_global_minimum(){
 
 }
 
-void aps::find_global_minimum(array_1d<double> &vv_in, array_1d<int> &neigh){
+void aps::find_global_minimum(array_1d<int> &neigh){
     
     if(neigh.get_dim()!=dim+1){
         printf("WARNING you just called find_global_minimum with an improper number of neighbors\n");
@@ -1103,6 +1130,8 @@ void aps::gradient_search(){
     
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
+    
+    find_global_minimum_meta();
     
     ix=choose_a_candidate();
     

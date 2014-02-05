@@ -100,7 +100,9 @@ private:
     
     void find_global_minimum();
     void find_global_minimum(array_1d<double>&);
-    void find_global_minimum(array_1d<double>&,array_1d<int>&);
+    void find_global_minimum(array_1d<int>&);
+    
+    void find_global_minimum_meta();
     
     void set_chimin(double,array_1d<double>&);
     void add_aps_pt(int,double,double);
