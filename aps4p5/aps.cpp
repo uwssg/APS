@@ -514,11 +514,21 @@ void aps::find_global_minimum(){
         vv.set(i,range_min.get_data(i)+dice->doub()*(range_max.get_data(i)-range_min.get_data(i)));
     }
     
-    find_global_minimum(vv);
+    array_1d<double> dd;
+    array_1d<int> neigh;
+    
+    gg.nn_srch(vv,dim+1,neigh,dd);
+    
+    find_global_minimum(vv,neigh);
 
 }
 
-void aps::find_global_minimum(array_1d<double> &vv_in){
+void aps::find_global_minimum(array_1d<double> &vv_in, array_1d<int> &neigh){
+    
+    if(neigh.get_dim()!=dim+1){
+        printf("WARNING you just called find_global_minimum with an improper number of neighbors\n");
+        exit(1);
+    }
     
     if(dim!=gg.get_dim()){
         printf("WARNING in find_global_minimum dim %d but gg says %d\n",
@@ -535,12 +545,11 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     }
     
     //write some code to do simplex search here
-    array_1d<int> neigh;
-    array_1d<double> ddneigh,vv;
+
+    array_1d<double> vv;
     
     vv.set_name("find_global_min_vv");
-    neigh.set_name("find_global_min_neigh");
-    ddneigh.set_name("find_global_min_ddneigh");
+   
     
     array_2d<double> pts;
     array_1d<double> pbar,ff,pstar,pstarstar;
@@ -559,7 +568,8 @@ void aps::find_global_minimum(array_1d<double> &vv_in){
     int ih,il,i,j,mindex=-1,actually_added;
     double alpha=1.0,beta=0.9,gamma=1.1;
     
-    gg.nn_srch(vv_in,dim+1,neigh,ddneigh);
+    //gg.nn_srch(vv_in,dim+1,neigh,ddneigh);
+    
     true_var.set_dim(dim);
     max.set_dim(dim);
     min.set_dim(dim);
@@ -1091,13 +1101,18 @@ void aps::gradient_search(){
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
     
+    array_1d<int> neigh;
+    array_1d<double> ddneigh;
+    
     ix=choose_a_candidate();
     
     if(ix>=0){
        
        gg.get_pt(ix,vv);
-
-       find_global_minimum(vv);
+       
+       gg.nn_srch(vv,dim+1,neigh,ddneigh);
+       
+       find_global_minimum(vv,neigh);
     
     }
     
