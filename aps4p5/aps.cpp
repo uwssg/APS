@@ -315,6 +315,8 @@ void aps::set_chimin(double cc,array_1d<double> &pt){
     
     strad.set_target(cc+delta_chisquared);
     
+    //printf("    setting chimin to %e\n",chimin);
+    
     /*printf("    chimin %e\n    ",chimin);
     for(i=0;i<(pt.get_dim()-2)/5;i++){
         printf("%e ",minpt.get_data(i*5+1));
@@ -510,6 +512,8 @@ void aps::find_global_minimum_meta(){
         return;
     }
     
+    printf("    performing meta search\n");
+        
     array_1d<double> ff,ffsorted;
     array_1d<int> inn;
     int i;
