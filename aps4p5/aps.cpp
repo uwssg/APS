@@ -914,6 +914,9 @@ void aps::search(){
         //printf("aps searching\n");
         //aps_scatter_search();
 	aps_search(250);
+        
+        gradient_search();
+        
 	//printf("done aps searching\n");
     }
     
