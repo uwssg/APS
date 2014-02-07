@@ -679,7 +679,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     mindex=neigh.get_data(il);
     
     printf("    starting %e\n    ",simplex_min);
-    for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*5+1)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
+    for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*4)*wgt.get_data(i*4)+min.get_data(i*4));
     printf("\n");
     
     
@@ -848,10 +848,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     printf("    ending %e\n",simplex_min);
     printf("    ");
-    for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*5+1)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
+    for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*4)*wgt.get_data(i*4)+min.get_data(i*4));
     i=(dim-2)/5-1;
     
-    printf(" -- %e ",pts.get_data(il,i*5)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
     printf("\n\n");
     printf("    ");
     //for(i=0;i<gg.get_dim();i++){
