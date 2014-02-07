@@ -378,8 +378,11 @@ int aps::is_it_a_candidate(int dex){
     }
     
     int i,use_it;
+    
+    //printf("  is %e a candidate -- med %e grat %e min %e\n",gg.get_fn(dex),global_median,grat,chimin);
+    
     if(gg.get_fn(dex)<chimin+grat*(global_median-chimin)){
-      
+        //printf(" yes it is\n");
 	use_it=1;
 	for(i=0;i<n_candidates && use_it==1;i++){
 	    if(dex==candidates.get_data(i))use_it=0;
@@ -439,7 +442,7 @@ int aps::choose_a_candidate(){
     uu.set_name("choose_a_candidate_uu");
     
     if(known_minima.get_dim()==0){
-        printf("    choosing based solely on candidate f\n");
+        //printf("    choosing based solely on candidate f\n");
         for(i=0;i<n_candidates;i++){
             if(is_it_a_candidate(candidates.get_data(i))>0){
 	        if(ichoice<0 || gg.get_fn(candidates.get_data(i))<minval){
@@ -450,7 +453,7 @@ int aps::choose_a_candidate(){
         }
     }
     else{
-        printf("    choosing on distance to known minima\n");
+        //printf("    choosing on distance to known minima\n");
         for(i=0;i<n_candidates;i++){
 	    if(is_it_a_candidate(candidates.get_data(i))>0){
 	        for(j=0;j<known_minima.get_dim();j++){
@@ -460,6 +463,13 @@ int aps::choose_a_candidate(){
 		        ddmin=dd;
 		    }
 	        }
+                
+                for(j=0;j<gradient_start_pts.get_dim();j++){
+                    dd=gg.distance((*gg.get_pt(candidates.get_data(i))),(*gg.get_pt(gradient_start_pts.get_data(j))));
+                    if(dd<ddmin){
+                        ddmin=dd;
+                    }
+                }
 	    
 	    
 	    /*if((*gg.get_pt(candidates.get_data(i))).get_data(11)<400.0){
@@ -472,7 +482,7 @@ int aps::choose_a_candidate(){
 	        }
 	    }
 	}
-	printf("    ddmax %e\n",ddmax);
+	//printf("    ddmax %e\n",ddmax);
     
     }
     
@@ -784,6 +794,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     printf("    ending %e\n",simplex_min);
     printf("    ");
     for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*5+1)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
+    i=(dim-2)/5-1;
+    
+    printf(" -- %e ",pts.get_data(il,i*5)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
     printf("\n\n");
     printf("    ");
     //for(i=0;i<gg.get_dim();i++){
@@ -1115,7 +1128,7 @@ void aps::aps_search(int n_samples){
 }
 
 void aps::gradient_search(){
-    printf("\ngradient searching\n");
+    //printf("\ngradient searching\n");
     set_where("gradient_search");
     
     if(n_candidates!=candidates.get_dim()){
@@ -1126,7 +1139,7 @@ void aps::gradient_search(){
     }
     
     if(n_candidates==0){
-        printf("there are no candidates yet\n");
+        //printf("there are no candidates yet\n");
         return;
     }
  
@@ -1144,6 +1157,8 @@ void aps::gradient_search(){
     
     if(ix>=0){
        
+       gradient_start_pts.add(ix);
+       
        gg.get_pt(ix,vv);
        
        find_global_minimum(vv);
@@ -1154,7 +1169,7 @@ void aps::gradient_search(){
     time_gradient+=double(time(NULL))-before;
     
     set_where("nowhere");
-    printf("done gradient searching\n");
+    //printf("done gradient searching\n");
 }
 
 void aps::write_pts(){
@@ -1208,7 +1223,7 @@ void aps::write_pts(){
     fprintf(output,"%e %e %e ",
     global_median,chimin,strad.get_target());
     
-    fprintf(output,"\n");
+    fprintf(output," -- %d %d\n",candidates.get_dim(),known_minima.get_dim());
     
     
     fclose(output);

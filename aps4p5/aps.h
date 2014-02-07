@@ -79,7 +79,7 @@ private:
     char outname[letters],timingname[letters];
     char **paramnames;
     
-    array_1d<int> candidates,aps_pts,known_minima;
+    array_1d<int> candidates,aps_pts,known_minima,gradient_start_pts;
     int n_candidates;
     
     array_1d<double> mu_storage,sig_storage,good_max,good_min;

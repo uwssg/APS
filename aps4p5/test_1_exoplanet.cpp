@@ -7,7 +7,7 @@ main(){
 
 printf("hello world\n");
 
-planet solar_system(2);
+planet solar_system(3);
 
 array_1d<double> vv;
 
@@ -25,8 +25,14 @@ vv.set(6,5191.0);
 vv.set(7,0.015);
 vv.set(8,223.0);
 vv.set(9,-0.4783912);
-vv.set(10,17.33453);
-vv.set(11,16.48477);
+vv.set(10,10.0);
+vv.set(11,44.349);
+vv.set(12,0.09);
+vv.set(13,66.0);
+vv.set(14,0.2048294);
+
+vv.set(15,17.33453);
+vv.set(16,16.48477);
 
 
 double before=double(time(NULL));

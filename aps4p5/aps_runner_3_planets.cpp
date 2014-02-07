@@ -102,7 +102,6 @@ max.set(nplanets*5,20.0);
 min.set(nplanets*5+1,10.0);
 max.set(nplanets*5+1,20.0);
 
-aps_test.set_grat(0.5);
 
 aps_test.initialize(50,min,max);
 
