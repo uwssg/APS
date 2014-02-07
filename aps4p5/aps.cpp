@@ -804,6 +804,18 @@ void aps::find_global_minimum(array_1d<int> &neigh){
    // }
     printf("    chimin %e\n",chimin);
     
+    array_1d<double> v_min,gradient;
+    gg.get_pt(mindex,v_min);
+    printf("checking simplex min %e\n",gg.get_fn(mindex));
+    gg.actual_gradient(v_min,gradient);
+    
+    double dd=gradient.get_square_norm();
+    
+    printf("square norm of gradient %e\n",dd);
+    
+    exit(1);
+
+    
     set_where("nowhere");
 }
 

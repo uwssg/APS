@@ -44,6 +44,11 @@ array_1d<T>::~array_1d(){
 }
 
 template <typename T>
+T* array_1d<T>::get_ptr(){
+    return data;
+}
+
+template <typename T>
 void array_1d<T>::die(int ii) const{
     printf("\nWARNING 1d array\n");
     
@@ -169,7 +174,8 @@ void array_1d<T>::set(int dex, T val){
         die(dex);
     }
     else if(dex>=dim){
-        for(i=dim;i<dex+1;i++)add(val);
+        for(i=dim;i<dex+1;i++)add(0);
+	set(dex,val);
     }
     else{
         data[dex]=val;
@@ -391,6 +397,88 @@ T array_1d<T>::get_data(int dex) const{
     
 }
 
+
+template <typename T>
+double array_1d<T>::get_square_norm(){
+    
+    if(dim<0){
+        printf("WARNING 1d array has dim %d\n",dim);
+	die(-1);
+    }
+    
+    if(dim==0){
+        return 0.0;
+    }
+    
+    int i;
+    double ans=0.0;
+    for(i=0;i<dim;i++){
+        ans+=data[i]*data[i];
+    }
+
+    return ans;
+
+}
+
+
+template <typename T>
+double array_1d<T>::get_norm(){
+    
+    if(dim<0){
+        printf("WARNING 1d array has dim %d\n",dim);
+	die(-1);
+    }
+    
+    if(dim==0){
+        return 0.0;
+    }
+    
+    int i;
+    double ans=0.0;
+    for(i=0;i<dim;i++){
+        ans+=data[i]*data[i];
+    }
+    ans=sqrt(ans);
+    return ans;
+
+}
+
+template <typename T>
+double array_1d<T>::normalize(){
+    
+    if(dim<0){
+        printf("WARNING 1d array has dim %d\n",dim);
+	die(-1);
+    }
+    
+    if(dim==0){
+        return 0.0;
+    }
+     
+    double ans;
+    int i;
+    ans=0.0;
+    for(i=0;i<dim;i++){
+        ans+=data[i]*data[i];
+    }
+    
+    if(ans<0.0){
+        printf("WARNING square of norm %e\n",ans);
+	
+	die(-1);
+    }
+    
+    if(ans>0.0){
+        ans=sqrt(ans);
+        for(i=0;i<dim;i++){
+            data[i]=data[i]/ans;
+        }
+    }
+    
+    return ans;
+
+}
+
 template <typename T>
 array_2d<T>::array_2d(){
     rows=0;
@@ -606,8 +694,42 @@ void array_2d<T>::remove_row(int dex){
 	}
     }
     
+    data[rows-1].reset();
     rows--;
 
+}
+
+template <typename T>
+void array_2d<T>::set_cols(int ii){
+    reset();
+    
+    row_room=2;
+    rows=0;
+    cols=ii;
+    data=new array_1d<T>[row_room];
+    int i;
+    for(i=0;i<row_room;i++){
+        data[i].set_dim(cols);
+    }
+    
+    for(i=0;i<row_room;i++){
+        try{
+            data[i].assert_name(name);
+	}
+	catch(int iex){
+	    printf("in 2d set dim\n");
+	    die(0,0);
+	}
+	
+	try{
+	    data[i].assert_where(where_am_i);
+	}
+	catch(int iex){
+	    printf("in 2d set dim\n");
+	    die(0,0);
+	}
+    }
+    
 }
 
 template <typename T>
@@ -855,7 +977,7 @@ void array_2d<T>::reset(){
     
     //printf("resetting %s\n",name);
     
-    set_name("resetting");
+    //set_name("resetting");
     
     int i;
     
@@ -989,6 +1111,381 @@ array_1d<T>* array_2d<T>::operator()(int dex){
 
 }
 
+template <typename T>
+asymm_array_2d<T>::asymm_array_2d(){
+    name=NULL;
+    where_am_i=NULL;
+    data=NULL;
+    rows=0;
+    row_room=0;
+}
+
+template <typename T>
+asymm_array_2d<T>::~asymm_array_2d(){
+    int i;
+    
+    for(i=0;i<row_room;i++){
+        try{
+            data[i].assert_name_null();
+	}
+	catch(int iex){
+	    printf("in asymm 2d destructor\n");
+	    die(0);
+	}
+	
+	try{
+	    data[i].assert_where_null();
+	}
+	catch(int iex){
+	    printf("in asymm 2d destructor\n");
+	    die(0);
+	}
+    }
+    
+    //printf("calling 2d destructor on %s\n",name);
+    
+    if(data!=NULL){
+        delete [] data;
+    }
+    
+    if(name!=NULL)delete [] name;
+    
+    if(where_am_i!=NULL)delete [] where_am_i;
+    
+
+}
+
+template <typename T>
+void asymm_array_2d<T>::die(int ir) const{
+    printf("\nWARNING asymm 2d array\n");
+    
+    if(name!=NULL)printf("in 2d_array %s\n",name);
+    if(where_am_i!=NULL)printf("in routine %s\n",where_am_i);
+    
+    printf("asked for %d\n",ir);
+    printf("but dimensions are %d\n",rows);
+    printf("row_room %d\n",row_room);
+    
+    if(data==NULL){
+        printf("data is null\n");
+    }
+    
+    int ifail=1;
+    
+    throw ifail;
+}
+
+template <typename T>
+void asymm_array_2d<T>::set_where(char *word) const {
+
+    int i,ct=0;
+    
+    for(i=0;word[i]!=0;i++)ct++;
+    ct++;
+    
+    if(where_am_i!=NULL)delete [] where_am_i;
+    where_am_i=new char[ct];
+    
+    for(i=0;i<ct && word[i]!=0;i++)where_am_i[i]=word[i];
+    where_am_i[ct-1]=0;
+    
+    for(i=0;i<row_room;i++){
+        try{
+            data[i].assert_where(where_am_i);
+	}
+	catch(int iex){
+	    printf("in asymm 2d set where\n");
+	    die(0);
+	}
+    }
+
+}
+
+template <typename T>
+void asymm_array_2d<T>::set_name(char *word){
+    int i,ct=0;
+    
+    for(i=0;word[i]!=0;i++)ct++;
+    ct++;
+    
+    if(name!=NULL){
+        delete [] name;
+    }
+    
+    name=new char[ct];
+    for(i=0;i<ct && word[i]!=0;i++)name[i]=word[i];
+    name[ct-1]=0;
+    
+    for(i=0;i<row_room;i++){
+        try{
+            data[i].assert_name(name);
+	}
+	catch(int iex){
+	    printf("in asymm 2d set name\n");
+	    die(0);
+	}
+    }
+    
+}
+
+template <typename T>
+int asymm_array_2d<T>::get_rows(){
+    return rows;
+}
+
+template <typename T>
+int asymm_array_2d<T>::get_cols(int dex){
+    
+    if(data==NULL){
+        printf("WARNING asking for cols in asymm array 2d\n");
+	die(dex);
+    }
+    
+    if(dex<0 || dex>=rows){
+        printf("WARNING asking for cols in asymm array 2d\n");
+	die(dex);
+    }
+    
+    return data[dex].get_dim();
+    
+}
+
+template <typename T>
+void asymm_array_2d<T>::add_row(const array_1d<T> &in){
+    
+    if(data==NULL){
+        row_room=2;
+	rows=0;
+	data=new array_1d<T>[row_room];
+    }
+    
+    array_1d<T> *buffer;
+    int i,j;
+    
+    if(rows==row_room){
+        buffer=new array_1d<T>[rows];
+	for(i=0;i<rows;i++){
+	    buffer[i].set_dim(data[i].get_dim());
+	    for(j=0;j<data[i].get_dim();j++){
+	        buffer[i].set(j,data[i].get_data(j));
+	    }
+	}
+	delete [] data;
+	
+	i=row_room/2;
+	if(i<100)i=100;
+	
+	row_room+=i;
+	data=new array_1d<T>[row_room];
+	
+	for(i=0;i<rows;i++){
+	    data[i].set_dim(buffer[i].get_dim());
+	    for(j=0;j<buffer[i].get_dim();j++){
+	        data[i].set(j,buffer[i].get_data(j));
+	    }
+	}
+	delete [] buffer;
+    }
+    
+    data[rows].set_dim(in.get_dim());
+    for(i=0;i<in.get_dim();i++){
+        data[rows].set(i,in.get_data(i));
+    }
+    rows++;
+    
+    for(i=0;i<row_room;i++){
+	    try{
+	        data[i].assert_name(name);
+	    }
+	    catch(int iex){
+	        printf("in asymm 2d add row (asserting name)\n");
+	        die(0);
+	    }
+	    
+	    try{
+	        data[i].assert_where(where_am_i);
+	    }
+	    catch(int iex){
+	        printf("in asymm 2d add row (asserting where)\n");
+	        die(0);
+	    }
+    } 
+    
+}
+
+template <typename T>
+void asymm_array_2d<T>::set(int ir, int ic, T val){
+    
+    array_1d<T> vector;
+    int i;
+    
+    if(ir<rows){
+        data[ir].set(ic,val);
+    }
+    else{
+        vector.set_dim(ic+1);
+	for(i=0;i<ic+1;i++)vector.set(i,val);
+	add_row(vector);
+    }
+
+}
+
+template <typename T>
+T asymm_array_2d<T>::get_data(int ir, int ic){
+    
+    if(ir<0 || ir>=rows){
+        printf("WARNING asking for asymm 2d data %d %d but rows %d\n",
+	ir,ic,rows);
+	die(ir);
+    }
+    
+    
+    try{
+       return data[ir].get_data(ic); 
+    }
+    catch(int iex){
+        printf("tried to get asymm 2d data %d %d\n",ir,ic);
+	die(ir);
+    }
+
+
+}
+
+template <typename T>
+void asymm_array_2d<T>::remove_row(int dex){
+    
+    if(dex<0 || dex>=rows){
+        printf("WARNING asking to remove %d from asymm\n",dex);
+	die(dex);
+    }
+    
+    int i,j;
+    for(i=dex;i<rows-1;i++){
+        data[i].set_dim(data[i+1].get_dim());
+	for(j=0;j<data[i+1].get_dim();j++){
+	    data[i].set(j,data[i+1].get_data(j));
+	}
+    }
+    data[rows-1].reset();
+    rows--;
+    
+    
+}
+
+template <typename T>
+void asymm_array_2d<T>::reset(){
+    
+    //printf("resetting %s\n",name);
+    
+    //set_name("resetting");
+    
+    int i;
+    
+    if(data==NULL && (rows>0 || row_room>0)){
+        printf("resetting but data is null and something is wrong\n");
+	die(-1);
+    }
+    
+    if(row_room==0 && data!=NULL){
+        die(-1);
+    }
+
+    if(row_room<rows){
+	die(-2);
+    }
+    
+    if(data!=NULL){
+        delete [] data;	
+	data=NULL;
+	row_room=0;
+	rows=0;
+
+    }
+    
+
+    
+}
+
+template <typename T>
+void asymm_array_2d<T>::add_val(int ir, int ic, T val){
+    if(ir<0 || ir>=rows){
+        printf("in asymm 2d add_val\n");
+	die(ir);
+    }
+    
+    data[ir].add_val(ic,val);
+}
+
+template <typename T>
+void asymm_array_2d<T>::subtract_val(int ir, int ic, T val){
+    if(ir<0 || ir>=rows){
+        printf("in asymm 2d subtract_val\n");
+	die(ir);
+    }
+    
+    data[ir].subtract_val(ic,val);
+}
+
+template <typename T>
+void asymm_array_2d<T>::multiply_val(int ir, int ic, T val){
+    if(ir<0 || ir>=rows){
+        printf("in asymm 2d multiply_val\n");
+	die(ir);
+    }
+    
+    data[ir].multiply_val(ic,val);
+}
+
+template <typename T>
+void asymm_array_2d<T>::divide_val(int ir, int ic, T val){
+    if(ir<0 || ir>=rows){
+        printf("in asymm 2d divide_val\n");
+	die(ir);
+    }
+    
+    data[ir].divide_val(ic,val);
+}
+
+template <typename T>
+void asymm_array_2d<T>::add(int dex, T val){
+    if(dex<0 || dex>=rows){
+        printf("in asymm 2d add\n");
+	die(dex);
+    }
+    
+    data[dex].add(val);
+}
+
+template <typename T>
+void asymm_array_2d<T>::replace_row(int dex, array_1d<T> &pt){
+    if(dex<0 || dex>=rows){
+        printf("WARNING trying to replace row %d in asymm, but only have %d\n",
+	dex,rows);
+	
+	die(dex);
+    }
+    
+    data[dex].reset();
+    int i;
+    for(i=0;i<pt.get_dim();i++){
+        data[dex].add(pt.get_data(i));
+    }
+
+}
+
+template <typename T>
+array_1d<T>* asymm_array_2d<T>::operator()(int dex){
+    
+    if(dex<0 || dex>=rows){
+        printf("WARNING asked for row %d but only have %d\n",dex,rows);
+    }
+    
+    return &data[dex];
+
+}
+
+template class asymm_array_2d<int>;
+template class asymm_array_2d<double>;
 template class array_2d<int>;
 template class array_2d<double>;
 template class array_1d<int>;
@@ -1185,9 +1682,27 @@ double sort_and_check(const array_1d<T> &in, array_1d<T> &sorted, array_1d<int> 
     
 }
 
+template <typename T>
+int get_dex(const array_1d<T> &xx, T target){
+    int i;
+    
+    for(i=0;i<xx.get_dim()-1 && xx.get_data(i)<target;i++);
+    
+
+    
+    if(i>0 && target-xx.get_data(i-1)<xx.get_data(i)-target){
+        //printf("decrementing\n");
+        i--;
+    }
+    
+    return i;
+}
+
 template void merge_sort<double>(array_1d<double>&,array_1d<int>&,int,int);
 template void merge_sort<int>(array_1d<int>&,array_1d<int>&,int,int);
 
 template double sort_and_check<double>(const array_1d<double>&,array_1d<double>&,array_1d<int>&);
 template double sort_and_check<int>(const array_1d<int>&,array_1d<int>&,array_1d<int>&);
 
+template int get_dex(const array_1d<int>&,int);
+template int get_dex(const array_1d<double>&,double);

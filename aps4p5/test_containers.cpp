@@ -910,6 +910,36 @@ xx.set_name("gaussian_xx");
 
 naive_gaussian_solver(aa,bb,xx,params);
 
+array_1d<double> vv_getdex;
+params=30;
+
+for(i=0;i<params;i++){
+    vv_getdex.set(i,chaos.doub()+double(i));
+}
+
+for(i=0;i<100;i++){
+    nn=chaos.doub()*40.0;
+    
+    j=get_dex(vv_getdex,nn);
+    
+    for(k=0;k<params;k++){
+        if(k!=j){
+            if(fabs(vv_getdex.get_data(k)-nn)<fabs(vv_getdex.get_data(j)-nn)){
+                printf("WARNING got wrong index\n");
+                printf("target %e j %d %e k %d %e\n",
+                nn,j,vv_getdex.get_data(j),k,vv_getdex.get_data(k));
+                
+                printf("%e %e\n",
+                fabs(vv_getdex.get_data(j)-nn),
+                fabs(vv_getdex.get_data(k)-nn));
+                
+                exit(1);
+            } 
+        }
+    }
+    
+}
+
 
 printf("\n\nall tests passed -- maxerr %e\n",maxerr);
 printf("have not tested self add, subtract, divide, or multiply\n");
