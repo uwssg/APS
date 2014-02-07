@@ -10,7 +10,7 @@ planet::planet(){
     exit(1);
 }
 
-planet::planet(int i) : chisquared(i*5+2){
+planet::planet(int i) : chisquared(i*4){
     nplanets=i;
     ndata=0;
     
