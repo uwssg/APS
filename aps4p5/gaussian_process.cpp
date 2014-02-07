@@ -893,7 +893,9 @@ double gp::actual_gradient(int dex, array_1d<double> &vout){
 	
     }
     
- 
+    for(i=0;i<vout.get_dim();i++){
+        vout.multiply_val(i,kptr->get_max(i)-kptr->get_min(i));
+    }  
     
     vout.set_where("nowhere");
     
