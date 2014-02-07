@@ -103,7 +103,7 @@ min.set(nplanets*5+1,10.0);
 max.set(nplanets*5+1,20.0);
 
 
-aps_test.initialize(50,min,max);
+aps_test.initialize(1000,min,max);
 
 //aps_test.set_wgt(2,0.1);
 

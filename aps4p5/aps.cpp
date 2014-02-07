@@ -700,6 +700,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int ct_abort=0,ct_abort_max=200;
     
     while(ct_abort<ct_abort_max && simplex_min<exception){
+        ct_abort++;
+        //printf("    simplex min %e\n",simplex_min);
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
             for(j=0;j<dim+1;j++){
