@@ -29,8 +29,7 @@ private:
     
     char *label;
     mutable double datemin;
-    
-    double true_chisq(array_1d<double>&,array_1d<double>&) const;
+   
     
     void set_where(char*) const;
     

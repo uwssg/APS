@@ -70,10 +70,10 @@ int i,j;
 double nn;
 
 for(i=0;i<nplanets;i++){
-
-    for(j=0;j<5;j++){
+    fscanf(input,"%le",&nn);
+    for(j=0;j<4;j++){
         fscanf(input,"%le",&nn);
-	vv.set(i*5+j,nn);
+	vv.set(i*4+j,nn);
     }
 }
 
@@ -91,13 +91,13 @@ printf("chisquared %e\n",chisquared);
 
 input=fopen("exoplanet_data/planet_file_better_complete.sav","r");
 for(i=0;i<nplanets;i++){
-    
+    fscanf(input,"%le",&nn);
     if(i>=5){
         printf("WARNING i over stepped %d\n",i);
     }
-    for(j=0;j<5;j++){
+    for(j=0;j<4;j++){
         fscanf(input,"%le",&nn);
-        vv.set(i*5+j,nn);
+        vv.set(i*4+j,nn);
     }
 }
 

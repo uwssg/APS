@@ -135,167 +135,160 @@ void planet::set_where(char *word) const{
     velocity.set_where(word);
 }
 
-double planet::true_chisq(array_1d<double> &amp_and_period, 
-               array_1d<double> &angles) const{
+double planet::operator()(array_1d<double> &vv_in) const{
    
     set_where("exoplanet_true_chisq");
-    amp_and_period.set_where("exoplanet_true_chisq");
-    angles.set_where("exoplanet_true_chisq");
+   
     
     double before=double(time(NULL));
     
-    //array_2d<double> nu;
-    //array_1d<double> times;
+    //period will be vv_in(i*4)
+    //eccentricity will be vv_in(i*4+1)
+    //angle will be vv_in(i*4+2)
+    //time displacement will be vv_in(i*4+3)
     
-    //nu.set_name("exoplanet_true_chisq_nu");
-    //times.set_name("exoplanet_true_chisq_times");
+    int i,j,k;
+    double bigE,xx,lntotal,vk,vl,nk,nl;
     
-    double nu;
+    array_2d<double> W,nu;
+    //vl will be nplanets
+    //vk will be nplanets+1
     
-    int i,j;
-    double mm,bigE,xx,lntotal;
+    W.set_dim(ndata,nplanets);
+    nu.set_dim(ndata,nplanets);
     
-
-    for(i=0;i<nplanets;i++){
-        if(angles.get_data(i*3)< 0.0 || angles.get_data(i*3)>1.0){
-	    set_where("exoplanet_operator");
-	    angles.set_where("nowhere");
-	    amp_and_period.set_where("nowhere");
-	    return 2.0*exception;
-	}
-	
-	if(amp_and_period.get_data(i*2)<0.0){
-	    set_where("exoplanet_operator");
-	    angles.set_where("nowhere");
-	    amp_and_period.set_where("nowhere");
-	    return 2.0*exception;
-	}
-	
-	//if(angles[i*3+1]<0.0 || angles[i*3+1]>360.0) return exception;
-	//if(angles[i*3+2]<-1.0 || angles[i*3+2]>1.0) return exception;
-    }
-    
-    //times.set_dim(nplanets);
-
-    lntotal=0.0;
-    for(i=0;i<nplanets;i++){
-
-	
-	if(angles.get_data(i*3)>1.0 || angles.get_data(i*3)<0.0){
-	    angles.set_where("nowhere");
-	    amp_and_period.set_where("nowhere");
-	    set_where("exoplanet_operator");
-	    
-	    return 2.0*exception;
-	
-	}
-
-
-    }
-    
-   
     double chisq,rms,rmsbest,ans;
-    double nn;
+    double nn,yy;
     chisq=0.0;
     rms=0.0;    
 
-    for(i=0;i<ndata;i++){
+    
         ans=0.0;
-        for(j=0;j<nplanets;j++){
-       
+      for(j=0;j<nplanets;j++){
+         for(i=0;i<ndata;i++){
 	    
-	    mm=2.0*pi*(date.get_data(i)/amp_and_period.get_data(j*2+1)-angles.get_data(j*3+2));//+tt*radians_per_degree;
+	    yy=2.0*pi*(date.get_data(i)/vv_in.get_data(j*4)-vv_in.get_data(j*4+3));//+tt*radians_per_degree;
 	    
-	    bigE=find_E(mm,angles.get_data(j*3));
-	    xx=sqrt((1.0+angles.get_data(j*3))/(1.0-angles.get_data(j*3)))*tan(0.5*bigE);
-	    nu=2.0*atan(xx);
+	    bigE=find_E(yy,vv_in.get_data(j*4+1));
+	    xx=sqrt((1.0+vv_in.get_data(j*4+1))/(1.0-vv_in.get_data(j*4+1)))*tan(0.5*bigE);
+	    nn=2.0*atan(xx);
 	    
+            nu.set(i,j,nn);
 	   
-	   if(isnan(nu)){
-	      printf("WARNING nu %e\n",nu);
-	      printf("mm %e  %e\n",mm,angles.get_data(i*3+2));
-	      printf("bigE %e ee %e xx %e atan %e\n",bigE,angles.get_data(j*3),xx,atan(xx));
+	   if(isnan(nn)){
+	      printf("WARNING nu %e\n",nn);
+	      printf("yy %e \n",yy);
+	      printf("bigE %e ee %e xx %e atan %e\n",bigE,vv_in.get_data(j*4+1),xx,atan(xx));
 	      printf("j %d\n",j);
 	      exit(1);
 	   }
-	   
-	   ans+=amp_and_period.get_data(j*2)*cos(nu+angles.get_data(j*3+1)*radians_per_degree);
-	   ans+=amp_and_period.get_data(j*2)*angles.get_data(j*3)*cos(angles.get_data(j*3+1)*radians_per_degree);
-	   if(isnan(ans)){
-	       printf("WARNING ans is nan\n");
-	       exit(1);
-	   } 
-
-        }
-
-        
-	if(label[i]=='L')ans+=angles.get_data(nplanets*3);
-	else ans+=angles.get_data(nplanets*3+1);
-	
-        nn=ans-velocity.get_data(i);
-        rms+=nn*nn;
-	
-        chisq+=nn*nn/sig2.get_data(i);
-        if(isnan(chisq)){
-           printf("sig2 %e nn %e ans %e\n",sig2.get_data(i),nn,ans);
+	    
+           W.set(i,j,vv_in.get_data(j*4+1)*cos(vv_in.get_data(j*4+2)*radians_per_degree)+cos(nn+vv_in.get_data(j*4+2)*radians_per_degree));
+            
+	   //ans+=amp_and_period.get_data(j*2)*cos(nu+angles.get_data(j*3+1)*radians_per_degree);
+	   //ans+=amp_and_period.get_data(j*2)*angles.get_data(j*3)*cos(angles.get_data(j*3+1)*radians_per_degree);
+        }	
+    }
+    
+    
+    array_1d<double> amplitudes,bb;
+    array_1d<double> mm;
+    
+    bb.set_dim(nplanets+2);
+    mm.set_dim(nplanets+2*nplanets+2);
+    
+    for(i=0;i<nplanets+2;i++){
+        bb.set(i,0.0);
+        for(j=0;j<nplanets+2;j++){
+            mm.set(i*(nplanets+2)+j,0.0);
         }
     }
-  
-    if(isnan(chisq))chisq=exception;
+       
+    for(j=0;j<nplanets;j++){
+        for(i=0;i<ndata;i++){
+            bb.add_val(j,velocity.get_data(i)*W.get_data(i,j));
+        }
+    }
     
-    //time_spent+=double(time(NULL))-before;
+    for(i=0;i<ndata;i++){
+        if(label[i]=='L'){
+            bb.add_val(nplanets,velocity.get_data(i));
+        }
+        else{
+            bb.add_val(nplanets+1,velocity.get_data(i));
+        }
+    }
     
-    amp_and_period.set_where("nowhere");
-    angles.set_where("nowhere");
+    for(i=0;i<nplanets;i++){
+        for(j=0;j<nplanets;j++){
+            for(k=0;k<ndata;k++){
+                mm.add_val(i*(nplanets+2)+j,W.get_data(k,i)*W.get_data(k,j));
+            }
+        }
+    }
+    
+    nl=0.0;
+    nk=0.0;
+    for(i=0;i<ndata;i++){
+        if(label[i]=='L'){
+            nl+=1.0;
+            for(j=0;j<nplanets;j++){
+                mm.add_val(nplanets*(nplanets+2)+j,W.get_data(i,j));
+            }
+        }
+        else{ 
+            nk+=1.0;
+            for(j=0;j<nplanets;j++){
+                mm.add_val((nplanets+1)*(nplanets+2)+j,W.get_data(i,j));
+            }
+        }
+    }
+    
+    for(i=0;i<ndata;i++){
+        if(label[i]=='L'){
+            for(j=0;j<nplanets;j++){
+                mm.add_val(j*(nplanets+2)+nplanets,W.get_data(i,j));
+            }
+        }
+        else{
+            for(j=0;j<nplanets;j++){
+                mm.add_val(j*(nplanets+2)+nplanets+1,W.get_data(i,j)); 
+            }
+        }
+    }
+    
+    mm.set(nplanets*(nplanets+2)+nplanets,nl);
+    mm.set((nplanets+1)*(nplanets+2)+nplanets+1,nk);
+    
+    naive_gaussian_solver(mm,bb,amplitudes,nplanets+2);
+    
+    chisq=0.0;
+    
+    for(i=0;i<ndata;i++){
+        nn=0.0;
+        for(j=0;j<nplanets;j++){
+            nn+=amplitudes.get_data(j)*vv_in.get_data(j*4+1)*cos(vv_in.get_data(j*4+2)*radians_per_degree);
+            nn+=amplitudes.get_data(j)*cos(nu.get_data(i,j)+vv_in.get_data(j*4+2)*radians_per_degree);
+            
+        }
+        
+        if(label[i]=='L'){
+            nn+=amplitudes.get_data(nplanets);
+        }
+        else{
+            nn+=amplitudes.get_data(nplanets+1);
+        }
+        
+        chisq+=power(nn-velocity.get_data(i),2)/sig2.get_data(i); 
+    }
+    
+    
     
     return chisq;
 
     
 }
 
-double planet::operator()(array_1d<double> &vv) const{
-
-  set_where("exoplanet_operator");
-  //use simplex
-  
-  double before=double(time(NULL));
-  
-  array_1d<double> amp_and_period,angles;
-  
-  double chimin;
-  
-  int i;
-  for(i=0;i<nplanets;i++){
-  
-      amp_and_period.set(i*2,vv.get_data(i*5));
-      amp_and_period.set(i*2+1,vv.get_data(i*5+1));
-      
-      angles.set(i*3,vv.get_data(i*5+2));
-      angles.set(i*3+1,vv.get_data(i*5+3));
-      angles.set(i*3+2,vv.get_data(i*5+4));
-  
-  }
-  
-  angles.set(nplanets*3,vv.get_data(nplanets*5));
-  angles.set(nplanets*3+1,vv.get_data(nplanets*5+1));
-  
-  chimin=true_chisq(amp_and_period,angles); 
-   
-  if(chimin<exception)called++;
-  time_spent+=double(time(NULL))-before;
-  
-  /*if(called>0){
-      printf("    called %d %.3e %.3e -- %.3e -- %e %e %e %e\n",
-      called,time_spent,time_spent/double(called),
-      chimin,vv.get_data(0),vv.get_data(1),vv.get_data(2),vv.get_data(3));
-  }*/
-  
-  set_where("nowhere");
-  return chimin;
-  
-  
-
-}
 
 
 double planet::find_E(double m, double ee) const{
