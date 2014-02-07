@@ -547,9 +547,41 @@ void aps::find_global_minimum_meta(){
 
 void aps::find_global_minimum(array_1d<double> &vv){
     array_1d<int> neigh;
-    array_1d<double> dd;
+    array_1d<double> dd,trial;
+    double ftrial;
+    
+    
+    int i,j,k;
+    
+    for(i=0;i<dim;i++){
+        for(j=0;j<dim;j++){
+            trial.set(j,vv.get_data(j));
+        }
+        trial.add_val(i,0.01*(gg.get_max(i)-gg.get_min(i)));
+        ftrial=(*chisq)(trial);
+        if(ftrial<exception){
+            add_pt(trial,ftrial);
+        }
+    }
+    
     
     gg.nn_srch(vv,dim+1,neigh,dd);
+    
+    /*
+    for(i=1;i<dim+1;){
+        j=dice->int32()%gg.get_pts();
+        l=1;
+        for(k=0;k<i;k++){
+            if(j==neigh.get_data(i))l=0;
+        }
+        
+        if(l==1){
+            neigh.set(i,j);
+            i++;
+        }
+    }*/
+    
+    
     find_global_minimum(neigh);
 }
 
@@ -650,7 +682,24 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*5+1)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
     printf("\n");
     
-    while(sig>1.0e-2 && simplex_min<exception){
+    
+    mu=0.0;
+    sig=0.0;
+    for(i=0;i<dim+1;i++){
+        mu+=ff.get_data(i);
+    }
+    mu=mu/double(dim+1);
+    for(i=0;i<dim+1;i++){
+        sig+=power(mu-ff.get_data(i),2);
+    }
+    sig=sig/double(dim+1);
+    sig=sqrt(sig);
+    
+    printf("    sig starts at %e\n",sig);
+    
+    int ct_abort=0,ct_abort_max=200;
+    
+    while(ct_abort<ct_abort_max && simplex_min<exception){
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
             for(j=0;j<dim+1;j++){
@@ -671,6 +720,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             actually_added=add_pt(true_var,fstar);
         }
         if(fstar<simplex_min){
+            ct_abort=0;
             simplex_min=fstar;
 	    if(actually_added==1)mindex=gg.get_pts()-1;
         }
@@ -693,6 +743,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             if(fstarstar<simplex_min){
+                ct_abort=0;
                 simplex_min=fstarstar;
 		if(actually_added==1){
 		    mindex=gg.get_pts()-1;
@@ -727,6 +778,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 actually_added=add_pt(true_var,fstarstar);
             }
             if(fstarstar<simplex_min){
+                ct_abort=0;
                 simplex_min=fstarstar;
 		if(actually_added==1){
 		    mindex=gg.get_pts()-1;
@@ -755,6 +807,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             actually_added=add_pt(true_var,ff.get_data(i));
                         }
                         if(ff.get_data(i)<simplex_min){
+                            ct_abort=0;
 			    simplex_min=ff.get_data(i);
 			    if(actually_added==1){
 			        mindex=gg.get_pts()-1;
@@ -940,7 +993,7 @@ void aps::search(){
         //aps_scatter_search();
 	aps_search(250);
         
-        gradient_search();
+        //gradient_search();
         
 	//printf("done aps searching\n");
     }
