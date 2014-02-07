@@ -650,7 +650,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*5+1)*wgt.get_data(i*5+1)+min.get_data(i*5+1));
     printf("\n");
     
-    while(sig>1.0e-4 && simplex_min<exception){
+    while(sig>1.0e-2 && simplex_min<exception){
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
             for(j=0;j<dim+1;j++){
@@ -804,7 +804,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
    // }
     printf("    chimin %e\n",chimin);
     
-    array_1d<double> v_min,gradient;
+    /*array_1d<double> v_min,gradient;
     gg.get_pt(mindex,v_min);
     printf("checking simplex min %e\n",gg.get_fn(mindex));
     gg.actual_gradient(v_min,gradient);
@@ -813,7 +813,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     printf("square norm of gradient %e\n",dd);
     
-    exit(1);
+    exit(1);*/
 
     
     set_where("nowhere");
