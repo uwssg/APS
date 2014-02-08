@@ -679,7 +679,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     mindex=neigh.get_data(il);
     
     printf("    starting %e\n    ",simplex_min);
-    for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*4)*wgt.get_data(i*4)+min.get_data(i*4));
+    for(i=0;i<(dim/4);i++)printf("%e ",pts.get_data(il,i*4)*wgt.get_data(i*4)+min.get_data(i*4));
     printf("\n");
     
     
@@ -699,7 +699,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     int ct_abort=0,ct_abort_max=200;
     
-    while(ct_abort<ct_abort_max && simplex_min<exception){
+    while(sig>1.0e-4 && simplex_min<exception){
         ct_abort++;
         //printf("    simplex min %e\n",simplex_min);
         for(i=0;i<dim;i++){
@@ -848,7 +848,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     printf("    ending %e\n",simplex_min);
     printf("    ");
-    for(i=0;i<(dim-2)/5;i++)printf("%e ",pts.get_data(il,i*4)*wgt.get_data(i*4)+min.get_data(i*4));
+    for(i=0;i<dim/4;i++)printf("%e ",pts.get_data(il,i*4)*wgt.get_data(i*4)+min.get_data(i*4));
     i=(dim-2)/5-1;
     
     printf("\n\n");
@@ -971,6 +971,7 @@ void aps::search(){
     double aps_score,grad_score;
     int i;
     
+    //printf("in search\n");
     
     aps_score=time_aps;
     
@@ -987,7 +988,7 @@ void aps::search(){
     if(grad_score<aps_score){
         //printf("gradient searching\n");
         gradient_search();
-	//printf("done gradient searching\n");
+	printf("done gradient searching\n");
     }
     else{
         //printf("aps searching\n");
@@ -1000,8 +1001,10 @@ void aps::search(){
     }
     
     if(gg.get_pts()>n_printed+write_every){
+        //printf("writing\n");
         write_pts();
     }
+    //printf("done searching\n");
         
     time_total+=double(time(NULL))-before;
 }
@@ -1066,7 +1069,9 @@ array_1d<double> &sampling_max){
 
 void aps::aps_search(int n_samples){
 
-    set_where("aps_scatter_search");
+    //set_where("aps_scatter_search");
+    
+   // printf("aps searching\n");
     
     if(chisq==NULL){
         printf("WARNING chisq is null in aps_scatter_search\n");
@@ -1217,7 +1222,7 @@ void aps::gradient_search(){
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
     
-    find_global_minimum_meta();
+    //find_global_minimum_meta();
     
     ix=choose_a_candidate();
     
@@ -1229,6 +1234,9 @@ void aps::gradient_search(){
        
        find_global_minimum(vv);
     
+    }
+    else{
+        find_global_minimum_meta();
     }
     
     ct_gradient+=chisq->get_called()-ibefore;
@@ -1347,11 +1355,12 @@ void aps::write_pts(){
     if(i<1000)i=1000;
     
     if(gg.get_pts()>gg.get_last_refactored()+i && gg.get_pts()<20000){
+        printf("refactoring\n");
         gg.refactor();
     }
     
     if(n_aps_pts>last_optimized+1000){
-        
+        printf("optimizing\n");
 	
 	nn=double(time(NULL));
 	//printf("    time refactoring %e\n",double(time(NULL))-nn);

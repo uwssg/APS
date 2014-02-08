@@ -138,9 +138,11 @@ void planet::set_where(char *word) const{
 double planet::operator()(array_1d<double> &vv_in) const{
    
     set_where("exoplanet_true_chisq");
-   
+    
+    //printf("calling operator\n");
     
     double before=double(time(NULL));
+    called++;
     
     //period will be vv_in(i*4)
     //eccentricity will be vv_in(i*4+1)
@@ -157,13 +159,18 @@ double planet::operator()(array_1d<double> &vv_in) const{
     W.set_dim(ndata,nplanets);
     nu.set_dim(ndata,nplanets);
     
-    double chisq,rms,rmsbest,ans;
+    double chisq,rms,rmsbest;
     double nn,yy;
     chisq=0.0;
     rms=0.0;    
 
-    
-        ans=0.0;
+     for(i=0;i<nplanets;i++){
+         if(vv_in.get_data(i*4+1)>1.0 || vv_in.get_data(i*4+1)<0.0){
+             return exception;
+         }
+         if(vv_in.get_data(i*4)<0.0)return exception;
+     }
+ 
       for(j=0;j<nplanets;j++){
          for(i=0;i<ndata;i++){
 	    
@@ -260,7 +267,10 @@ double planet::operator()(array_1d<double> &vv_in) const{
     mm.set(nplanets*(nplanets+2)+nplanets,nl);
     mm.set((nplanets+1)*(nplanets+2)+nplanets+1,nk);
     
+    //printf("about to solve linear equation\n");
+    
     naive_gaussian_solver(mm,bb,amplitudes,nplanets+2);
+    //printf("done\n");
     
     chisq=0.0;
     
@@ -283,6 +293,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
     }
     
     
+    //printf("returning %e\n",chisq);
     
     return chisq;
 
