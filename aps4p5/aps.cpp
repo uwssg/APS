@@ -1235,9 +1235,9 @@ void aps::gradient_search(){
        find_global_minimum(vv);
     
     }
-    else{
+    /*else{
         find_global_minimum_meta();
-    }
+    }*/
     
     ct_gradient+=chisq->get_called()-ibefore;
     time_gradient+=double(time(NULL))-before;
@@ -1360,7 +1360,7 @@ void aps::write_pts(){
     }
     
     if(n_aps_pts>last_optimized+1000){
-        printf("optimizing\n");
+        //printf("optimizing\n");
 	
 	nn=double(time(NULL));
 	//printf("    time refactoring %e\n",double(time(NULL))-nn);

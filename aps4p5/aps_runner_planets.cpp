@@ -17,7 +17,7 @@ if(seed<0){
     seed=int(time(NULL));
 }
 
-//printf("seed %d\n",seed);
+printf("seed %d\n",seed);
 
 Ran chaos(seed);
 
@@ -33,7 +33,7 @@ aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);
 
 aps_test.set_write_every(10);
-aps_test.set_grat(0.5);
+aps_test.set_grat(0.1);
 
 array_1d<double> max,min;
 max.set_name("driver_max");
@@ -62,7 +62,7 @@ min.set(3,-1.0);
 max.set(3,1.0);
 
 
-min.set(4,0.0);
+min.set(4,3000.0);
 max.set(4,6000.0);
 //aps_test.set_wgt(6,200.0);
 
