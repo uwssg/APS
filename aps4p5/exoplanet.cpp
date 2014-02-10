@@ -135,7 +135,27 @@ void planet::set_where(char *word) const{
     velocity.set_where(word);
 }
 
-double planet::operator()(array_1d<double> &vv_in) const{
+double planet::calculate_nu(array_1d<double> &period, array_1d<double> &eccentricity, 
+               array_1d<double> &T0, array_2d<double> &nu) const{
+
+    int i,j;
+    double yy,xx,EE;
+    
+    for (i=0;i<ndata;i++){
+        for(j=0;j<nplanets;j++){
+            yy=2.0*pi*(date.get_data(i)/period.get_data(j)-T0.get_data(j));
+            EE=find_E(yy,eccentricity.get_data(j));
+            xx=sqrt((1.0+eccentricity.get_data(j))/(1.0-eccentricity.get_data(j)))*tan(EE*0.5);
+            nu.set(i,j,2.0*atan(xx));
+        }
+    }
+
+}
+
+double planet::true_chisq(array_1d<double> &period,
+                          array_1d<double> &eccentricity,
+                          array_1d<double> &omega,
+                          array_2d<double> &nu) const{
    
     set_where("exoplanet_true_chisq");
     
@@ -152,12 +172,11 @@ double planet::operator()(array_1d<double> &vv_in) const{
     int i,j,k;
     double bigE,xx,lntotal,vk,vl,nk,nl;
     
-    array_2d<double> W,nu;
+    array_2d<double> W;
     //vl will be nplanets
     //vk will be nplanets+1
     
     W.set_dim(ndata,nplanets);
-    nu.set_dim(ndata,nplanets);
     
     double chisq,rms,rmsbest;
     double nn,yy;
@@ -165,32 +184,24 @@ double planet::operator()(array_1d<double> &vv_in) const{
     rms=0.0;    
 
      for(i=0;i<nplanets;i++){
-         if(vv_in.get_data(i*4+1)>1.0 || vv_in.get_data(i*4+1)<0.0){
+         if(eccentricity.get_data(i)>1.0 || eccentricity.get_data(i)<0.0){
              return exception;
          }
-         if(vv_in.get_data(i*4)<0.0)return exception;
+         if(period.get_data(i)<0.0)return exception;
      }
  
       for(j=0;j<nplanets;j++){
          for(i=0;i<ndata;i++){
-	    
-	    yy=2.0*pi*(date.get_data(i)/vv_in.get_data(j*4)-vv_in.get_data(j*4+3));//+tt*radians_per_degree;
-	    
-	    bigE=find_E(yy,vv_in.get_data(j*4+1));
-	    xx=sqrt((1.0+vv_in.get_data(j*4+1))/(1.0-vv_in.get_data(j*4+1)))*tan(0.5*bigE);
-	    nn=2.0*atan(xx);
-	    
-            nu.set(i,j,nn);
 	   
 	   if(isnan(nn)){
 	      printf("WARNING nu %e\n",nn);
 	      printf("yy %e \n",yy);
-	      printf("bigE %e ee %e xx %e atan %e\n",bigE,vv_in.get_data(j*4+1),xx,atan(xx));
+	      printf("bigE %e ee %e xx %e atan %e\n",bigE,eccentricity.get_data(j),xx,atan(xx));
 	      printf("j %d\n",j);
 	      exit(1);
 	   }
 	    
-           W.set(i,j,vv_in.get_data(j*4+1)*cos(vv_in.get_data(j*4+2)*radians_per_degree)+cos(nn+vv_in.get_data(j*4+2)*radians_per_degree));
+           W.set(i,j,eccentricity.get_data(j)*cos(omega.get_data(j)*radians_per_degree)+cos(nu.get_data(i,j)+omega.get_data(j)*radians_per_degree));
             
 	   //ans+=amp_and_period.get_data(j*2)*cos(nu+angles.get_data(j*3+1)*radians_per_degree);
 	   //ans+=amp_and_period.get_data(j*2)*angles.get_data(j*3)*cos(angles.get_data(j*3+1)*radians_per_degree);
@@ -277,8 +288,8 @@ double planet::operator()(array_1d<double> &vv_in) const{
     for(i=0;i<ndata;i++){
         nn=0.0;
         for(j=0;j<nplanets;j++){
-            nn+=amplitudes.get_data(j)*vv_in.get_data(j*4+1)*cos(vv_in.get_data(j*4+2)*radians_per_degree);
-            nn+=amplitudes.get_data(j)*cos(nu.get_data(i,j)+vv_in.get_data(j*4+2)*radians_per_degree);
+            nn+=amplitudes.get_data(j)*eccentricity.get_data(j)*cos(omega.get_data(j)*radians_per_degree);
+            nn+=amplitudes.get_data(j)*cos(nu.get_data(i,j)+omega.get_data(j)*radians_per_degree);
             
         }
         
@@ -381,6 +392,30 @@ double planet::find_E(double m, double ee) const{
     
     return ebest;
 
+}
+
+double planet::operator()(array_1d<double> &vv_in) const{
+    
+    array_1d<double> period,eccentricity,omega,T0;
+    array_2d<double> nu;
+    int i;
+    
+    nu.set_name("planet_nu");
+    nu.set_cols(nplanets);
+    
+    for(i=0;i<nplanets;i++){
+        period.set(i,vv_in.get_data(i*4));
+        eccentricity.set(i,vv_in.get_data(i*4+1));
+        omega.set(i,vv_in.get_data(i*4+2));
+        T0.set(i,vv_in.get_data(i*4+3));
+    }
+    
+    calculate_nu(period,eccentricity,T0,nu);
+    double chisq=true_chisq(period,eccentricity,omega,nu);
+    
+    return chisq;
+    
+    
 }
 
 int planet::get_nplanets(){

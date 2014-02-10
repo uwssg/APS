@@ -33,6 +33,12 @@ private:
     
     void set_where(char*) const;
     
+    double calculate_nu(array_1d<double>&,
+           array_1d<double>&,array_1d<double>&,array_2d<double>&) const;
+    
+    double true_chisq(array_1d<double>&,array_1d<double>&,
+                      array_1d<double>&,array_2d<double>&) const;
+    
     void set_bounds(array_1d<double>&,array_1d<double>&,array_1d<double>&,
          array_1d<double>&);
     
