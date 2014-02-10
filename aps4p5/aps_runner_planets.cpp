@@ -32,7 +32,7 @@ aps aps_test(dim,20,25.0,seed);
 aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);
 
-aps_test.set_write_every(10);
+aps_test.set_write_every(100);
 aps_test.set_grat(0.1);
 
 array_1d<double> max,min;
@@ -48,8 +48,8 @@ printf("set weights\n");
 
 
 
-min.set(0,0.1);
-max.set(0,50.0);
+min.set(0,3000.0);
+max.set(0,6000.0);
 //aps_test.set_wgt(1,7.0);
 
 min.set(1,0.001);
@@ -62,8 +62,8 @@ min.set(2,-1.0);
 max.set(2,1.0);
 
 
-min.set(3,3000.0);
-max.set(3,6000.0);
+min.set(3,20.0);
+max.set(3,1000.0);
 //aps_test.set_wgt(6,200.0);
 
 min.set(4,0.001);
@@ -78,7 +78,7 @@ max.set(5, 1.0);
 if(nplanets>2){
 
     min.set(6,0.0);
-    max.set(6,1000.0);
+    max.set(6,20.0);
     //aps_test.set_wgt(11,1000.0);
 
     min.set(7,0.001);

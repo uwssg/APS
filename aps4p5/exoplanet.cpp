@@ -406,6 +406,11 @@ double planet::operator()(array_1d<double> &vv_in) const{
     
     for(i=0;i<nplanets;i++){
         period.set(i,vv_in.get_data(i*3));
+        if(i>0 && period.get_data(i)>period.get_data(i-1)){
+            return exception;
+        }
+        
+        
         eccentricity.set(i,vv_in.get_data(i*3+1));
         //omega.set(i,vv_in.get_data(i*4+2));
         T0.set(i,vv_in.get_data(i*3+2));
