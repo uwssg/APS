@@ -162,7 +162,6 @@ double planet::true_chisq(array_1d<double> &period,
     //printf("calling operator\n");
     
     double before=double(time(NULL));
-    called++;
     
     //period will be vv_in(i*4)
     //eccentricity will be vv_in(i*4+1)
@@ -400,6 +399,8 @@ double planet::operator()(array_1d<double> &vv_in) const{
     array_2d<double> nu;
     int i;
     
+    called++;
+    
     nu.set_name("planet_nu");
     nu.set_cols(nplanets);
     
@@ -561,9 +562,9 @@ double planet::operator()(array_1d<double> &vv_in) const{
     }
     
     
-    for(i=0;i<nplanets;i++){
+    /*for(i=0;i<nplanets;i++){
         printf("%e\n",min_pt.get_data(i));
-    }
+    }*/
     //double chisq=true_chisq(period,eccentricity,omega,nu);
     
     return simplex_min;
