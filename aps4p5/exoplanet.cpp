@@ -10,7 +10,7 @@ planet::planet(){
     exit(1);
 }
 
-planet::planet(int i) : chisquared(i*4){
+planet::planet(int i) : chisquared(i*3){
     nplanets=i;
     ndata=0;
     
@@ -404,11 +404,15 @@ double planet::operator()(array_1d<double> &vv_in) const{
     nu.set_cols(nplanets);
     
     for(i=0;i<nplanets;i++){
-        period.set(i,vv_in.get_data(i*4));
-        eccentricity.set(i,vv_in.get_data(i*4+1));
+        period.set(i,vv_in.get_data(i*3));
+        eccentricity.set(i,vv_in.get_data(i*3+1));
         //omega.set(i,vv_in.get_data(i*4+2));
-        T0.set(i,vv_in.get_data(i*4+2));
+        T0.set(i,vv_in.get_data(i*3+2));
     }
+    
+    /*for(i=0;i<nplanets;i++){
+        printf("%e %e %e\n",period.get_data(i),eccentricity.get_data(i),T0.get_data(i));
+    }*/
     
     calculate_nu(period,eccentricity,T0,nu);
     
@@ -443,6 +447,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
     
     double sig=1.0,mu=0.0;
     while(sig>1.0e-4){
+        //printf("%e %e\n",simplex_min,sig);
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
             for(j=0;j<dim+1;j++){
@@ -555,6 +560,10 @@ double planet::operator()(array_1d<double> &vv_in) const{
     
     }
     
+    
+    for(i=0;i<nplanets;i++){
+        printf("%e\n",min_pt.get_data(i));
+    }
     //double chisq=true_chisq(period,eccentricity,omega,nu);
     
     return simplex_min;

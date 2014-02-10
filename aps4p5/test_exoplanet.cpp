@@ -71,16 +71,22 @@ double nn;
 
 for(i=0;i<nplanets;i++){
     fscanf(input,"%le",&nn);
-    for(j=0;j<4;j++){
+    //printf("%e\n",nn);
+    for(j=0;j<2;j++){
         fscanf(input,"%le",&nn);
-	vv.set(i*4+j,nn);
+	vv.set(i*3+j,nn);
+        //printf(" %d %d %e\n",i,j,vv.get_data(i*3+j));
     }
+    fscanf(input,"%le",&nn);
+    //printf("    %e\n",nn);
+    fscanf(input,"%le",&nn);
+    vv.set(i*3+2,nn);
 }
 
-fscanf(input,"%le",&nn);
+/*fscanf(input,"%le",&nn);
 vv.set(nplanets*5,nn);
 fscanf(input,"%le",&nn);
-vv.set(nplanets*5+1,nn);
+vv.set(nplanets*5+1,nn);*/
 
 fclose(input);
 
@@ -95,10 +101,14 @@ for(i=0;i<nplanets;i++){
     if(i>=5){
         printf("WARNING i over stepped %d\n",i);
     }
-    for(j=0;j<4;j++){
+    for(j=0;j<2;j++){
         fscanf(input,"%le",&nn);
-        vv.set(i*4+j,nn);
+        vv.set(i*3+j,nn);
     }
+    fscanf(input,"%le",&nn);
+    fscanf(input,"%le",&nn);
+    
+    vv.set(i*3+2,nn);
 }
 
 fscanf(input,"%le",&nn);
