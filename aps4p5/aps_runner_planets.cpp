@@ -78,7 +78,7 @@ max.set(5, 1.0);
 if(nplanets>2){
 
     min.set(6,0.0);
-    max.set(6,20.0);
+    max.set(6,1000.0);
     //aps_test.set_wgt(11,1000.0);
 
     min.set(7,0.001);
