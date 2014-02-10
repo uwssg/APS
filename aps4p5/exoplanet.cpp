@@ -553,6 +553,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
             sig+=power(mu-ff.get_data(i),2);
         }
         sig=sig/double(dim+1);
+        sig=sqrt(sig);
         
         for(i=0;i<dim+1;i++){
             if(i==0 || ff.get_data(i)<ff.get_data(il)){
