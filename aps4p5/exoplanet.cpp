@@ -406,14 +406,158 @@ double planet::operator()(array_1d<double> &vv_in) const{
     for(i=0;i<nplanets;i++){
         period.set(i,vv_in.get_data(i*4));
         eccentricity.set(i,vv_in.get_data(i*4+1));
-        omega.set(i,vv_in.get_data(i*4+2));
-        T0.set(i,vv_in.get_data(i*4+3));
+        //omega.set(i,vv_in.get_data(i*4+2));
+        T0.set(i,vv_in.get_data(i*4+2));
     }
     
     calculate_nu(period,eccentricity,T0,nu);
-    double chisq=true_chisq(period,eccentricity,omega,nu);
     
-    return chisq;
+    double alpha=1.0,beta=0.9,gamma=1.1;
+    array_1d<double> pbar,ps,pss,ff,min_pt;
+    array_2d<double>pts;
+    double ffs,ffss,simplex_min;
+    
+    int dim=nplanets;
+    
+    pts.set_cols(dim);
+    
+    int j,il=-1,ih=-1;
+    
+    Ran chaos(43);
+    
+    for(i=0;i<dim+1;i++){
+        for(j=0;j<dim;j++){
+            pts.set(i,j,chaos.doub()*360.0);
+        }
+        ff.set(i,true_chisq(period,eccentricity,*pts(i),nu));
+        if(il<0 || ff.get_data(i)<ff.get_data(il)){
+            il=i;
+            simplex_min=ff.get_data(i);
+            for(j=0;j<dim;j++)min_pt.set(j,pts.get_data(i,j));
+        }
+        
+        if(ih<0 || ff.get_data(i)>ff.get_data(ih)){
+            ih=i;
+        }
+    }
+    
+    double sig=1.0,mu=0.0;
+    while(sig>1.0e-4){
+        for(i=0;i<dim;i++){
+            pbar.set(i,0.0);
+            for(j=0;j<dim+1;j++){
+                if(j!=ih){
+                    pbar.add_val(i,pts.get_data(j,i));
+                }
+            }
+            pbar.divide_val(i,double(dim));
+        }
+        
+        for(i=0;i<dim;i++){
+            ps.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
+        }
+        ffs=true_chisq(period,eccentricity,ps,nu);
+        
+        if(ffs<simplex_min){
+            simplex_min=ffs;
+            for(i=0;i<dim;i++)min_pt.set(i,ps.get_data(i));
+        }
+        
+        if(ffs<ff.get_data(ih) && ffs>ff.get_data(il)){
+            ff.set(ih,ffs);
+            for(i=0;i<dim;i++){
+                pts.set(ih,i,ps.get_data(i));
+            } 
+        }
+        else if(ffs<ff.get_data(il)){
+            for(i=0;i<dim;i++){
+                pss.set(i,gamma*ps.get_data(i)+(1.0-gamma)*pbar.get_data(i));
+            }
+            ffss=true_chisq(period,eccentricity,pss,nu);
+            if(ffss<simplex_min){
+                simplex_min=ffss;
+                for(i=0;i<dim;i++)min_pt.set(i,pss.get_data(i));
+            }
+            
+            if(ffss<ff.get_data(il)){
+                for(i=0;i<dim;i++)pts.set(ih,i,pss.get_data(i));
+                ff.set(ih,ffss);
+            }
+            else{
+                for(i=0;i<dim;i++)pts.set(ih,i,ps.get_data(i));
+                ff.set(ih,ffs);
+            }
+        }
+        
+        j=1;
+        for(i=0;i<dim+1;i++){
+            if(ffs<ff.get_data(i) && i!=ih){
+                j=0;
+            }
+        }
+        
+        if(j==1){
+            for(i=0;i<dim;i++){
+                pss.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
+            }
+            ffss=true_chisq(period,eccentricity,pss,nu);
+            if(ffss<simplex_min){
+                simplex_min=ffss;
+                for(i=0;i<dim;i++)min_pt.set(i,pss.get_data(i));
+            }
+            
+            if(ffss<ff.get_data(ih)){
+                for(i=0;i<dim;i++)pts.set(ih,i,pss.get_data(i));
+                ff.set(ih,ffss);
+            }
+            else{
+                for(i=0;i<dim+1;i++){
+                    if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                        il=i;
+                    }
+                }
+                for(i=0;i<dim+1;i++){
+                    if(i!=il){
+                        for(j=0;j<dim;j++){
+                            mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
+                            pts.set(i,j,mu);
+                        }
+                        ff.set(i,true_chisq(period,eccentricity,*pts(i),nu));
+                        if(ff.get_data(i)<simplex_min){
+                            simplex_min=ff.get_data(i);
+                            for(j=0;j<dim;j++)min_pt.set(j,pts.get_data(i,j));
+                        }
+                    }
+                }
+            }
+        }
+        
+        mu=0.0;
+        for(i=0;i<dim+1;i++){
+            mu+=ff.get_data(i);
+        }
+        mu=mu/double(dim+1);
+        sig=0.0;
+        for(i=0;i<dim+1;i++){
+            sig+=power(mu-ff.get_data(i),2);
+        }
+        sig=sig/double(dim+1);
+        
+        for(i=0;i<dim+1;i++){
+            if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                il=i;
+            }
+            
+            if(i==0 || ff.get_data(i)>ff.get_data(ih)){
+                ih=i;
+            }
+        }
+    
+    }
+    
+    //double chisq=true_chisq(period,eccentricity,omega,nu);
+    
+    return simplex_min;
     
     
 }

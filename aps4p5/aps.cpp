@@ -727,11 +727,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
 	    if(actually_added==1)mindex=gg.get_pts()-1;
         }
         
-        if(fstar>ff.get_data(il) && fstar<ff.get_data(ih)){
+        if(fstar<ff.get_data(ih) && fstar>ff.get_data(il)){
+            ff.set(ih,fstar);
             for(i=0;i<dim;i++){
                 pts.set(ih,i,pstar.get_data(i));
             }
-            ff.set(ih,fstar);
         }
         else if(fstar<ff.get_data(il)){
             for(i=0;i<dim;i++){
