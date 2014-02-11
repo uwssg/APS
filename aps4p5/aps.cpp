@@ -880,7 +880,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
         }
         
-    
+        sig=1.0;
     }//loop over iteration
     
     known_minima.add(mindex);
