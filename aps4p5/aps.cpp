@@ -642,7 +642,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     true_var.set_name("find_global_min_true_var");
     
     double fstar,fstarstar;
-    int ih,il,i,j,mindex=-1,actually_added;
+    int ih,il,i,j,k,mindex=-1,actually_added;
     double alpha=1.0,beta=0.9,gamma=1.1;
     
     //gg.nn_srch(vv_in,dim+1,neigh,ddneigh);
@@ -849,13 +849,16 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     }
         printf("    iteration %d chimin %e\n",iteration,chimin);
         
+        k=0;
         for(i=0;i<dim+1;i++){
             if(i!=il){
                 for(j=0;j<dim;j++){
                     pts.set(i,j,pts.get_data(il,j));
                 }
                 
-                pts.add_val(i,i,0.01*(max.get_data(i)-min.get_data(i)));
+                pts.add_val(i,k,0.01*(max.get_data(k)-min.get_data(k)));
+                k++;
+                
                 for(j=0;j<dim;j++){
                     true_var.set(j,min.get_data(j)+pts.get_data(i,j)*wgt.get_data(j));
                 }
