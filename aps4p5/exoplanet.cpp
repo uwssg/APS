@@ -410,6 +410,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
             return exception;
         }
         
+        if(period.get_data(i)>6000.0) return exception;
         
         eccentricity.set(i,vv_in.get_data(i*3+1));
         //omega.set(i,vv_in.get_data(i*4+2));
