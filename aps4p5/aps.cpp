@@ -1019,14 +1019,14 @@ void aps::search(){
     
     
     
-    /*if(n_candidates==0){
+    if(n_candidates==0){
         grad_score=aps_score+100;
     }
     else{
         grad_score=time_gradient;
-    }*/
+    }
     
-    grad_score=time_gradient;
+    //grad_score=time_gradient;
 
     if(grad_score<aps_score){
         //printf("gradient searching\n");
@@ -1262,6 +1262,10 @@ void aps::gradient_search(){
     
     //find_global_minimum_meta();
     
+    for(i=0;i<n_candidates;i++){
+         printf("candidates %d %d\n",i,is_it_a_candidate(candidates.get_data(i)));
+    }
+    
     ix=choose_a_candidate();
     
     if(ix>=0){
@@ -1273,10 +1277,10 @@ void aps::gradient_search(){
        find_global_minimum(vv);
     
     }
-    else{
+    /*else{
         printf("finding global minimum from minpt\n");
         find_global_minimum(minpt);
-    }
+    }*/
     
     ct_gradient+=chisq->get_called()-ibefore;
     time_gradient+=double(time(NULL))-before;
