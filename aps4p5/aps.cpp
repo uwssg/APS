@@ -863,7 +863,20 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 if(mu<exception){
                     add_pt(true_var,mu);
                 }
+                if(mu<simplex_min){
+                    simplex_min=mu;
+                    mindex=gg.get_pts()-1;
+                }
                 ff.set(i,mu);
+            }
+        }
+        
+        for(i=0;i<dim+1;i++){
+            if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                il=i;
+            }
+            if(i==0 || ff.get_data(i)>ff.get_data(ih)){
+                ih=i;
             }
         }
         
