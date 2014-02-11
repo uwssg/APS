@@ -430,8 +430,9 @@ int aps::choose_a_candidate(){
 
  
     if(n_candidates==0){
-        printf("WARNING trying to choose candidate, but n_candidates is zero\n");
-	exit(1);
+        //printf("WARNING trying to choose candidate, but n_candidates is zero\n");
+	//exit(1);
+        return -1;
     }
     
     int i,ichoice=-1,j;
@@ -977,13 +978,14 @@ void aps::search(){
     
     
     
-    if(n_candidates==0){
+    /*if(n_candidates==0){
         grad_score=aps_score+100;
     }
     else{
         grad_score=time_gradient;
-    }
+    }*/
     
+    grad_score=time_gradient;
 
     if(grad_score<aps_score){
         //printf("gradient searching\n");
