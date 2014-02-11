@@ -855,7 +855,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     pts.set(i,j,pts.get_data(il,j));
                 }
                 
-                pts.add_val(i,i,0.01*(max.get_data(i)-min.get_data(j)));
+                pts.add_val(i,i,0.01*(max.get_data(i)-min.get_data(i)));
                 for(j=0;j<dim;j++){
                     true_var.set(j,min.get_data(j)+pts.get_data(i,j)*wgt.get_data(j));
                 }
