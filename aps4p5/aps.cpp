@@ -75,6 +75,8 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     minuit_failed=0;
     assess_failed=0;
     
+    global_mindex=-1;
+    
     ct_aps=0;
     ct_gradient=0;
     called=0;
@@ -933,7 +935,12 @@ int aps::add_pt(array_1d<double> &vv, double chitrue){
         failed_to_add++;
     }
     
-    if(chitrue<chimin || chimin<0.0)set_chimin(chitrue,vv);
+    if(chitrue<chimin || chimin<0.0){
+        set_chimin(chitrue,vv);
+        if(use_it==1){
+            global_mindex=gg.get_pts()-1;
+        }
+    }
     
     if(chitrue<strad.get_target()){
         if(ngood==0){
@@ -1137,7 +1144,7 @@ void aps::aps_search(int n_samples){
     array_1d<double> sambest,samv;
     double mu,sig,stradval,stradmax;
     
-    int i,j;
+    int i,j,o_mindex;
     
     samples.set_name("aps_scatter_search_samples");
     sambest.set_name("aps_scatter_search_sambest");
@@ -1216,6 +1223,7 @@ void aps::aps_search(int n_samples){
     
     int actually_added;
     
+    o_mindex=global_mindex;
     if(chitrue<exception){
         actually_added=add_pt(sambest,chitrue);
 	
@@ -1226,12 +1234,33 @@ void aps::aps_search(int n_samples){
 	    aps_failed++;
 	}
 	
-	if(chitrue<chimin || chimin<0.0)set_chimin(chitrue,sambest);
+	//if(chitrue<chimin || chimin<0.0)set_chimin(chitrue,sambest);
 	
+        /*if(chitrue<7.0e4){
+            printf("found chi %e do_focus %d\n",chitrue,do_focus);
+        }*/
+        
 	if(actually_added==1 && do_focus==0){
 	    i=is_it_a_candidate(gg.get_pts()-1);
-	    if(i==1)set_as_candidate(gg.get_pts()-1);   
+	    if(i==1)set_as_candidate(gg.get_pts()-1);
+            
+            /*if(chitrue<7.0e4){
+                printf("set as candidate? %d -- %d %d\n",
+                i,gg.get_pts()-1,global_mindex);
+            }*/
+               
 	}
+    }
+    
+    if(global_mindex!=o_mindex){
+        j=1;
+        for(i=0;i<n_candidates;i++){
+            if(candidates.get_data(i)==global_mindex)j=0;
+        }
+        
+        if(j==1){
+            set_as_candidate(global_mindex);
+        }
     }
     
     
