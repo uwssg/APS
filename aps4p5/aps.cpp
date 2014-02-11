@@ -1208,12 +1208,7 @@ void aps::gradient_search(){
 	
 	exit(1);
     }
-    
-    if(n_candidates==0){
-        //printf("there are no candidates yet\n");
-        return;
-    }
- 
+
     array_1d<double> vv;
     vv.set_name("gradient_search_vv");
    
@@ -1235,9 +1230,10 @@ void aps::gradient_search(){
        find_global_minimum(vv);
     
     }
-    /*else{
-        find_global_minimum_meta();
-    }*/
+    else{
+        printf("finding global minimum from minpt\n");
+        find_global_minimum(minpt);
+    }
     
     ct_gradient+=chisq->get_called()-ibefore;
     time_gradient+=double(time(NULL))-before;
