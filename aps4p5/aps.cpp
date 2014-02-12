@@ -76,6 +76,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     assess_failed=0;
     
     global_mindex=-1;
+    mindex_is_candidate=0;
     
     ct_aps=0;
     ct_gradient=0;
@@ -1026,7 +1027,7 @@ void aps::search(){
     
     
     
-    if(n_candidates==0){
+    if(n_candidates==0 && mindex_is_candidate==0){
         grad_score=aps_score+100;
     }
     else{
@@ -1253,14 +1254,7 @@ void aps::aps_search(int n_samples){
     }
     
     if(global_mindex!=o_mindex){
-        j=1;
-        for(i=0;i<n_candidates;i++){
-            if(candidates.get_data(i)==global_mindex)j=0;
-        }
-        
-        if(j==1){
-            set_as_candidate(global_mindex);
-        }
+        mindex_is_candidate=1;
     }
     
     
@@ -1285,6 +1279,7 @@ void aps::gradient_search(){
     vv.set_name("gradient_search_vv");
    
     int i,ix;
+    int o_mindex=global_mindex;
     
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
@@ -1296,6 +1291,9 @@ void aps::gradient_search(){
     }
     
     ix=choose_a_candidate();
+    if(ix<0 && mindex_is_candidate==1){
+        ix=global_mindex;
+    }
     
     if(ix>=0){
        
@@ -1310,6 +1308,11 @@ void aps::gradient_search(){
         printf("finding global minimum from minpt\n");
         find_global_minimum(minpt);
     }*/
+    
+    
+    if(global_mindex!=o_mindex){
+        mindex_is_candidate=0;
+    }
     
     ct_gradient+=chisq->get_called()-ibefore;
     time_gradient+=double(time(NULL))-before;

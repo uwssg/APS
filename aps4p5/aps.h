@@ -72,7 +72,7 @@ private:
     chisquared *chisq;
     
     int write_every,n_printed,called,ngood,dim,last_optimized;
-    int global_mindex;
+    int global_mindex,mindex_is_candidate;
     
     int failed_to_add;
     int aps_failed,minuit_failed,assess_failed;
