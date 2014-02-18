@@ -552,7 +552,7 @@ void aps::find_global_minimum(array_1d<double> &vv){
         for(j=0;j<dim;j++){
             trial.set(j,vv.get_data(j));
         }
-        trial.add_val(i,0.01*(gg.get_max(i)-gg.get_min(i)));
+        trial.add_val(i,0.01*(range_max.get_data(i)-range_min.get_data(i)));
         ftrial=(*chisq)(trial);
         if(ftrial<exception){
             add_pt(trial,ftrial);
