@@ -121,6 +121,13 @@ private:
     
     void aps_choose_best(array_2d<double>&,int);
     
+    void aps_wide(int);
+    void aps_focus(int);
+    void aps_gibbs(int);
+    
+    array_2d<double> gibbs_sets;
+    int ig;
+    
 };
 
 
