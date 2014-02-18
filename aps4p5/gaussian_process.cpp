@@ -223,9 +223,9 @@ array_1d<double> &mx, array_1d<double> &mn){
       paranoia.add_pt(uu);
   }
   
-  for(i=0;i<dim;i++){
+  /*for(i=0;i<dim;i++){
       printf("gp minmax %d %e %e\n",i,get_min(i),get_max(i));
-  }
+  }*/
   
   seed.set_where("nowhere");
   seedfn.set_where("nowhere");

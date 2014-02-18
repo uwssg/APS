@@ -97,7 +97,7 @@ for(i=0;i<3;i++){
 }
 
 printf("initializing\n");
-aps_test.initialize(100,min,max);
+aps_test.initialize(1000,min,max);
 
 //aps_test.set_wgt(2,0.1);
 

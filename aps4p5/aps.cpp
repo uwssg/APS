@@ -85,7 +85,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     ct_aps=0;
     ct_gradient=0;
-    called=0;
+
     ngood=0;
     
     time_aps=0.0;
@@ -1045,10 +1045,6 @@ void aps::search(){
     else{
         grad_score=time_gradient;
     }
-    
-    grad_score=aps_score+100.0;
-    
-    //grad_score=time_gradient;
 
     if(grad_score<aps_score){
         //printf("gradient searching\n");
@@ -1074,69 +1070,11 @@ void aps::search(){
     time_total+=double(time(NULL))-before;
 }
 
-int aps::set_sampling_range(array_1d<double> &sampling_min,
-array_1d<double> &sampling_max){
-
-    int i;
-    int do_focus=0;
-    
-    sampling_max.set_dim(gg.get_dim());
-    sampling_min.set_dim(gg.get_dim());
-    
-    if(called%2==0 && ngood>0){
-        if(ngood>1){
-            for(i=0;i<gg.get_dim();i++){
-	        sampling_max.set(i,good_max.get_data(i)+0.1*(good_max.get_data(i)-good_min.get_data(i)));
-	        sampling_min.set(i,good_min.get_data(i)-0.1*(good_max.get_data(i)-good_min.get_data(i)));
-	    }
-	}
-	else{
-	    for(i=0;i<gg.get_dim();i++){
-	        sampling_max.set(i,good_max.get_data(i)+1.0e-2*(range_max.get_data(i)-range_min.get_data(i)));
-		sampling_min.set(i,good_min.get_data(i)+1.0e-2*(range_max.get_data(i)-range_min.get_data(i)));
-	    }
-	}
-	do_focus=1;
-    }
-    else{
-        //printf("setting full range\n");
-        for(i=0;i<gg.get_dim();i++){
-	    sampling_max.set(i,range_max.get_data(i));
-	    sampling_min.set(i,range_min.get_data(i));
-	}
-	//printf("%e %e %d\n",sampling_min.get_data(11),sampling_max.get_data(11),gg.get_dim());
-    }
-    
-    for(i=0;i<gg.get_dim();i++){
-        while(sampling_max.get_data(i)-sampling_min.get_data(i)<1.0e-10){
-	  
-	    sampling_max.add_val(i,1.0e-2*(range_max.get_data(i)-range_min.get_data(i)));
-	    sampling_min.subtract_val(i,1.0e-2*(range_max.get_data(i)-range_min.get_data(i)));
-	}
-	
-	if(sampling_min.get_data(i)<range_min.get_data(i) || 
-	    sampling_min.get_data(i)>range_max.get_data(i)){
-	    sampling_min.set(i,range_min.get_data(i));
-	}
-	
-	if(sampling_max.get_data(i)>range_max.get_data(i) ||
-	   sampling_max.get_data(i)<range_min.get_data(i)){
-	    sampling_max.set(i,range_max.get_data(i));
-	}
-	
-    }
-    
-    return do_focus;
-    
-
-
-}
-
 void aps::aps_wide(int n_samples){
 
     array_2d<double> samples;
     
-    printf("wide searching\n");
+    //printf("wide searching\n");
     
     int i,j;
     samples.set_cols(dim);
@@ -1158,7 +1096,7 @@ void aps::aps_focus(int n_samples){
     
     int i,j;
     
-    printf("focus searching\n");
+    //printf("focus searching\n");
     
     samples.set_cols(dim);
     
@@ -1219,11 +1157,11 @@ void aps::aps_gibbs(int n_samples){
         i_gibbs=0;
     }
     
-    printf("gibbs searching ");
-    for(i=0;i<gibbs_sets.get_cols(i_gibbs);i++){
+    //printf("gibbs searching ");
+    /*for(i=0;i<gibbs_sets.get_cols(i_gibbs);i++){
         printf("%d ",gibbs_sets.get_data(i_gibbs,i));
     }
-    printf("\n");
+    printf("\n");*/
     
     for(i=0;i<n_samples;i++){
         for(j=0;j<dim;j++){
@@ -1339,7 +1277,7 @@ void aps::aps_search(int n_samples){
     
     
     
-    called++;
+   
     time_aps+=double(time(NULL))-before;
     ct_aps+=chisq->get_called()-ibefore;
     set_where("nowhere");
@@ -1367,9 +1305,9 @@ void aps::gradient_search(){
     
     //find_global_minimum_meta();
     
-    for(i=0;i<n_candidates;i++){
+    /*for(i=0;i<n_candidates;i++){
          printf("candidates %d %d\n",i,is_it_a_candidate(candidates.get_data(i)));
-    }
+    }*/
     
     ix=choose_a_candidate();
     if(ix<0 && mindex_is_candidate==1){

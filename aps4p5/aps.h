@@ -72,7 +72,7 @@ private:
     Ran *dice;
     chisquared *chisq;
     
-    int write_every,n_printed,called,ngood,dim,last_optimized;
+    int write_every,n_printed,ngood,dim,last_optimized;
     int global_mindex,mindex_is_candidate;
     
     int failed_to_add;
@@ -115,8 +115,6 @@ private:
     int choose_a_candidate();
     
     int add_pt(array_1d<double>&,double);
-    
-    int set_sampling_range(array_1d<double>&,array_1d<double>&);
 
     void start_timingfile();
     
