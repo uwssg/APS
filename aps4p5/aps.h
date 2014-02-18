@@ -66,6 +66,7 @@ public:
     
     void write_pts();
     void set_characteristic_length(int,double);
+    void set_gibbs_set(array_1d<int>&);
     
 private:
     Ran *dice;

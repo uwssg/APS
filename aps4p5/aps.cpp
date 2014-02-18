@@ -174,6 +174,10 @@ void aps::set_characteristic_length(int dex, double nn){
     characteristic_length.set(dex,nn);
 }
 
+void aps::set_gibbs_set(array_1d<int> &row){
+    gibbs_sets.add_row(row);
+}
+
 void aps::initialize(int npts,array_1d<double> &min, array_1d<double> &max){
     array_2d<double> q;
     initialize(npts,min,max,0,q);
@@ -220,14 +224,25 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
 	data.add_row(vector);
     }
     
+    printf("done guessing\n");
     for(;i<npts;i++){
+        //printf("%d\n",i);
         ff.set(i,2.0*exception);
 	while(!(ff.get_data(i)<exception)){
+            
 	    for(j=0;j<dim;j++)vector.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
 	    ff.set(i,(*chisq)(vector));
+            
+            /*printf("ff %e \n",ff.get_data(i));
+            for(j=0;j<dim;j++){
+                printf("%e\n",vector.get_data(j));
+            }*/
+            
 	}
 	data.add_row(vector);
     }
+    printf("done assembling points\n");
+    
     
     for(i=0;i<dim;i++){
         range_max.set(i,max.get_data(i));
@@ -246,6 +261,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
         }
     }
     
+    printf("calling on gg.initialize\n");
     gg.initialize(data,ff,ggmax,ggmin);
     
     if(gg.get_dim()!=dim){

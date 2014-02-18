@@ -41,16 +41,10 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-printf("about to set weights\n");
-
-
-printf("set weights\n");
-
-
 
 min.set(0,4500.0);
 max.set(0,5500.0);
-//aps_test.set_wgt(1,7.0);
+aps_test.set_characteristic_length(0,1.0);
 
 min.set(1,0.001);
 max.set(1,0.999);
@@ -64,7 +58,7 @@ max.set(2,1.0);
 
 min.set(3,20.0);
 max.set(3,1000.0);
-//aps_test.set_wgt(6,200.0);
+aps_test.set_characteristic_length(3,1.0);
 
 min.set(4,0.001);
 max.set(4,0.999);
@@ -79,7 +73,7 @@ if(nplanets>2){
 
     min.set(6,13.0);
     max.set(6,15.0);
-    //aps_test.set_wgt(11,1000.0);
+    aps_test.set_characteristic_length(6,1.0);
 
     min.set(7,0.001);
     max.set(7,0.999);
@@ -91,14 +85,23 @@ if(nplanets>2){
     max.set(8,1.0);
 }
 
+array_1d<int> rr_i;
 
+int i,j;
+for(i=0;i<3;i++){
+    for(j=0;j<3;j++){
+        rr_i.add(i*3+j);
+    }
+    aps_test.set_gibbs_set(rr_i);
+}
+
+printf("initializing\n");
 aps_test.initialize(1000,min,max);
 
 //aps_test.set_wgt(2,0.1);
 
 double chival,chivaltest,err,maxerr;
 
-int i;
 i=-1;
 while(aps_test.get_n_pts()<200000){
     aps_test.search();
