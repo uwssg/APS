@@ -384,7 +384,7 @@ int aps::is_it_a_candidate(int dex){
     
     //printf("  is %e a candidate -- med %e grat %e min %e\n",gg.get_fn(dex),global_median,grat,chimin);
     
-    if(gg.get_fn(dex)<chimin+grat*(global_median-chimin)){
+    if(gg.get_fn(dex)<chimin+grat*(global_median-chimin) && gg.get_fn(dex)>strad.get_target()){
         //printf(" yes it is\n");
 	use_it=1;
 	for(i=0;i<n_candidates && use_it==1;i++){
@@ -1078,8 +1078,8 @@ array_1d<double> &sampling_max){
 	}
 	else{
 	    for(i=0;i<gg.get_dim();i++){
-	        sampling_max.set(i,good_max.get_data(i)+0.01*(range_max.get_data(i)-range_min.get_data(i)));
-		sampling_min.set(i,good_min.get_data(i)+0.01*(range_max.get_data(i)-range_min.get_data(i)));
+	        sampling_max.set(i,good_max.get_data(i)+1.0e-2*(range_max.get_data(i)-range_min.get_data(i)));
+		sampling_min.set(i,good_min.get_data(i)+1.0e-2*(range_max.get_data(i)-range_min.get_data(i)));
 	    }
 	}
 	do_focus=1;
@@ -1096,8 +1096,8 @@ array_1d<double> &sampling_max){
     for(i=0;i<gg.get_dim();i++){
         while(sampling_max.get_data(i)-sampling_min.get_data(i)<1.0e-10){
 	  
-	    sampling_max.add_val(i,0.05*(range_max.get_data(i)-range_min.get_data(i)));
-	    sampling_min.subtract_val(i,0.05*(range_max.get_data(i)-range_min.get_data(i)));
+	    sampling_max.add_val(i,1.0e-2*(range_max.get_data(i)-range_min.get_data(i)));
+	    sampling_min.subtract_val(i,1.0e-2*(range_max.get_data(i)-range_min.get_data(i)));
 	}
 	
 	if(sampling_min.get_data(i)<range_min.get_data(i) || 
@@ -1241,7 +1241,7 @@ void aps::aps_search(int n_samples){
             printf("found chi %e do_focus %d\n",chitrue,do_focus);
         }*/
         
-	if(actually_added==1 && do_focus==0){
+	if(actually_added==1){
 	    i=is_it_a_candidate(gg.get_pts()-1);
 	    if(i==1)set_as_candidate(gg.get_pts()-1);
             
@@ -1372,7 +1372,7 @@ void aps::write_pts(){
     fprintf(output,"%e %e %e ",
     global_median,chimin,strad.get_target());
     
-    fprintf(output," -- %d %d\n",candidates.get_dim(),known_minima.get_dim());
+    fprintf(output," -- %d %d %d\n",candidates.get_dim(),known_minima.get_dim(),ngood);
     
     
     fclose(output);
