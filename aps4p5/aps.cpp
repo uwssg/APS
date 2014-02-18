@@ -113,6 +113,10 @@ aps::aps(int dim_in, int kk, double dd, int seed){
 	sprintf(paramnames[i],"p%d",i);
     }
     
+    for(i=0;i<dim;i++){
+        characteristic_length.set(i,-1.0);
+    }
+    
     if(seed<-1)seed=int(time(NULL));
     dice=new Ran(seed);
     
@@ -159,6 +163,10 @@ void aps::assign_covariogram(covariance_function *cc){
 
 void aps::assign_chisquared(chisquared *cc){
     chisq=cc;
+}
+
+void aps::set_characteristic_length(int dex, double nn){
+    characteristic_length.set(dex,nn);
 }
 
 void aps::initialize(int npts,array_1d<double> &min, array_1d<double> &max){
@@ -222,9 +230,15 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     }
     
     array_1d<double> ggmin,ggmax;
+    
     for(i=0;i<dim;i++){
         ggmin.set(i,0.0);
-        ggmax.set(i,(range_max.get_data(i)-range_min.get_data(i)));
+        if(characteristic_length.get_data(i)<0.0){
+            ggmax.set(i,(range_max.get_data(i)-range_min.get_data(i)));
+        }
+        else{
+            ggmax.set(i,characteristic_length.get_data(i));
+        }
     }
     
     gg.initialize(data,ff,ggmax,ggmin);

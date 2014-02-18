@@ -65,7 +65,7 @@ public:
     int get_called();
     
     void write_pts();
-    void set_wgt(int,double);
+    void set_characteristic_length(int,double);
     
 private:
     Ran *dice;
@@ -83,8 +83,10 @@ private:
     array_1d<int> candidates,aps_pts,known_minima,gradient_start_pts;
     int n_candidates;
     
+    array_1d<double> characteristic_length;
+    
     array_1d<double> mu_storage,sig_storage,good_max,good_min;
-    array_1d<double> old_hyper_1,old_hyper_2,wgt,minpt;
+    array_1d<double> old_hyper_1,old_hyper_2,minpt;
     array_1d<double> range_max,range_min;
     
     double time_node,time_aps,time_gradient,time_total,start_time;
