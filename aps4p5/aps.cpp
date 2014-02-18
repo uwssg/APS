@@ -1118,6 +1118,72 @@ array_1d<double> &sampling_max){
 
 }
 
+void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
+    
+    int n_samples=samples.get_rows();
+    int i_sample,i;
+    double nn,dd,mu,sig,stradval,stradmax,mubest,sigbest;
+    
+    array_1d<double> samv,sambest;
+    
+    gg.reset_cache();
+    while(samples.get_rows()>0){
+        if(samples.get_rows()==n_samples){
+	    i_sample=0;
+	}
+	else{
+	    for(i=0;i<samples.get_rows();i++){
+	        nn=gg.distance((*samples(i)),samv);
+		if(i==0 || nn<dd){
+		    dd=nn;
+		    i_sample=i;
+		}
+	    }
+	}
+        
+	for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
+	
+	mu=gg.user_predict(samv,&sig,0);
+
+	stradval=strad(mu,sig);
+
+	if(samples.get_rows()==n_samples || stradval>stradmax){
+            mubest=mu;
+            sigbest=sig;
+	    stradmax=stradval;
+	    for(i=0;i<gg.get_dim();i++)sambest.set(i,samv.get_data(i));
+	}
+	
+	samples.remove_row(i_sample);
+	
+    }
+
+    double chitrue=(*chisq)(sambest);
+    
+    int actually_added;
+    
+    int o_mindex=global_mindex;
+    if(chitrue<exception){
+        actually_added=add_pt(sambest,chitrue);
+	
+	if(actually_added==1 && do_focus==0){
+	    add_aps_pt(gg.get_pts()-1,mubest,sigbest);
+	}
+
+	if(actually_added==1){
+	    i=is_it_a_candidate(gg.get_pts()-1);
+	    if(i==1)set_as_candidate(gg.get_pts()-1);
+               
+	}
+    }
+    
+    if(global_mindex!=o_mindex){
+        mindex_is_candidate=1;
+    }
+    
+
+}
+
 void aps::aps_search(int n_samples){
 
     //set_where("aps_scatter_search");
@@ -1141,18 +1207,12 @@ void aps::aps_search(int n_samples){
 
     do_focus=set_sampling_range(sampling_min,sampling_max);
     
-    array_2d<double> samples;
-    array_1d<double> sambest,samv;
-    double mu,sig,stradval,stradmax;
-    
-    int i,j,o_mindex;
+    array_2d<double> samples;    
+    int i,j;
     
     samples.set_name("aps_scatter_search_samples");
-    sambest.set_name("aps_scatter_search_sambest");
-    samv.set_name("aps_scatter_search_samv");
-    
     samples.set_dim(n_samples,gg.get_dim());
-    sambest.set_dim(gg.get_dim());
+
     
     double nn,dd;
     
@@ -1181,82 +1241,7 @@ void aps::aps_search(int n_samples){
 	exit(1);
     }
     
-    gg.reset_cache();
-    while(samples.get_rows()>0){
-        if(samples.get_rows()==n_samples){
-	    i_sample=0;
-	}
-	else{
-	    for(i=0;i<samples.get_rows();i++){
-	        nn=gg.distance((*samples(i)),samv);
-		if(i==0 || nn<dd){
-		    dd=nn;
-		    i_sample=i;
-		}
-	    }
-	}
-        
-	for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
-	
-	mu=gg.user_predict(samv,&sig,0);
-	
-	
-	stradval=strad(mu,sig);
-
-	
-	/*if(sampling_min.get_data(11)<500.0 && samv.get_data(11)<500.0){
-	    printf("    I did try %e -- %e %e -- %e\n",samv.get_data(11),mu,sig,stradval);
-	}*/
-
-
-	if(samples.get_rows()==n_samples || stradval>stradmax){
-	    stradmax=stradval;
-	    for(i=0;i<gg.get_dim();i++)sambest.set(i,samv.get_data(i));
-	}
-	
-	samples.remove_row(i_sample);
-	
-    }
-    
-    //printf("    stradbest %e\n",stradmax);
-    
-    double chitrue=(*chisq)(sambest);
-    
-    int actually_added;
-    
-    o_mindex=global_mindex;
-    if(chitrue<exception){
-        actually_added=add_pt(sambest,chitrue);
-	
-	if(actually_added==1 && do_focus==0){
-	    add_aps_pt(gg.get_pts()-1,mu,sig);
-	}
-	else{
-	    aps_failed++;
-	}
-	
-	//if(chitrue<chimin || chimin<0.0)set_chimin(chitrue,sambest);
-	
-        /*if(chitrue<7.0e4){
-            printf("found chi %e do_focus %d\n",chitrue,do_focus);
-        }*/
-        
-	if(actually_added==1){
-	    i=is_it_a_candidate(gg.get_pts()-1);
-	    if(i==1)set_as_candidate(gg.get_pts()-1);
-            
-            /*if(chitrue<7.0e4){
-                printf("set as candidate? %d -- %d %d\n",
-                i,gg.get_pts()-1,global_mindex);
-            }*/
-               
-	}
-    }
-    
-    if(global_mindex!=o_mindex){
-        mindex_is_candidate=1;
-    }
-    
+    aps_choose_best(samples,do_focus);
     
     called++;
     time_aps+=double(time(NULL))-before;

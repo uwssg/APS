@@ -119,6 +119,8 @@ private:
     
     void set_where(char*);
     
+    void aps_choose_best(array_2d<double>&,int);
+    
 };
 
 
