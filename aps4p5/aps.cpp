@@ -69,6 +69,11 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     chimin=-1.0;
     
+    i_gibbs=0;
+    called_focus=0;
+    called_wide=0;
+    called_gibbs=0;
+    
     last_optimized=0;
     failed_to_add=0;
     aps_failed=0;
@@ -552,7 +557,7 @@ void aps::find_global_minimum(array_1d<double> &vv){
         for(j=0;j<dim;j++){
             trial.set(j,vv.get_data(j));
         }
-        trial.add_val(i,0.01*(range_max.get_data(i)-range_min.get_data(i)));
+        trial.add_val(i,0.01*(gg.get_max(i)-gg.get_min(i)));
         ftrial=(*chisq)(trial);
         if(ftrial<exception){
             add_pt(trial,ftrial);
@@ -1109,6 +1114,108 @@ array_1d<double> &sampling_max){
 
 }
 
+void aps::aps_wide(int n_samples){
+
+    array_2d<double> samples;
+
+    int i,j;
+    samples.set_cols(dim);
+    for(i=0;i<n_samples;i++){
+        for(j=0;j<dim;j++){
+            samples.set(i,j,range_min.get_data(j)+dice->doub()*(range_max.get_data(j)-range_min.get_data(j)));
+        }
+    }
+    
+    aps_choose_best(samples,0);
+    called_wide++;
+   
+}
+
+void aps::aps_focus(int n_samples){
+
+    array_2d<double> samples;
+    array_1d<double> min,max,length;
+    
+    int i,j;
+    
+    samples.set_cols(dim);
+    
+    for(i=0;i<dim;i++){
+        length.set(i,gg.get_max(i)-gg.get_min(i));
+        if(length.get_data(i)<0.0){
+            printf("WARNING in aps_focus length %d %e\n",i,length.get_data(i));
+            printf("%e %e\n",gg.get_min(i),gg.get_max(i));
+            exit(1);
+        }
+    }
+    
+    if(ngood==0){
+        for(i=0;i<dim;i++){
+            min.set(i,minpt.get_data(i)-0.5*length.get_data(i));
+            max.set(i,minpt.get_data(i)+0.5*length.get_data(i));
+        }
+    }
+    else{
+        for(i=0;i<dim;i++){
+            min.set(i,good_min.get_data(i)-0.01*length.get_data(i));
+            max.set(i,good_max.get_data(i)+0.01*length.get_data(i));
+        }
+    }
+    
+    for(i=0;i<dim;i++){
+        while(!(max.get_data(i)-min.get_data(i)>0.0)){
+            max.add_val(i,0.01*length.get_data(i));
+            min.subtract_val(i,0.01*length.get_data(i));
+        }
+    }
+    
+    for(i=0;i<n_samples;i++){
+        for(j=0;j<dim;j++){
+            samples.set(i,j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
+        }
+    }
+    
+    aps_choose_best(samples,1);
+    called_focus++;
+
+}
+
+void aps::aps_gibbs(int n_samples){
+
+    if(gibbs_sets.get_rows()==0){
+        called_gibbs++;
+        return;
+    }
+
+    array_2d<double> samples;
+    int i,j,i_dim;
+    
+    samples.set_cols(dim);
+    
+    if(i_gibbs>=gibbs_sets.get_rows()){
+        i_gibbs=0;
+    }
+    
+    for(i=0;i<n_samples;i++){
+        for(j=0;j<dim;j++){
+            samples.set(i,j,minpt.get_data(j));
+        }
+        
+        for(j=0;j<gibbs_sets.get_cols(i_gibbs);j++){
+            i_dim=gibbs_sets.get_data(i_gibbs,j);
+            
+            samples.set(i,i_dim,range_min.get_data(i_dim)+dice->doub()*(range_max.get_data(i_dim)-range_min.get_data(i_dim)));
+        }
+        
+    }
+    
+    aps_choose_best(samples,1);
+    
+    i_gibbs++;
+    called_gibbs++;
+
+}
+
 void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
     
     int n_samples=samples.get_rows();
@@ -1188,51 +1295,18 @@ void aps::aps_search(int n_samples){
 
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
-    int do_focus=0;
-    
-    
-    array_1d<double> sampling_min,sampling_max;
-    
-    sampling_min.set_name("aps_scatter_seacrh_sampling_min");
-    sampling_max.set_name("aps_scatter_search_sampling_max");
 
-    do_focus=set_sampling_range(sampling_min,sampling_max);
-    
-    array_2d<double> samples;    
-    int i,j;
-    
-    samples.set_name("aps_scatter_search_samples");
-    samples.set_dim(n_samples,gg.get_dim());
-
-    
-    double nn,dd;
-    
-    for(i=0;i<n_samples;i++){
-        for(j=0;j<gg.get_dim();j++){
-	    nn=sampling_min.get_data(j)+dice->doub()*(sampling_max.get_data(j)-sampling_min.get_data(j));
-	    samples.set(i,j,nn);
-	    
-	    if(nn<range_min.get_data(j) || nn>range_max.get_data(j)){
-	        printf("WARNING aps sampled outside of bounds\n");
-		printf("%e\n",nn);
-		printf("%e %e\n",range_min.get_data(j),range_max.get_data(j));
-		printf("%e %e\n",sampling_min.get_data(j),sampling_max.get_data(j));
-		exit(1);
-	    }
-	    
-	}
-
+    if(called_gibbs<called_focus && called_gibbs<called_wide){
+        aps_gibbs(n_samples);
+    }    
+    else if(called_focus<called_gibbs && called_focus<called_wide){
+        aps_focus(n_samples);
+    }
+    else{
+        aps_wide(n_samples);
     }
     
-    int i_sample;
     
-    if(samples.get_rows()!=n_samples){
-        printf("WARNING samples.get_rows() %d n_samples %d\n",
-	samples.get_rows(),n_samples);
-	exit(1);
-    }
-    
-    aps_choose_best(samples,do_focus);
     
     called++;
     time_aps+=double(time(NULL))-before;

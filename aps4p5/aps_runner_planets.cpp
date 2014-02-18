@@ -48,8 +48,8 @@ printf("set weights\n");
 
 
 
-min.set(0,3000.0);
-max.set(0,6000.0);
+min.set(0,4500.0);
+max.set(0,5500.0);
 //aps_test.set_wgt(1,7.0);
 
 min.set(1,0.001);
@@ -77,8 +77,8 @@ max.set(5, 1.0);
 
 if(nplanets>2){
 
-    min.set(6,0.0);
-    max.set(6,1000.0);
+    min.set(6,13.0);
+    max.set(6,15.0);
     //aps_test.set_wgt(11,1000.0);
 
     min.set(7,0.001);
