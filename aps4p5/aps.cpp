@@ -1046,6 +1046,8 @@ void aps::search(){
         grad_score=time_gradient;
     }
     
+    grad_score=aps_score+100.0;
+    
     //grad_score=time_gradient;
 
     if(grad_score<aps_score){
@@ -1133,7 +1135,9 @@ array_1d<double> &sampling_max){
 void aps::aps_wide(int n_samples){
 
     array_2d<double> samples;
-
+    
+    printf("wide searching\n");
+    
     int i,j;
     samples.set_cols(dim);
     for(i=0;i<n_samples;i++){
@@ -1153,6 +1157,8 @@ void aps::aps_focus(int n_samples){
     array_1d<double> min,max,length;
     
     int i,j;
+    
+    printf("focus searching\n");
     
     samples.set_cols(dim);
     
@@ -1197,7 +1203,8 @@ void aps::aps_focus(int n_samples){
 }
 
 void aps::aps_gibbs(int n_samples){
-
+    
+    
     if(gibbs_sets.get_rows()==0){
         called_gibbs++;
         return;
@@ -1211,6 +1218,12 @@ void aps::aps_gibbs(int n_samples){
     if(i_gibbs>=gibbs_sets.get_rows()){
         i_gibbs=0;
     }
+    
+    printf("gibbs searching ");
+    for(i=0;i<gibbs_sets.get_cols(i_gibbs);i++){
+        printf("%d ",gibbs_sets.get_data(i_gibbs,i));
+    }
+    printf("\n");
     
     for(i=0;i<n_samples;i++){
         for(j=0;j<dim;j++){
@@ -1312,10 +1325,12 @@ void aps::aps_search(int n_samples){
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
 
+    
+
     if(called_gibbs<called_focus && called_gibbs<called_wide){
         aps_gibbs(n_samples);
     }    
-    else if(called_focus<called_gibbs && called_focus<called_wide){
+    else if(called_focus<called_wide){
         aps_focus(n_samples);
     }
     else{

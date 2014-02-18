@@ -93,10 +93,11 @@ for(i=0;i<3;i++){
         rr_i.add(i*3+j);
     }
     aps_test.set_gibbs_set(rr_i);
+    rr_i.reset();
 }
 
 printf("initializing\n");
-aps_test.initialize(1000,min,max);
+aps_test.initialize(100,min,max);
 
 //aps_test.set_wgt(2,0.1);
 
