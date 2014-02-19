@@ -74,6 +74,8 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     called_wide=0;
     called_gibbs=0;
     
+    n_samples=250;
+    
     last_optimized=0;
     failed_to_add=0;
     aps_failed=0;
@@ -142,6 +144,10 @@ void aps::start_timingfile(){
 
 void aps::set_write_every(int ii){
     write_every=ii;
+}
+
+void aps::set_n_samples(int ii){
+    n_samples=ii;
 }
 
 void aps::set_outname(char *word){
@@ -1054,7 +1060,7 @@ void aps::search(){
     else{
         //printf("aps searching\n");
         //aps_scatter_search();
-	aps_search(250);
+	aps_search(n_samples);
         
         //gradient_search();
         
@@ -1070,7 +1076,7 @@ void aps::search(){
     time_total+=double(time(NULL))-before;
 }
 
-void aps::aps_wide(int n_samples){
+void aps::aps_wide(int in_samples){
 
     array_2d<double> samples;
     
@@ -1078,7 +1084,7 @@ void aps::aps_wide(int n_samples){
     
     int i,j;
     samples.set_cols(dim);
-    for(i=0;i<n_samples;i++){
+    for(i=0;i<in_samples;i++){
         for(j=0;j<dim;j++){
             samples.set(i,j,range_min.get_data(j)+dice->doub()*(range_max.get_data(j)-range_min.get_data(j)));
         }
@@ -1089,7 +1095,7 @@ void aps::aps_wide(int n_samples){
    
 }
 
-void aps::aps_focus(int n_samples){
+void aps::aps_focus(int in_samples){
 
     array_2d<double> samples;
     array_1d<double> min,max,length;
@@ -1129,7 +1135,7 @@ void aps::aps_focus(int n_samples){
         }
     }
     
-    for(i=0;i<n_samples;i++){
+    for(i=0;i<in_samples;i++){
         for(j=0;j<dim;j++){
             samples.set(i,j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
         }
@@ -1140,7 +1146,7 @@ void aps::aps_focus(int n_samples){
 
 }
 
-void aps::aps_gibbs(int n_samples){
+void aps::aps_gibbs(int in_samples){
     
     
     if(gibbs_sets.get_rows()==0){
@@ -1163,7 +1169,7 @@ void aps::aps_gibbs(int n_samples){
     }
     printf("\n");*/
     
-    for(i=0;i<n_samples;i++){
+    for(i=0;i<in_samples;i++){
         for(j=0;j<dim;j++){
             samples.set(i,j,minpt.get_data(j));
         }
@@ -1185,7 +1191,7 @@ void aps::aps_gibbs(int n_samples){
 
 void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
     
-    int n_samples=samples.get_rows();
+    int in_samples=samples.get_rows();
     int i_sample,i;
     double nn,dd,mu,sig,stradval,stradmax,mubest,sigbest;
     
@@ -1193,7 +1199,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
     
     gg.reset_cache();
     while(samples.get_rows()>0){
-        if(samples.get_rows()==n_samples){
+        if(samples.get_rows()==in_samples){
 	    i_sample=0;
 	}
 	else{
@@ -1212,7 +1218,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
 
 	stradval=strad(mu,sig);
 
-	if(samples.get_rows()==n_samples || stradval>stradmax){
+	if(samples.get_rows()==in_samples || stradval>stradmax){
             mubest=mu;
             sigbest=sig;
 	    stradmax=stradval;
@@ -1249,7 +1255,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
 
 }
 
-void aps::aps_search(int n_samples){
+void aps::aps_search(int in_samples){
 
     //set_where("aps_scatter_search");
     
@@ -1266,13 +1272,13 @@ void aps::aps_search(int n_samples){
     
 
     if(called_gibbs<called_focus && called_gibbs<called_wide){
-        aps_gibbs(n_samples);
+        aps_gibbs(in_samples);
     }    
     else if(called_focus<called_wide){
-        aps_focus(n_samples);
+        aps_focus(in_samples);
     }
     else{
-        aps_wide(n_samples);
+        aps_wide(in_samples);
     }
     
     

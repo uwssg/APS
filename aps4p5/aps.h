@@ -68,6 +68,8 @@ public:
     void set_characteristic_length(int,double);
     void set_gibbs_set(array_1d<int>&);
     
+    void set_n_samples(int);
+    
 private:
     Ran *dice;
     chisquared *chisq;
@@ -75,7 +77,7 @@ private:
     int write_every,n_printed,ngood,dim,last_optimized;
     int global_mindex,mindex_is_candidate;
     
-    int failed_to_add;
+    int failed_to_add,n_samples;
     int aps_failed,minuit_failed,assess_failed;
     
     char outname[letters],timingname[letters];

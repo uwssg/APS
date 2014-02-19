@@ -23,7 +23,7 @@ Ran chaos(seed);
 
 matern_covariance cv;
 
-int nplanets=3;
+int nplanets=5;
 planet chisq(nplanets);
 dim=nplanets*3;
 
@@ -49,46 +49,27 @@ aps_test.set_characteristic_length(0,1.0);
 min.set(1,0.001);
 max.set(1,0.999);
 
-//min.set(2,0.0);
-//max.set(2,360.0);
-
 min.set(2,-1.0);
 max.set(2,1.0);
 
+int i,j;
 
-min.set(3,20.0);
-max.set(3,1000.0);
-aps_test.set_characteristic_length(3,1.0);
-
-min.set(4,0.001);
-max.set(4,0.999);
-
-//min.set(6,0.0);
-//max.set(6,360.0);
-
-min.set(5,-1.0);
-max.set(5, 1.0);
-
-if(nplanets>2){
-
-    min.set(6,13.0);
-    max.set(6,15.0);
-    aps_test.set_characteristic_length(6,1.0);
-
-    min.set(7,0.001);
-    max.set(7,0.999);
-
-    //min.set(10,0.0);
-    //max.set(10,360.0);
-
-    min.set(8,-1.0);
-    max.set(8,1.0);
+for(i=1;i<nplanets;i++){
+    min.set(i*3,0.01);
+    max.set(i*3,1000.0);
+    aps_test.set_characteristic_length(i*3,1.0);
+    
+    min.set(i*3+1,0.001);
+    max.set(i*3+1,0.999);
+    
+    min.set(i*3+2,-1.0);
+    max.set(i*3+2,1.0);
 }
+
 
 array_1d<int> rr_i;
 
-int i,j;
-for(i=0;i<3;i++){
+for(i=0;i<nplanets;i++){
     for(j=0;j<3;j++){
         rr_i.add(i*3+j);
     }
@@ -99,7 +80,7 @@ for(i=0;i<3;i++){
 printf("initializing\n");
 aps_test.initialize(1000,min,max);
 
-//aps_test.set_wgt(2,0.1);
+aps_test.set_n_samples(1000);
 
 double chival,chivaltest,err,maxerr;
 
