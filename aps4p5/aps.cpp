@@ -747,6 +747,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             actually_added=add_pt(true_var,fstar);
         }
         if(fstar<simplex_min){
+            printf("simplex min %e ct %d\n",fstar,ct_abort);
             ct_abort=0;
             simplex_min=fstar;
 	    if(actually_added==1)mindex=gg.get_pts()-1;
@@ -770,6 +771,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             if(fstarstar<simplex_min){
+                printf("simplex_min %e ct %d\n",fstarstar,ct_abort);
                 ct_abort=0;
                 simplex_min=fstarstar;
 		if(actually_added==1){
@@ -805,6 +807,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 actually_added=add_pt(true_var,fstarstar);
             }
             if(fstarstar<simplex_min){
+                printf("simplex_min %e ct %d\n",fstarstar,ct_abort);
                 ct_abort=0;
                 simplex_min=fstarstar;
 		if(actually_added==1){
@@ -834,6 +837,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             actually_added=add_pt(true_var,ff.get_data(i));
                         }
                         if(ff.get_data(i)<simplex_min){
+                            printf("simplex_min %e ct %d\n",ff.get_data(i),ct_abort);
                             ct_abort=0;
 			    simplex_min=ff.get_data(i);
 			    if(actually_added==1){
