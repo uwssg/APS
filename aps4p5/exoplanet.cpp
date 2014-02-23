@@ -452,8 +452,10 @@ double planet::operator()(array_1d<double> &vv_in) const{
         }
     }
     
+    int ct_abort=0,max_abort=1000;
     double sig=1.0,mu=0.0;
-    while(sig>1.0e-4){
+    while(sig>1.0e-4 && ct_abort<max_abort){
+        ct_abort++;
         //printf("%e %e\n",simplex_min,sig);
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
@@ -471,6 +473,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
         ffs=true_chisq(period,eccentricity,ps,nu);
         
         if(ffs<simplex_min){
+            ct_abort=0;
             simplex_min=ffs;
             for(i=0;i<dim;i++)min_pt.set(i,ps.get_data(i));
         }
@@ -487,6 +490,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
             }
             ffss=true_chisq(period,eccentricity,pss,nu);
             if(ffss<simplex_min){
+                ct_abort=0;
                 simplex_min=ffss;
                 for(i=0;i<dim;i++)min_pt.set(i,pss.get_data(i));
             }
@@ -514,6 +518,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
             }
             ffss=true_chisq(period,eccentricity,pss,nu);
             if(ffss<simplex_min){
+                ct_abort=0;
                 simplex_min=ffss;
                 for(i=0;i<dim;i++)min_pt.set(i,pss.get_data(i));
             }
@@ -536,6 +541,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
                         }
                         ff.set(i,true_chisq(period,eccentricity,*pts(i),nu));
                         if(ff.get_data(i)<simplex_min){
+                            ct_abort=0;
                             simplex_min=ff.get_data(i);
                             for(j=0;j<dim;j++)min_pt.set(j,pts.get_data(i,j));
                         }
