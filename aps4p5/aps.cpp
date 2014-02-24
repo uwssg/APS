@@ -719,12 +719,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     printf("    sig starts at %e\n",sig);
     
-    int ct_abort=0,ct_abort_max=200;
+    int ct_abort=0,ct_abort_max=1000;
     int iteration,last_good;
     
     for(iteration=0;iteration<4;iteration++){
     
-    while(sig>1.0e-4 && simplex_min<exception){
+    while(sig>1.0e-4 && simplex_min<exception && ct_abort<abort_max){
         ct_abort++;
         //printf("    simplex min %e\n",simplex_min);
         for(i=0;i<dim;i++){
