@@ -726,7 +726,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     last_found=chisq->get_called();
     
-    while(sig/mu>1.0e-4 && simplex_min<exception && 
+    while(sig>0.1 && simplex_min<exception && 
     chisq->get_called()-last_found<ct_abort_max){
         
         //printf("    simplex min %e\n",simplex_min);
@@ -869,6 +869,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
         }
         
+        printf("chimin %e sig %e mu %e\n",chimin,sig,mu);
+        
         //printf("    sig %e\n",sig);
         if(chisq->get_called()-last_found%100==0 && chisq->get_called()-last_found>0){
             printf("sig %e mu %eih %e il %e\n",
@@ -917,7 +919,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     known_minima.add(mindex);
     
-    printf("    ending %e\n",simplex_min);
+    printf("    ending %e -- %e %e %e\n",simplex_min,sig,mu,chimin);
     printf("    ");
     for(i=0;i<dim/3;i++)printf("%e ",pts.get_data(il,i*3)+min.get_data(i*3));
     i=(dim-2)/5-1;
