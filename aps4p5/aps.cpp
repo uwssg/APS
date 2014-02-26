@@ -717,14 +717,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     sig=sig/double(dim+1);
     sig=sqrt(sig);
     
-    printf("    sig starts at %e\n",sig);
+    printf("    sig starts at %e with mu %e\n",sig,mu);
     
     int ct_abort=0,ct_abort_max=1000;
     int iteration,last_good;
     
-    for(iteration=0;iteration<4;iteration++){
+    //for(iteration=0;iteration<4;iteration++){
     
-    while(sig>1.0e-4 && simplex_min<exception && ct_abort<ct_abort_max){
+    while(sig/mu>1.0e-4 && simplex_min<exception && ct_abort<ct_abort_max){
         ct_abort++;
         //printf("    simplex min %e\n",simplex_min);
         for(i=0;i<dim;i++){
@@ -880,7 +880,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             sig,ff.get_data(ih),ff.get_data(il),last_good);
         }
     }
-        printf("    iteration %d chimin %e\n",iteration,chimin);
+       /* printf("    iteration %d chimin %e\n",iteration,chimin);
         
         k=0;
         for(i=0;i<dim+1;i++){
@@ -918,6 +918,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         sig=1.0;
     }//loop over iteration
+    */
     
     known_minima.add(mindex);
     
