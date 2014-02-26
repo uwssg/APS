@@ -453,8 +453,8 @@ double planet::operator()(array_1d<double> &vv_in) const{
     }
     
     int ct_abort=0,max_abort=1000;
-    double sig=1.0,mu=0.0;
-    while(sig>1.0e-4 && ct_abort<max_abort){
+    double sig=1.0,mu=1.0;
+    while(sig/mu>1.0e-4 && ct_abort<max_abort){
         ct_abort++;
         //printf("%e %e\n",simplex_min,sig);
         for(i=0;i<dim;i++){
