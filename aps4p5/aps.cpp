@@ -719,13 +719,16 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     printf("    sig starts at %e with mu %e\n",sig,mu);
     
-    int ct_abort=0,ct_abort_max=1000;
+    int ct_abort_max=1000,last_found;
     int iteration,last_good;
     
     //for(iteration=0;iteration<4;iteration++){
     
-    while(sig/mu>1.0e-4 && simplex_min<exception && ct_abort<ct_abort_max){
-        ct_abort++;
+    last_found=chisq->get_called();
+    
+    while(sig/mu>1.0e-4 && simplex_min<exception && 
+    chisq->get_called()-last_found<ct_abort_max){
+        
         //printf("    simplex min %e\n",simplex_min);
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
@@ -747,9 +750,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             actually_added=add_pt(true_var,fstar);
         }
         if(fstar<simplex_min){
-            printf("simplex min %e ct %d\n",fstar,ct_abort);
-            if(ct_abort>0)last_good=ct_abort;
-            ct_abort=0;
+            last_found=chisq->get_called();
             simplex_min=fstar;
 	    if(actually_added==1)mindex=gg.get_pts()-1;
         }
@@ -772,9 +773,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             if(fstarstar<simplex_min){
-                printf("simplex_min %e ct %d\n",fstarstar,ct_abort);
-                if(ct_abort>0)last_good=ct_abort;
-                ct_abort=0;
+                last_found=chisq->get_called();
                 simplex_min=fstarstar;
 		if(actually_added==1){
 		    mindex=gg.get_pts()-1;
@@ -809,9 +808,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 actually_added=add_pt(true_var,fstarstar);
             }
             if(fstarstar<simplex_min){
-                printf("simplex_min %e ct %d\n",fstarstar,ct_abort);
-                if(ct_abort>0)last_good=ct_abort;
-                ct_abort=0;
+                last_found=chisq->get_called();
                 simplex_min=fstarstar;
 		if(actually_added==1){
 		    mindex=gg.get_pts()-1;
@@ -840,9 +837,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             actually_added=add_pt(true_var,ff.get_data(i));
                         }
                         if(ff.get_data(i)<simplex_min){
-                            printf("simplex_min %e ct %d\n",ff.get_data(i),ct_abort);
-                            if(ct_abort>0)last_good=ct_abort;
-                            ct_abort=0;
+                            last_found=chisq->get_called();
 			    simplex_min=ff.get_data(i);
 			    if(actually_added==1){
 			        mindex=gg.get_pts()-1;
@@ -875,9 +870,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }
         
         //printf("    sig %e\n",sig);
-        if(ct_abort%100==0 && ct_abort>0){
-            printf("sig %e ih %e il %e last_good %d\n",
-            sig,ff.get_data(ih),ff.get_data(il),last_good);
+        if(chisq->get_called()-last_found%100==0 && chisq->get_called()-last_found>0){
+            printf("sig %e mu %eih %e il %e\n",
+            sig,mu,ff.get_data(ih),ff.get_data(il));
         }
     }
        /* printf("    iteration %d chimin %e\n",iteration,chimin);
@@ -1093,7 +1088,7 @@ void aps::aps_wide(int in_samples){
 
     array_2d<double> samples;
     
-    printf("wide searching\n");
+    //printf("wide searching\n");
     
     int i,j;
     samples.set_cols(dim);
@@ -1115,7 +1110,7 @@ void aps::aps_focus(int in_samples){
     
     int i,j;
     
-    printf("focus searching\n");
+    //printf("focus searching\n");
     
     samples.set_cols(dim);
     
@@ -1126,7 +1121,7 @@ void aps::aps_focus(int in_samples){
             printf("%e %e\n",gg.get_min(i),gg.get_max(i));
             exit(1);
         }
-        printf("    length %e\n",length.get_data(i));
+        //printf("    length %e\n",length.get_data(i));
     }
     
     if(ngood==0){
@@ -1142,7 +1137,7 @@ void aps::aps_focus(int in_samples){
         }
     }
     
-    printf("about to make sure max>min\n");
+    //printf("about to make sure max>min\n");
     
     for(i=0;i<dim;i++){
         while(!(max.get_data(i)-min.get_data(i)>0.0)){
@@ -1151,14 +1146,14 @@ void aps::aps_focus(int in_samples){
         }
     }
     
-    printf("setting samples\n");
+    //printf("setting samples\n");
     
     for(i=0;i<in_samples;i++){
         for(j=0;j<dim;j++){
             samples.set(i,j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
         }
     }
-    printf("about to choose best\n");
+    //printf("about to choose best\n");
     
     
     aps_choose_best(samples,1);
@@ -1167,7 +1162,7 @@ void aps::aps_focus(int in_samples){
 }
 
 void aps::aps_gibbs(int in_samples){
-    printf("gibbs\n");
+    //printf("gibbs\n");
     
     if(gibbs_sets.get_rows()==0){
         called_gibbs++;
@@ -1219,7 +1214,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
     
     gg.reset_cache();
     while(samples.get_rows()>0){
-        printf("rows %d\n",samples.get_rows());
+        //printf("rows %d\n",samples.get_rows());
         if(samples.get_rows()==in_samples){
 	    i_sample=0;
 	}
@@ -1235,13 +1230,13 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
         
 	for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
 	
-        for(i=0;i<gg.get_dim();i++){
+        /*for(i=0;i<gg.get_dim();i++){
             printf("    %e %e\n",samples.get_data(i_sample,i),samv.get_data(i));
-        }
+        }*/
         
 	mu=gg.user_predict(samv,&sig,0);
         
-        printf("mu %e sig %e\n",mu,sig);
+        //printf("mu %e sig %e\n",mu,sig);
         
 	stradval=strad(mu,sig);
 
@@ -1256,11 +1251,11 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
 	
     }
     
-    printf("time for chitrue\n");
+    //printf("time for chitrue\n");
     
     double chitrue=(*chisq)(sambest);
     
-    printf("chitrue %e\n",chitrue);
+    //printf("chitrue %e\n",chitrue);
     
     int actually_added;
     
@@ -1283,14 +1278,14 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
         mindex_is_candidate=1;
     }
     
-    printf("leaving\n");
+    //printf("leaving\n");
 }
 
 void aps::aps_search(int in_samples){
 
     //set_where("aps_scatter_search");
     
-    printf("aps searching\n");
+    //printf("aps searching\n");
     
     if(chisq==NULL){
         printf("WARNING chisq is null in aps_scatter_search\n");
@@ -1319,7 +1314,7 @@ void aps::aps_search(int in_samples){
     ct_aps+=chisq->get_called()-ibefore;
     set_where("nowhere");
     
-    printf("ct_aps %d time %e\n",ct_aps,time_aps);
+    //printf("ct_aps %d time %e\n",ct_aps,time_aps);
     
 }
 
