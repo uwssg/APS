@@ -138,7 +138,7 @@ void aps::start_timingfile(){
     output=fopen(timingname,"a");
     fprintf(output,"\n# pts called time ct_aps time_aps ");
     fprintf(output," ct_grad time_grad ");
-    fprintf(output,"median chimin target\n");
+    fprintf(output,"median chimin target volume\n");
     fclose(output);
 }
 
@@ -1413,6 +1413,12 @@ void aps::write_pts(){
 	}
     }
     
+    double volume=good_max.get_data(0)-good_min.get_data(0);
+    for(i=1;i<gg.get_dim();i++){
+        mu=good_max.get_data(i)-good_min.get_data(i);
+        volume*=mu;
+    }
+    
     
     output=fopen(outname,"w");
     fprintf(output,"# ");
@@ -1451,8 +1457,8 @@ void aps::write_pts(){
     fprintf(output,"%d %e ",ct_aps,time_aps);
     fprintf(output,"%d %e ",ct_gradient,time_gradient);
     
-    fprintf(output,"%e %e %e ",
-    global_median,chimin,strad.get_target());
+    fprintf(output,"%e %e %e %e",
+    global_median,chimin,strad.get_target(),volume);
     
     fprintf(output," -- %d %d %d\n",candidates.get_dim(),known_minima.get_dim(),ngood);
     
