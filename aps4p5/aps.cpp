@@ -867,7 +867,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
         }
         
-        printf("chimin %e sig %e mu %e\n",chimin,sig,mu);
+        //printf("chimin %e sig %e mu %e\n",chimin,sig,mu);
         
         //printf("    sig %e\n",sig);
         if(chisq->get_called()-last_found%100==0 && chisq->get_called()-last_found>0){
@@ -1543,6 +1543,13 @@ void aps::write_pts(){
 	    last_optimized=n_aps_pts;
 	}
     }
+     
+    output=fopen("candidates_log.sav","w");
+    for(i=0;i<n_candidates;i++){
+        fprintf(output,"%e %e\n",gg.get_pt(candidates.get_data(i),0),
+        gg.get_pt(candidates.get_data(i),3));
+    }
+    fclose(output);
        
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
