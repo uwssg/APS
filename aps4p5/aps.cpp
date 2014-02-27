@@ -512,11 +512,9 @@ int aps::choose_a_candidate(){
     if(ichoice>=0){
         to_return=candidates.get_data(ichoice);
         
-        for(i=ichoice+1;i<n_candidates;i++){
-            candidates.set(i-1,candidates.get_data(i));
-        }
+        candidates.remove(ichoice);
+     
         n_candidates--;
-        candidates.decrement_dim();
         
         if(n_candidates!=candidates.get_dim()){
             printf("WARNING after decrementing ncand %d dim %d\n",
