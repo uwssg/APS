@@ -1559,6 +1559,23 @@ void aps::write_pts(){
         gg.get_pt(candidates.get_data(i),3));
     }
     fclose(output);
+    
+    output=fopen("minima_log.sav","w");
+    for(i=0;i<known_minima.get_dim();i++){
+        fprintf(output,"%e %e\n",gg.get_pt(known_minima.get_data(i),0),
+        gg.get_pt(known_minima.get_data(i),3));
+    }
+    
+    fclose(output);
+    
+    output=fopen("startpts_log.sav","w");
+    for(i=0;i<gradient_start_pts.get_dim();i++){
+        fprintf(output,"%e %e\n",
+        gg.get_pt(gradient_start_pts.get_data(i),0),
+        gg.get_pt(gradient_start_pts.get_data(i),3));
+    }
+    fclose(output);
+    
        
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
