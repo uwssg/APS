@@ -448,7 +448,16 @@ int aps::choose_a_candidate(){
 	
 	exit(1);
     }
-
+    
+    int i;
+    for(i=0;i<n_candidates;i++){
+        if(is_it_a_candidate(candidates.get_data(i))==0){
+            candidates.remove(i);
+            n_candidates--;
+            i--;
+        }
+    }
+    
  
     if(n_candidates==0){
         //printf("WARNING trying to choose candidate, but n_candidates is zero\n");
@@ -456,7 +465,7 @@ int aps::choose_a_candidate(){
         return -1;
     }
     
-    int i,ichoice=-1,j;
+    int ichoice=-1,j;
     double minval,ddmin,dd,ddmax=-1.0;
     
     array_1d<double> vv,uu;
