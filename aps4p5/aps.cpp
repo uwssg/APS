@@ -1388,6 +1388,32 @@ void aps::write_pts(){
     double mu,sig;
     FILE *output;
     
+    ngood=0;
+    for(i=0;i<gg.get_pts();i++){
+        if(gg.get_fn(i)<strad.get_target()){
+	    if(ngood==0){
+	        for(j=0;j<gg.get_dim();j++){
+		    good_min.set(j,gg.get_pt(i,j));
+		    good_max.set(j,gg.get_pt(i,j));
+		}
+	    }
+	    else{
+	        for(j=0;j<gg.get_dim();j++){
+		    if(gg.get_pt(i,j)<good_min.get_data(j)){
+		        good_min.set(j,gg.get_pt(i,j));
+		    }
+		    if(gg.get_pt(i,j)>good_max.get_data(j)){
+		        good_max.set(j,gg.get_pt(i,j));
+		    }
+		}
+	    }
+	    
+	    ngood++;
+	    
+	}
+    }
+    
+    
     output=fopen(outname,"w");
     fprintf(output,"# ");
     for(i=0;i<gg.get_dim();i++){
@@ -1451,30 +1477,7 @@ void aps::write_pts(){
     
     n_printed=gg.get_pts();
     
-    ngood=0;
-    for(i=0;i<gg.get_pts();i++){
-        if(gg.get_fn(i)<strad.get_target()){
-	    if(ngood==0){
-	        for(j=0;j<gg.get_dim();j++){
-		    good_min.set(j,gg.get_pt(i,j));
-		    good_max.set(j,gg.get_pt(i,j));
-		}
-	    }
-	    else{
-	        for(j=0;j<gg.get_dim();j++){
-		    if(gg.get_pt(i,j)<good_min.get_data(j)){
-		        good_min.set(j,gg.get_pt(i,j));
-		    }
-		    if(gg.get_pt(i,j)>good_max.get_data(j)){
-		        good_max.set(j,gg.get_pt(i,j));
-		    }
-		}
-	    }
-	    
-	    ngood++;
-	    
-	}
-    }
+    
 
     array_1d<int> to_optimize;
     
