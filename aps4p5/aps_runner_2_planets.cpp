@@ -23,7 +23,7 @@ Ran chaos(seed);
 
 matern_covariance cv;
 
-int nplanets=5;
+int nplanets=2;
 planet chisq(nplanets);
 dim=nplanets*3;
 
@@ -45,6 +45,9 @@ min.set_dim(dim);
 min.set(0,4500.0);
 max.set(0,5500.0);
 aps_test.set_characteristic_length(0,1.0);
+
+aps_test.set_timingname("timing_file_2planets.sav");
+aps_test.set_outname("master_output_2planets.sav");
 
 min.set(1,0.001);
 max.set(1,0.999);
