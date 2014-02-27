@@ -27,7 +27,9 @@ int nplanets=2;
 planet chisq(nplanets);
 dim=nplanets*3;
 
-aps aps_test(dim,20,25.0,seed);
+aps aps_test(dim,20,21,seed);
+//21 is the 95% CL for 12 dof (all 5 parameters for all planets 
+//+ two telescope velocities)
 
 aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);

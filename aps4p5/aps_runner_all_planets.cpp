@@ -27,7 +27,8 @@ int nplanets=5;
 planet chisq(nplanets);
 dim=nplanets*5+2;
 
-aps aps_test(dim,20,25.0,seed);
+aps aps_test(dim,20,40.1,seed);
+//40.1 is the 95% CL for 27 dof
 
 aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);
