@@ -89,6 +89,10 @@ planet2: aps_runner_2_planets.cpp aps.o exoplanet.o
 	chisq_1311.o exoplanet.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
+analyze_planets: goto_tools.o containers.o analyze_planets.cpp
+	$(gg) -o analyze_planets analyze_planets.cpp \
+	goto_tools.o containers.o 
+
 aps_test: aps_tester.cpp aps.o
 	$(gg) -o aps_test aps_tester.cpp goto_tools.o kd.o \
 	eigen_wrapper.o gaussian_process.o chisq_1311.o aps.o \
