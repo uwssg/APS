@@ -35,7 +35,7 @@ aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);
 
 aps_test.set_write_every(100);
-aps_test.set_grat(0.1);
+aps_test.set_grat(1.0);
 
 array_1d<double> max,min;
 max.set_name("driver_max");
