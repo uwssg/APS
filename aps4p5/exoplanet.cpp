@@ -406,9 +406,9 @@ double planet::operator()(array_1d<double> &vv_in) const{
     
     for(i=0;i<nplanets;i++){
         period.set(i,vv_in.get_data(i*3));
-        if(i>0 && period.get_data(i)>period.get_data(i-1)){
+        /*if(i>0 && period.get_data(i)>period.get_data(i-1)){
             return exception;
-        }
+        }*/
         
         if(period.get_data(i)>6000.0) return exception;
         
