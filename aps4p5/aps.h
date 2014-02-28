@@ -105,6 +105,7 @@ private:
     straddle_parameter strad;
     
     void find_global_minimum();
+    void find_global_minimum(int);
     void find_global_minimum(array_1d<double>&);
     void find_global_minimum(array_1d<int>&);
     

@@ -596,21 +596,6 @@ void aps::find_global_minimum(array_1d<double> &vv){
     
     gg.nn_srch(vv,dim+1,neigh,dd);
     
-    /*
-    for(i=1;i<dim+1;){
-        j=dice->int32()%gg.get_pts();
-        l=1;
-        for(k=0;k<i;k++){
-            if(j==neigh.get_data(i))l=0;
-        }
-        
-        if(l==1){
-            neigh.set(i,j);
-            i++;
-        }
-    }*/
-    
-    
     find_global_minimum(neigh);
 }
 
@@ -626,6 +611,40 @@ void aps::find_global_minimum(){
 
     find_global_minimum(vv);
 
+}
+
+void aps::find_global_minimum(int ix){
+    array_1d<int> neigh;
+    array_1d<double> trial,s_length;
+    
+    neigh.add(ix);
+    
+    double chitrial;
+    int i,j,actually_added;
+    
+    for(i=0;i<dim;i++){
+        if(range_max.get_data(i)-range_min.get_data(i)>10.0*(gg.get_max(i)-gg.get_min(i))){
+            s_length.set(i,10.0*(gg.get_max(i)-gg.get_min(i)));
+        }
+        else{
+            s_length.set(i,range_max.get_data(i)-range_min.get_data(i));
+        }
+    }
+      
+    for(i=1;i<dim+1;){
+        for(j=0;j<dim;j++){
+            trial.set(j,gg.get_pt(ix,j)+(dice->doub()-0.5)*s_length.get_data(j));
+        }
+        chitrial=(*chisq)(trial);
+        actually_added=add_pt(trial,chitrial);
+        if(actually_added==1){
+            neigh.set(i,gg.get_pts()-1);
+            i++;
+        }
+    }
+    
+    find_global_minimum(neigh);
+    
 }
 
 void aps::find_global_minimum(array_1d<int> &neigh){
@@ -1362,9 +1381,9 @@ void aps::gradient_search(){
        
        gradient_start_pts.add(ix);
        
-       gg.get_pt(ix,vv);
+       //gg.get_pt(ix,vv);
        
-       find_global_minimum(vv);
+       find_global_minimum(ix);
     
     }
     /*else{
