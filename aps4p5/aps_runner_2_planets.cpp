@@ -48,8 +48,8 @@ min.set(0,4500.0);
 max.set(0,5500.0);
 aps_test.set_characteristic_length(0,1.0);
 
-aps_test.set_timingname("timing_file_2planets.sav");
-aps_test.set_outname("master_output_2planets.sav");
+aps_test.set_timingname("timing_file_2planets_test.sav");
+aps_test.set_outname("master_output_2planets_test.sav");
 
 min.set(1,0.001);
 max.set(1,0.999);
@@ -61,7 +61,7 @@ int i,j;
 
 for(i=1;i<nplanets;i++){
     min.set(i*3,0.01);
-    max.set(i*3,1000.0);
+    max.set(i*3,500.0);
     aps_test.set_characteristic_length(i*3,1.0);
     
     min.set(i*3+1,0.001);
@@ -83,7 +83,7 @@ for(i=0;i<nplanets;i++){
 }
 
 printf("initializing\n");
-aps_test.initialize(1000,min,max);
+aps_test.initialize(100,min,max);
 
 aps_test.set_n_samples(1000);
 

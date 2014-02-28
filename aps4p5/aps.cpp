@@ -733,7 +733,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     last_found=chisq->get_called();
     
-    while(sig>0.1 && simplex_min<exception && 
+    while(sig>0.01 && simplex_min<exception && 
     chisq->get_called()-last_found<ct_abort_max){
         
         //printf("    simplex min %e\n",simplex_min);
