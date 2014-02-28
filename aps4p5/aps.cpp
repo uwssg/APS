@@ -728,7 +728,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     simplex_min=ff.get_data(il);
     mindex=neigh.get_data(il);
     
-    printf("    starting %e\n    ",simplex_min);
+    printf("    starting %e chimin %e\n    ",simplex_min,chimin);
     for(i=0;i<(dim/3);i++)printf("%e ",pts.get_data(il,i*3)+min.get_data(i*3));
     printf("\n");
     
