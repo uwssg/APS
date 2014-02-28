@@ -1297,7 +1297,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
 	    add_aps_pt(gg.get_pts()-1,mubest,sigbest);
 	}
 
-	if(actually_added==1){
+	if(actually_added==1 && do_focus==0){
 	    i=is_it_a_candidate(gg.get_pts()-1);
 	    if(i==1)set_as_candidate(gg.get_pts()-1);
                
