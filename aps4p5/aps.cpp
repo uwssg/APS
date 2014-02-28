@@ -636,10 +636,12 @@ void aps::find_global_minimum(int ix){
             trial.set(j,gg.get_pt(ix,j)+(dice->doub()-0.5)*s_length.get_data(j));
         }
         chitrial=(*chisq)(trial);
-        actually_added=add_pt(trial,chitrial);
-        if(actually_added==1){
-            neigh.set(i,gg.get_pts()-1);
-            i++;
+        if(chitrial<exception){
+            actually_added=add_pt(trial,chitrial);
+            if(actually_added==1){
+                neigh.set(i,gg.get_pts()-1);
+                i++;
+            }
         }
     }
     
