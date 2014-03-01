@@ -466,11 +466,14 @@ int aps::choose_a_candidate(){
     }
     
     int ichoice=-1,j;
-    double minval,ddmin,dd,ddmax=-1.0;
+    double minval,ddmin,dd,vmin;
     
     array_1d<double> vv,uu;
     vv.set_name("choose_a_candidate_vv");
     uu.set_name("choose_a_candidate_uu");
+    
+    array_1d<double> distances,values,sorted;
+    array_1d<int> inn,inn_v;
     
     if(known_minima.get_dim()==0){
         //printf("    choosing based solely on candidate f\n");
@@ -503,18 +506,23 @@ int aps::choose_a_candidate(){
                 }
 	    
 	    
-	    /*if((*gg.get_pt(candidates.get_data(i))).get_data(11)<400.0){
-	        printf("    %e %e\n",(*gg.get_pt(candidates.get_data(i))).get_data(11),ddmin);
-	    }*/
-	     
-	        if(ichoice<0 || ddmin>ddmax){
-	            ddmax=ddmin;
-		    ichoice=i;
-	        }
+	        inn.add(i);
+                distances.add(ddmin);
 	    }
 	}
-	//printf("    ddmax %e\n",ddmax);
-    
+	
+        sort_and_check(distances,sorted,inn);
+        
+        for(i=sorted.get_dim()-1;i>=sorted.get_dim()/2;i--){
+           dd=gg.get_fn(candidates.get_data(inn.get_data(i)));
+           if(ichoice<0 || dd<vmin){
+               vmin=dd;
+               ichoice=i;
+           }
+        }
+        
+        
+        
     }
     
     int to_return;
