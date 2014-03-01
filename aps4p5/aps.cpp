@@ -517,7 +517,7 @@ int aps::choose_a_candidate(){
            dd=gg.get_fn(candidates.get_data(inn.get_data(i)));
            if(ichoice<0 || dd<vmin){
                vmin=dd;
-               ichoice=i;
+               ichoice=inn.get_data(i);
            }
         }
         
