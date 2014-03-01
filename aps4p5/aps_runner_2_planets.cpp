@@ -61,7 +61,7 @@ int i,j;
 
 for(i=1;i<nplanets;i++){
     min.set(i*3,0.01);
-    max.set(i*3,500.0);
+    max.set(i*3,1000.0);
     aps_test.set_characteristic_length(i*3,1.0);
     
     min.set(i*3+1,0.001);
