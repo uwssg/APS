@@ -70,6 +70,9 @@ public:
     
     void set_n_samples(int);
     
+    double get_chimin();
+    void get_minpt(array_1d<double>&);
+    
 private:
     Ran *dice;
     chisquared *chisq;

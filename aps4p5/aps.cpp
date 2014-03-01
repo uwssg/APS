@@ -347,6 +347,17 @@ void aps::set_chimin(double cc,array_1d<double> &pt){
     //printf("set chimin to %e target %e\n",chimin,strad.get_target());
 }
 
+double aps::get_chimin(){
+    return chimin;
+}
+
+void aps::get_minpt(array_1d<double> &output){
+    int i;
+    for(i=0;i<gg.get_dim();i++){
+        output.set(i,minpt.get_data(i));
+    }
+}
+
 void aps::add_aps_pt(int dex, double mu, double sig){
     if(dex>=gg.get_pts() || dex<0){
         printf("WARNING trying to add aps_pt %d but total %d\n",
