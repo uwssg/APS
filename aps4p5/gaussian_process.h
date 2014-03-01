@@ -195,6 +195,8 @@ class gp{
     
     int is_kptr_null();
     
+    int get_kk();
+    
     void set_max(int,double);
     void set_min(int,double);
        
@@ -243,6 +245,7 @@ class gp{
     double get_min(int);
     
     void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&);
+    void nn_srch(int,int,array_1d<int>&,array_1d<double>&);
     
     int get_ct_predict();
     int get_ct_search();

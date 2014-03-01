@@ -476,63 +476,108 @@ int aps::choose_a_candidate(){
         return -1;
     }
     
-    int ichoice=-1,j;
+    int ichoice=-1,j,ii;
     double minval,ddmin,dd,ddmax;
+   
     
-    array_1d<double> vv,uu;
-    vv.set_name("choose_a_candidate_vv");
-    uu.set_name("choose_a_candidate_uu");
+    array_1d<int> under_consideration,neigh;
+    array_1d<double> distances;
     
+    double mu,sig;
     
-    if(known_minima.get_dim()==0){
-        //printf("    choosing based solely on candidate f\n");
+    if(n_candidates==1){
+        ichoice=candidates.get_data(0);
+    }  
+    else{//if more than one candidate
         for(i=0;i<n_candidates;i++){
-            if(is_it_a_candidate(candidates.get_data(i))>0){
-	        if(ichoice<0 || gg.get_fn(candidates.get_data(i))<minval){
-		    minval=gg.get_fn(candidates.get_data(i));
-		    ichoice=i;
-                }
-	    }
+            j=candidates.get_data(i);
+            
+            gg.nn_srch(j,gg.get_kk()+1,neigh,distances);
+            
+            mu=0.0;
+            for(ii=1;ii<gg.get_kk()+1;ii++){
+                mu+=gg.get_fn(neigh.get_data(ii));
+            }
+            mu=mu/double(gg.get_kk());
+            sig=0.0;
+            for(ii=1;ii<gg.get_kk()+1;ii++){
+                sig+=power(mu-gg.get_fn(neigh.get_data(ii)),2);
+            }
+            sig=sig/double(gg.get_kk());
+            sig=sqrt(sig);
+            
+            dd=(mu-gg.get_fn(j))/sig;
+            if(dd>1.99999){
+                under_consideration.add(j);
+            }
+            
         }
-    }
-    else{
-        //printf("    choosing on distance to known minima\n");
-        for(i=0;i<n_candidates;i++){
-	    if(is_it_a_candidate(candidates.get_data(i))>0){
-	        for(j=0;j<known_minima.get_dim();j++){
-	            dd=gg.distance((*gg.get_pt(candidates.get_data(i))),(*gg.get_pt(known_minima.get_data(j))));
-		
-		    if(j==0 || dd<ddmin){
-		        ddmin=dd;
-		    }
-	        }
+        
+        if(under_consideration.get_dim()==0){
+            
+            printf("\nhave to evaluate all candidates\n");
+            
+            for(i=0;i<n_candidates;i++){
+                under_consideration.add(candidates.get_data(i));
+            }
+        }
+        else{
+            printf("\nonly choosing candidates with large mu-chisq\n");
+        }
+        
+        if(known_minima.get_dim()==0){
+            for(i=0;i<under_consideration.get_dim();i++){
+                if(gg.get_fn(under_consideration.get_data(i))<dd || ichoice<0){
+                    ichoice=under_consideration.get_data(i);
+                    dd=gg.get_fn(under_consideration.get_data(i));
+                }
+            }
+        }//if there are no known minima
+        else{
+            
+            for(i=0;i<under_consideration.get_dim();i++){
+                ii=under_consideration.get_data(i);
+                
+                for(j=0;j<known_minima.get_dim();j++){
+                    dd=gg.distance(*(gg.get_pt(ii)),*(gg.get_pt(known_minima.get_data(j))));
+                    if(j==0 || dd<ddmin){
+                        ddmin=dd;
+                    }    
+                }
                 
                 for(j=0;j<gradient_start_pts.get_dim();j++){
-                    dd=gg.distance((*gg.get_pt(candidates.get_data(i))),(*gg.get_pt(gradient_start_pts.get_data(j))));
+                    dd=gg.distance(*(gg.get_pt(ii)),*(gg.get_pt(gradient_start_pts.get_data(j))));
+                    
                     if(dd<ddmin){
                         ddmin=dd;
                     }
                 }
-	    
-	    
-	        if(ichoice<0 || ddmin>ddmax){
-                    ichoice=i;
+                
+                if(i==0 || ddmin>ddmax){
                     ddmax=ddmin;
+                    ichoice=ii;
                 }
-	    }
-	}
-	
-        
-        
+            }
+            
+        }
         
         
     }
     
-    int to_return;
+    
+  
+    
+    int dex;
     if(ichoice>=0){
-        to_return=candidates.get_data(ichoice);
         
-        candidates.remove(ichoice);
+        for(dex=0;candidates.get_data(dex)!=ichoice;dex++);
+        
+        if(candidates.get_data(dex)!=ichoice){
+            printf("WARNING about to eliminate the wrong candidate\n");
+            exit(1);
+        }
+        
+        candidates.remove(dex);
      
         n_candidates--;
         
@@ -544,7 +589,7 @@ int aps::choose_a_candidate(){
         }
         
         
-        return to_return;
+        return ichoice;
     }
     else{
         n_candidates=0;
@@ -1589,8 +1634,8 @@ void aps::write_pts(){
      
     output=fopen("candidates_log.sav","w");
     for(i=0;i<n_candidates;i++){
-        fprintf(output,"%e %e\n",gg.get_pt(candidates.get_data(i),0),
-        gg.get_pt(candidates.get_data(i),3));
+        fprintf(output,"%e %e %d\n",gg.get_pt(candidates.get_data(i),0),
+        gg.get_pt(candidates.get_data(i),3),candidates.get_data(i));
     }
     fclose(output);
     

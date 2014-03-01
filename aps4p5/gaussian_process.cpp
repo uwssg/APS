@@ -38,6 +38,10 @@ gp::~gp(){
  
 }
 
+int gp::get_kk(){
+    return kk;
+}
+
 void gp::set_max(int dex, double nn){
     if(kptr==NULL){
         return;
@@ -57,6 +61,17 @@ void gp::set_min(int dex, double nn){
 int gp::is_kptr_null(){
     if(kptr==NULL)return 1;
     else return 0;
+}
+
+void gp::nn_srch(int dex, int ikk, array_1d<int> &neigh, array_1d<double> &dd){
+    if(kptr==NULL){
+        printf("WARNING cannot call gp nn_srch; kptr is null\n");
+	exit(1);
+    }
+    
+    kptr->nn_srch(dex,ikk,neigh,dd);
+    
+
 }
 
 void gp::nn_srch(array_1d<double> &pt, int ikk, array_1d<int> &neigh,
