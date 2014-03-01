@@ -49,7 +49,7 @@ max.set(0,5500.0);
 aps_test.set_characteristic_length(0,1.0);
 
 aps_test.set_timingname("timing_file_2planets_test.sav");
-aps_test.set_outname("master_output_2planets_test.sav");
+aps_test.set_outname("master_output.sav");
 
 min.set(1,0.001);
 max.set(1,0.999);
@@ -90,13 +90,21 @@ aps_test.set_n_samples(1000);
 double chival,chivaltest,err,maxerr;
 
 i=-1;
-while(aps_test.get_n_pts()<200000){
+while(aps_test.get_n_pts()<200000 && aps_test.get_chimin()>4000.0){
     aps_test.search();
     
     
 }
 
+array_1d<double> minpt;
 
+aps_test.get_minpt(minpt);
+
+FILE *output;
+output=fopen("timing_file_2planets_test.sav","a");
+fprintf(output,"chimin %e -- %e %e\n\n",
+aps_test.get_chimin(),minpt.get_data(0),minpt.get_data(1));
+fclose(output);
 
 printf("ct_aps %d ct_grad %d total %d\n",
 aps_test.get_ct_aps(),aps_test.get_ct_gradient(),
