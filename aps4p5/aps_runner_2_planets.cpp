@@ -90,7 +90,7 @@ aps_test.set_n_samples(1000);
 double chival,chivaltest,err,maxerr;
 
 i=-1;
-while(aps_test.get_n_pts()<200000 && aps_test.get_chimin()>4000.0){
+while(aps_test.get_chimin()>4000.0){
     aps_test.search();
     
     
