@@ -1087,15 +1087,17 @@ void aps::search(){
     
     //printf("in search\n");
     
-    aps_score=time_aps;
+    //aps_score=time_aps;
     
+    aps_score=ct_aps;
     
     
     if(n_candidates==0 && mindex_is_candidate==0){
         grad_score=aps_score+100;
     }
     else{
-        grad_score=time_gradient;
+        //grad_score=time_gradient;
+        grad_score=ct_gradient;
     }
 
     if(grad_score<aps_score){
