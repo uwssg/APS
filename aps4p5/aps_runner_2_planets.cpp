@@ -103,7 +103,7 @@ aps_test.get_minpt(minpt);
 FILE *output;
 output=fopen("timing_file_2planets_test.sav","a");
 fprintf(output,"chimin %e -- %e %e\n\n",
-aps_test.get_chimin(),minpt.get_data(0),minpt.get_data(1));
+aps_test.get_chimin(),minpt.get_data(0),minpt.get_data(3));
 fclose(output);
 
 printf("ct_aps %d ct_grad %d total %d\n",
@@ -112,5 +112,5 @@ aps_test.get_called());
 
 
 printf("maxerr %e npts %d\n",maxerr,aps_test.get_n_pts());
-aps_test.write_pts();
+
 }
