@@ -102,7 +102,7 @@ aps_test.get_minpt(minpt);
 
 FILE *output;
 output=fopen("timing_file_2planets_test.sav","a");
-fprintf(output,"chimin %e -- %e %e\n\n",
+fprintf(output,"%d chimin %e -- %e %e\n\n",aps_test.get_called(),
 aps_test.get_chimin(),minpt.get_data(0),minpt.get_data(3));
 fclose(output);
 
