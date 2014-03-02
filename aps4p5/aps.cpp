@@ -507,7 +507,7 @@ int aps::choose_a_candidate(){
             sig=sqrt(sig);
             
             dd=(mu-gg.get_fn(j))/sig;
-            if(dd>1.99999){
+            if(dd>1.0){
                 under_consideration.add(j);
             }
             
