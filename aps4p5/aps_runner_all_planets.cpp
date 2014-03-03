@@ -17,7 +17,7 @@ if(seed<0){
     seed=int(time(NULL));
 }
 
-//printf("seed %d\n",seed);
+printf("seed %d\n",seed);
 
 Ran chaos(seed);
 
@@ -25,15 +25,16 @@ matern_covariance cv;
 
 int nplanets=5;
 planet chisq(nplanets);
-dim=nplanets*5+2;
+dim=nplanets*3;
 
-aps aps_test(dim,20,40.1,seed);
-//40.1 is the 95% CL for 27 dof
+aps aps_test(dim,20,21,seed);
+//21 is the 95% CL for 12 dof (all 5 parameters for all planets 
+//+ two telescope velocities)
 
 aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);
 
-aps_test.set_write_every(10);
+aps_test.set_write_every(100);
 aps_test.set_grat(1.0);
 
 array_1d<double> max,min;
@@ -42,111 +43,73 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-printf("about to set weights\n");
 
+min.set(0,3000.0);
+max.set(0,6500.0);
+aps_test.set_characteristic_length(0,1.0);
 
-printf("set weights\n");
+aps_test.set_timingname("timing_file_5planets_test.sav");
+aps_test.set_outname("master_output_5planets.sav");
 
-min.set(0,60.0);
-max.set(0,80.0);
+min.set(1,0.001);
+max.set(1,0.999);
 
-min.set(1,13.0);
-max.set(1,15.0);
-//aps_test.set_wgt(1,7.0);
+min.set(2,-1.0);
+max.set(2,1.0);
 
-min.set(2,0.001);
-max.set(2,0.1);
+int i,j;
 
-min.set(3,120.0);
-max.set(3,180.0);
+for(i=1;i<nplanets;i++){
+    min.set(i*3,0.01);
+    max.set(i*3,1000.0);
+    aps_test.set_characteristic_length(i*3,1.0);
+    
+    min.set(i*3+1,0.001);
+    max.set(i*3+1,0.999);
+    
+    min.set(i*3+2,-1.0);
+    max.set(i*3+2,1.0);
+}
 
-min.set(4,-0.4);
-max.set(4,-0.1);
+min.set(3,14.0);
+max.set(3,15.0);
+min.set(6,44.0);
+max.set(6,45.0);
+min.set(9,259.0);
+max.set(9,260.0);
 
-min.set(5,40.0);
-max.set(5,50.0);
+array_1d<int> rr_i;
 
-min.set(6,4900.0);
-max.set(6,5400.0);
-//aps_test.set_wgt(6,200.0);
+for(i=0;i<nplanets;i++){
+    for(j=0;j<3;j++){
+        rr_i.add(i*3+j);
+    }
+    aps_test.set_gibbs_set(rr_i);
+    rr_i.reset();
+}
 
-min.set(7,0.001);
-max.set(7,0.1);
+printf("initializing\n");
+aps_test.initialize(100,min,max);
 
-min.set(8,180.0);
-max.set(8,220.0);
-
-min.set(9,-0.7);
-max.set(9, -0.3);
-
-min.set(10,9.0);
-max.set(10,11.0);
-
-min.set(11,42.0);
-max.set(11,46.0);
-
-min.set(12,0.001);
-max.set(12,0.2);
-
-min.set(13,40.0);
-max.set(13,100.0);
-
-min.set(14,0.1);
-max.set(14,0.5);
-
-min.set(15,4.0);
-max.set(15,7.0);
-
-min.set(16,230.0);
-max.set(16,270.0);
-
-min.set(17,0.001);
-max.set(17,0.5);
-
-min.set(18,150.0);
-max.set(18,270.0);
-
-min.set(19,-0.4);
-max.set(19,-0.05);
-
-min.set(20,0.0);
-max.set(20,10.0);
-
-min.set(21,0.0);
-max.set(21,10.0);
-
-min.set(22,0.001);
-max.set(22,1.0);
-
-min.set(23,0.0);
-max.set(23,360.0);
-
-min.set(24,-1.0);
-max.set(24,1.0);
-
-min.set(25,10.0);
-max.set(25,20.0);
-
-min.set(26,10.0);
-max.set(26,20.0);
-
-aps_test.set_grat(0.5);
-
-aps_test.initialize(5000,min,max);
-
-//aps_test.set_wgt(2,0.1);
+aps_test.set_n_samples(1000);
 
 double chival,chivaltest,err,maxerr;
 
-int i;
 i=-1;
-while(aps_test.get_n_pts()<200000){
+while(aps_test.get_called()<1000000 && aps_test.get_chimin()>600.0){
     aps_test.search();
     
     
 }
 
+array_1d<double> minpt;
 
+aps_test.get_minpt(minpt);
+
+for(i=0;i<nplanets;i++){
+    printf("period %d %e\n",i,minpt.get_data(i*3));
+}
+printf("chimin %e\n",aps_test.get_chimin());
 
 printf("ct_aps %d ct_grad %d total %d\n",
 aps_test.get_ct_aps(),aps_test.get_ct_gradient(),
@@ -154,5 +117,5 @@ aps_test.get_called());
 
 
 printf("maxerr %e npts %d\n",maxerr,aps_test.get_n_pts());
-aps_test.write_pts();
+
 }
