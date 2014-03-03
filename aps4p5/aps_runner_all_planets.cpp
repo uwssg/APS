@@ -44,8 +44,8 @@ max.set_dim(dim);
 min.set_dim(dim);
 
 
-min.set(0,3000.0);
-max.set(0,6500.0);
+min.set(0,5150.0);
+max.set(0,5250.0);
 aps_test.set_characteristic_length(0,1.0);
 
 aps_test.set_timingname("timing_file_5planets_test.sav");
