@@ -53,7 +53,7 @@ dummy_planet::dummy_planet() : chisquared(15){
 
 dummy_planet::~dummy_planet(){}
 
-double dummy_planet::operator()(array_1d<double> &pp){
+double dummy_planet::operator()(array_1d<double> &pp) const{
     double d1=0.0,d2=0.0;
     
     int i;
