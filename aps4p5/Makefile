@@ -60,6 +60,10 @@ exoplanet.o: exoplanet.h exoplanet.cpp chisq_1311.o
 	$(gg) -c exoplanet.cpp goto_tools.o containers.o chisq_1311.o \
 	$(LIBRARIES) $(INCLUDE)
 
+dummy_planet.o: dummy_planet.h dummy_planet.cpp chisq_1311.o
+	$(gg) -c dummy_planet.cpp goto_tools.o containers.o chisq_1311.o \
+	$(LIBRARIES) $(INCLUDE)
+
 test_exoplanet: test_exoplanet.cpp exoplanet.o
 	$(gg) -o test_exoplanet test_exoplanet.cpp \
 	goto_tools.o containers.o chisq_1311.o exoplanet.o \
@@ -81,6 +85,12 @@ planet: aps_runner_planets.cpp aps.o exoplanet.o
 	$(gg) -o planet aps_runner_planets.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
 	chisq_1311.o exoplanet.o aps.o \
+	$(LIBRARIES) $(INCLUDE)
+
+dummy: aps_runner_dummy_planets.cpp aps.o dummy_planet.o
+	$(gg) -o dummy aps_runner_dummy_planets.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq_1311.o dummy_planet.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
 planet2: aps_runner_2_planets.cpp aps.o exoplanet.o
@@ -141,4 +151,5 @@ likelihoodinterface.o kd.o camb_wrapper_wmap.o wmap_wrapper.o gaussian_process.o
 	 -Wno-deprecated
 
 clean:
-	rm *.o aps_run aps_test test_containers test_kd
+	rm *.o aps_run aps_test test_containers test_kd planet dummy planet2 \
+	planet3 planet4 planet5
