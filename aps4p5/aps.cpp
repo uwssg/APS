@@ -62,6 +62,9 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     good_max.set_name("aps_good_max");
     good_min.set_name("aps_good_min");
     aps_pts.set_name("aps_aps_pts");
+    wide_pts.set_name("aps_wide_pts");
+    focus_pts.set_name("aps_focus_pts");
+    gibbs_pts.set_name("aps_gibbs_pts");
     
     
     write_every=1000;
@@ -1186,7 +1189,12 @@ void aps::aps_wide(int in_samples){
         }
     }
     
+    i=gg.get_pts();
     aps_choose_best(samples,0);
+    if(gg.get_pts()!=i){
+        wide_pts.add(gg.get_pts()-1);
+    }
+    
     called_wide++;
    
 }
@@ -1243,8 +1251,12 @@ void aps::aps_focus(int in_samples){
     }
     //printf("about to choose best\n");
     
-    
+    i=gg.get_pts();
     aps_choose_best(samples,1);
+    if(gg.get_pts()!=i){
+        focus_pts.add(gg.get_pts()-1);
+    }
+    
     called_focus++;
 
 }
@@ -1285,7 +1297,11 @@ void aps::aps_gibbs(int in_samples){
         
     }
     
+    i=gg.get_pts();
     aps_choose_best(samples,1);
+    if(gg.get_pts()!=i){
+        gibbs_pts.add(gg.get_pts()-1);
+    }
     
     i_gibbs++;
     called_gibbs++;
@@ -1553,22 +1569,35 @@ void aps::write_pts(){
     global_median=sorted.get_data(gg.get_pts()/2);
     
     candidates.reset();
+    
+    array_1d<int> *to_choose_from;
+    int ii,jj;
+    
     n_candidates=0;
-    for(i=0;i<gg.get_pts();i++){
-        j=1;
-        for(k=0;k<known_minima.get_dim() && j==1;k++){
-            if(i==known_minima.get_data(k))j=0;
-        }
-        for(k=0;k<gradient_start_pts.get_dim() && j==1;k++){
-            if(i==gradient_start_pts.get_data(k))j=0;
-        }
+    
+    for(ii=0;ii<3;ii++){
+        if(ii==0)to_choose_from=&wide_pts;
+        else if(ii==1)to_choose_from=&gibbs_pts;
+        else if(ii==1)to_choose_from=&focus_pts;
         
-        if(j==1){
-            if(is_it_a_candidate(i)){
-                candidates.add(i);
-                n_candidates++;
+        for(jj=0;jj<to_choose_from->get_dim();jj++){
+            i=to_choose_from->get_data(jj);
+            j=1;
+            for(k=0;k<known_minima.get_dim() && j==1;k++){
+                if(i==known_minima.get_data(k))j=0;
             }
-        }
+            for(k=0;k<gradient_start_pts.get_dim() && j==1;k++){
+                if(i==gradient_start_pts.get_data(k))j=0;
+            }
+        
+            if(j==1){
+                if(is_it_a_candidate(i)){
+                    candidates.add(i);
+                    n_candidates++;
+                }
+            }
+    }
+    
     }
     
     n_printed=gg.get_pts();

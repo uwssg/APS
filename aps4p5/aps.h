@@ -87,6 +87,8 @@ private:
     char **paramnames;
     
     array_1d<int> candidates,aps_pts,known_minima,gradient_start_pts;
+    array_1d<int> wide_pts,focus_pts,gibbs_pts;
+    
     int n_candidates;
     
     array_1d<double> characteristic_length;
