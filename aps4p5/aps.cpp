@@ -1578,7 +1578,7 @@ void aps::write_pts(){
     for(ii=0;ii<3;ii++){
         if(ii==0)to_choose_from=&wide_pts;
         else if(ii==1)to_choose_from=&gibbs_pts;
-        else if(ii==1)to_choose_from=&focus_pts;
+        else if(ii==2)to_choose_from=&focus_pts;
         
         for(jj=0;jj<to_choose_from->get_dim();jj++){
             i=to_choose_from->get_data(jj);
