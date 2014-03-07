@@ -1536,21 +1536,7 @@ void aps::write_pts(){
     }
     fclose(output);
    
-    output=fopen(timingname,"a");
-    fprintf(output,"%d %d %e ",
-    gg.get_pts(),chisq->get_called(),double(time(NULL))-start_time);
-    
-    fprintf(output,"%d %e ",ct_aps,time_aps);
-    fprintf(output,"%d %e ",ct_gradient,time_gradient);
-    
-    fprintf(output,"%e %e %e %e",
-    global_median,chimin,strad.get_target(),volume);
-    
-    fprintf(output," -- %d %d %d\n",candidates.get_dim(),known_minima.get_dim(),ngood);
-    
-    
-    fclose(output);
-    
+   
     array_1d<double> tosort,sorted;
     tosort.set_name("aps_write_pts_tosort");
     sorted.set_name("aps_write_pts_sorted");
@@ -1565,7 +1551,25 @@ void aps::write_pts(){
     
     sort_and_check(tosort,sorted,inn);
     global_median=sorted.get_data(gg.get_pts()/2);
-
+    
+    candidates.reset();
+    n_candidates=0;
+    for(i=0;i<gg.get_pts();i++){
+        j=1;
+        for(k=0;k<known_minima.get_dim() && j==1;k++){
+            if(i==known_minima.get_data(k))j=0;
+        }
+        for(k=0;k<gradient_start_pts.get_dim() && j==1;k++){
+            if(i==gradient_start_pts.get_data(k))j=0;
+        }
+        
+        if(j==1){
+            if(is_it_a_candidate(i)){
+                candidates.add(i);
+                n_candidates++;
+            }
+        }
+    }
     
     n_printed=gg.get_pts();
     
@@ -1654,7 +1658,22 @@ void aps::write_pts(){
         gg.get_pt(gradient_start_pts.get_data(i),3));
     }
     fclose(output);
+   
+    output=fopen(timingname,"a");
+    fprintf(output,"%d %d %e ",
+    gg.get_pts(),chisq->get_called(),double(time(NULL))-start_time);
     
+    fprintf(output,"%d %e ",ct_aps,time_aps);
+    fprintf(output,"%d %e ",ct_gradient,time_gradient);
+    
+    fprintf(output,"%e %e %e %e",
+    global_median,chimin,strad.get_target(),volume);
+    
+    fprintf(output," -- %d %d %d\n",candidates.get_dim(),known_minima.get_dim(),ngood);
+    
+    
+    fclose(output);
+     
        
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
