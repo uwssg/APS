@@ -27,7 +27,7 @@ int nplanets=5;
 planet chisq(nplanets);
 dim=nplanets*3;
 
-aps aps_test(dim,20,21,seed);
+aps aps_test(dim,20,40.1,seed);
 //21 is the 95% CL for 12 dof (all 5 parameters for all planets 
 //+ two telescope velocities)
 
@@ -77,6 +77,9 @@ min.set(6,44.0);
 max.set(6,45.0);
 min.set(9,259.0);
 max.set(9,260.0);
+
+min.set(12,0.001);
+max.set(12,10.0);
 
 array_1d<int> rr_i;
 
