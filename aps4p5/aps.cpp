@@ -1591,7 +1591,7 @@ void aps::write_pts(){
             }
         
             if(j==1){
-                if(is_it_a_candidate(i)){
+                if(is_it_a_candidate(i)==1){
                     candidates.add(i);
                     n_candidates++;
                 }
