@@ -1558,13 +1558,13 @@ void aps::write_pts(){
     array_1d<int> inn;
     inn.set_name("aps_write_pts_inn");
     
-    for(i=0;i<n_aps_pts;i++){
-        tosort.set(i,gg.get_fn(aps_pts.get_data(i)));
+    for(i=0;i<gg.get_pts();i++){
+        tosort.set(i,gg.get_fn(i));
 	inn.set(i,i);
     }
     
     sort_and_check(tosort,sorted,inn);
-    global_median=sorted.get_data(n_aps_pts/2);
+    global_median=sorted.get_data(gg.get_pts()/2);
 
     
     n_printed=gg.get_pts();
