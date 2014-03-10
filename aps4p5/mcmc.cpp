@@ -196,9 +196,17 @@ void mcmc::resume(){
 }
 
 void mcmc::guess(array_1d<double> &input){
-
-    if(start.get_rows()==dim){
-        printf("CANNOT guess; start is already all set\n");
+   
+    int i,j;
+    if(start.get_rows()==chains){
+        printf("CANNOT guess; start is already all set \n");
+        for(i=0;i<start.get_rows();i++){
+            for(j=0;j<start.get_cols();j++){
+                printf("%.2e ",start.get_data(i,j));
+            }
+            printf("\n");
+        }
+        throw -1;
     }
 
     start.add_row(input);
