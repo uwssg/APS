@@ -84,7 +84,9 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
   
   dof=df;
   
-  start.set_dim(chains,dim);
+  //start.set_dim(chains,dim);
+  
+  start.set_cols(dim);
   p_vectors.set_dim(dim,dim);
   p_values.set_dim(dim);
   
@@ -219,6 +221,9 @@ void mcmc::sample(int npts){
   oldl.set_dim(chains);
   degen.set_dim(chains);
   
+  printf("starting with start rows %d\n",start.get_rows());
+
+  
   if(called==0 && resumed==0){
     for(i=0;i<chains;i++){
              
@@ -238,6 +243,8 @@ void mcmc::sample(int npts){
          nn=(*chisqfn[i])(*start(i));
      }
      
+     printf("nn %e\n",nn);
+     
      while(nn>=exception){
        
          for(j=0;j<dim;j++){
@@ -252,6 +259,8 @@ void mcmc::sample(int npts){
       
     }
   }
+  
+  //exit(1);
   
   called++;
 
