@@ -51,6 +51,7 @@ class mcmc{
     void resume();
     void activate_fastslow(int);
     void set_chisq(chisquared*,int);
+    void guess(array_1d<double>&);
 
 };
 

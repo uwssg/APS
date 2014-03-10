@@ -193,6 +193,17 @@ void mcmc::resume(){
     resumed=1;
 }
 
+void mcmc::guess(array_1d<double> &input){
+
+    if(start.get_rows()==dim){
+        printf("CANNOT guess; start is already all set\n");
+    }
+
+    start.add_row(input);
+    
+
+}
+
 void mcmc::sample(int npts){
   
   int i,j,k,l,cc,ii,inbounds;
@@ -219,8 +230,16 @@ void mcmc::sample(int npts){
     
      sprintf(word,"rm %s",names[i]);
      system(word);
-     nn=2.0*exception;
+     
+     if(start.get_rows()<=i){
+         nn=2.0*exception;
+     }
+     else{
+         nn=(*chisqfn[i])(*start(i));
+     }
+     
      while(nn>=exception){
+       
          for(j=0;j<dim;j++){
              start.set(i,j,min.get_data(j)+chaos->doub()*(max.get_data(j)-min.get_data(j)));
          }
