@@ -125,8 +125,6 @@ aps_run: aps_runner.cpp aps.o
 	containers.o \
 	$(LIBRARIES) $(INCLUDE)
 
-
-
 apsForceGibbs: aps_interface.cpp goto_tools.o eigen_wrapper.o \
 likelihoodinterface.o kd.o gaussian_process.o \
 chisq_1311.o 
@@ -155,6 +153,11 @@ likelihoodinterface.o kd.o camb_wrapper_wmap.o wmap_wrapper.o gaussian_process.o
 	 $(LAPACK) $(BLAS) $(FORTRAN) $(CAMB) $(WMAP) $(WMAPLIBS) \
 	 -Wno-deprecated
 
+mcmc_test: mcmc.o mcmc_test.cpp
+	$(gg) -o mcmc_test mcmc_test.cpp \
+	goto_tools.o containers.o eigen_wrapper.o chisq_1311.o mcmc.o \
+	$(LIBRARIES) $(INCLUDE)
+
 clean:
 	rm *.o aps_run aps_test test_containers test_kd planet dummy planet2 \
-	planet3 planet4 planet5
+	planet3 planet4 planet5 mcmc_test
