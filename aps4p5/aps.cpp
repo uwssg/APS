@@ -1566,7 +1566,7 @@ void aps::write_pts(){
     }
     
     sort_and_check(tosort,sorted,inn);
-    global_median=sorted.get_data(gg.get_pts()/2);
+    global_median=sorted.get_data(2*gg.get_pts()/3);
     
     candidates.reset();
     
