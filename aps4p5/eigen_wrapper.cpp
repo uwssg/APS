@@ -199,7 +199,10 @@ void invert_lapack(array_2d<double> &matin, array_2d<double> &min, int verb){
 	dgetrf_(&m,&n,matrix,&lda,ipiv,&info);
 	//cout<<"after dgetrf info is "<<info<<endl;
 	
-	
+	if(info!=0){
+            printf("WARNING after dgetrf in inversion info %d\n",info);
+            throw -1;
+        }
 	
 	dgetri_(&n,matrix,&lda,ipiv,work,&lwork,&info);
 	//cout<<"after dgetri info is "<<info<<endl;
@@ -218,12 +221,13 @@ void invert_lapack(array_2d<double> &matin, array_2d<double> &min, int verb){
 	
 	if(info!=0){
 	    printf("WARNING in invert_lapack info %d\n",info);
+            throw -1;
 	}
 
 
 }
 
-void eval_symm(double **m, double **vecs, double *vals, int nev, int n, int order){
+void eval_symm(array_2d<double> &m, array_2d<double> &vecs, array_1d<double> &vals, int nev, int n, int order){
 //this will use ARPACK to get nev eigenvalues and vectors of a symmetric
 // n-by-n matrix
 //order=1 looks for nev largest eigenvalues
@@ -289,7 +293,7 @@ void eval_symm(double **m, double **vecs, double *vals, int nev, int n, int orde
    for(i=0;i<n;i++){
      workd[ipntr[1]+i-1]=0.0;
      for(j=0;j<n;j++){
-      workd[ipntr[1]+i-1]+=m[i][j]*workd[ipntr[0]+j-1];
+      workd[ipntr[1]+i-1]+=m.get_data(i,j)*workd[ipntr[0]+j-1];
      }
    }
   }
@@ -299,7 +303,8 @@ void eval_symm(double **m, double **vecs, double *vals, int nev, int n, int orde
   }
  }
  if(info!=0){printf("after dsaupd info is %d ido %d ncv %d n %d\n",info,ido,ncv,n);
- printf("iterations %d n %d\n",iparam[2],n);
+     printf("iterations %d n %d\n",iparam[2],n);
+     throw -1;
  }
 /* for(i=0;i<ncv;i++){
  printf("ritzvalue %e\n",workl[ipntr[7]+i]);
@@ -313,15 +318,17 @@ void eval_symm(double **m, double **vecs, double *vals, int nev, int n, int orde
        printf("ritzvalue %e\n",workl[ipntr[7]+i]);
     }
     printf("\n");
+    
+    throw -1;
  }
    for(i=0;i<nev;i++){
-    vals[i]=d[i];
+    vals.set(i,d[i]);
     //printf("eval%d is %e\n",i,d[i]);
    }
  
  for(i=0;i<nev;i++){
   for(j=0;j<n;j++){
-   vecs[j][i]=z[i*n+j];
+   vecs.set(j,i,z[i*n+j]);
   }
  }
  
@@ -336,7 +343,7 @@ void eval_symm(double **m, double **vecs, double *vals, int nev, int n, int orde
 
 
 
-double eigen_check(double **matrix, double *vec, double lambda, int n){
+double eigen_check(array_2d<double> &matrix, array_1d<double> &vec, double lambda, int n){
  int i,j,k,l;
  double err,maxerr=-1.0,ans;
  
@@ -349,18 +356,17 @@ double eigen_check(double **matrix, double *vec, double lambda, int n){
  for(i=0;i<n;i++){
   ans=0.0;
   for(j=0;j<n;j++){
-   ans+=matrix[i][j]*vec[j];
+   ans+=matrix.get_data(i,j)*vec.get_data(j);
   }
   
   //printf("%e %e\n",ans/lambda,vec[i]);
   
-  if(fabs(vec[i])>0.0)err=fabs((ans/vec[i]-lambda)/lambda);
-  else{
-      err=fabs(ans);
-      //err=0.0;
-  }
+  ans=ans/lambda;
+  err=fabs(ans-vec.get_data(i));
+  if(vec.get_data(i)!=0.0)err=err/fabs(vec.get_data(i));
+
   if(err>maxerr)maxerr=err;
- // if(maxerr<0.0)printf("err in code %e\n",err);
+
   
   
  }
@@ -561,4 +567,82 @@ delete [] isplit ;
 delete [] iwork;
 delete [] ifail;
 
+}
+
+void solve_lapack_nbyn(array_2d<double> &mm, array_1d<double> &yy, array_1d<double> &xx){
+    
+    if(yy.get_dim()!=mm.get_rows()){
+        printf("WARNNG in solve_lapack yy dim %d mm rows %d\n",
+	yy.get_dim(),mm.get_rows());
+	
+	exit(1);
+    }
+    
+    if(mm.get_rows()!=mm.get_cols()){
+        printf("WARNING cannot solve non square matrix %d %d\n",
+	mm.get_rows(),mm.get_cols());
+	
+	exit(1);
+    }
+    
+    double *aa;
+    int m,n,lda,*ipiv,info;
+    
+    aa=new double[mm.get_rows()*mm.get_cols()];
+    
+    int i,j;
+    if(mm.get_rows()<mm.get_cols())i=mm.get_rows()+1;
+    else i=mm.get_cols()+1;
+    
+    ipiv=new int[i];
+    
+    info=0;
+    m=mm.get_rows();
+    n=mm.get_cols();
+    lda=m;
+    
+    for(i=0;i<mm.get_rows();i++){
+        for(j=0;j<mm.get_cols();j++){
+	    aa[j*mm.get_rows()+i]=mm.get_data(i,j);
+	}
+    }
+    
+    dgetrf_(&m,&n,aa,&lda,ipiv,&info);
+    if(info!=0){
+        printf("WARNING in solve lapack info %d after dgetrf\n",info);
+	exit(1);
+    }
+    
+    int nrhs,ldb;
+    double *bb;
+    char *T;
+    
+    bb=new double[mm.get_rows()];
+    
+    for(i=0;i<mm.get_rows();i++){
+        bb[i]=yy.get_data(i);
+    }
+    
+    nrhs=1;
+    ldb=mm.get_rows();
+    
+    T=new char[1];
+    T[0]='N';
+    
+    dgetrs_(T,&n,&nrhs,aa,&lda,ipiv,bb,&ldb,&info);
+    
+    if(info!=0){
+        printf("WARNING in solve lapack info %d after dgetrs\n",info);
+	exit(1);
+    }
+    
+    for(i=0;i<mm.get_rows();i++){
+        xx.set(i,bb[i]);
+    }
+    
+    delete [] bb;
+    delete [] aa;
+    delete [] ipiv;
+    delete [] T;
+    
 }

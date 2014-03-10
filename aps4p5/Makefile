@@ -46,6 +46,11 @@ eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h containers.o
 	$(gg) -c eigen_wrapper.cpp goto_tools.o $(LIBRARIES) \
 	$(INCLUDE) -Wno-deprecated
 
+mcmc.o: chisq_1311.o mcmc.h mcmc.cpp eigen_wrapper.o
+	$(gg) -c mcmc.cpp \
+	goto_tools.o containers.o chisq_1311.o eigen_wrapper.o \
+	$(LIBRARIES) $(INCLUDE)
+
 test_eigen: test_eigen.cpp eigen_wrapper.o
 	$(gg) -o test_eigen test_eigen.cpp goto_tools.o containers.o \
 	eigen_wrapper.o $(LIBRARIES) $(INCLUDE) -Wno-deprecated
