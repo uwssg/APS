@@ -688,7 +688,9 @@ void mcmc::update_directions(){
 	
        }
    }//try to invert
-   catch (int iex){}
+   catch (int iex){
+       printf("could not find eigen vectors... oh well\n");
+   }
 
    i=accept_degen/accept_total;
    if(i>4)p_factor=p_factor*0.5;
