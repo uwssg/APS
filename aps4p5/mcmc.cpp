@@ -344,15 +344,21 @@ void mcmc::sample(int npts){
 	
             printf("ii %d npts %d start %d\n",ii,npts,start_update);
             
-	    calculate_covariance();
+            
+            try{
+	        calculate_covariance();
 	    
-	    if(dofastslow==0){
-	        update_directions();
+	        if(dofastslow==0){
+	            update_directions();
+	        }
+	        else{
+	            update_fastslow();
+	        }
 	    }
-	    else{
-	        update_fastslow();
-	    }
-	    
+            catch (int iex){
+                printf("could not complete the directional update\n");
+            }
+            
 	    write_directions();
 	    
     }
@@ -386,6 +392,15 @@ void mcmc::calculate_covariance(){
 
     FILE *input,*output;
     
+    for(cc=0;cc<chains;cc++){
+        
+        input=fopen(names[cc],"r");
+        if(input==NULL){
+            throw 1;
+        }
+        fclose(input);
+        
+    }
 
     tol=1.0e-2;
     printf("calculating covariance tol %e\n",tol);
@@ -453,7 +468,12 @@ void mcmc::calculate_covariance(){
 		
 		for(j=0;j<jj;j++){
 		    for(i=0;i<dim;i++){
-		        data[cc][k][i]=v.get_data(i);
+		        if(k>=ndata.get_data(cc)){
+                            printf("WARNING you are about to overstep k %d %d\n",
+                            k,ndata.get_data(cc));
+                        }
+                        
+                        data[cc][k][i]=v.get_data(i);
 			mu.add_val(i,v.get_data(i));
 			var.add_val(i,v.get_data(i)*v.get_data(i));
 	            }
@@ -471,7 +491,7 @@ void mcmc::calculate_covariance(){
 	
 	fclose(input);
 	
-	//printf("assigned data\n");
+	printf("assigned data\n");
 	
 	for(i=0;i<dim;i++){
             mu.divide_val(i,double(ndata.get_data(cc)));
@@ -492,7 +512,7 @@ void mcmc::calculate_covariance(){
 		
 		if(mincov<0.0 || covar<mincov)mincov=covar;
 		
-		//printf("len %d covar %e\n",len,covar);
+		printf("len %d covar %e\n",len,covar);
 		if(covar<tol || len==ndata.get_data(cc)-1){
 		    //printf("covar %e assigning maxlen %d\n",covar,len);
 		    if(len>maxlen)maxlen=len;
@@ -503,7 +523,7 @@ void mcmc::calculate_covariance(){
 		len++;
 	    }
 	}
-	//printf("maxlen %d\n",maxlen);
+	printf("maxlen %d\n",maxlen);
     }
     
     

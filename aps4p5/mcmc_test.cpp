@@ -1,9 +1,16 @@
 #include "mcmc.h"
 #include <time.h>
 
-main(){
+main(int iargc, char *argv[]){
 
-Ran chaos(int(time(NULL)));
+int seed=99;
+
+if(iargc>1){
+    seed=atoi(argv[1]);
+    if(seed<0)seed=int(time(NULL));
+}
+
+Ran chaos(seed);
 int dim=22;
 
 ellipses chifn(dim,2);
