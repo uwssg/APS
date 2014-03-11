@@ -1,9 +1,10 @@
 #include "mcmc.h"
+#include <time.h>
 
 main(){
 
-Ran chaos(99);
-int dim=7;
+Ran chaos(int(time(NULL)));
+int dim=22;
 
 ellipses chifn(dim,2);
 array_1d<double> min,max,c1,c2,sig;
@@ -21,8 +22,8 @@ guesses.set_cols(dim);
 printf("guesses\n");
 int j;
 for(i=0;i<dim;i++){
-    min.set(i,-10.0);
-    max.set(i,10.0);
+    min.set(i,-100.0);
+    max.set(i,100.0);
     sig.set(i,5.0);
     
     for(j=0;j<4;j++){
@@ -37,25 +38,29 @@ for(i=0;i<dim;i++){
     }
 }
 
+
+
 mcmc mcmc_obj(dim,8,"chains/control_chains",min,max,sig,2.0,&chaos);
 mcmc_obj.set_chisq(&chifn,1);
 for(i=0;i<8;i++){
     printf("i %d\n",i);
     mcmc_obj.guess(*guesses(i));
 }
-mcmc_obj.set_statname("chains/test_mcmc_status.sav");
-mcmc_obj.begin_update(1000);
-mcmc_obj.step_update(20000);
-mcmc_obj.cutoff_update(100000);
+mcmc_obj.set_statname("chains/control_mcmc_status.sav");
+mcmc_obj.begin_update(50000);
+mcmc_obj.step_update(50000);
+mcmc_obj.cutoff_update(200000);
 
 mcmc_obj.sample(400000);
 
-mcmc mcmc_test(dim,8,"chains/control_chains",min,max,sig,2.0,&chaos);
+
+
+mcmc mcmc_test(dim,8,"chains/test_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
 mcmc_test.set_statname("chains/test_mcmc_status.sav");
-mcmc_test.begin_update(1000);
-mcmc_test.step_update(20000);
-mcmc_test.cutoff_update(100000);
+mcmc_test.begin_update(50000);
+mcmc_test.step_update(50000);
+mcmc_test.cutoff_update(200000);
 mcmc_test.sample(400000);
 
 

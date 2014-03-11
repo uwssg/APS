@@ -342,7 +342,7 @@ void mcmc::sample(int npts){
 	(stop_update<0 || ii<=stop_update) &&
 	do_update==1){
 	
-            printf("ii %d npts %d\n",ii,npts);
+            printf("ii %d npts %d start %d\n",ii,npts,start_update);
             
 	    calculate_covariance();
 	    
@@ -368,6 +368,7 @@ void mcmc::cutoff_update(int i){
 
 void mcmc::begin_update(int i){
     start_update=i;
+    printf("set start_updated %d\n",start_update);
 }
 
 void mcmc::step_update(int i){
@@ -625,82 +626,75 @@ void mcmc::update_directions(){
     
     vbuff.set_dim(dim,2);
     
-    eval_symm(covariance,vbuff,evbuff,2,dim,-1);
+    double nn,maxerr;
+    int j,ii;
     
-    e_values.set(dim-2,evbuff.get_data(0));
-    e_values.set(dim-1,evbuff.get_data(1));
+    try{
     
-    for(i=0;i<dim;i++){
-        e_vectors.set(i,dim-2,vbuff.get_data(i,0));
-        e_vectors.set(i,dim-1,vbuff.get_data(i,1));
-    }
- 
+        eval_symm(covariance,vbuff,evbuff,2,dim,-1);
     
-    double nn;
-    int j;
-    for(i=0;i<dim;i++){
-        nn=0.0;
-	for(j=0;j<dim;j++)nn+=e_vectors.get_data(j,i)*e_vectors.get_data(j,i);
-	//printf("nn %e\n",nn);
-	nn=sqrt(nn);
-        e_values.multiply_val(i,nn);
-	
-	for(j=0;j<dim;j++)e_vectors.divide_val(j,i,nn);
-    }
+        e_values.set(dim-2,evbuff.get_data(0));
+        e_values.set(dim-1,evbuff.get_data(1));
     
-    int ii;
-    double maxerr;
-    for(ii=0;ii<dim;ii++){
-      for(j=ii+1;j<dim;j++){
-          nn=0.0;
-	  for(i=0;i<dim;i++)nn+=e_vectors.get_data(i,ii)*e_vectors.get_data(i,j);
-	  if(ii==0 && j==1 || fabs(nn)>maxerr){
-	      maxerr=fabs(nn);
-	  }
-	  
-	  /*if(fabs(nn)>1.0e-5){
-	     printf("WARNING orthogonalization error %e\n",nn);
-	     for(i=0;i<dim;i++){
-	         printf("%e %e\n",e_vectors[i][ii],e_vectors[i][j]);
-	     }
-	     
-	     
-	     exit(1);
-	  }*/
-      }
-    
-    
-      for(i=0;i<dim;i++)v.set(i,e_vectors.get_data(i,ii));
-      nn=eigen_check(covariance,v,e_values.get_data(ii),dim);
-      if(nn>maxerr)maxerr=nn;
-      if(isnan(nn)){
-         printf("WARNING eigen error is nan\n");
-	 for(i=0;i<dim;i++)printf("%e ",v.get_data(i));
-	 printf("-- %e\n",e_values.get_data(ii));
-	// exit(1);
-	maxerr=10.0*tolerance;
-      }
-      
-    }
-    
-    if(maxerr>1.0e-10)printf("maxerr %e\n",maxerr);
-    
-    if(maxerr<=tolerance){
         for(i=0;i<dim;i++){
-            p_values.set(i,2.38*sqrt(e_values.get_data(i)/double(dim)));
+            e_vectors.set(i,dim-2,vbuff.get_data(i,0));
+            e_vectors.set(i,dim-1,vbuff.get_data(i,1));
         }
+ 
         for(i=0;i<dim;i++){
-	    for(j=0;j<dim;j++)p_vectors.set(i,j,e_vectors.get_data(i,j));
-	}
+            nn=0.0;
+	    for(j=0;j<dim;j++)nn+=e_vectors.get_data(j,i)*e_vectors.get_data(j,i);
+	    //printf("nn %e\n",nn);
+	    nn=sqrt(nn);
+            e_values.multiply_val(i,nn);
 	
-	
-   }
+	    for(j=0;j<dim;j++)e_vectors.divide_val(j,i,nn);
+        }
 
-       i=accept_degen/accept_total;
-       if(i>4)p_factor=p_factor*0.5;
-       else if(i<4){
-           p_factor=p_factor*1.25;
+        for(ii=0;ii<dim;ii++){
+          for(j=ii+1;j<dim;j++){
+              nn=0.0;
+	      for(i=0;i<dim;i++)nn+=e_vectors.get_data(i,ii)*e_vectors.get_data(i,j);
+	      if(ii==0 && j==1 || fabs(nn)>maxerr){
+	          maxerr=fabs(nn);
+	      }
+	  
+	
+          }
+
+          for(i=0;i<dim;i++)v.set(i,e_vectors.get_data(i,ii));
+          nn=eigen_check(covariance,v,e_values.get_data(ii),dim);
+          if(nn>maxerr)maxerr=nn;
+          if(isnan(nn)){
+             printf("WARNING eigen error is nan\n");
+	     for(i=0;i<dim;i++)printf("%e ",v.get_data(i));
+	     printf("-- %e\n",e_values.get_data(ii));
+	    // exit(1);
+	    maxerr=10.0*tolerance;
+          }
+      
+        }
+    
+        if(maxerr>1.0e-10)printf("maxerr %e\n",maxerr);
+    
+        if(maxerr<=tolerance){
+            for(i=0;i<dim;i++){
+                p_values.set(i,2.38*sqrt(e_values.get_data(i)/double(dim)));
+            }
+            for(i=0;i<dim;i++){
+	        for(j=0;j<dim;j++)p_vectors.set(i,j,e_vectors.get_data(i,j));
+	    }
+	
+	
        }
+   }//try to invert
+   catch (int iex){}
+
+   i=accept_degen/accept_total;
+   if(i>4)p_factor=p_factor*0.5;
+   else if(i<4){
+       p_factor=p_factor*1.25;
+   }
    
    printf("\n\np_factor %e\n\n",p_factor);
    
