@@ -339,7 +339,7 @@ void mcmc::sample(int npts){
      
      if(ii%update_interval==0 && 
         ii>=start_update && 
-	(stop_update<0 || ii<stop_update) &&
+	(stop_update<0 || ii<=stop_update) &&
 	do_update==1){
 	
             printf("ii %d npts %d\n",ii,npts);

@@ -43,10 +43,10 @@ for(i=0;i<8;i++){
     printf("i %d\n",i);
     mcmc_obj.guess(*guesses(i));
 }
-mcmc_obj.set_statname("chains/control_mcmc_status.sav");
+mcmc_obj.set_statname("chains/test_mcmc_status.sav");
 mcmc_obj.begin_update(1000);
-mcmc_obj.step_update(10000);
-mcmc_obj.cutoff_update(200000);
+mcmc_obj.step_update(20000);
+mcmc_obj.cutoff_update(100000);
 
 mcmc_obj.sample(400000);
 
@@ -54,8 +54,8 @@ mcmc mcmc_test(dim,8,"chains/control_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
 mcmc_test.set_statname("chains/test_mcmc_status.sav");
 mcmc_test.begin_update(1000);
-mcmc_test.step_update(10000);
-mcmc_test.cutoff_update(200000);
+mcmc_test.step_update(20000);
+mcmc_test.cutoff_update(100000);
 mcmc_test.sample(400000);
 
 
