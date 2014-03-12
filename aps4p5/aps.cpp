@@ -1060,7 +1060,7 @@ int aps::add_pt(array_1d<double> &vv, double chitrue){
     }
     
     if(chitrue<strad.get_target()){
-        good_pts.add(i);
+        if(use_it==1)good_pts.add(gg.get_pts()-1);
         if(ngood==0){
             for(i=0;i<gg.get_dim();i++){
                 good_max.set(i,vv.get_data(i));
