@@ -1378,6 +1378,11 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
 	    if(i==1)set_as_candidate(gg.get_pts()-1);
                
 	}
+        
+        if(chitrue>strad.get_target() && chitrue<strad.get_target()+delta_chisquared){
+            bisection(sambest,chitrue);
+        }
+        
     }
     
     if(global_mindex!=o_mindex){
