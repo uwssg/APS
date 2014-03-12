@@ -51,6 +51,11 @@ mcmc.o: chisq_1311.o mcmc.h mcmc.cpp eigen_wrapper.o
 	goto_tools.o containers.o chisq_1311.o eigen_wrapper.o \
 	$(LIBRARIES) $(INCLUDE)
 
+gp_to_mcmc.o: gp_to_mcmc.cpp gp_to_mcmc.h chisq_1311.o gaussian_process.o
+	$(gg) -c gp_to_mcmc.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq_1311.o $(LIBRARIES) $(INCLUDE)
+
 test_eigen: test_eigen.cpp eigen_wrapper.o
 	$(gg) -o test_eigen test_eigen.cpp goto_tools.o containers.o \
 	eigen_wrapper.o $(LIBRARIES) $(INCLUDE) -Wno-deprecated
@@ -165,4 +170,4 @@ mcmc_test: mcmc.o mcmc_test.cpp
 
 clean:
 	rm *.o aps_run aps_test test_containers test_kd planet dummy planet2 \
-	planet3 planet4 planet5 mcmc_test
+	planet3 planet4 planet5 mcmc_test gp_to_mcmc ellipse
