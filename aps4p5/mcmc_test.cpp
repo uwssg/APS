@@ -31,7 +31,7 @@ int j;
 for(i=0;i<dim;i++){
     min.set(i,-100.0);
     max.set(i,100.0);
-    sig.set(i,5.0);
+    sig.set(i,0.1);
     
     for(j=0;j<4;j++){
        guesses.set(j*2,i,c1.get_data(i)+(chaos.doub()-0.5)*10.0);

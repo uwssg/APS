@@ -383,6 +383,7 @@ void mcmc::step_update(int i){
 
 void mcmc::calculate_covariance(){
     int cc,i,j,k,len,maxlen,ii,jj,toburn,burnin,ct,nmasterold;
+    int dlen;
     double covar,***data,nn,mm,maxerr,mincov,tol;
     double xx;
     
@@ -402,7 +403,7 @@ void mcmc::calculate_covariance(){
         
     }
 
-    tol=1.0e-2;
+    tol=5.0e-2;
     printf("calculating covariance tol %e\n",tol);
     mincov=-1.0;
     burnin=2;
@@ -491,7 +492,7 @@ void mcmc::calculate_covariance(){
 	
 	fclose(input);
 	
-	printf("assigned data\n");
+	printf("    assigned data\n");
 	
 	for(i=0;i<dim;i++){
             mu.divide_val(i,double(ndata.get_data(cc)));
@@ -501,8 +502,19 @@ void mcmc::calculate_covariance(){
 	}
 	
 	for(i=0;i<dim;i++){
-	    len=1;
-	    while(len==1 || (covar>tol && len<ndata.get_data(cc)-1)){
+	    //len=1;
+            //dlen=1;
+            len=maxlen/2;
+            if(len<1)len=1;
+            
+            dlen=maxlen/100;
+            if(dlen<1)dlen=1;
+            
+            printf("    maxlen %d dlen %d covar %e\n",maxlen,dlen,covar);
+            
+            covar=exception;
+            
+	    while(covar>tol && len<ndata.get_data(cc)-1){
 	        covar=0.0;
 		for(j=0;j<ndata.get_data(cc)-len;j++){
 		    covar+=(data[cc][j][i]-mu.get_data(i))*(data[cc][j+len][i]-mu.get_data(i));
@@ -512,7 +524,7 @@ void mcmc::calculate_covariance(){
 		
 		if(mincov<0.0 || covar<mincov)mincov=covar;
 		
-		printf("len %d covar %e\n",len,covar);
+		//printf("len %d covar %e\n",len,covar);
 		if(covar<tol || len==ndata.get_data(cc)-1){
 		    //printf("covar %e assigning maxlen %d\n",covar,len);
 		    if(len>maxlen)maxlen=len;
@@ -520,14 +532,14 @@ void mcmc::calculate_covariance(){
 		        printf("WARNING len %d ndata %d\n",len,ndata.get_data(cc));
 		    }
 		}
-		len++;
+		len+=dlen;
 	    }
 	}
-	printf("maxlen %d\n",maxlen);
+	//printf("maxlen %d\n",maxlen);
     }
     
     
-    printf("maxlen %d mincov %e tol %e\n",maxlen,mincov,tol);
+    //printf("maxlen %d mincov %e tol %e\n",maxlen,mincov,tol);
     if(maxlen<0){
         for(cc=0;cc<chains;cc++){
 	    if(ndata.get_data(cc)/100>maxlen)maxlen=ndata.get_data(cc)/100;
