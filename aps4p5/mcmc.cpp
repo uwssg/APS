@@ -155,7 +155,7 @@ void mcmc::resume(){
     
     v.set_dim(dim);
    
-
+    printf("resuming\n");
     for(cc=0;cc<chains;cc++){
         input=fopen(names[cc],"r");
 	while(fscanf(input,"%d",&j)>0){
@@ -563,7 +563,8 @@ void mcmc::calculate_covariance(){
 	}
     }
     
-    printf("assigned maxlen %d \n",maxlen);
+    printf("assigned maxlen %d of %d last %d\n",maxlen,ndata.get_data(0),
+    last_updated);
     
     array_2d<double> master;
     int nmaster;
@@ -647,8 +648,12 @@ void mcmc::calculate_covariance(){
     }
      
     for(cc=0;cc<chains;cc++){
-        if(cc==0 || ntot.get_data(cc)<last_updated)last_updated=ntot.get_data(cc);
+        if(cc==0 || ntot.get_data(cc)<last_updated){
+            //printf("ntot %d = %d\n",cc,ntot.get_data(cc));
+            last_updated=ntot.get_data(cc);
+        }
     }
+    //exit(1);
     
 }  
 

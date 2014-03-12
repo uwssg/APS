@@ -42,8 +42,8 @@ for(i=0;i<dim;i++){
     sig.set(i,5.0);
     
     for(j=0;j<4;j++){
-       guesses.set(j*2,i,c1.get_data(i)+(chaos.doub()-0.5)*10.0);
-       guesses.set(j*2+1,i,c2.get_data(i)+(chaos.doub()-0.5)*10.0);
+       guesses.set(j*2,i,c1.get_data(i)+(chaos.doub()-0.5)*5.0);
+       guesses.set(j*2+1,i,c2.get_data(i)+(chaos.doub()-0.5)*5.0);
     }
     
     if(i==0){
@@ -58,7 +58,7 @@ for(i=0;i<dim;i++){
 mcmc mcmc_obj(dim,8,"chains/control_chains",min,max,sig,2.0,&chaos);
 mcmc_obj.set_chisq(&chifn,1);
 for(i=0;i<8;i++){
-    printf("i %d\n",i);
+    //printf("i %d\n",i);
     mcmc_obj.guess(*guesses(i));
 }
 mcmc_obj.set_statname("chains/control_mcmc_status.sav");
@@ -66,11 +66,15 @@ mcmc_obj.begin_update(50000);
 mcmc_obj.step_update(50000);
 mcmc_obj.cutoff_update(200000);
 
-mcmc_obj.sample(400000);
+mcmc_obj.resume();
+mcmc_obj.disable_update();
+mcmc_obj.sample(200000);
 
 for(i=0;i<dim;i++){
     sig.set(i,5.0);
 }
+
+exit(1);
 
 mcmc mcmc_test(dim,8,"chains/test_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
