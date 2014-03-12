@@ -8,7 +8,7 @@ class gp_to_mcmc : public chisquared{
 
 public:
     
-    gp_to_mcmc(array_2d<double>&, array_1d<double>&);
+    gp_to_mcmc(array_2d<double>&, array_1d<double>&,double);
     ~gp_to_mcmc();
     
     virtual double operator()(array_1d<double>&) const;
@@ -20,6 +20,7 @@ private:
     
     gp gg;
     matern_covariance cv;
+    double delta_chisquared;
 
 };
 
