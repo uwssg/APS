@@ -163,6 +163,12 @@ likelihoodinterface.o kd.o camb_wrapper_wmap.o wmap_wrapper.o gaussian_process.o
 	 $(LAPACK) $(BLAS) $(FORTRAN) $(CAMB) $(WMAP) $(WMAPLIBS) \
 	 -Wno-deprecated
 
+gp2mcmc: gp_to_mcmc_driver.cpp gp_to_mcmc.o mcmc.o
+	$(gg) -o gp2mcmc gp_to_mcmc_driver.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq_1311.o gp_to_mcmc.o mcmc.o \
+	$(LIBRARIES) $(INCLUDE)
+
 mcmc_test: mcmc.o mcmc_test.cpp
 	$(gg) -o mcmc_test mcmc_test.cpp \
 	goto_tools.o containers.o eigen_wrapper.o chisq_1311.o mcmc.o \
