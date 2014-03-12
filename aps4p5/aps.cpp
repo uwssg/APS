@@ -1409,7 +1409,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             dd=gg.distance(good_pts.get_data(i),inpt);
             if(i==0 || dd<ddmin){
                 ddmin=dd;
-                j=i;
+                j=good_pts.get_data(i);
             }
         }
         
