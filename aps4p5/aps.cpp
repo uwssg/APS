@@ -236,7 +236,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     
     printf("done guessing\n");
     for(;i<npts;i++){
-        printf("%d\n",i);
+        //printf("%d\n",i);
         ff.set(i,2.0*exception);
 	while(!(ff.get_data(i)<exception)){
             
@@ -1400,6 +1400,8 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     double dd,ddmin;
     int i,j,k;
     
+    //printf("bisecting\n");
+    
     if(good_pts.get_dim()==0){
         for(i=0;i<gg.get_dim();i++)lowball.set(i,minpt.get_data(i));
         flow=chimin;
@@ -1444,8 +1446,11 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
         }
         
+        dd*=0.5;
+        
     }
     
+   // printf("done bisecting\n");
 }
 
 void aps::aps_search(int in_samples){
