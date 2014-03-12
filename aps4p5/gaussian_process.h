@@ -229,6 +229,9 @@ class gp{
     void optimize(int,int);
     int optimize(array_1d<double>&,double);
     void optimize(array_1d<double>&,int);
+    
+    double optimization_error(array_1d<double>&, array_1d<int>&);
+    
     void set_kk(int);
     double get_fn(int);
     

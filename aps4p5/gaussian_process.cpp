@@ -2467,17 +2467,8 @@ void gp::optimize(array_1d<int> &use_dex, int n_use){
 	
 	covariogram->set_hyper_parameters(hh);
 	
-	E=0.0;
-	
-	for(i=0;i<n_use;i++){
-	    mu=self_predict(use_dex.get_data(i));
-	    E+=power(mu-fn.get_data(use_dex.get_data(i)),2);
-	}
-	
-	/*printf("hh ");
-	for(i=0;i<nhy;i++)printf("%e ",hh[i]);
-	printf("E %e\n",E);*/
-	
+	E=optimization_error(hh,use_dex);
+        
 	if(ii==0 || E<Ebest){
 	    Ebest=E;
 	    for(i=0;i<nhy;i++){
@@ -2512,6 +2503,21 @@ void gp::optimize(array_1d<int> &use_dex, int n_use){
     
     use_dex.set_where("nowhere");
 
+}
+
+double gp::optimization_error(array_1d<double> &hh, array_1d<int> &dex){
+
+    int i;
+    covariogram->set_hyper_parameters(hh);
+    
+    double E=0.0,mu;
+    
+    for(i=0;i<dex.get_dim();i++){
+        mu=self_predict(dex.get_data(i));
+        E+=power(fn.get_data(dex.get_data(i))-mu,2);
+    }
+    
+    return E;
 }
 
 int gp::get_last_optimized(){
