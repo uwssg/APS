@@ -437,10 +437,15 @@ void mcmc::calculate_covariance(){
 	}
         fclose(input);
 	
-        if(last_updated<1)toburn=ntot.get_data(cc)/burnin;
-	else{
+        if(last_updated<1){
+            toburn=ntot.get_data(cc)/burnin;
+	 
+        }
+        else{
             toburn=last_updated;
         }
+        
+        //printf("toburn %d\n",toburn);
         
         ndata.set(cc,ntot.get_data(cc)-toburn);
 	
@@ -515,7 +520,7 @@ void mcmc::calculate_covariance(){
             dlen=maxlen/100;
             if(dlen<1)dlen=1;
             
-            printf("    maxlen %d dlen %d covar %e\n",maxlen,dlen,covar);
+            //printf("    maxlen %d dlen %d covar %e\n",maxlen,dlen,covar);
             
             covar=exception;
             
@@ -551,7 +556,7 @@ void mcmc::calculate_covariance(){
 	}
     }
     
-    //printf("assigned maxlen \n");
+    printf("assigned maxlen %d \n",maxlen);
     
     array_2d<double> master;
     int nmaster;
@@ -736,7 +741,7 @@ void mcmc::update_directions(){
    }
    
    printf("\n\np_factor %e\n\n",p_factor);
-   
+   //exit(1);
    /*if(maxerr>1.0e-10){
     for(i=0;i<dim;i++){
         for(j=0;j<dim;j++)printf("%.4e -- ",p_vectors.get_data(i,j));
