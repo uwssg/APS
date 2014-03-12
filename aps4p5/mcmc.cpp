@@ -267,6 +267,13 @@ void mcmc::sample(int npts){
       
     }
   }
+  else{
+      for(i=0;i<chains;i++){
+          nn=(*chisqfn[i])(*start(i));
+          oldchi.set(i,nn);
+          oldl.set(i,-0.5*nn);
+      }
+  }
   
   //exit(1);
   
