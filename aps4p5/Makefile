@@ -92,6 +92,11 @@ planet: aps_runner_planets.cpp aps.o exoplanet.o
 	chisq_1311.o exoplanet.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
+ellipse: aps_runner_ellipses.cpp aps.o chisq_1311.o
+	$(gg) -o ellipse aps_runner_ellipses.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq_1311.o aps.o $(LIBRARIES) $(INCLUDE)
+
 dummy: aps_runner_dummy_planets.cpp aps.o dummy_planet.o
 	$(gg) -o dummy aps_runner_dummy_planets.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
