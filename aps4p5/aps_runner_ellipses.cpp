@@ -42,7 +42,7 @@ max.set_dim(dim);
 min.set_dim(dim);
 
 aps_test.set_timingname("aps_output/timing_file_ellipses.sav");
-aps_test.set_outname("master_output_ellipses.sav");
+aps_test.set_outname("aps_output/master_output_ellipses.sav");
 
 
 int i,j;

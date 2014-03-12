@@ -65,6 +65,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     wide_pts.set_name("aps_wide_pts");
     focus_pts.set_name("aps_focus_pts");
     gibbs_pts.set_name("aps_gibbs_pts");
+    good_pts.set_name("aps_good_pts");
     
     
     write_every=1000;
@@ -1059,6 +1060,7 @@ int aps::add_pt(array_1d<double> &vv, double chitrue){
     }
     
     if(chitrue<strad.get_target()){
+        good_pts.add(i);
         if(ngood==0){
             for(i=0;i<gg.get_dim();i++){
                 good_max.set(i,vv.get_data(i));
@@ -1385,6 +1387,62 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
     //printf("leaving\n");
 }
 
+void aps::bisection(array_1d<double> &inpt, double chi_in){
+    
+    array_1d<double> lowball,highball;
+    double flow,fhigh;
+    
+    double dd,ddmin;
+    int i,j,k;
+    
+    if(good_pts.get_dim()==0){
+        for(i=0;i<gg.get_dim();i++)lowball.set(i,minpt.get_data(i));
+        flow=chimin;
+    }
+    else{
+        for(i=0;i<good_pts.get_dim();i++){
+            dd=gg.distance(good_pts.get_data(i),inpt);
+            if(i==0 || dd<ddmin){
+                ddmin=dd;
+                j=i;
+            }
+        }
+        
+        for(i=0;i<gg.get_dim();i++){
+            lowball.set(i,gg.get_pt(j,i));
+        }
+        flow=gg.get_fn(j);
+    }
+    
+    for(i=0;i<gg.get_dim();i++)highball.set(i,inpt.get_data(i));
+    fhigh=chi_in;
+    
+    dd=gg.distance(lowball,highball);
+    
+    double mu;
+    array_1d<double> trial;
+    
+    while(dd>1.0e-10){
+        for(i=0;i<gg.get_dim();i++){
+            trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
+        }
+        mu=(*chisq)(trial);
+        
+        if(mu<exception){
+            add_pt(trial,mu);
+        }
+        
+        if(mu>strad.get_target()){
+            for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
+        }
+        else{
+            for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
+        }
+        
+    }
+    
+}
+
 void aps::aps_search(int in_samples){
 
     //set_where("aps_scatter_search");
@@ -1490,9 +1548,11 @@ void aps::write_pts(){
     double mu,sig;
     FILE *output;
     
+    good_pts.reset();
     ngood=0;
     for(i=0;i<gg.get_pts();i++){
         if(gg.get_fn(i)<strad.get_target()){
+            good_pts.add(i);
 	    if(ngood==0){
 	        for(j=0;j<gg.get_dim();j++){
 		    good_min.set(j,gg.get_pt(i,j));

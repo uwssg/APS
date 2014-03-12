@@ -87,7 +87,7 @@ private:
     char **paramnames;
     
     array_1d<int> candidates,aps_pts,known_minima,gradient_start_pts;
-    array_1d<int> wide_pts,focus_pts,gibbs_pts;
+    array_1d<int> wide_pts,focus_pts,gibbs_pts,good_pts;
     
     int n_candidates;
     
@@ -129,6 +129,8 @@ private:
     void set_where(char*);
     
     void aps_choose_best(array_2d<double>&,int);
+    
+    void bisection(array_1d<double>&,double);
     
     void aps_wide(int);
     void aps_focus(int);
