@@ -436,8 +436,13 @@ void mcmc::calculate_covariance(){
            
 	}
         fclose(input);
-	toburn=ntot.get_data(cc)/burnin;
-	ndata.set(cc,ntot.get_data(cc)-toburn);
+	
+        if(last_updated<1)toburn=ntot.get_data(cc)/burnin;
+	else{
+            toburn=last_updated;
+        }
+        
+        ndata.set(cc,ntot.get_data(cc)-toburn);
 	
 	data[cc]=new double*[ndata.get_data(cc)];
 	
@@ -732,7 +737,7 @@ void mcmc::update_directions(){
    
    printf("\n\np_factor %e\n\n",p_factor);
    
-   if(maxerr>1.0e-10){
+   /*if(maxerr>1.0e-10){
     for(i=0;i<dim;i++){
         for(j=0;j<dim;j++)printf("%.4e -- ",p_vectors.get_data(i,j));
 	printf("\n");
@@ -740,7 +745,7 @@ void mcmc::update_directions(){
     printf("\n");
     for(i=0;i<dim;i++)printf("%.4e -- ",p_values.get_data(i));
     printf("\n\n");
-   }
+   }*/
    
    
 }

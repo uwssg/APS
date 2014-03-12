@@ -60,7 +60,9 @@ mcmc_obj.cutoff_update(200000);
 
 mcmc_obj.sample(400000);
 
-
+for(i=0;i<dim;i++){
+    sig.set(i,5.0);
+}
 
 mcmc mcmc_test(dim,8,"chains/test_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
