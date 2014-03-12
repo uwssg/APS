@@ -1407,18 +1407,26 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         flow=chimin;
     }
     else{
+        ddmin=exception;
+        j=-1;
         for(i=0;i<good_pts.get_dim();i++){
             dd=gg.distance(good_pts.get_data(i),inpt);
-            if(i==0 || dd<ddmin){
+            if(gg.get_fn(good_pts.get_data(i))<chimin+0.75*delta_chisquared && (j==-1 || dd<ddmin)){
                 ddmin=dd;
                 j=good_pts.get_data(i);
             }
         }
         
-        for(i=0;i<gg.get_dim();i++){
-            lowball.set(i,gg.get_pt(j,i));
+        if(j>=0){
+            for(i=0;i<gg.get_dim();i++){
+                lowball.set(i,gg.get_pt(j,i));
+            }
+            flow=gg.get_fn(j);
         }
-        flow=gg.get_fn(j);
+        else{
+            flow=chimin;
+            for(i=0;i<gg.get_dim();i++)lowball.set(i,minpt.get_data(i));
+        }
     }
     
     for(i=0;i<gg.get_dim();i++)highball.set(i,inpt.get_data(i));
