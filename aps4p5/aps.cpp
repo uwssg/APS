@@ -1379,7 +1379,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
                
 	}
         
-        if(chitrue>strad.get_target() && chitrue<strad.get_target()+delta_chisquared){
+        if(chitrue>strad.get_target() && do_focus==1){
             bisection(sambest,chitrue);
         }
         
