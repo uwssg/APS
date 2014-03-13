@@ -41,6 +41,7 @@ gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd,
 void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     array_1d<double> &min, array_1d<double> &max){
     
+    gg.set_kk(50);
     gg.initialize(data,ff,max,min);
     gg.assign_covariogram(&cv);
     
@@ -118,7 +119,7 @@ double gp_to_mcmc::optimization_error(array_1d<double> &hh){
         ff=gg.get_fn(opt_dexes.get_data(i));
         mu=gg.self_predict(opt_dexes.get_data(i));
         
-        if(ff<chimin+5.0*delta_chisquared){
+        if(ff>chimin+5.0*delta_chisquared){
             if(mu<chimin+5.0*delta_chisquared){
                 ee+=delta_chisquared*delta_chisquared;
             }
@@ -191,6 +192,9 @@ void gp_to_mcmc::optimize(){
 	cv.set_hyper_parameters(hh);
 	
 	E=optimization_error(hh);
+        
+        cv.print_hyperparams();
+        printf("ee %e\n\n",E);
         
 	if(ii==0 || E<Ebest){
 	    Ebest=E;
