@@ -41,7 +41,7 @@ gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd,
 void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     array_1d<double> &min, array_1d<double> &max){
     
-    gg.set_kk(50);
+    
     gg.initialize(data,ff,max,min);
     gg.assign_covariogram(&cv);
     
@@ -114,19 +114,23 @@ double gp_to_mcmc::optimization_error(array_1d<double> &hh){
     cv.set_hyper_parameters(hh);
     
     int i;
-    double mu,ff,ee=0.0;
+    double mu,ff,ee=0.0,target=chimin+delta_chisquared;
     for(i=0;i<opt_dexes.get_dim();i++){
         ff=gg.get_fn(opt_dexes.get_data(i));
         mu=gg.self_predict(opt_dexes.get_data(i));
         
-        if(ff>chimin+5.0*delta_chisquared){
+        if(ff>target && mu<target)ee+=1.0;
+        
+        if(ff<target && mu>target)ee+=1.0;
+        
+        /*if(ff>chimin+5.0*delta_chisquared){
             if(mu<chimin+5.0*delta_chisquared){
                 ee+=delta_chisquared*delta_chisquared;
             }
         }
         else{
             ee+=power(mu-ff,2);
-        }
+        }*/
         
     }
     
@@ -193,8 +197,8 @@ void gp_to_mcmc::optimize(){
 	
 	E=optimization_error(hh);
         
-        cv.print_hyperparams();
-        printf("ee %e\n\n",E);
+        //cv.print_hyperparams();
+        //printf("ee %e\n\n",E);
         
 	if(ii==0 || E<Ebest){
 	    Ebest=E;
@@ -251,6 +255,12 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     }
     
     time_spent+=double(time(NULL))-before;
+    
+    if(called%1000==0){
+        printf("called %d time %e -> %e\n",
+        called,time_spent,time_spent/double(called));
+    }
+    
     return mu;
 
 }

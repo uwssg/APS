@@ -15,6 +15,7 @@ public:
     ~gp_to_mcmc();
     
     virtual double operator()(array_1d<double>&) const;
+    
 
 private:
     
