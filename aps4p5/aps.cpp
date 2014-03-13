@@ -1624,9 +1624,9 @@ void aps::write_pts(){
     
     
         for(j=0;j<gg.get_dim();j++){
-	    fprintf(output,"%le ",gg.get_pt(i,j));
+	    fprintf(output,"%.18e ",gg.get_pt(i,j));
 	}
-	fprintf(output,"%le %le %le %d\n",gg.get_fn(i),mu,sig,lling);
+	fprintf(output,"%.18e %.18e %.18e %d\n",gg.get_fn(i),mu,sig,lling);
     }
     fclose(output);
    

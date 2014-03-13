@@ -2,9 +2,11 @@
 
 gp_to_mcmc::~gp_to_mcmc(){}
 
-gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd, array_1d<double> &ff, double delta){
+gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd, 
+            array_1d<double> &ff, double delta) : chisquared(dd.get_cols()){
     
     int j,i,dim,npts;
+    
     
     delta_chisquared=delta;
     
@@ -104,9 +106,13 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
 }
 
 double gp_to_mcmc::operator()(array_1d<double> &pt) const{
-    
+
+    double before=double(time(NULL));
+    called++;
+
     double mu=gg.user_predict(pt,0);
     
+    time_spent+=double(time(NULL))-before;
     return mu;
 
 }

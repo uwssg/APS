@@ -1,8 +1,11 @@
 #ifndef GP_TO_MCMC_H
 #define GP_TO_MCMC_H
 
+#include <time.h>
+
 #include "gaussian_process.h"
 #include "chisq_1311.h"
+
 
 class gp_to_mcmc : public chisquared{
 

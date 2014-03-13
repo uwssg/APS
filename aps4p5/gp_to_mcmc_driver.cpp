@@ -3,6 +3,8 @@
 
 main(){
 
+int seed=99;
+
 char inname[500];
 int npts,dim,i,j;
 
@@ -41,5 +43,29 @@ if(data.get_rows()!=ff.get_dim()){
     
     exit(1);
 }
+
+gp_to_mcmc gp_operator(data,ff,15.5);
+
+array_1d<double> min,max,sig;
+for(i=0;i<dim;i++){
+    min.set(i,-100.0);
+    max.set(i,100.0);
+    sig.set(i,10.0);
+}
+
+Ran chaos(seed);
+
+mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains",min,max,sig,2.0,&chaos);
+mcmc_obj.set_statname("chains/gp_to_mcmc_status");
+mcmc_obj.set_chisq(&gp_operator,1);
+mcmc_obj.begin_update(10000);
+mcmc_obj.step_update(5000);
+mcmc_obj.cutoff_update(30000);
+
+mcmc_obj.sample(60000);
+
+printf("ct %d time %e -> %e\n",
+gp_operator.get_called(),gp_operator.get_time_spent(),
+gp_operator.get_time_spent()/double(gp_operator.get_called()));
 
 }
