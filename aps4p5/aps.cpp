@@ -1,5 +1,7 @@
 #include "aps.h"
 
+enum{iFOCUS,iGIBBS,iWIDE};
+
 straddle_parameter::straddle_parameter(){
     target=-1.0;
 }
@@ -1181,6 +1183,7 @@ void aps::aps_wide(int in_samples){
 
     array_2d<double> samples;
     
+    
     //printf("wide searching\n");
     
     int i,j;
@@ -1192,10 +1195,10 @@ void aps::aps_wide(int in_samples){
     }
     
     i=gg.get_pts();
-    aps_choose_best(samples,0);
-    if(gg.get_pts()!=i){
+    aps_choose_best(samples,iWIDE);
+    /*if(gg.get_pts()!=i){
         wide_pts.add(gg.get_pts()-1);
-    }
+    }*/
     
     called_wide++;
    
@@ -1205,7 +1208,7 @@ void aps::aps_focus(int in_samples){
 
     array_2d<double> samples;
     array_1d<double> min,max,length;
-    
+   
     int i,j;
     
     //printf("focus searching\n");
@@ -1254,10 +1257,10 @@ void aps::aps_focus(int in_samples){
     //printf("about to choose best\n");
     
     i=gg.get_pts();
-    aps_choose_best(samples,1);
-    if(gg.get_pts()!=i){
+    aps_choose_best(samples,iFOCUS);
+    /*if(gg.get_pts()!=i){
         focus_pts.add(gg.get_pts()-1);
-    }
+    }*/
     
     called_focus++;
 
@@ -1300,17 +1303,17 @@ void aps::aps_gibbs(int in_samples){
     }
     
     i=gg.get_pts();
-    aps_choose_best(samples,1);
-    if(gg.get_pts()!=i){
+    aps_choose_best(samples,iGIBBS);
+    /*if(gg.get_pts()!=i){
         gibbs_pts.add(gg.get_pts()-1);
-    }
+    }*/
     
     i_gibbs++;
     called_gibbs++;
 
 }
 
-void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
+void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     
     int in_samples=samples.get_rows();
     int i_sample,i;
@@ -1369,17 +1372,29 @@ void aps::aps_choose_best(array_2d<double> &samples, int do_focus){
     if(chitrue<exception){
         actually_added=add_pt(sambest,chitrue);
 	
-	if(actually_added==1 && do_focus==0){
+	if(actually_added==1 && which_aps==iWIDE){
 	    add_aps_pt(gg.get_pts()-1,mubest,sigbest);
 	}
 
-	if(actually_added==1 && do_focus==0){
+	if(actually_added==1 && which_aps==iWIDE){
 	    i=is_it_a_candidate(gg.get_pts()-1);
 	    if(i==1)set_as_candidate(gg.get_pts()-1);
                
 	}
         
-        if(chitrue>strad.get_target() && do_focus==1){
+        if(actually_added==1){
+            if(which_aps==iWIDE){
+                wide_pts.add(gg.get_pts()-1);
+            }
+            else if(which_aps==iGIBBS){
+                gibbs_pts.add(gg.get_pts()-1);
+            }
+            else if(which_aps==iFOCUS){
+                 focus_pts.add(gg.get_pts()-1);
+            }
+        }
+        
+        if(chitrue>strad.get_target() && which_aps!=iWIDE){
             bisection(sambest,chitrue);
         }
         
