@@ -174,6 +174,12 @@ mcmc_test: mcmc.o mcmc_test.cpp
 	goto_tools.o containers.o eigen_wrapper.o chisq_1311.o mcmc.o \
 	$(LIBRARIES) $(INCLUDE)
 
+validate: validate_gp2mcmc.cpp gp2mcmc
+	$(gg) -o validate validate_gp2mcmc.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq_1311.o gp_to_mcmc.o mcmc.o \
+	$(LIBRARIES) $(INCLUDE)
+
 clean:
 	rm *.o aps_run aps_test test_containers test_kd planet dummy planet2 \
 	planet3 planet4 planet5 mcmc_test gp_to_mcmc ellipse

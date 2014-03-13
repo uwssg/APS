@@ -41,7 +41,7 @@ gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd,
 void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     array_1d<double> &min, array_1d<double> &max){
     
-    
+    gg.set_kk(7);
     gg.initialize(data,ff,max,min);
     gg.assign_covariogram(&cv);
     
@@ -71,9 +71,9 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
        }
     }
     
-    double good_ratio=500.0/double(good_ct),
-           mild_ratio=500.0/double(mild_ct),
-           bad_ratio=500.0/(double(ff.get_dim()-good_ct-mild_ct));
+    double good_ratio=2000.0/double(good_ct),
+           mild_ratio=1000.0/double(mild_ct),
+           bad_ratio=1000.0/(double(ff.get_dim()-good_ct-mild_ct));
            
     double roll;
     
@@ -161,7 +161,7 @@ void gp_to_mcmc::optimize(){
     hhbest.set_dim(nhy);
     dh.set_dim(nhy);
     
-    int nsteps=10;
+    int nsteps=50;
     for(i=0;i<nhy;i++){
         dh.set(i,(log(cv.get_hyper_parameter_max(i))-log(cv.get_hyper_parameter_min(i)))/double(nsteps-1));
     }
@@ -242,7 +242,17 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     gg.reset_cache();
     double mu=gg.user_predict(pt,0,ffneigh);
     
+    double min;
+    
     int i;
+    for(i=0;i<ffneigh.get_dim();i++){
+        if(i==0 || ffneigh.get_data(i)<min)min=ffneigh.get_data(i);
+    }
+    
+    if(mu<chimin+delta_chisquared && min>chimin+delta_chisquared){
+        printf("WARNING returning %e but min %e\n",mu,min);
+    }
+    
     if(mu<chimin){
         printf("WARNING mu %e -- chimin %e\n",mu,chimin);
         for(i=0;i<ffneigh.get_dim();i++){
@@ -256,7 +266,7 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     
     time_spent+=double(time(NULL))-before;
     
-    if(called%1000==0){
+    if(called%10000==0){
         printf("called %d time %e -> %e\n",
         called,time_spent,time_spent/double(called));
     }
