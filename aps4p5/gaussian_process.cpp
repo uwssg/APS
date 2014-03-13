@@ -1654,7 +1654,7 @@ double neighbor_cache::get_ggin(int i, int j){
     return ggin.get_data(i,j);
 }
 
-void gp::reset_cache(){
+void gp::reset_cache() const{
       neighbor_storage->reset();
 }
 

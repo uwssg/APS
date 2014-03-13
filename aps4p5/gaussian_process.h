@@ -161,7 +161,7 @@ private:
 class gp{
   
   private:
-    neighbor_cache *neighbor_storage;   
+    mutable neighbor_cache *neighbor_storage;   
     covariance_function *covariogram;
     
     paranoid_backup paranoia;
@@ -213,7 +213,7 @@ class gp{
     void assign_covariogram(covariance_function*);
     void refactor();
     void print_search_time(char*);
-    void reset_cache();
+    void reset_cache() const;
     void set_sig_cap(double);
     double get_biggest_neighbor(array_1d<double>&);
     void get_neighbor_range(array_1d<double>&,array_1d<double>&,array_1d<double>&,double*);

@@ -102,6 +102,7 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     }
     
     gg.optimize(opt_dexes,opt_dexes.get_dim());
+    cv.print_hyperparams();
     
 }
 
@@ -109,7 +110,8 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
 
     double before=double(time(NULL));
     called++;
-
+    
+    gg.reset_cache();
     double mu=gg.user_predict(pt,0);
     
     time_spent+=double(time(NULL))-before;
