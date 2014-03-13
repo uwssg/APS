@@ -451,15 +451,24 @@ array_1d<double> &omin, double *omean){
 }
 
 double gp::user_predict(array_1d<double> &pt, double *sigout, int verbose) const{
-    return predict(pt,sigout,verbose,1);
+    array_1d<double> ff;
+    return predict(pt,sigout,verbose,1,ff);
 }
 
 double gp::user_predict(array_1d<double> &pt, int verbose) const{
     double nn;
-    return predict(pt,&nn,verbose,0);
+    array_1d<double> ff;
+    return predict(pt,&nn,verbose,0,ff);
 }
 
-double gp::predict(array_1d<double> &pt,double *sigout,int verbose, int get_sig)
+double gp::user_predict(array_1d<double> &pt, int verbose, array_1d<double> &ffout) const{
+
+    double nn;
+    return predict(pt,&nn,verbose,0,ffout);
+}
+
+double gp::predict(array_1d<double> &pt,double *sigout,int verbose, int get_sig,
+    array_1d<double> &ffout)
 const{
 
   //this is the function that oustide code actually calls to use
@@ -560,6 +569,9 @@ const{
     }
     after=double(time(NULL));
     
+    for(i=0;i<kk;i++){
+        ffout.set(i,fn.get_data(neigh.get_data(i)));
+    }
    
     
     modelpts.set_dim(kk,dim);

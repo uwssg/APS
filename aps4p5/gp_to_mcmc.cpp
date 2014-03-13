@@ -111,8 +111,22 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     double before=double(time(NULL));
     called++;
     
+    array_1d<double> ffneigh;
+    
     gg.reset_cache();
-    double mu=gg.user_predict(pt,0);
+    double mu=gg.user_predict(pt,0,ffneigh);
+    
+    int i;
+    if(mu<0.0){
+        printf("WARNING mu %e\n",mu);
+        for(i=0;i<ffneigh.get_dim();i++){
+            printf("%e\n",ffneigh.get_data(i));
+        }
+        printf("\ncalled %d time %e -> %e\n",
+        called,time_spent,time_spent/double(called));
+        
+        throw -1;
+    }
     
     time_spent+=double(time(NULL))-before;
     return mu;
