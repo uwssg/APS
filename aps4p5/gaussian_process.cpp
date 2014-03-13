@@ -1545,6 +1545,169 @@ const array_1d<double> &min, const array_1d<double> &max, array_1d<double> &grad
  
 }
 
+matern_covariance_multiD::matern_covariance_multiD(){
+    dim=-1;
+    n_hyperparameters=-1;
+}
+
+void matern_covariance_multiD::get_hyper_parameters(array_1d<double> &output){
+    int i;
+    for(i=0;i<dim;i++){
+        output.set(i,ell.get_data(i));
+    }
+}
+
+void matern_covariance_multiD::set_dim(int ii){
+    dim=ii;
+    n_hyperparameters=dim;
+    int i;
+    ell.reset();
+    hyper_max.reset();
+    hyper_min.reset();
+    for(i=0;i<dim;i++){
+        ell.set(i,1.0);
+        hyper_max.set(i,10.0);
+        hyper_min.set(i,0.001);
+    }
+
+}
+
+void matern_covariance_multiD::set_hyper_parameters(array_1d<double> &input){
+    if(input.get_dim()!=n_hyperparameters){
+        printf("WARNING trying to set hyperparams for matern multiD but input has %d\n",
+        input.get_dim());
+        
+        printf("need %d\n",n_hyperparameters);
+        
+        throw -1;
+    }
+    
+    ell.reset();
+    int i;
+    for(i=0;i<n_hyperparameters;i++){
+        ell.set(i,input.get_data(i));
+    }
+}
+
+void matern_covariance_multiD::print_hyperparams(){
+    printf("in matern_covariance_multiD\n");
+    int i;
+    for(i=0;i<n_hyperparameters;i++){
+        printf("    ell %d %e\n",i,ell.get_data(i));
+    }
+    
+}
+
+double matern_covariance_multiD::operator()(const array_1d<double> &v1, const array_1d<double> &v2, 
+const array_1d<double> &min, const array_1d<double> &max, array_1d<double> &grad, const int swit) const{
+
+ int i;
+ double ans,d,gradnum,exnum;
+ 
+ 
+ array_1d<double> length;
+ 
+ for(i=0;i<dim;i++){
+     length.set(i,(max.get_data(i)-min.get_data(i))*ell.get_data(i));
+ }
+ 
+ v1.set_where("matern_operator");
+ v2.set_where("matern_operator");
+ max.set_where("matern_operator");
+ min.set_where("matern_operator");
+ grad.set_where("matern_operator");
+ //printf("in covariogram\n");
+
+ //return value
+   d=0.0;
+   for(i=0;i<dim;i++){
+    
+    d+=power((v1.get_data(i)-v2.get_data(i))/(length.get_data(i)),2);
+    
+   }
+   d=sqrt(d);
+   exnum=exp(-1.732*d);
+   ans=(1.0+1.732*d)*exnum;
+   
+   /*if(swit<0){
+       printf("d %e dim %d\n",d,dim);
+       for(i=0;i<dim;i++){
+           printf("     %e %e %e %e\n",v1[i],v2[1],max[i],min[i]);
+       }
+   }*/
+   
+   if(isnan(ans)){
+       printf("WARNING matern covariogram returning nan\n");
+       printf("ans %e dd %e exnum %e\n",ans,d,exnum);
+       for(i=0;i<dim;i++)printf("%e %e max %e min %e\n",v1.get_data(i),v2.get_data(i),max.get_data(i),min.get_data(i));
+       exit(1);
+       
+       
+   }
+ 
+ if(swit>0){
+  //this returns the derivative of the above value (ans) with respect
+  //to parameters as a vector stored in grad[]
+  
+  
+  gradnum=exnum*(-3.0*d);
+  
+  //printf("gradnum %e exnum %e d %e max0 %e min0 %e\n",gradnum,exnum,d,max[0],min[0]);
+  
+  if(d>1.0e-6){
+    for(i=0;i<dim;i++){
+      grad.set(i,gradnum*(v1.get_data(i)-v2.get_data(i))/(d*power(length.get_data(i),2)));
+      //printf("g%d %e ",i,grad[i]);
+      
+      if(isnan(grad.get_data(i)) || isinf(grad.get_data(i))){
+       printf("in matern covariance operator\n");
+        printf("gradnum %e max %e min %e v %e %e\n",gradnum,max.get_data(i),min.get_data(i),
+	v1.get_data(i),v2.get_data(i));
+        exit(1);
+      }
+      
+    }
+  }
+  else{
+    for(i=0;i<dim;i++){
+      grad.set(i,gradnum/power(max.get_data(i)-min.get_data(i),2));
+      
+      if(isnan(grad.get_data(i)) || isinf(grad.get_data(i))){
+        printf("in matern covariance operator\n");
+        printf("gradnum %e max %e min %e\n",gradnum,max.get_data(i),min.get_data(i));
+        exit(1);
+      }
+      
+    }
+  }
+  //printf("\n");
+  
+ }
+
+ 
+  /*d=0.0;
+  for(i=0;i<dim;i++)d+=power((v1[i]-v2[i])/(kptr->maxs[i]-kptr->mins[i]),2);
+  ans=exp(-0.5*d/(ell*ell));
+  if(d<1.0e-6)ans+=1.0e-5;
+  
+  if(swit>0){
+    for(i=0;i<dim;i++)grad[i]=0.0;
+    for(i=0;i<dim;i++){
+     grad[i]=-1.0*(v1[i]-v2[i])*ans/power(ell*(kptr->maxs[i]-kptr->mins[i]),2);
+    }
+  } */
+
+  v1.set_where("nowhere");
+  v2.set_where("nowhere");
+  max.set_where("nowhere");
+  min.set_where("nowhere");
+  grad.set_where("nowhere");
+
+ return ans;
+ 
+}
+
+
 neighbor_cache::neighbor_cache(kd_tree *inptr){
      kptr=inptr;
      dim=kptr->get_dim();

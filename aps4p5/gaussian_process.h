@@ -62,7 +62,7 @@ public:
               const array_1d<double>&, const array_1d<double>&, array_1d<double>&, const int) const;
     
     virtual void set_hyper_parameters(array_1d<double>&);
-    void set_dim(int);
+    virtual void set_dim(int);
     void set_max(int,double);
     void set_min(int, double);
     int get_dim();
@@ -131,6 +131,26 @@ public:
     
     virtual void get_hyper_parameters(array_1d<double>&);
 
+};
+
+class matern_covariance_multiD : public covariance_function{
+
+    private:
+        array_1d<double> ell;
+    
+    public:
+        matern_covariance_multiD();
+        
+        virtual double operator()(const array_1d<double>&,const array_1d<double>&, const array_1d<double>&,
+        const array_1d<double>&,array_1d<double>&, const int)const;
+	
+        virtual void set_hyper_parameters(array_1d<double>&);
+    
+        virtual void print_hyperparams();
+    
+        virtual void get_hyper_parameters(array_1d<double>&);
+        
+        virtual void set_dim(int);
 };
 
 class neighbor_cache{
