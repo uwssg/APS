@@ -178,7 +178,7 @@ class gp{
     mutable double time_search,time_predict;
     mutable double time_dummy_search;
     
-    double self_predict(int) const;
+ 
         double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
  
   public:
@@ -203,6 +203,8 @@ class gp{
     double user_predict(array_1d<double>&,double*,int) const;
     double user_predict(array_1d<double>&,int) const;
     double user_predict(array_1d<double>&,int,array_1d<double>&) const;
+    
+    double self_predict(int) const;
     
     void user_predict_gradient(array_1d<double>&,array_1d<double>&,int);
     double actual_gradient(int,array_1d<double>&);

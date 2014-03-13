@@ -21,9 +21,15 @@ private:
     void initialize(array_2d<double>&, array_1d<double>&, 
                     array_1d<double>&, array_1d<double>&);
     
+    
+    
+    double optimization_error(array_1d<double>&);
+    void optimize();
+    
     gp gg;
     matern_covariance cv;
-    double delta_chisquared;
+    double delta_chisquared,chimin;
+    array_1d<int> opt_dexes;
 
 };
 

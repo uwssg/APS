@@ -44,12 +44,9 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     gg.initialize(data,ff,max,min);
     gg.assign_covariogram(&cv);
     
-    array_1d<int> opt_dexes;
-    
     Ran chaos(49);
     
     int mindex,i;
-    double chimin;
     
     for(i=0;i<ff.get_dim();i++){
         if(i==0 || ff.get_data(i)<chimin){
@@ -101,8 +98,129 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
        }
     }
     
-    gg.optimize(opt_dexes,opt_dexes.get_dim());
+    optimize();
     cv.print_hyperparams();
+    
+}
+
+double gp_to_mcmc::optimization_error(array_1d<double> &hh){
+    
+    if(opt_dexes.get_dim()==0){
+        printf("WARNING cannot call optimization error; no points chosen\n");
+        throw -1;
+    }
+    
+    cv.set_hyper_parameters(hh);
+    
+    int i;
+    double mu,ff,ee=0.0;
+    for(i=0;i<opt_dexes.get_dim();i++){
+        ff=gg.get_fn(opt_dexes.get_data(i));
+        mu=gg.self_predict(opt_dexes.get_data(i));
+        
+        if(ff<chimin+5.0*delta_chisquared){
+            if(mu<chimin+5.0*delta_chisquared){
+                ee+=delta_chisquared*delta_chisquared;
+            }
+        }
+        else{
+            ee+=power(mu-ff,2);
+        }
+        
+    }
+    
+    return ee;
+}
+
+void gp_to_mcmc::optimize(){
+    
+    int i,j,k,l;
+    
+    if(opt_dexes.get_dim()==0){
+        printf("WARNING cannot optimize; no dexes\n");
+        throw -1;
+    }
+    
+   
+    int nhy=cv.get_n_hyper_parameters();
+    
+    array_1d<double> hh,hhbest,dh;
+    
+    hh.set_name("gp_optimize(array<int>,int)_hh");
+    hhbest.set_name("gp_optimize(array<int>,int)_hhbest");
+    dh.set_name("gp_optimize(array<int>,int)_dh");
+    
+    double nn;
+    
+    hh.set_dim(nhy);
+    hhbest.set_dim(nhy);
+    dh.set_dim(nhy);
+    
+    int nsteps=10;
+    for(i=0;i<nhy;i++){
+        dh.set(i,(log(cv.get_hyper_parameter_max(i))-log(cv.get_hyper_parameter_min(i)))/double(nsteps-1));
+    }
+    
+    int totalsteps=1;
+    for(i=0;i<nhy;i++){
+        totalsteps=totalsteps*nsteps;
+    }
+    
+    int ii;
+    double E,Ebest,mu;
+    
+    for(ii=0;ii<totalsteps;ii++){
+        j=ii;
+	l=totalsteps/nsteps;
+	for(i=0;i<nhy;i++){
+	    if(l==0){
+	        printf("WARNING you indexing magic in optimize failed\n");
+		exit(1);
+	    }
+	    k=j/l;
+	    
+	    nn=log(cv.get_hyper_parameter_min(i))+k*dh.get_data(i);
+	    
+	    hh.set(i,exp(nn));
+	    
+	    j-=k*l;
+	    l=l/nsteps;
+	    
+	}
+	
+	cv.set_hyper_parameters(hh);
+	
+	E=optimization_error(hh);
+        
+	if(ii==0 || E<Ebest){
+	    Ebest=E;
+	    for(i=0;i<nhy;i++){
+	        hhbest.set(i,hh.get_data(i));
+	    }
+	}
+	
+	
+    }
+    
+    
+    for(i=0;i<nhy;i++){
+        if(fabs(log(hhbest.get_data(i))-log(cv.get_hyper_parameter_max(i)))<dh.get_data(i)){
+	    nn=cv.get_hyper_parameter_max(i);
+	    cv.set_hyper_parameter_max(i,10.0*nn);
+	}
+	
+	if(fabs(log(hhbest.get_data(i))-log(cv.get_hyper_parameter_min(i)))<dh.get_data(i)){
+	    nn=cv.get_hyper_parameter_min(i);
+	    cv.set_hyper_parameter_min(i,0.1*nn);
+        }
+	
+    }
+    
+    /*printf("chose hyper parameters ");
+    for(i=0;i<nhy;i++)printf("%e ",hhbest[i]);
+    printf("Ebest %e \n",Ebest/double(n_use));*/
+    
+    cv.set_hyper_parameters(hhbest);
     
 }
 
@@ -117,8 +235,8 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     double mu=gg.user_predict(pt,0,ffneigh);
     
     int i;
-    if(mu<0.0){
-        printf("WARNING mu %e\n",mu);
+    if(mu<chimin){
+        printf("WARNING mu %e -- chimin %e\n",mu,chimin);
         for(i=0;i<ffneigh.get_dim();i++){
             printf("%e\n",ffneigh.get_data(i));
         }
