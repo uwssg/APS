@@ -489,8 +489,15 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     double min;
     
     int i;
+    int do_truth=0;
+    if(mu<chimin+delta_chisquared){
+        for(i=0;i<ffneigh.get_data(i) && do_truth==0;i++){
+            if(ffneigh.get_data(i)>chimin+delta_chisquared)do_truth=1;
+        }
+    }
     
-    if(mu<chimin+delta_chisquared && mu+sig>chimin+delta_chisquared){
+    
+    if(do_truth==1){
         called_true++;
         mu=(*true_chisq)(pt);
         gg.add_pt(pt,mu);
@@ -514,8 +521,8 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
             for(i=0;i<ffneigh.get_dim();i++){
                 printf("%e\n",ffneigh.get_data(i));
             }
-            printf("\ncalled %d time %e -> %e\n",
-            called,time_spent,time_spent/double(called));
+            printf("\ncalled %d true %d time %e -> %e\n",
+            called,called_true,time_spent,time_spent/double(called));
         
             throw -1;
         }
@@ -525,8 +532,8 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     time_spent+=double(time(NULL))-before;
     
     if(called%10000==0){
-        printf("called %d time %e -> %e\n",
-        called,time_spent,time_spent/double(called));
+        printf("called %d true %d time %e -> %e\n",
+        called,called_true,time_spent,time_spent/double(called));
     }
     
     return mu;
