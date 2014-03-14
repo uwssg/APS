@@ -16,6 +16,8 @@ public:
     ~gp_to_mcmc();
     
     virtual double operator()(array_1d<double>&) const;
+    void set_true_chisq(chisquared*);
+    int get_called_true();
     
 
 private:
@@ -32,7 +34,7 @@ private:
     void optimize_simplex();
     void assess_optimization_min(array_1d<double>&,double);
     
-    gp gg;
+    mutable gp gg;
     matern_covariance_multiD cv;
     double delta_chisquared,chimin;
     array_1d<int> opt_dexes;
@@ -40,6 +42,9 @@ private:
     double eebest;
     array_1d<double> hhbest;
     int called_opt,last_set;
+    mutable int called_true;
+    
+    chisquared *true_chisq;
 
 };
 

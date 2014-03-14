@@ -223,6 +223,7 @@ class gp{
     double user_predict(array_1d<double>&,double*,int) const;
     double user_predict(array_1d<double>&,int) const;
     double user_predict(array_1d<double>&,int,array_1d<double>&) const;
+    double user_predict(array_1d<double>&,double*,int,array_1d<double>&) const;
     
     double self_predict(int) const;
     

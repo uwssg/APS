@@ -5,12 +5,14 @@ gp_to_mcmc::~gp_to_mcmc(){}
 gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd, 
             array_1d<double> &ff, double delta) : chisquared(dd.get_cols()){
     
+    called_true=0;
     called_opt=0;
     last_set=0;
     eebest=2.0*exception;
     
     int j,i,dim,npts;
     
+    true_chisq=NULL;
     
     delta_chisquared=delta;
     
@@ -148,7 +150,7 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     
         printf("optimizing on %d pts \n",opt_dexes.get_dim());
     
-        //optimize();
+        optimize();
     
         printf("eebest %e\n",eebest);
     }
@@ -157,6 +159,10 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     }
     cv.print_hyperparams();
     
+}
+
+void gp_to_mcmc::set_true_chisq(chisquared *cc){
+    true_chisq=cc;
 }
 
 double gp_to_mcmc::optimization_error(array_1d<double> &hh_in){
@@ -461,46 +467,59 @@ void gp_to_mcmc::optimize_grid(){
     
 }
 
-double gp_to_mcmc::operator()(array_1d<double> &pt) const{
+int gp_to_mcmc::get_called_true(){
+    return called_true;
+}
 
+double gp_to_mcmc::operator()(array_1d<double> &pt) const{
+    
+    if(true_chisq==NULL){
+        printf("WARNING cannot call operator; true_chisq is null\n");
+    }
+    
     double before=double(time(NULL));
     called++;
     
     array_1d<double> ffneigh;
+    double sig;
     
-    //gg.reset_cache();
-    //double mu=gg.user_predict(pt,0,ffneigh);
-    
-    array_1d<int> neigh;
-    array_1d<double> dd;
-    gg.nn_srch(pt,1,neigh,dd);
-    
-    double mu=gg.get_fn(neigh.get_data(0));
-    
+    gg.reset_cache();
+    double mu=gg.user_predict(pt,&sig,0,ffneigh);
+
     double min;
     
     int i;
-    /*for(i=0;i<ffneigh.get_dim();i++){
-        if(i==0 || ffneigh.get_data(i)<min)min=ffneigh.get_data(i);
+    
+    if(mu<chimin+delta_chisquared && mu+sig>chimin+delta_chisquared){
+        called_true++;
+        mu=(*true_chisq)(pt);
+        gg.add_pt(pt,mu);
     }
+    else{
     
-    if(mu<chimin+delta_chisquared && min>chimin+delta_chisquared){
-        printf("WARNING returning %e but min %e\n",mu,min);
         for(i=0;i<ffneigh.get_dim();i++){
-            printf("%e\n",ffneigh.get_data(i));
+            if(i==0 || ffneigh.get_data(i)<min)min=ffneigh.get_data(i);
         }
-        throw -1;
-    }*/
     
-    if(mu<chimin){
-        printf("WARNING mu %e -- chimin %e\n",mu,chimin);
-        for(i=0;i<ffneigh.get_dim();i++){
-            printf("%e\n",ffneigh.get_data(i));
+        if(mu<chimin+delta_chisquared && min>chimin+delta_chisquared){
+            printf("WARNING returning %e but min %e\n",mu,min);
+            for(i=0;i<ffneigh.get_dim();i++){
+                printf("%e\n",ffneigh.get_data(i));
+            }
+            throw -1;
         }
-        printf("\ncalled %d time %e -> %e\n",
-        called,time_spent,time_spent/double(called));
+    
+        if(mu<chimin){
+            printf("WARNING mu %e -- chimin %e\n",mu,chimin);
+            for(i=0;i<ffneigh.get_dim();i++){
+                printf("%e\n",ffneigh.get_data(i));
+            }
+            printf("\ncalled %d time %e -> %e\n",
+            called,time_spent,time_spent/double(called));
         
-        throw -1;
+            throw -1;
+        }
+    
     }
     
     time_spent+=double(time(NULL))-before;

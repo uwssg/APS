@@ -206,6 +206,8 @@ void mcmc::resume(){
     printf("\n    p_factor %e\n",p_factor);
     
     fclose(input);
+    
+    last_updated=n_samples/chains;
 
     resumed=1;
 }
@@ -866,4 +868,8 @@ void mcmc::update_fastslow(){
     
     delete uplo;
     delete [] arr;
+}
+
+int mcmc::get_n_samples(){
+    return n_samples;
 }

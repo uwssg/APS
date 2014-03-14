@@ -468,6 +468,11 @@ double gp::user_predict(array_1d<double> &pt, int verbose, array_1d<double> &ffo
     return predict(pt,&nn,verbose,0,ffout);
 }
 
+double gp::user_predict(array_1d<double> &pt, double *sig, 
+int verbose, array_1d<double> &ffout) const{
+    return predict(pt,sig,verbose,1,ffout);
+}
+
 double gp::predict(array_1d<double> &pt,double *sigout,int verbose, int get_sig,
     array_1d<double> &ffout)
 const{

@@ -79,8 +79,8 @@ Ran chaos(seed);
 
 
 
-mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains_nn",min,max,sig,2.0,&chaos);
-mcmc_obj.set_statname("chains/gp_to_mcmc_status_nn.sav");
+mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains_true",min,max,sig,2.0,&chaos);
+mcmc_obj.set_statname("chains/gp_to_mcmc_status_true.sav");
 mcmc_obj.set_chisq(&gp_operator,1);
 mcmc_obj.begin_update(10000);
 mcmc_obj.step_update(10000);
@@ -94,12 +94,19 @@ for(i=0;i<8;i++){
 }
 
 //mcmc_obj.disable_update();
-mcmc_obj.resume();
+//mcmc_obj.resume();
+
+ellipses actual_chisq(dim,2);
+
+gp_operator.set_true_chisq(&actual_chisq);
 
 mcmc_obj.sample(40000);
 
 printf("ct %d time %e -> %e\n",
 gp_operator.get_called(),gp_operator.get_time_spent(),
 gp_operator.get_time_spent()/double(gp_operator.get_called()));
+
+printf("n_samples %d called_true %d\n",
+mcmc_obj.get_n_samples(),gp_operator.get_called_true());
 
 }
