@@ -54,7 +54,7 @@ ell.set(5,0.6691386);
 ell.set(6,14.651);
 ell.set(7,0.6304614);
 
-gp_to_mcmc gp_operator(data,ff,15.5,ell);
+gp_to_mcmc gp_operator(data,ff,15.5);//15.5);
 
 array_1d<double> min,max,sig;
 for(i=0;i<dim;i++){

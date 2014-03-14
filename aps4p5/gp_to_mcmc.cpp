@@ -187,11 +187,11 @@ double gp_to_mcmc::optimization_error(array_1d<double> &hh_in){
         ff=gg.get_fn(opt_dexes.get_data(i));
         mu=gg.self_predict(opt_dexes.get_data(i));
         
-        if(ff>target && mu<target)ee+=1.0;
+        //if(ff>target && mu<target)ee+=1.0;
         
-        if(ff<target && mu>target)ee+=1.0;
+        //if(ff<target && mu>target)ee+=1.0;
         
-        //ee+=power((ff-mu)/ff,2);
+        ee+=power((ff-mu)/ff,2);
         
         /*if(ff>chimin+5.0*delta_chisquared){
             if(mu<chimin+5.0*delta_chisquared){
@@ -491,6 +491,8 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     int i;
     int do_truth=0;
     if(mu<chimin+delta_chisquared){
+        if(mu<chimin)do_truth=1;
+        
         for(i=0;i<ffneigh.get_dim() && do_truth==0;i++){
             if(ffneigh.get_data(i)>chimin+delta_chisquared)do_truth=1;
         }
