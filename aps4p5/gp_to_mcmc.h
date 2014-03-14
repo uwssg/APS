@@ -11,7 +11,8 @@ class gp_to_mcmc : public chisquared{
 
 public:
     
-    gp_to_mcmc(array_2d<double>&, array_1d<double>&,double);
+    gp_to_mcmc(array_2d<double>&,array_1d<double>&,double,array_1d<double>&);
+    gp_to_mcmc(array_2d<double>&,array_1d<double>&,double);
     ~gp_to_mcmc();
     
     virtual double operator()(array_1d<double>&) const;
@@ -20,7 +21,8 @@ public:
 private:
     
     void initialize(array_2d<double>&, array_1d<double>&, 
-                    array_1d<double>&, array_1d<double>&);
+                    array_1d<double>&, array_1d<double>&,
+                    array_1d<double>&);
     
     
     

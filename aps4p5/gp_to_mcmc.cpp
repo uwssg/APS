@@ -38,12 +38,53 @@ gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd,
         }
     }
     
-    initialize(dd,ff,min,max);
+    array_1d<double> ell_junk;
+    initialize(dd,ff,min,max,ell_junk);
+    
+}
+
+gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd, 
+            array_1d<double> &ff, double delta, array_1d<double> &ell_in) : chisquared(dd.get_cols()){
+    
+    called_opt=0;
+    last_set=0;
+    eebest=2.0*exception;
+    
+    int j,i,dim,npts;
+    
+    
+    delta_chisquared=delta;
+    
+    dim=dd.get_cols();
+    npts=dd.get_rows();
+    
+    if(ff.get_dim()!=npts){
+        printf("WARNING in gp_to_mcmc data has %d pts but ff %d\n",
+        dd.get_rows(),ff.get_dim());
+        
+        exit(1);
+    }
+    
+    array_1d<double> min,max;
+    
+    for(i=0;i<npts;i++){
+        for(j=0;j<dim;j++){
+            if(i==0 || dd.get_data(i,j)>max.get_data(j)){
+                max.set(j,dd.get_data(i,j));
+            }
+            
+            if(i==0 || dd.get_data(i,j)<min.get_data(j)){
+                min.set(j,dd.get_data(i,j));
+            }
+        }
+    }
+    
+    initialize(dd,ff,min,max,ell_in);
     
 }
 
 void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
-    array_1d<double> &min, array_1d<double> &max){
+    array_1d<double> &min, array_1d<double> &max, array_1d<double> &ell_in){
     
     gg.set_kk(15);
     gg.initialize(data,ff,max,min);
@@ -86,46 +127,34 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     
     int has_above,has_below,j;
     
-    for(i=0;i<ff.get_dim();i++){
-        gg.nn_srch(i,gg.get_kk(),neigh,dd);
-        has_above=0;
-        has_below=0;
+    if(ell_in.get_dim()==0){
+    
+        for(i=0;i<ff.get_dim();i++){
+            gg.nn_srch(i,gg.get_kk(),neigh,dd);
+            has_above=0;
+            has_below=0;
         
-        for(j=0;j<neigh.get_dim() && (has_above==0 || has_below==0);j++){
-            if(gg.get_fn(neigh.get_data(j))<chimin+delta_chisquared)has_below=1;
-            
-            if(gg.get_fn(neigh.get_data(j))>chimin+delta_chisquared)has_above=1;
-        }
+            for(j=0;j<neigh.get_dim() && (has_above==0 || has_below==0);j++){
+                if(gg.get_fn(neigh.get_data(j))<chimin+delta_chisquared)has_below=1;
+                
+                if(gg.get_fn(neigh.get_data(j))>chimin+delta_chisquared)has_above=1;
+            }
         
-        if(has_above==1 && has_below==1){
-            opt_dexes.add(i);
+            if(has_above==1 && has_below==1){
+                opt_dexes.add(i);
+            }
+   
         }
     
-       /*roll=chaos.doub();
-       if(ff.get_data(i)<chimin+delta_chisquared && i!=mindex){
-           if(roll<good_ratio){
-               opt_dexes.add(i);
-           }
-       }
-       else if(ff.get_data(i)>chimin+delta_chisquared &&
-               ff.get_data(i)<chimin+2.0*delta_chisquared){
-           
-           if(roll<mild_ratio){
-               opt_dexes.add(i);
-           }
-           
-       }
-       else if(i!=mindex){
-           if(roll<bad_ratio){
-               opt_dexes.add(i);
-           }
-       }*/
+        printf("optimizing on %d pts \n",opt_dexes.get_dim());
+    
+        optimize();
+    
+        printf("eebest %e\n",eebest);
     }
-    
-    printf("optimizing on %d pts \n",opt_dexes.get_dim());
-    
-    optimize();
-    printf("eebest %e\n",eebest);
+    else{
+        cv.set_hyper_parameters(ell_in);
+    }
     cv.print_hyperparams();
     
 }

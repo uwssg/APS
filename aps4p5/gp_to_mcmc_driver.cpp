@@ -59,7 +59,7 @@ mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains3",min,max,sig,2.0,&chaos);
 mcmc_obj.set_statname("chains/gp_to_mcmc_status");
 mcmc_obj.set_chisq(&gp_operator,1);
 mcmc_obj.begin_update(5000);
-mcmc_obj.step_update(1000);
+mcmc_obj.step_update(5000);
 mcmc_obj.cutoff_update(10000);
 
 mcmc_obj.sample(20000);
