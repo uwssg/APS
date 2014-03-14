@@ -79,8 +79,8 @@ Ran chaos(seed);
 
 
 
-mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains3c",min,max,sig,2.0,&chaos);
-mcmc_obj.set_statname("chains/gp_to_mcmc_status3c.sav");
+mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains_nn",min,max,sig,2.0,&chaos);
+mcmc_obj.set_statname("chains/gp_to_mcmc_status_nn.sav");
 mcmc_obj.set_chisq(&gp_operator,1);
 mcmc_obj.begin_update(10000);
 mcmc_obj.step_update(10000);

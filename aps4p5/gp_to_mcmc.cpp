@@ -148,7 +148,7 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     
         printf("optimizing on %d pts \n",opt_dexes.get_dim());
     
-        optimize();
+        //optimize();
     
         printf("eebest %e\n",eebest);
     }
@@ -468,13 +468,19 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     
     array_1d<double> ffneigh;
     
-    gg.reset_cache();
-    double mu=gg.user_predict(pt,0,ffneigh);
+    //gg.reset_cache();
+    //double mu=gg.user_predict(pt,0,ffneigh);
+    
+    array_1d<int> neigh;
+    array_1d<double> dd;
+    gg.nn_srch(pt,1,neigh,dd);
+    
+    double mu=gg.get_fn(neigh.get_data(0));
     
     double min;
     
     int i;
-    for(i=0;i<ffneigh.get_dim();i++){
+    /*for(i=0;i<ffneigh.get_dim();i++){
         if(i==0 || ffneigh.get_data(i)<min)min=ffneigh.get_data(i);
     }
     
@@ -484,7 +490,7 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
             printf("%e\n",ffneigh.get_data(i));
         }
         throw -1;
-    }
+    }*/
     
     if(mu<chimin){
         printf("WARNING mu %e -- chimin %e\n",mu,chimin);

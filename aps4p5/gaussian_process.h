@@ -256,7 +256,7 @@ class gp{
     double optimization_error(array_1d<double>&, array_1d<int>&);
     
     void set_kk(int);
-    double get_fn(int);
+    double get_fn(int) const;
     
     double get_pt(int,int);
     void get_pt(int,array_1d<double>&);
@@ -270,8 +270,8 @@ class gp{
     double get_max(int);
     double get_min(int);
     
-    void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&);
-    void nn_srch(int,int,array_1d<int>&,array_1d<double>&);
+    void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&) const;
+    void nn_srch(int,int,array_1d<int>&,array_1d<double>&) const;
     
     int get_ct_predict();
     int get_ct_search();

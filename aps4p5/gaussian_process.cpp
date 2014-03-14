@@ -63,7 +63,8 @@ int gp::is_kptr_null(){
     else return 0;
 }
 
-void gp::nn_srch(int dex, int ikk, array_1d<int> &neigh, array_1d<double> &dd){
+void gp::nn_srch(int dex, int ikk, array_1d<int> &neigh, array_1d<double> &dd)
+const{
     if(kptr==NULL){
         printf("WARNING cannot call gp nn_srch; kptr is null\n");
 	exit(1);
@@ -75,7 +76,7 @@ void gp::nn_srch(int dex, int ikk, array_1d<int> &neigh, array_1d<double> &dd){
 }
 
 void gp::nn_srch(array_1d<double> &pt, int ikk, array_1d<int> &neigh,
-array_1d<double>&dd){
+array_1d<double>&dd) const{
     if(kptr==NULL){
         printf("WARNING cannot call gp nn_srch; kptr is null\n");
 	exit(1);
@@ -1117,7 +1118,7 @@ int gp::get_dim(){
     return dim;
 }
 
-double gp::get_fn(int dex){
+double gp::get_fn(int dex) const{
     if(dex<0 || dex>=pts){
         printf("WARNING asking for fn %d but pts %d\n",dex,pts);
 	exit(1);
