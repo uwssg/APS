@@ -26,11 +26,18 @@ private:
     
     double optimization_error(array_1d<double>&);
     void optimize();
+    void optimize_grid();
+    void optimize_simplex();
+    void assess_optimization_min(array_1d<double>&,double);
     
     gp gg;
-    matern_covariance cv;
+    matern_covariance_multiD cv;
     double delta_chisquared,chimin;
     array_1d<int> opt_dexes;
+    
+    double eebest;
+    array_1d<double> hhbest;
+    int called_opt,last_set;
 
 };
 
