@@ -491,7 +491,7 @@ double gp_to_mcmc::operator()(array_1d<double> &pt) const{
     int i;
     int do_truth=0;
     if(mu<chimin+delta_chisquared){
-        for(i=0;i<ffneigh.get_data(i) && do_truth==0;i++){
+        for(i=0;i<ffneigh.get_dim() && do_truth==0;i++){
             if(ffneigh.get_data(i)>chimin+delta_chisquared)do_truth=1;
         }
     }
