@@ -206,8 +206,6 @@ void mcmc::resume(){
     printf("\n    p_factor %e\n",p_factor);
     
     fclose(input);
-    
-    n_samples=n_samples/chains;
 
     resumed=1;
 }
@@ -303,10 +301,10 @@ void mcmc::sample(int npts){
   for(cc=0;cc<chains;cc++)degen.set(cc,1);
   
   for(ii=0;ii<npts;ii++){
-      n_samples++;
+     
       
   for(cc=0;cc<chains;cc++){
-    
+    n_samples++;
    
     
    // printf("oldl %e oldchi %e\n",oldl,oldchi);
@@ -363,34 +361,50 @@ void mcmc::sample(int npts){
       
      }//loop over chains 
      
-     if(ii%update_interval==0 && 
+     /*if(ii%update_interval==0 && 
         ii>=start_update && 
 	(stop_update<0 || ii<=stop_update) &&
-	do_update==1){
+	do_update==1){*/
 	
-            printf("ii %d npts %d start %d\n",ii,npts,start_update);
+            //printf("ii %d npts %d start %d\n",ii,npts,start_update);
             
-            
-            try{
-	        calculate_covariance();
-	    
-	        if(dofastslow==0){
-	            update_directions();
-	        }
-	        else{
-	            update_fastslow();
-	        }
-	    }
-            catch (int iex){
-                printf("could not complete the directional update\n");
-            }
-            
-	    write_directions();
-	    
+    if(ii>=start_update && do_update==1 && ii%update_interval==0){        
+            update_directions();    
     }
     
    
   }//loop over npts
+  
+  
+  output=fopen(statname,"a");
+  fprintf(output,"total samples %d\n",n_samples);
+  fclose(output);
+}
+
+void mcmc::update_directions(){
+    
+    double ratio=calculate_acceptance();
+    
+    printf("found ratio to be %e\n",ratio);
+    
+    if(ratio>1.0/2.9 || ratio < 1.0/6.0){
+    
+        try{
+	    calculate_covariance();
+	    
+	    if(dofastslow==0){
+                update_eigen();
+            }
+            else{
+                update_fastslow();
+            }
+        }
+        catch (int iex){
+            printf("could not complete the directional update\n");
+        }
+    }
+    
+    write_directions();
 
 }
 
@@ -440,8 +454,6 @@ void mcmc::calculate_covariance(){
     ntot.set_dim(chains);
     
     data=new double**[chains];
-    accept_total=0;
-    accept_degen=0;
     
     ndata.set_dim(chains);
 
@@ -497,11 +509,6 @@ void mcmc::calculate_covariance(){
 	    if(ct>toburn){
 	        if(ct-ii>toburn)jj=ii;
 		else jj=ct-toburn;
-		
-		if(ct>last_updated){
-		    accept_total++;
-		    accept_degen+=jj;
-		}
 		
 		for(j=0;j<jj;j++){
 		    for(i=0;i<dim;i++){
@@ -667,16 +674,47 @@ void mcmc::calculate_covariance(){
     }
      
     for(cc=0;cc<chains;cc++){
-        if(cc==0 || ntot.get_data(cc)<last_updated){
-            //printf("ntot %d = %d\n",cc,ntot.get_data(cc));
-            last_updated=ntot.get_data(cc);
-        }
+            last_updated=n_samples/chains;
     }
     //exit(1);
     
 }  
 
-void mcmc::update_directions(){
+double mcmc::calculate_acceptance(){
+    int cc,ii,i;
+    FILE *input;
+    double nn;
+    int tot=0,steps=0,ct=0;
+    
+    for(cc=0;cc<chains;cc++){
+        input=fopen(names[cc],"r");
+        ct=0;
+        while(fscanf(input,"%d",&ii)>0){
+            for(i=0;i<dim+1;i++)fscanf(input,"%le",&nn);
+            
+            ct+=ii;
+            if(ct>last_updated){
+                
+                steps++;
+                if(ct-ii<last_updated){
+                    tot+=ct-last_updated;
+                }
+                else{
+                    tot+=ii;
+                }
+                
+            }
+            
+        }
+        
+        fclose(input);
+    }
+    
+    return double(steps)/double(tot);
+    
+}
+
+void mcmc::update_eigen(){
     int i;
 
     double tolerance=1.0e-5;
@@ -764,7 +802,8 @@ void mcmc::update_directions(){
    catch (int iex){
        printf("could not find eigen vectors... oh well\n");
    }
-
+   
+   /*
    i=accept_degen/accept_total;
    if(i>4)p_factor=p_factor*0.5;
    else if(i<4){
@@ -772,17 +811,7 @@ void mcmc::update_directions(){
    }
    
    printf("\n\np_factor %e\n\n",p_factor);
-   //exit(1);
-   /*if(maxerr>1.0e-10){
-    for(i=0;i<dim;i++){
-        for(j=0;j<dim;j++)printf("%.4e -- ",p_vectors.get_data(i,j));
-	printf("\n");
-    }
-    printf("\n");
-    for(i=0;i<dim;i++)printf("%.4e -- ",p_values.get_data(i));
-    printf("\n\n");
-   }*/
-   
+   */
    
 }
 
@@ -798,7 +827,7 @@ void mcmc::write_directions(){
    }
    fprintf(output,"%e\n",p_factor);
    
-   fprintf(output,"last set at %d per chain\n",n_samples);
+   fprintf(output,"last set at %d samples",n_samples);
    fclose(output);
     
    

@@ -8,7 +8,7 @@ class mcmc{
   private:
     chisquared **chisqfn;
     int seed,do_update,stop_update,start_update,update_interval;
-    int resumed,last_updated,accept_total,accept_degen;
+    int resumed,last_updated;
     
     int dofastslow,ifast;
     
@@ -27,8 +27,11 @@ class mcmc{
     
     void calculate_covariance();
     void update_directions();
+    void update_eigen();
     void update_fastslow();
     void write_directions();
+    
+    double calculate_acceptance();
     
   public:
 

@@ -93,7 +93,7 @@ for(i=0;i<8;i++){
     mcmc_obj.guess(guess);   
 }
 
-mcmc_obj.disable_update();
+//mcmc_obj.disable_update();
 mcmc_obj.resume();
 
 mcmc_obj.sample(40000);
