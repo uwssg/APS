@@ -15,7 +15,7 @@ class mcmc{
     array_2d<double> covariance;
     double p_factor;
     
-    int chains,dim,called;
+    int chains,dim,called,n_samples;
     char **names;
     Ran *chaos;
     char statname[500];     

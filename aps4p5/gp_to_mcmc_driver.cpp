@@ -44,25 +44,59 @@ if(data.get_rows()!=ff.get_dim()){
     exit(1);
 }
 
-gp_to_mcmc gp_operator(data,ff,15.5);
+array_1d<double> ell;
+ell.set(0,0.8487669);
+ell.set(1,0.1640894);
+ell.set(2,0.1783955);
+ell.set(3,0.05983020);
+ell.set(4,0.6178762);
+ell.set(5,0.6691386);
+ell.set(6,14.651);
+ell.set(7,0.6304614);
+
+gp_to_mcmc gp_operator(data,ff,15.5,ell);
 
 array_1d<double> min,max,sig;
 for(i=0;i<dim;i++){
     min.set(i,-100.0);
     max.set(i,100.0);
-    sig.set(i,10.0);
+    sig.set(i,1.0);
 }
 
+double minval;
+int mindex;
+for(i=0;i<ff.get_dim();i++){
+    if(i==0 || ff.get_data(i)<minval){
+        minval=ff.get_data(i);
+        mindex=i;
+    }
+}
+
+array_1d<double> guess;
 Ran chaos(seed);
 
-mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains3",min,max,sig,2.0,&chaos);
-mcmc_obj.set_statname("chains/gp_to_mcmc_status");
-mcmc_obj.set_chisq(&gp_operator,1);
-mcmc_obj.begin_update(5000);
-mcmc_obj.step_update(5000);
-mcmc_obj.cutoff_update(10000);
 
-mcmc_obj.sample(20000);
+
+
+
+mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains3c",min,max,sig,2.0,&chaos);
+mcmc_obj.set_statname("chains/gp_to_mcmc_status3c.sav");
+mcmc_obj.set_chisq(&gp_operator,1);
+mcmc_obj.begin_update(10000);
+mcmc_obj.step_update(10000);
+mcmc_obj.cutoff_update(20000);
+
+for(i=0;i<8;i++){
+    for(j=0;j<dim;j++){
+        guess.set(j,data.get_data(mindex,j)+(chaos.doub()-0.5)*5.0);
+    }
+    mcmc_obj.guess(guess);   
+}
+
+mcmc_obj.disable_update();
+mcmc_obj.resume();
+
+mcmc_obj.sample(40000);
 
 printf("ct %d time %e -> %e\n",
 gp_operator.get_called(),gp_operator.get_time_spent(),

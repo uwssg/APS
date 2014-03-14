@@ -33,6 +33,7 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
 
   int i,j,k,l;
   
+  n_samples=0;
   last_updated=0;
   p_factor=1.0;
   resumed=0;
@@ -159,7 +160,9 @@ void mcmc::resume(){
     for(cc=0;cc<chains;cc++){
         input=fopen(names[cc],"r");
 	while(fscanf(input,"%d",&j)>0){
-	
+	    
+            n_samples+=j;
+            
 	    fscanf(input,"%le",&nn);
 	    for(i=0;i<dim;i++){
                 fscanf(input,"%le",&xx);
@@ -187,10 +190,24 @@ void mcmc::resume(){
                 p_vectors.set(i,j,xx);
             }
 	}
+        
+        fscanf(input,"%le",&p_factor);
     }
     
+    for(i=0;i<dim;i++){
+        printf("    p_val %e\n",p_values.get_data(i));
+    }
+    printf("\n\n    vectors\n");
+    for(i=0;i<dim;i++){
+        printf("    ");
+        for(j=0;j<dim;j++)printf("%e ",p_vectors.get_data(i,j));
+        printf("\n");
+    }
+    printf("\n    p_factor %e\n",p_factor);
     
     fclose(input);
+    
+    n_samples=n_samples/chains;
 
     resumed=1;
 }
@@ -286,6 +303,8 @@ void mcmc::sample(int npts){
   for(cc=0;cc<chains;cc++)degen.set(cc,1);
   
   for(ii=0;ii<npts;ii++){
+      n_samples++;
+      
   for(cc=0;cc<chains;cc++){
     
    
@@ -777,6 +796,9 @@ void mcmc::write_directions(){
       for(j=0;j<dim;j++)fprintf(output,"%e ",p_vectors.get_data(i,j));
       fprintf(output,"\n");
    }
+   fprintf(output,"%e\n",p_factor);
+   
+   fprintf(output,"last set at %d per chain\n",n_samples);
    fclose(output);
     
    
