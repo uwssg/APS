@@ -149,7 +149,14 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
         }
     
         printf("optimizing on %d pts \n",opt_dexes.get_dim());
-    
+        j=0;
+        for(i=0;i<opt_dexes.get_dim();i++){
+            if(gg.get_fn(opt_dexes.get_data(i))>chimin+2.0*delta_chisquared){
+                j++;
+            }
+        }
+        printf("%d are above 3 delta\n",j);
+        
         optimize();
     
         printf("eebest %e\n",eebest);
@@ -191,7 +198,22 @@ double gp_to_mcmc::optimization_error(array_1d<double> &hh_in){
         
         //if(ff<target && mu>target)ee+=1.0;
         
-        ee+=power((ff-mu)/ff,2);
+        //ee+=power((ff-mu)/ff,2);
+        
+        if(ff>chimin+2.0*delta_chisquared){
+            if(mu<chimin+2.0*delta_chisquared){
+            
+                if(fabs(ff-mu)>2.0*delta_chisquared){
+                    ee+=4.0*delta_chisquared*delta_chisquared;
+                }
+                else{
+                    ee+=power(ff-mu,2);
+                }
+            }
+        }
+        else{
+            ee+=power(ff-mu,2);
+        }
         
         /*if(ff>chimin+5.0*delta_chisquared){
             if(mu<chimin+5.0*delta_chisquared){

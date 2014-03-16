@@ -45,16 +45,16 @@ if(data.get_rows()!=ff.get_dim()){
 }
 
 array_1d<double> ell;
-ell.set(0,0.8487669);
-ell.set(1,0.1640894);
-ell.set(2,0.1783955);
-ell.set(3,0.05983020);
-ell.set(4,0.6178762);
-ell.set(5,0.6691386);
-ell.set(6,14.651);
-ell.set(7,0.6304614);
+ell.set(0,7.969711);
+ell.set(1,9.40406);
+ell.set(2,3.139244);
+ell.set(3,4.433045);
+ell.set(4,4.571072);
+ell.set(5,6.993652);
+ell.set(6,7.776026e5);
+ell.set(7,16.44261);
 
-gp_to_mcmc gp_operator(data,ff,15.5);//15.5);
+gp_to_mcmc gp_operator(data,ff,15.5,ell);//15.5);
 
 array_1d<double> min,max,sig;
 for(i=0;i<dim;i++){
@@ -79,8 +79,8 @@ Ran chaos(seed);
 
 
 
-mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains_true",min,max,sig,2.0,&chaos);
-mcmc_obj.set_statname("chains/gp_to_mcmc_status_true.sav");
+mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains_trueunnorm",min,max,sig,2.0,&chaos);
+mcmc_obj.set_statname("chains/gp_to_mcmc_status_trueunnorm.sav");
 mcmc_obj.set_chisq(&gp_operator,1);
 mcmc_obj.begin_update(10000);
 mcmc_obj.step_update(10000);
@@ -100,8 +100,12 @@ ellipses actual_chisq(dim,2);
 
 gp_operator.set_true_chisq(&actual_chisq);
 
-mcmc_obj.sample(40000);
+while(mcmc_obj.get_n_samples()==0 || 
+mcmc_obj.get_last_updated()*8>mcmc_obj.get_n_samples()/2){
 
+    mcmc_obj.sample(40000);
+
+}
 printf("ct %d time %e -> %e\n",
 gp_operator.get_called(),gp_operator.get_time_spent(),
 gp_operator.get_time_spent()/double(gp_operator.get_called()));

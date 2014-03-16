@@ -57,7 +57,7 @@ class mcmc{
     void guess(array_1d<double>&);
     
     int get_n_samples();
-
+    int get_last_updated();
 };
 
 #endif

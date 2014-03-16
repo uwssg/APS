@@ -389,7 +389,7 @@ void mcmc::update_directions(){
     
     printf("found ratio to be %e\n",ratio);
     
-    if(ratio>1.0/2.9 || ratio < 1.0/6.0){
+    if(ratio>1.0/2.5 || ratio < 1.0/6.0){
     
         try{
 	    calculate_covariance();
@@ -404,6 +404,15 @@ void mcmc::update_directions(){
         catch (int iex){
             printf("could not complete the directional update\n");
         }
+        
+        if(ratio>1.0/2.5){
+            p_factor=p_factor*1.5;
+        }
+        else if(ratio<1.0/6.0){
+            p_factor=p_factor*0.75;
+        }
+        
+        printf("    p_factor %e\n",p_factor);
     }
     
     write_directions();
@@ -487,12 +496,23 @@ void mcmc::calculate_covariance(){
         
         //printf("toburn %d\n",toburn);
         
-        ndata.set(cc,ntot.get_data(cc)-toburn);
+        i=ntot.get_data(cc)-toburn;
+        
+        if(i>0){
+            ndata.set(cc,i);
+	}
+        else{
+            ndata.set(cc,0);
+        }
+        
+        printf("want to allocate %d\n",ndata.get_data(cc));
+        
+        if(ndata.get_data(cc)>0){
+	    data[cc]=new double*[ndata.get_data(cc)];
 	
-	data[cc]=new double*[ndata.get_data(cc)];
-	
-	for(i=0;i<ndata.get_data(cc);i++)data[cc][i]=new double[dim];
-	
+	    for(i=0;i<ndata.get_data(cc);i++)data[cc][i]=new double[dim];
+	}
+        
 	for(i=0;i<dim;i++){
 	    mu.set(i,0.0);
             var.set(i,0.0);
@@ -635,8 +655,10 @@ void mcmc::calculate_covariance(){
     printf("nmaster %d\n",nmaster);
     
     for(cc=0;cc<chains;cc++){
-        for(i=0;i<ndata.get_data(cc);i++)delete [] data[cc][i];
-	delete [] data[cc];
+        if(ndata.get_data(cc)>0){
+            for(i=0;i<ndata.get_data(cc);i++)delete [] data[cc][i];
+	    delete [] data[cc];
+        }
 	
     }
     delete [] data;
@@ -872,4 +894,8 @@ void mcmc::update_fastslow(){
 
 int mcmc::get_n_samples(){
     return n_samples;
+}
+
+int mcmc::get_last_updated(){
+    return last_updated;
 }
