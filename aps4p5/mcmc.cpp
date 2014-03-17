@@ -355,14 +355,14 @@ void mcmc::sample(int npts){
 	fprintf(output,"\n");
 	degen.set(cc,1);
         
-        /*if(newchi>100.0 && oldchi.get_data(cc)<20.0){
-            printf("that's weird... jumping from %e to %e roll %e\n",
-            newchi,oldchi.get_data(cc),rr);
-            
-            throw -1;
-        }*/
-        
         if(ii!=npts-1){
+            /*if(newchi>100.0 && oldchi.get_data(cc)<20.0){
+                printf("that's weird... jumping to %e from %e roll %e\n",
+                newchi,oldchi.get_data(cc),rr);
+            
+                throw -1;
+            }*/
+        
 	   oldchi.set(cc,newchi);
 	   oldl.set(cc,newl);
 	   for(i=0;i<dim;i++)start.set(cc,i,trial.get_data(i));

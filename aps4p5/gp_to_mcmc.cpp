@@ -88,11 +88,20 @@ gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd,
 void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     array_1d<double> &min, array_1d<double> &max, array_1d<double> &ell_in){
     
+    sprintf(supplemental_pts,"gp_to_mcmc_supplement.sav");
+    
     gg.set_kk(15);
     gg.initialize(data,ff,max,min);
     gg.assign_covariogram(&cv);
     
-    Ran chaos(49);
+    if(gg.get_pts()!=data.get_rows()){
+        printf("WARNING did not properly read data %d %d\n",
+        data.get_rows(),gg.get_pts());
+        
+        throw -1;
+    }
+    
+    n_gp_0=gg.get_pts();
     
     int mindex,i;
     
@@ -166,6 +175,47 @@ void gp_to_mcmc::initialize(array_2d<double> &data, array_1d<double> &ff,
     }
     cv.print_hyperparams();
     
+}
+
+void gp_to_mcmc::set_supplement(char *word){
+    int i;
+    for(i=0;i<letters-1 && word[i]!=0;i++){
+        supplemental_pts[i]=word[i];
+    }
+    supplemental_pts[i]=0;
+}
+
+void gp_to_mcmc::write_supplement(){
+    FILE *output=fopen(supplemental_pts,"a");
+    int i,j;
+    for(i=n_gp_0;i<gg.get_pts();i++){
+        for(j=0;j<gg.get_dim();j++){
+            fprintf(output,"%.18e ",gg.get_pt(i,j));
+        }
+        fprintf(output,"%.18e\n",gg.get_fn(i));
+    } 
+    fclose(output);
+}
+
+void gp_to_mcmc::read_supplement(){
+    FILE *input=fopen(supplemental_pts,"r");
+    int i;
+    array_1d<double> vv;
+    double nn,cc;
+    
+    if(input!=NULL){
+        while(fscanf(input,"%le",&nn)>0){
+            vv.set(0,nn);
+            for(i=1;i<gg.get_dim();i++){
+                fscanf(input,"%le",&nn);
+                vv.set(i,nn);
+            }
+            fscanf(input,"%le",&cc);
+            
+            gg.add_pt(vv,cc);
+        }
+        fclose(input);
+    }
 }
 
 void gp_to_mcmc::set_true_chisq(chisquared *cc){

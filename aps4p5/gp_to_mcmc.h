@@ -19,6 +19,9 @@ public:
     void set_true_chisq(chisquared*);
     int get_called_true();
     
+    void set_supplement(char*);
+    void read_supplement();
+    void write_supplement();
 
 private:
     
@@ -34,6 +37,8 @@ private:
     void optimize_simplex();
     void assess_optimization_min(array_1d<double>&,double);
     
+    char supplemental_pts[letters];
+    
     mutable gp gg;
     matern_covariance_multiD cv;
     double delta_chisquared,chimin;
@@ -41,7 +46,7 @@ private:
     
     double eebest;
     array_1d<double> hhbest;
-    int called_opt,last_set;
+    int called_opt,last_set,n_gp_0;
     mutable int called_true;
     
     chisquared *true_chisq;
