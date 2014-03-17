@@ -79,8 +79,8 @@ Ran chaos(seed);
 
 
 
-mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains_trueunnorm",min,max,sig,2.0,&chaos);
-mcmc_obj.set_statname("chains/gp_to_mcmc_status_trueunnorm.sav");
+mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains_trueunnorm_b",min,max,sig,2.0,&chaos);
+mcmc_obj.set_statname("chains/gp_to_mcmc_status_trueunnorm_b.sav");
 mcmc_obj.set_chisq(&gp_operator,1);
 mcmc_obj.begin_update(10000);
 mcmc_obj.step_update(10000);
@@ -103,7 +103,7 @@ gp_operator.set_true_chisq(&actual_chisq);
 while(mcmc_obj.get_n_samples()==0 || 
 mcmc_obj.get_last_updated()*8>mcmc_obj.get_n_samples()/2){
 
-    mcmc_obj.sample(40000);
+    mcmc_obj.sample(10000);
 
 }
 printf("ct %d time %e -> %e\n",

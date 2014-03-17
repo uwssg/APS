@@ -285,10 +285,12 @@ void mcmc::sample(int npts){
     }
   }
   else{
+      printf("calling old start pts\n");
       for(i=0;i<chains;i++){
           nn=(*chisqfn[i])(*start(i));
           oldchi.set(i,nn);
           oldl.set(i,-0.5*nn);
+          printf("chi %e\n",nn);
       }
   }
   
@@ -352,10 +354,20 @@ void mcmc::sample(int npts){
 	for(i=0;i<dim;i++)fprintf(output,"%e ",start.get_data(cc,i));
 	fprintf(output,"\n");
 	degen.set(cc,1);
-	oldchi.set(cc,newchi);
-	oldl.set(cc,newl);
-	for(i=0;i<dim;i++)start.set(cc,i,trial.get_data(i));
-	
+        
+        /*if(newchi>100.0 && oldchi.get_data(cc)<20.0){
+            printf("that's weird... jumping from %e to %e roll %e\n",
+            newchi,oldchi.get_data(cc),rr);
+            
+            throw -1;
+        }*/
+        
+        if(ii!=npts-1){
+	   oldchi.set(cc,newchi);
+	   oldl.set(cc,newl);
+	   for(i=0;i<dim;i++)start.set(cc,i,trial.get_data(i));
+	}
+        
 	fclose(output);
       }
       else degen.add_val(cc,1);
@@ -370,13 +382,17 @@ void mcmc::sample(int npts){
 	
             //printf("ii %d npts %d start %d\n",ii,npts,start_update);
             
-    if(ii>=start_update && do_update==1 && ii%update_interval==0){        
+    if((n_samples/chains)>=start_update && do_update==1 && (n_samples/chains)%update_interval==0){        
             update_directions();    
     }
     
    
   }//loop over npts
   
+  printf("ending with chi\n");
+  for(i=0;i<chains;i++){
+      printf("%e\n",oldchi.get_data(i));
+  }
   
   output=fopen(statname,"a");
   fprintf(output,"total samples %d\n",n_samples);
@@ -439,7 +455,7 @@ void mcmc::calculate_covariance(){
     double xx;
     
     array_1d<int> ndata,ntot;
-    array_1d<double> v,mu,var;
+    array_1d<double> v;
     
 
     FILE *input,*output;
@@ -460,8 +476,6 @@ void mcmc::calculate_covariance(){
     burnin=2;
     
     v.set_dim(dim);
-    mu.set_dim(dim);
-    var.set_dim(dim);
     ntot.set_dim(chains);
     
     data=new double**[chains];
@@ -513,12 +527,6 @@ void mcmc::calculate_covariance(){
 	    for(i=0;i<ndata.get_data(cc);i++)data[cc][i]=new double[dim];
 	}
         
-	for(i=0;i<dim;i++){
-	    mu.set(i,0.0);
-            var.set(i,0.0);
-	}
-	
-	
 	k=0;
 	ct=0;
 	input=fopen(names[cc],"r");
@@ -540,8 +548,6 @@ void mcmc::calculate_covariance(){
                         }
                         
                         data[cc][k][i]=v.get_data(i);
-			mu.add_val(i,v.get_data(i));
-			var.add_val(i,v.get_data(i)*v.get_data(i));
 	            }
 		    k++;
 		}
@@ -559,13 +565,7 @@ void mcmc::calculate_covariance(){
 	
 	printf("    assigned data\n");
 	
-	for(i=0;i<dim;i++){
-            mu.divide_val(i,double(ndata.get_data(cc)));
-            
-            var.divide_val(i,double(ndata.get_data(cc)));
-            var.subtract_val(i,mu.get_data(i)*mu.get_data(i));
-	}
-	
+	double mu,var,nmu;
 	for(i=0;i<dim;i++){
 	    //len=1;
             //dlen=1;
@@ -580,12 +580,28 @@ void mcmc::calculate_covariance(){
             covar=exception;
             
 	    while(covar>tol && len<ndata.get_data(cc)-1){
+                mu=0.0;
+                nmu=0.0;
+                for(j=0;j<ndata.get_data(cc);j+=len){
+                    mu+=data[cc][j][i];
+                    nmu+=1.0;
+                }
+                mu=mu/nmu;
+                
+                var=0.0;
+                for(j=0;j<ndata.get_data(cc);j+=len){
+                    var+=power(data[cc][j][i]-mu,2);
+                }
+                var=var/nmu;
+                
+                nmu=0.0;
 	        covar=0.0;
-		for(j=0;j<ndata.get_data(cc)-len;j++){
-		    covar+=(data[cc][j][i]-mu.get_data(i))*(data[cc][j+len][i]-mu.get_data(i));
+		for(j=0;j<ndata.get_data(cc)-len;j+=len){
+                    nmu+=1.0;
+		    covar+=(data[cc][j][i]-mu)*(data[cc][j+len][i]-mu);
 		}
-		covar=covar/double(ndata.get_data(cc)-len);
-		covar=fabs(covar/var.get_data(i));
+		covar=covar/nmu;
+		covar=fabs(covar/var);
 		
 		if(mincov<0.0 || covar<mincov)mincov=covar;
 		
@@ -673,17 +689,19 @@ void mcmc::calculate_covariance(){
         for(j=0;j<dim;j++)covariance.set(i,j,0.0);
     }
     
-    for(i=0;i<dim;i++)mu.set(i,0.0);
+    array_1d<double> v_mu;
+    
+    for(i=0;i<dim;i++)v_mu.set(i,0.0);
     for(i=0;i<nmaster;i++){
-        for(j=0;j<dim;j++)mu.add_val(j,master.get_data(i,j));
+        for(j=0;j<dim;j++)v_mu.add_val(j,master.get_data(i,j));
     }
-    for(i=0;i<dim;i++)mu.divide_val(i,double(nmaster));
+    for(i=0;i<dim;i++)v_mu.divide_val(i,double(nmaster));
     
     for(ii=0;ii<nmaster;ii++){
         for(i=0;i<dim;i++){
-            covariance.add_val(i,i,power(master.get_data(ii,i)-mu.get_data(i),2));
+            covariance.add_val(i,i,power(master.get_data(ii,i)-v_mu.get_data(i),2));
 	    for(j=i+1;j<dim;j++){
-                covariance.add_val(i,j,(master.get_data(ii,i)-mu.get_data(i))*(master.get_data(ii,j)-mu.get_data(j)));
+                covariance.add_val(i,j,(master.get_data(ii,i)-v_mu.get_data(i))*(master.get_data(ii,j)-v_mu.get_data(j)));
 	    }
 	}
     }
@@ -851,7 +869,7 @@ void mcmc::write_directions(){
    }
    fprintf(output,"%e\n",p_factor);
    
-   fprintf(output,"last set at %d samples",n_samples);
+   fprintf(output,"last set at %d samples",last_updated*chains);
    fclose(output);
     
    
