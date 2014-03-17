@@ -106,11 +106,11 @@ gp_operator.set_supplement("chains/gp_to_mcmc_supplement.sav");
 
 while(mcmc_obj.get_n_samples()==0 || 
 mcmc_obj.get_last_updated()*8>mcmc_obj.get_n_samples()/2){
-
-
     mcmc_obj.sample(10000);
-
 }
+
+gp_operator.write_supplement();
+
 printf("ct %d time %e -> %e\n",
 gp_operator.get_called(),gp_operator.get_time_spent(),
 gp_operator.get_time_spent()/double(gp_operator.get_called()));
