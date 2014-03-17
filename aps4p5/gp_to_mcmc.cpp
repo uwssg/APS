@@ -215,7 +215,10 @@ void gp_to_mcmc::read_supplement(){
             gg.add_pt(vv,cc);
         }
         fclose(input);
+        
+        gg.refactor();
     }
+    
 }
 
 void gp_to_mcmc::set_true_chisq(chisquared *cc){
