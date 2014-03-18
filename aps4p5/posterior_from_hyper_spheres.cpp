@@ -44,14 +44,22 @@ array_1d<int> neigh;
 
 FILE *output;
 
+array_1d<double> sorted_chi;
+array_1d<int> dexes;
+
 for(i=0;i<data.get_rows();i++){
-    kd.nn_srch(*data(i),2,neigh,dd);
-    radii.set(i,dd.get_data(1));
+    dexes.set(i,i);
+}
+
+sort_and_check(chisq,sorted_chi,dexes);
+
+for(i=0;i<data.get_rows();i++){
+    kd.nn_srch(*data(dexes.get_data(i)),2,neigh,dd);
+    radii.set(dexes.get_data(i),dd.get_data(1));
 }
 
 
-array_1d<double> sorted_chi,tosort_chi,l_probability;
-array_1d<int> dexes;
+array_1d<double> l_probability;
 
 int j;
 double lv,lp,total_p=0.0;;
@@ -59,14 +67,13 @@ double lv,lp,total_p=0.0;;
 
 for(i=0;i<data.get_rows();i++){
 
-    dexes.set(i,i);
     lv=3.0*log(radii.get_data(i));
     nn=chisq.get_data(i)-chimin;
     l_probability.set(i,lv-0.5*nn);
     total_p+=exp(l_probability.get_data(i));
 }
 
-sort_and_check(chisq,sorted_chi,dexes);
+
 
 nn=log(total_p);
 for(i=0;i<data.get_rows();i++){
@@ -84,7 +91,7 @@ for(cc=0;cc<nchains;cc++){
     sprintf(outname,"chains/hyper_sphere_chains_%d.txt",cc+1);
     output=fopen(outname,"w");
     
-    for(ii=0;ii<100000;ii++){
+    for(ii=0;ii<10000;ii++){
         roll=chaos.doub();
         sum=0.0;
         for(i=0;i<l_probability.get_dim()-1 && sum<roll; i++){
