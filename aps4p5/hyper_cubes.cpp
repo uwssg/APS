@@ -1164,6 +1164,10 @@ int box::get_contents(int dex){
     return box_contents.get_cols(dex);
 }
 
+int box::get_contents(int dex, int ip){
+    return box_contents.get_data(dex,ip);
+}
+
 int box::get_smallest_box(){
     int j,i,min;
     for(i=0;i<box_contents.get_rows();i++){
@@ -1237,6 +1241,26 @@ double box::get_box_max(int i_box, int idim){
 
 double box::get_box_min(int i_box, int idim){
     return box_min.get_data(i_box,idim);
+}
+
+double box::get_l_vol(int dex){
+    double ans,nn;
+    ans=log(box_max.get_data(dex,0)-box_min.get_data(dex,0));
+    int i;
+    for(i=1;i<data.get_cols();i++){
+        nn=log(box_max.get_data(dex,i)-box_min.get_data(dex,i));
+        ans+=nn;
+    }
+    if(isinf(ans) || isinf(-1.0*ans) || isnan(ans)){
+        printf("WARNING l_vol ans %e -- %d\n",ans,dex);
+        for(i=0;i<data.get_cols();i++){
+            printf("%e %e\n",box_min.get_data(dex,i),box_max.get_data(dex,i));
+            
+        }
+        throw -1;
+    }
+    
+    return ans;
 }
 
 double box::get_max(int dex) const{

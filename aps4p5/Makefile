@@ -187,6 +187,17 @@ validate: validate_gp2mcmc.cpp gp2mcmc
 	chisq_1311.o gp_to_mcmc.o mcmc.o \
 	$(LIBRARIES) $(INCLUDE)
 
+posterior_cubes: posterior_from_hyper_cubes.cpp hyper_cubes.o
+	$(gg) -o posterior_cubes posterior_from_hyper_cubes.cpp \
+	containers.o goto_tools.o hyper_cubes.o
+
+posterior_spheres: posterior_from_hyper_spheres.cpp kd.o
+	$(gg) -o posterior_spheres posterior_from_hyper_spheres.cpp \
+	containers.o goto_tools.o kd.o
+
+
+
 clean:
 	rm *.o aps_run aps_test test_containers test_kd planet dummy planet2 \
-	planet3 planet4 planet5 mcmc_test gp_to_mcmc ellipse
+	planet3 planet4 planet5 mcmc_test gp_to_mcmc ellipse posterior_cubes \
+	posterior_spheres

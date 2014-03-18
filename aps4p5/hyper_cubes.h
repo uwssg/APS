@@ -65,6 +65,7 @@ public:
     double get_mean_box(double*);
     int get_ntree();
     int get_contents(int);
+    int get_contents(int,int);
     
     int get_pts();
     int get_dim();
@@ -90,6 +91,8 @@ public:
     
     array_1d<int>* get_box(int);
     void refactor();
+    
+    double get_l_vol(int);
     
     double test_twins();
     void get_tree_cts(array_1d<int>&);
