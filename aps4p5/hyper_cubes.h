@@ -1,25 +1,108 @@
-#ifndef HYPER_CUBE_H
-#define HYPER_CUBE_H
+#ifndef HYPER_CUBES_H
+#define HYPER_CUBES_H
 
+#include "containers.h"
+#include "goto_tools.h"
 #include "kd.h"
+#include <time.h>
 
-class hyper_cubes{
+#define box_exception -1
+#define min_pts_per_box 2
 
-public:
-    
-    ~hyper_cubes();
-    hyper_cubes(array_2d<double>*,array_1d<double>&,array_1d<double>&);
-    double get_max(int,int);
-    double get_min(int,int);
-    double get_vol(int);
+class box{
 
 private:
     
-    void initialize();
+    kd_tree *kptr;
     
-    array_2d<double> *data,global_max,global_min;
-    array_2d<double> max,min;
+    int diagnostic,pts_per_box;
+    array_2d<int> tree;
+  
+    asymm_array_2d<int> box_contents;
     
-}
+    array_1d<double> tree_values;
+    array_2d<double> data,box_min,box_max;
+    array_1d<double> maxs,mins,norm_max,norm_min;
+    
+    array_1d<int> tree_ct;
+    
+    void build_tree();
+    void organize(array_1d<int>&,int,int,int,
+        int,array_1d<double>&,array_1d<double>&);
+    int split_box(int,int,int);
+    
+    double time_add_srch,time_split;
+    
+    double split_error(array_1d<int>&,int,int*,int*);
+
+    
+public:
+    
+    box(array_2d<double>&,int);
+    box(array_2d<double>&,int,array_1d<double>&,array_1d<double>&);
+    
+    void initialize(array_2d<double>&,int,array_1d<double>&,array_1d<double>&);
+
+    ~box();
+    
+    void set_pts_per(int);
+    
+    double distance(array_1d<double>&,array_1d<double>&);
+    double distance(int,array_1d<double>&);
+    double distance(array_1d<double>&,int);
+    
+    void verify_tree();
+    
+    int find_box(array_1d<double>&);
+    int find_box(array_1d<double>&,int*,int*);
+    
+    int add_pt(array_1d<double>&);
+    int add_pt(array_1d<double>&,array_1d<int>&);
+    
+    int get_nboxes();
+    int get_n_small_boxes();
+    int get_n_optimal_boxes();
+    int get_smallest_box();
+    int get_biggest_box();
+    double get_mean_box(double*);
+    int get_ntree();
+    int get_contents(int);
+    
+    int get_pts();
+    int get_dim();
+    
+    double get_box_max(int,int);
+    double get_box_min(int,int);
+    
+    double get_max(int) const;
+    double get_min(int) const;
+    
+    double get_time_add_srch();
+    double get_time_split();
+    
+    array_1d<double>* get_pt(int);
+    double get_pt(int,int) const;
+    void get_pt(int,array_1d<double>&);
+    
+    void nn_srch(array_1d<double>&,array_1d<int>&,array_1d<double>&);
+    void nn_srch(int,array_1d<int>&,array_1d<double>&);
+    
+    void true_nn_srch(int,int,array_1d<int>&,array_1d<double>&);
+    void true_nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&);
+    
+    void nn_srch(array_1d<double>&,array_1d<int>&,array_1d<double>&,array_1d<int>&);
+    void nn_srch(int,array_1d<int>&,array_1d<double>&,array_1d<int>&);
+    
+    int kernel_srch(array_1d<double>&,array_1d<double>&,array_1d<int>&);
+    
+    array_1d<int>* get_box(int);
+    void refactor();
+    
+    void get_tree_cts(array_1d<int>&);
+    void get_avg_box_bounds(array_1d<double>&,array_1d<double>&,
+        array_1d<double>&,array_1d<double>&);
+    
+    
+};
 
 #endif
