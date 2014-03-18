@@ -25,6 +25,13 @@ goto_tools.o: goto_tools.h goto_tools.cpp containers.o
 test_containers: containers.o test_containers.cpp goto_tools.o
 	$(gg) -o test_containers test_containers.cpp containers.o goto_tools.o
 
+hyper_cubes.o: hyper_cubes.h hyper_cubes.cpp goto_tools.o
+	$(gg) -c hyper_cubes.cpp goto_tools.o containers.o
+
+test_hyper_cubes: test_hyper_cubes.cpp hyper_cubes.o
+	$(gg) -o test_hyper_cubes test_hyper_cubes.cpp \
+	containers.o goto_tools.o hyper_cubes.o
+
 kd.o: kd.cpp kd.h goto_tools.o containers.o
 	$(gg) -c kd.cpp goto_tools.o containers.o $(LIBRARIES) $(INCLUDE) \
          -Wno-deprecated
