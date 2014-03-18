@@ -158,12 +158,17 @@ void box::build_tree(){
     
     organize(use,0,data.get_rows(),-1,-1,box_min_local,box_max_local);
     
+    //printf("before trying to split\n");
+    test_twins();
+    
+    int isplit;
+    for(isplit=0;isplit<2;isplit++){
     for(i=0;i<box_contents.get_rows();i++){
         if(box_contents.get_cols(i)>pts_per_box){
 	    split_box(i,-1,-1);
 	}
     }
-    
+    }
 
     
     /*int i_empty=0;
@@ -614,12 +619,30 @@ double box::get_time_split(){
 }
 
 double box::split_error(array_1d<int> &use,int idim, int *iup, int *idown){
-
+    
     double vmax,vmin,v1,v2,vtrial;
     int iup1,iup2,idown1,idown2;
     int iuptrial,idowntrial;
 
     int i,j,npts;
+    
+    if(use.get_dim()==2){
+       
+        v1=0.5*(data.get_data(use.get_data(0),idim)+data.get_data(use.get_data(1),idim));
+        
+        iup[0]=0;
+        idown[0]=0;
+        
+        for(i=0;i<2;i++){
+            if(data.get_data(use.get_data(i),idim)<v1)idown[0]++;
+            else iup[0]++;
+        }
+        
+        if(iup[0]!=idown[0])printf("split on 2 with %d %d\n",iup[0],idown[0]);
+        return v1;
+        
+    }
+    
     
     npts=use.get_dim();
     
@@ -790,8 +813,12 @@ int box::split_box(int i_box, int i_tree, int dir){
 	}
     }
     
+    
     if(best_min<min_pts_per_box){
         //printf("bestmin %d returning\n",best_min);
+        
+        //printf("split failed %d\n",best_min);
+        
         return 0;
     }
     
@@ -909,7 +936,6 @@ int box::split_box(int i_box, int i_tree, int dir){
         
         exit(1);
     }
-    
     
     return 1;
 }
@@ -1594,22 +1620,36 @@ void box::get_avg_box_bounds(array_1d<double> &minav,array_1d<double> &minvar,
 
 double box::test_twins(){
     double dd,ddmax;
-    int twin_ct=0;
+    int twin_ct=0,total_ct=0;
     
     ddmax=-1.0;
-    int i,j,k;
+    int i,j,k,l;
     for(i=0;i<box_contents.get_rows();i++){
         if(box_contents.get_cols(i)>1)twin_ct++;
+        total_ct+=box_contents.get_cols(i);
         for(j=0;j<box_contents.get_cols(i);j++){
             for(k=j+1;k<box_contents.get_cols(i);k++){
-                dd=distance(j,k);
+                dd=distance(box_contents.get_data(i,j),box_contents.get_data(i,k));
                 
-                if(dd>ddmax)ddmax=dd;
+                if(dd>ddmax){
+                    ddmax=dd;
+                    
+                    /*for(l=0;l<data.get_cols();l++){
+                        printf("%e %e -- %e\n",
+                        data.get_data(box_contents.get_data(i,j),l),
+                        data.get_data(box_contents.get_data(i,k),l),
+                        data.get_data(box_contents.get_data(i,j),l)
+                            -data.get_data(box_contents.get_data(i,k),l)
+                        );
+                    }
+                    printf("\n");*/
+                    
+                }
             }
         }
     }
     
-    printf("twins %d of %d\n",twin_ct,box_contents.get_rows());
+    printf("twins %d of %d -- total pts %d\n",twin_ct,box_contents.get_rows(),total_ct);
     return ddmax;
     
 }
