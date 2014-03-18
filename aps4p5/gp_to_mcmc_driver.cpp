@@ -60,7 +60,7 @@ array_1d<double> min,max,sig;
 for(i=0;i<dim;i++){
     min.set(i,-100.0);
     max.set(i,100.0);
-    sig.set(i,1.0);
+    sig.set(i,5.0);
 }
 
 double minval;
@@ -79,8 +79,8 @@ Ran chaos(seed);
 
 
 
-mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc_chains",min,max,sig,2.0,&chaos);
-mcmc_obj.set_statname("chains/gp_to_mcmc_status.sav");
+mcmc mcmc_obj(dim,8,"chains/gp_to_mcmc2_chains",min,max,sig,2.0,&chaos);
+mcmc_obj.set_statname("chains/gp_to_mcmc2_status.sav");
 mcmc_obj.set_chisq(&gp_operator,1);
 mcmc_obj.begin_update(10000);
 mcmc_obj.step_update(10000);
@@ -88,12 +88,12 @@ mcmc_obj.cutoff_update(20000);
 
 
 
-for(i=0;i<8;i++){
+/*for(i=0;i<8;i++){
     for(j=0;j<dim;j++){
         guess.set(j,data.get_data(mindex,j)+(chaos.doub()-0.5)*5.0);
     }
     mcmc_obj.guess(guess);   
-}
+}*/
 
 //mcmc_obj.disable_update();
 //mcmc_obj.resume();
@@ -102,11 +102,18 @@ ellipses actual_chisq(dim,2);
 
 gp_operator.set_true_chisq(&actual_chisq);
 
-gp_operator.set_supplement("chains/gp_to_mcmc_supplement.sav");
+gp_operator.set_supplement("chains/gp_to_mcmc2_supplement.sav");
 
-while(mcmc_obj.get_n_samples()==0 || 
-mcmc_obj.get_last_updated()*8>mcmc_obj.get_n_samples()/2){
-    mcmc_obj.sample(10000);
+gp_operator.read_supplement();
+//mcmc_obj.disable_update();
+//mcmc_obj.resume();
+
+
+while(mcmc_obj.get_n_samples()<20000*8 || 
+mcmc_obj.get_last_updated()*8>mcmc_obj.get_n_samples()/3){
+
+    mcmc_obj.sample(1000);
+
 }
 
 gp_operator.write_supplement();
