@@ -3,17 +3,14 @@
 
 #include "containers.h"
 #include "goto_tools.h"
-#include "kd.h"
 #include <time.h>
 
 #define box_exception -1
-#define min_pts_per_box 2
+#define min_pts_per_box 1
 
 class box{
 
 private:
-    
-    kd_tree *kptr;
     
     int diagnostic,pts_per_box;
     array_2d<int> tree;
@@ -87,13 +84,8 @@ public:
     void nn_srch(array_1d<double>&,array_1d<int>&,array_1d<double>&);
     void nn_srch(int,array_1d<int>&,array_1d<double>&);
     
-    void true_nn_srch(int,int,array_1d<int>&,array_1d<double>&);
-    void true_nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&);
-    
     void nn_srch(array_1d<double>&,array_1d<int>&,array_1d<double>&,array_1d<int>&);
     void nn_srch(int,array_1d<int>&,array_1d<double>&,array_1d<int>&);
-    
-    int kernel_srch(array_1d<double>&,array_1d<double>&,array_1d<int>&);
     
     array_1d<int>* get_box(int);
     void refactor();

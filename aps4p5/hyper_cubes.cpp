@@ -1,14 +1,11 @@
 #include "hyper_cubes.h"
 
 box::~box(){
-    if(kptr!=NULL) delete kptr;
 }
 
 box::box(array_2d<double> &data_in, int pp_per_box){
     array_1d<double> mx,mn;
-    
-    kptr=NULL;
-    
+
     int i;
     for(i=0;i<data_in.get_cols();i++){
         mx.set(i,1.0);
@@ -17,12 +14,10 @@ box::box(array_2d<double> &data_in, int pp_per_box){
     
     initialize(data_in,pp_per_box,mx,mn);
     
-    //printf("in outer constructor %p\n",kptr);
     
 }
 
 box::box(array_2d<double> &data_in, int pp_per_box, array_1d<double> &max_in, array_1d<double> &min_in){
-    kptr=NULL;
     initialize(data_in,pp_per_box,max_in,min_in);
 }
 
@@ -101,10 +96,7 @@ void box::initialize(array_2d<double> &data_in, int pp_per_box, array_1d<double>
     build_tree();
     
     //printf("built box tree\n");
-    
-    if(kptr!=NULL)delete kptr;
-    kptr=new kd_tree(&data,&norm_min,&norm_max);
-    //printf("just assigned new kptr %d %p\n",kptr->get_pts(),kptr);
+
     
     time_add_srch=0.0;
     time_split=0.0;
@@ -141,7 +133,6 @@ double box::distance(array_1d<double> &p1, array_1d<double> &p2){
     
     return sqrt(ans);
     
-    //return kptr->distance(p1,p2);
     
 }
 
@@ -601,7 +592,6 @@ int box::add_pt(array_1d<double> &pt, array_1d<int> &tree_stats){
 	
     }
 
-    kptr->add();
     
     time_split+=double(time(NULL))-before;
     
@@ -924,11 +914,7 @@ void box::verify_tree(){
     int i,j,k,l,occurrences;
     
     int i_fail;
-    
-    if(kptr==NULL){
-        printf("CANNOT verify box; kptr is null\n");
-	exit(1);
-    }
+
     
     if(box_min.get_rows() != box_contents.get_rows()){
         printf("WARNING box_min %d box_contents %d\n",
@@ -1098,16 +1084,6 @@ void box::verify_tree(){
     }
     
     
-    //printf("about to check kptr %p\n",kptr);
-
-    kptr->check_tree();
-    if(kptr->get_diagnostic()!=1){
-        printf("WARNING kd_tree poorly constructed\n");
-	i_fail=1;
-	throw i_fail;
-    }
-    
-    
     //printf("done verifyin\n");
 }
 
@@ -1251,21 +1227,6 @@ double box::get_min(int dex) const{
     }
     
     return mins.get_data(dex);
-}
-
-int box::kernel_srch(array_1d<double> &pt, array_1d<double> &kernel,
-     array_1d<int> &dexes){
-
-    return kptr->kernel_srch(pt,kernel,dexes);
-}
-
-void box::true_nn_srch(int dex, int kk, array_1d<int> &neigh, array_1d<double> &dd){
-
-    kptr->nn_srch(dex,kk,neigh,dd);
-}
-
-void box::true_nn_srch(array_1d<double> &pt, int kk, array_1d<int> &neigh, array_1d<double> &dd){
-    kptr->nn_srch(pt,kk,neigh,dd);
 }
 
 void box::nn_srch(int dex, array_1d<int> &neigh, array_1d<double> &dd){
@@ -1421,9 +1382,6 @@ void box::refactor(){
     box_max.reset();
     
         
-    if(kptr!=NULL)delete kptr;
-    kptr=new kd_tree(&data,&norm_min,&norm_max);
-    
     try{
         build_tree();
     }
