@@ -107,6 +107,10 @@ void box::initialize(array_2d<double> &data_in, int pp_per_box, array_1d<double>
     
 }
 
+double box::distance(int d1, int d2){
+    return distance(*data(d1),*data(d2));
+}
+
 double box::distance(int dex, array_1d<double> &p2){
     return distance(p2,dex);
 }
@@ -211,7 +215,8 @@ array_1d<double> &box_min_local,array_1d<double> &box_max_local)
         printf("WARNING passed organize 1pt to work with\n");
 	exit(1);
     }
- 
+    
+
     
     use.set_name("box_organize_use");
     use.set_dim(ct);
@@ -433,6 +438,7 @@ array_1d<double> &box_min_local,array_1d<double> &box_max_local)
         exit(1);
     }*/
     
+    //spock here
     if(i_med>ct-(pts_per_box+min_pts_per_box)){
         for(i=i_med;i<ct;i++){
 	    tree_in.add(use_in.get_data(use_start+i));
@@ -1584,4 +1590,26 @@ void box::get_avg_box_bounds(array_1d<double> &minav,array_1d<double> &minvar,
 	maxvar.divide_val(i,double(box_contents.get_rows()));
     }
 
+}
+
+double box::test_twins(){
+    double dd,ddmax;
+    int twin_ct=0;
+    
+    ddmax=-1.0;
+    int i,j,k;
+    for(i=0;i<box_contents.get_rows();i++){
+        if(box_contents.get_cols(i)>1)twin_ct++;
+        for(j=0;j<box_contents.get_cols(i);j++){
+            for(k=j+1;k<box_contents.get_cols(i);k++){
+                dd=distance(j,k);
+                
+                if(dd>ddmax)ddmax=dd;
+            }
+        }
+    }
+    
+    printf("twins %d of %d\n",twin_ct,box_contents.get_rows());
+    return ddmax;
+    
 }

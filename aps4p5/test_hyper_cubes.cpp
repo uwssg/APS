@@ -63,6 +63,7 @@ main(int iargc, char *argv[]){
     test_box.verify_tree();
     
     printf("verify took %e\n",double(time(NULL))-nn);
+    printf("twin distance %e\n",test_box.test_twins());
     
     printf("nboxes %d -- %d %d\n",
     test_box.get_nboxes(),test_box.get_smallest_box(),
@@ -91,6 +92,7 @@ main(int iargc, char *argv[]){
     nn=double(time(NULL));
     test_box.verify_tree();
     printf("verify took %e\n",double(time(NULL))-nn);
+    printf("twin distance %e\n",test_box.test_twins());
     
     printf("nboxes %d -- %d %d\n",
     test_box.get_nboxes(),test_box.get_smallest_box(),
@@ -130,6 +132,8 @@ main(int iargc, char *argv[]){
 	
     }
     test_box.verify_tree();
+    printf("through that loop of 40\n");
+    printf("twin distance %e\n",test_box.test_twins());
     
     array_1d<int> truth;
     int iitt,imax,imin,did_it_split;
@@ -198,10 +202,12 @@ main(int iargc, char *argv[]){
     
     }
     
+    printf("done with iitt -- twin %e\n",test_box.test_twins());
+    
     array_1d<double> multiple_row;
     array_2d<double> degenerate_data;
    
-    
+    printf("testing degeneracy\n");
     degenerate_data.set_cols(dim);
     for(i=0;i<dim;i++)multiple_row.add(chaos.doub());
     
@@ -219,6 +225,8 @@ main(int iargc, char *argv[]){
     
     box degenerate_box(degenerate_data,10,max,min);
     degenerate_box.verify_tree();
+    
+    printf("twin distance %e\n",degenerate_box.test_twins());
     
     ///// now let's see what happens when I add points that are outside of the
     //// max/min limits of the box
