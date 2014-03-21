@@ -53,21 +53,44 @@ for(i=0;i<data.get_rows();i++){
 
 sort_and_check(chisq,sorted_chi,dexes);
 
+double delta_chisq=15.5;
+
+int j;
+int n_neigh,found_it;
 for(i=0;i<data.get_rows();i++){
-    kd.nn_srch(*data(dexes.get_data(i)),2,neigh,dd);
-    radii.set(dexes.get_data(i),dd.get_data(1));
+    n_neigh=20;
+    found_it=0;
+    while(found_it==0){
+       kd.nn_srch(*data(dexes.get_data(i)),n_neigh,neigh,dd);
+       
+       if(chisq.get_data(dexes.get_data(i))>chimin+2.0*delta_chisq){
+           radii.set(dexes.get_data(i),dd.get_data(0));
+           found_it=1;
+       }
+       else{
+           for(j=0;j<n_neigh-1 && 
+               chisq.get_data(neigh.get_data(j))<=chisq.get_data(dexes.get_data(i));j++);
+           
+           if(j<n_neigh && 
+              chisq.get_data(neigh.get_data(j))>chisq.get_data(dexes.get_data(i))){    
+               radii.set(dexes.get_data(i),dd.get_data(j));
+               found_it=1;
+           }
+       }
+       
+       if(found_it==0)n_neigh+=10;
+    }
 }
 
 
 array_1d<double> l_probability;
 
-int j;
 double lv,lp,total_p=0.0;;
 
 
 for(i=0;i<data.get_rows();i++){
 
-    lv=3.0*log(radii.get_data(i));
+    lv=double(dim)*log(radii.get_data(i));
     nn=chisq.get_data(i)-chimin;
     l_probability.set(i,lv-0.5*nn);
     total_p+=exp(l_probability.get_data(i));
@@ -91,7 +114,7 @@ for(cc=0;cc<nchains;cc++){
     sprintf(outname,"chains/hyper_sphere_chains_%d.txt",cc+1);
     output=fopen(outname,"w");
     
-    for(ii=0;ii<10000;ii++){
+    for(ii=0;ii<40000;ii++){
         roll=chaos.doub();
         sum=0.0;
         for(i=0;i<l_probability.get_dim()-1 && sum<roll; i++){
