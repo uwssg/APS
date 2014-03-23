@@ -90,6 +90,17 @@ public:
 
 };
 
+class ellipses_integrable : public ellipses {
+
+public:
+    ~ellipses_integrable();
+    ellipses_integrable();
+    ellipses_integrable(int);
+    ellipses_integrable(int,int);
+    void integrate_boundary(int,int,double,char*);
+
+};
+
 class linear_ellipses : public chisquared{
 
 public:

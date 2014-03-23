@@ -526,6 +526,14 @@ ellipses::ellipses(int id, int ic) : chisquared(id,ic){
     make_bases(13);
 }
 
+ellipses_integrable::~ellipses_integrable(){}
+
+ellipses_integrable::ellipses_integrable() : ellipses(){make_bases(-13);}
+
+ellipses_integrable::ellipses_integrable(int id) : ellipses(id){make_bases(-13);}
+
+ellipses_integrable::ellipses_integrable(int id, int ic) : ellipses(id,ic){make_bases(-13);}
+
 linear_ellipses::~linear_ellipses(){}
 
 linear_ellipses::linear_ellipses() : chisquared(22){make_bases(17);}
@@ -1118,4 +1126,84 @@ void linear_ellipses::build_boundary(double br){
     bases.set_where("nowhere");
     widths.set_where("nowhere");
     
+}
+
+void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char *filename){
+    
+    int i,j;
+    for(i=0;i<dim;i++){
+        for(j=0;j<dim;j++){
+            if(i==j){
+                if(fabs(bases.get_data(i,j)-1.0)>1.0e-6){
+                    printf("WARNING bases %d %d %e\n",i,j,bases.get_data(i,j));
+                    exit(1);
+                }
+            }
+            else{
+                if(fabs(bases.get_data(i,j))>1.0e-6){
+                    printf("WARNING bases %d %d %e\n",i,j,bases.get_data(i,j));
+                    exit(1);
+                }
+            }
+        }
+    }
+    
+    int icenter,k,imin;
+    array_1d<double> chiarr,xarr,yarr,trial;
+    array_1d<int> dexes;
+    double xx,yy,maxwidth,nn,ddmin,total=0.0;;
+    
+    maxwidth=-1.0;
+    for(icenter=0;icenter<ncenters;icenter++){
+        if(widths.get_data(icenter,ix1)>maxwidth)maxwidth=widths.get_data(icenter,ix1);
+        if(widths.get_data(icenter,ix2)>maxwidth)maxwidth=widths.get_data(icenter,ix2);
+    }
+    
+    for(icenter=0;icenter<ncenters;icenter++){
+        for(xx=centers.get_data(icenter,ix1)-5.0*maxwidth;xx<centers.get_data(icenter,ix1)+5.1*maxwidth;xx+=0.1*maxwidth){
+            for(yy=centers.get_data(icenter,ix2)-5.0*maxwidth;yy<centers.get_data(icenter,ix2)+5.1*maxwidth;yy+=0.1*maxwidth){
+                
+                for(k=0;k<ncenters;k++){
+                    for(i=0;i<dim;i++)trial.set(i,centers.get_data(k,i));
+                    trial.set(ix1,xx);
+                    trial.set(ix2,yy);
+                    nn=0.0;
+                    for(i=0;i<dim;i++){
+                        nn+=power((trial.get_data(i)-centers.get_data(k,i))/widths.get_data(k,i),2);
+                    }
+                    
+                    if(k==0 || nn<ddmin){
+                        ddmin=nn;
+                        imin=k;
+                    }
+                }
+                
+                for(i=0;i<dim;i++)trial.set(i,centers.get_data(imin,i));
+                trial.set(ix1,xx);
+                trial.set(ix2,yy);
+                
+                nn=(*this)(trial);
+                xarr.add(xx);
+                yarr.add(yy);
+                chiarr.add(nn);
+                dexes.add(chiarr.get_dim()-1);
+                total+=exp(-0.5*nn);
+                
+            }//loop over yy
+        }//loop overxx
+    }
+    
+    array_1d<double> chisorted;
+    sort_and_check(chiarr,chisorted,dexes);
+    
+    double sum=0.0;
+    FILE *output=fopen(filename,"w");
+    for(i=0;i<dexes.get_dim() && sum<lim*total;i++){
+        j=dexes.get_data(i);
+        fprintf(output,"%e %e\n",xarr.get_data(j),yarr.get_data(j));
+        sum+=exp(-0.5*chiarr.get_data(j));
+    }
+    
+    
+
 }
