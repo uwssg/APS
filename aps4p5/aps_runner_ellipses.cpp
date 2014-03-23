@@ -26,7 +26,7 @@ matern_covariance cv;
 dim=8;
 ellipses_integrable chisq(dim,2);
 
-chisq.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth.sav");
+chisq.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_chk.sav");
 
 printf("done integrating\n");
 
@@ -45,8 +45,8 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-aps_test.set_timingname("aps_output/timing_file_ellipses_integrable.sav");
-aps_test.set_outname("aps_output/master_output_ellipses_integrable.sav");
+aps_test.set_timingname("aps_output/timing_file_ellipses_onion.sav");
+aps_test.set_outname("aps_output/master_output_ellipses_onion.sav");
 
 
 int i,j;

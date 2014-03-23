@@ -1151,17 +1151,18 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
     int icenter,k,imin;
     array_1d<double> chiarr,xarr,yarr,trial;
     array_1d<int> dexes;
-    double xx,yy,maxwidth,nn,ddmin,total=0.0;;
+    double xx,yy,xwidth,ywidth,nn,ddmin,total=0.0;;
     
-    maxwidth=-1.0;
+    xwidth=-1.0;
+    ywidth=-1.0;
     for(icenter=0;icenter<ncenters;icenter++){
-        if(widths.get_data(icenter,ix1)>maxwidth)maxwidth=widths.get_data(icenter,ix1);
-        if(widths.get_data(icenter,ix2)>maxwidth)maxwidth=widths.get_data(icenter,ix2);
+        if(widths.get_data(icenter,ix1)>xwidth)xwidth=widths.get_data(icenter,ix1);
+        if(widths.get_data(icenter,ix2)>ywidth)ywidth=widths.get_data(icenter,ix2);
     }
     
     for(icenter=0;icenter<ncenters;icenter++){
-        for(xx=centers.get_data(icenter,ix1)-5.0*maxwidth;xx<centers.get_data(icenter,ix1)+5.1*maxwidth;xx+=0.1*maxwidth){
-            for(yy=centers.get_data(icenter,ix2)-5.0*maxwidth;yy<centers.get_data(icenter,ix2)+5.1*maxwidth;yy+=0.1*maxwidth){
+        for(xx=centers.get_data(icenter,ix1)-7.0*xwidth;xx<centers.get_data(icenter,ix1)+7.1*xwidth;xx+=0.05*xwidth){
+            for(yy=centers.get_data(icenter,ix2)-7.0*ywidth;yy<centers.get_data(icenter,ix2)+7.1*ywidth;yy+=0.05*ywidth){
                 
                 for(k=0;k<ncenters;k++){
                     for(i=0;i<dim;i++)trial.set(i,centers.get_data(k,i));

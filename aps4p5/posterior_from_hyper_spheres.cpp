@@ -7,7 +7,7 @@ char inname[letters],outname[letters];
 array_2d<double> data;
 array_1d<double> min,max;
 
-sprintf(inname,"aps_output/master_output_ellipses_integrable.sav");
+sprintf(inname,"aps_output/master_output_ellipses_onion.sav");
 
 FILE *input;
 array_1d<double> vv,chisq;
@@ -112,7 +112,7 @@ double roll,sum,rr;
 array_1d<double> pt;
 
 for(cc=0;cc<nchains;cc++){
-    sprintf(outname,"chains/integrable_hyper_sphere_chains_%d.txt",cc+1);
+    sprintf(outname,"chains/onion_hyper_sphere_chains_%d.txt",cc+1);
     output=fopen(outname,"w");
     
     for(ii=0;ii<40000;ii++){
