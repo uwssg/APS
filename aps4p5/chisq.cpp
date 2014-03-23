@@ -71,8 +71,15 @@ void chisquared::reset_boundary(){
 
 void chisquared::make_bases(int seed){
 
+    int do_random_bases=1;
     
-    if(seed<0)seed=int(time(NULL));
+    if(seed==0){
+        seed=int(time(NULL));
+    }
+    else if(seed<0){
+        seed*=-1;
+        do_random_bases=0;
+    }
     
     dice=new Ran(seed);
     
@@ -83,27 +90,37 @@ void chisquared::make_bases(int seed){
     bases.set_where("chisq_make_bases");
     widths.set_where("chisq_make_bases");
     
-    for(ii=0;ii<dim;ii++){
-        goon=1;
-	while(goon==1){
-            goon=0;
-	    for(i=0;i<dim;i++)bases.set(ii,i,dice->doub()-0.5);
-	    for(jj=0;jj<ii;jj++){
-	        nn=0.0;
-		for(i=0;i<dim;i++)nn+=bases.get_data(ii,i)*bases.get_data(jj,i);
-		for(i=0;i<dim;i++)bases.subtract_val(ii,i,nn*bases.get_data(jj,i));
-	    }
+    if(do_random_bases==1){
+        for(ii=0;ii<dim;ii++){
+            goon=1;
+	    while(goon==1){
+                goon=0;
+	        for(i=0;i<dim;i++)bases.set(ii,i,dice->doub()-0.5);
+	        for(jj=0;jj<ii;jj++){
+	            nn=0.0;
+		    for(i=0;i<dim;i++)nn+=bases.get_data(ii,i)*bases.get_data(jj,i);
+		    for(i=0;i<dim;i++)bases.subtract_val(ii,i,nn*bases.get_data(jj,i));
+	        }
 	    
-	    nn=0.0;
-	    for(i=0;i<dim;i++){
-		nn+=power(bases.get_data(ii,i),2);
+	        nn=0.0;
+	        for(i=0;i<dim;i++){
+		    nn+=power(bases.get_data(ii,i),2);
+	        }
+	        if(nn<1.0e-20)goon=1;
+	        nn=sqrt(nn);
+	        for(i=0;i<dim;i++){
+	            bases.divide_val(ii,i,nn);
+	        }
 	    }
-	    if(nn<1.0e-20)goon=1;
-	    nn=sqrt(nn);
-	    for(i=0;i<dim;i++){
-	        bases.divide_val(ii,i,nn);
-	    }
-	}
+        }
+    }//if do_random_bases==1
+    else{
+        for(i=0;i<dim;i++){
+            for(jj=0;jj<dim;jj++){
+                if(i==jj)bases.set(i,jj,1.0);
+                else bases.set(i,jj,0.0);
+            }
+        }
     }
     
     double normerr,ortherr;
