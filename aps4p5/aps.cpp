@@ -1409,8 +1409,8 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
 
 void aps::bisection(array_1d<double> &inpt, double chi_in){
     
-    array_1d<double> lowball,highball;
-    double flow,fhigh;
+    array_1d<double> lowball,highball,original_lowball;
+    double flow,fhigh,original_flow;
     
     double dd,ddmin;
     int i,j,k;
@@ -1444,35 +1444,80 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         }
     }
     
-    for(i=0;i<gg.get_dim();i++)highball.set(i,inpt.get_data(i));
-    fhigh=chi_in;
+    for(i=0;i<gg.get_dim();i++)original_lowball.set(i,lowball.get_data(i));
+    original_flow=flow;
     
-    dd=gg.distance(lowball,highball);
+    array_1d<double> dir;
+    double rr,new_rr;
     
-    double mu;
-    array_1d<double> trial;
-    
-    while(dd>1.0e-10){
-        for(i=0;i<gg.get_dim();i++){
-            trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
-        }
-        mu=(*chisq)(trial);
+    if(chi_in>strad.get_target()+delta_chisquared){
+        for(i=0;i<gg.get_dim();i++)highball.set(i,inpt.get_data(i));
+        fhigh=chi_in;
+    }
+    else{
         
-        if(mu<exception){
-            add_pt(trial,mu);
+        for(i=0;i<gg.get_dim();i++)dir.set(i,inpt.get_data(i)-lowball.get_data(i));
+        rr=dir.normalize();
+        new_rr=2.0*rr;
+        fhigh=chimin-delta_chisquared;
+        while(fhigh<strad.get_target()+delta_chisquared){
+            
+            for(i=0;i<gg.get_dim();i++){
+                highball.set(i,lowball.get_data(i)+new_rr*dir.get_data(i));
+            }
+            fhigh=(*chisq)(highball);
+            if(fhigh<exception){
+                add_pt(highball,fhigh);
+            }
+            
         }
-        
-        if(mu>strad.get_target()){
-            for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
-        }
-        else{
-            for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
-        }
-        
-        dd*=0.5;
-        
     }
     
+    
+    int ii;
+    double mu,bisection_target;
+    array_1d<double> trial;
+    
+    for(ii=0;ii<2;ii++){
+        if(ii==0)bisection_target=strad.get_target()+delta_chisquared;
+        else bisection_target=strad.get_target();
+        
+        dd=gg.distance(lowball,highball);
+        while(dd>1.0e-10){
+            for(i=0;i<gg.get_dim();i++){
+                trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
+            }
+            mu=(*chisq)(trial);
+        
+            if(mu<exception){
+                add_pt(trial,mu);
+            }
+        
+            if(mu>bisection_target){
+                for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
+                fhigh=mu;
+                
+            }
+            else{
+                for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
+                flow=mu;
+                
+                if(mu<strad.get_target()){
+                    original_flow=mu;
+                    for(i=0;i<gg.get_dim();i++)original_lowball.set(i,trial.get_data(i));
+                }
+                
+            }
+        
+            dd*=0.5;
+        
+        }
+        
+        flow=original_flow;
+        for(i=0;i<gg.get_dim();i++)lowball.set(i,original_lowball.get_data(i));
+        
+        
+    }
    // printf("done bisecting\n");
 }
 
