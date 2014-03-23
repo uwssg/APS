@@ -1203,7 +1203,8 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
         fprintf(output,"%e %e\n",xarr.get_data(j),yarr.get_data(j));
         sum+=exp(-0.5*chiarr.get_data(j));
     }
+    fclose(output);
     
-    
+    called=0;
 
 }
