@@ -1,7 +1,7 @@
 #ifndef MCMC_H
 #define MCMC_H
 
-#include "chisq_1311.h"
+#include "chisq.h"
 #include "eigen_wrapper.h"
 
 class mcmc{

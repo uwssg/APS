@@ -1,7 +1,7 @@
 #ifndef CHISQ_APS4p5_H
 #define CHISQ_APS4p5_H
 
-#include "chisq_1311.h"
+#include "chisq.h"
 #include <math.h>
 #include <stdio.h>
 

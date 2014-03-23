@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include "chisq_1311.h"
+#include "chisq.h"
 
 void chisquared::set_characteristic_error(double nn){
     death_knell("used meaningless set characteristic error");

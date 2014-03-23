@@ -39,29 +39,29 @@ kd.o: kd.cpp kd.h goto_tools.o containers.o
 test_kd: test_kd.cpp kd.o
 	$(gg) -o test_kd test_kd.cpp containers.o goto_tools.o kd.o
 
-chisq_1311.o: goto_tools.o chisq_1311.h chisq_1311.cpp containers.o
-	$(gg) -c chisq_1311.cpp goto_tools.o containers.o $(LIBRARIES) $(INCLUDE)
+chisq.o: goto_tools.o chisq.h chisq.cpp containers.o
+	$(gg) -c chisq.cpp goto_tools.o containers.o $(LIBRARIES) $(INCLUDE)
 
-chisq_aps4p5.o: chisq_1311.o
-	$(gg) -c chisq_aps4p5.cpp goto_tools.o containers.o chisq_1311.o \
+chisq_aps4p5.o: chisq.o
+	$(gg) -c chisq_aps4p5.cpp goto_tools.o containers.o chisq.o \
 	$(LIBRARIES) $(INCLUDE)
 
-#sne.o: chisq_1311.o sne.h sne.cpp
-#	$(gg) -c sne.cpp goto_tools.o chisq_1311.o $(LIBRARIES) $(INCLUDE)
+#sne.o: chisq.o sne.h sne.cpp
+#	$(gg) -c sne.cpp goto_tools.o chisq.o $(LIBRARIES) $(INCLUDE)
 
 eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h containers.o
 	$(gg) -c eigen_wrapper.cpp goto_tools.o $(LIBRARIES) \
 	$(INCLUDE) -Wno-deprecated
 
-mcmc.o: chisq_1311.o mcmc.h mcmc.cpp eigen_wrapper.o
+mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o
 	$(gg) -c mcmc.cpp \
-	goto_tools.o containers.o chisq_1311.o eigen_wrapper.o \
+	goto_tools.o containers.o chisq.o eigen_wrapper.o \
 	$(LIBRARIES) $(INCLUDE)
 
-gp_to_mcmc.o: gp_to_mcmc.cpp gp_to_mcmc.h chisq_1311.o gaussian_process.o
+gp_to_mcmc.o: gp_to_mcmc.cpp gp_to_mcmc.h chisq.o gaussian_process.o
 	$(gg) -c gp_to_mcmc.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq_1311.o $(LIBRARIES) $(INCLUDE)
+	chisq.o $(LIBRARIES) $(INCLUDE)
 
 test_eigen: test_eigen.cpp eigen_wrapper.o
 	$(gg) -o test_eigen test_eigen.cpp goto_tools.o containers.o \
@@ -73,58 +73,58 @@ eigen_wrapper.o containers.o
 	containers.o \
 	$(LIBRARIES) $(INCLUDE)
 
-exoplanet.o: exoplanet.h exoplanet.cpp chisq_1311.o
-	$(gg) -c exoplanet.cpp goto_tools.o containers.o chisq_1311.o \
+exoplanet.o: exoplanet.h exoplanet.cpp chisq.o
+	$(gg) -c exoplanet.cpp goto_tools.o containers.o chisq.o \
 	$(LIBRARIES) $(INCLUDE)
 
-dummy_planet.o: dummy_planet.h dummy_planet.cpp chisq_1311.o
-	$(gg) -c dummy_planet.cpp goto_tools.o containers.o chisq_1311.o \
+dummy_planet.o: dummy_planet.h dummy_planet.cpp chisq.o
+	$(gg) -c dummy_planet.cpp goto_tools.o containers.o chisq.o \
 	$(LIBRARIES) $(INCLUDE)
 
 test_exoplanet: test_exoplanet.cpp exoplanet.o
 	$(gg) -o test_exoplanet test_exoplanet.cpp \
-	goto_tools.o containers.o chisq_1311.o exoplanet.o \
+	goto_tools.o containers.o chisq.o exoplanet.o \
 	$(LIBRARIES) $(INCLUDE)
 
 test_1_exoplanet: test_1_exoplanet.cpp exoplanet.o
 	$(gg) -o test_1_exoplanet test_1_exoplanet.cpp \
-	goto_tools.o containers.o chisq_1311.o exoplanet.o \
+	goto_tools.o containers.o chisq.o exoplanet.o \
 	$(LIBRARIES) $(INCLUDE)
 
 aps.o: aps.h aps.cpp kd.o goto_tools.o eigen_wrapper.o gaussian_process.o \
-chisq_1311.o containers.o
+chisq.o containers.o
 	$(gg) -c aps.cpp goto_tools.o \
 	eigen_wrapper.o kd.o gaussian_process.o \
-	chisq_1311.o containers.o $(LIBRARIES) \
+	chisq.o containers.o $(LIBRARIES) \
 	$(INCLUDE) -Wno-deprecated
 
 planet: aps_runner_planets.cpp aps.o exoplanet.o
 	$(gg) -o planet aps_runner_planets.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq_1311.o exoplanet.o aps.o \
+	chisq.o exoplanet.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
-ellipse: aps_runner_ellipses.cpp aps.o chisq_1311.o
+ellipse: aps_runner_ellipses.cpp aps.o chisq.o
 	$(gg) -o ellipse aps_runner_ellipses.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq_1311.o aps.o $(LIBRARIES) $(INCLUDE)
+	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
 
 dummy: aps_runner_dummy_planets.cpp aps.o dummy_planet.o
 	$(gg) -o dummy aps_runner_dummy_planets.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq_1311.o dummy_planet.o aps.o \
+	chisq.o dummy_planet.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
 planet2: aps_runner_2_planets.cpp aps.o exoplanet.o
 	$(gg) -o planet2 aps_runner_2_planets.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq_1311.o exoplanet.o aps.o \
+	chisq.o exoplanet.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
 planet5: aps_runner_all_planets.cpp aps.o exoplanet.o
 	$(gg) -o planet5 aps_runner_all_planets.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq_1311.o exoplanet.o aps.o \
+	chisq.o exoplanet.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
 analyze_planets: goto_tools.o containers.o analyze_planets.cpp
@@ -133,21 +133,21 @@ analyze_planets: goto_tools.o containers.o analyze_planets.cpp
 
 aps_test: aps_tester.cpp aps.o
 	$(gg) -o aps_test aps_tester.cpp goto_tools.o kd.o \
-	eigen_wrapper.o gaussian_process.o chisq_1311.o aps.o \
+	eigen_wrapper.o gaussian_process.o chisq.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
 aps_run: aps_runner.cpp aps.o
 	$(gg) -o aps_run aps_runner.cpp goto_tools.o kd.o \
-	eigen_wrapper.o gaussian_process.o chisq_1311.o aps.o \
+	eigen_wrapper.o gaussian_process.o chisq.o aps.o \
 	containers.o \
 	$(LIBRARIES) $(INCLUDE)
 
 apsForceGibbs: aps_interface.cpp goto_tools.o eigen_wrapper.o \
 likelihoodinterface.o kd.o gaussian_process.o \
-chisq_1311.o 
+chisq.o 
 	$(gg) -o apsForceGibbs aps_interface.cpp goto_tools.o eigen_wrapper.o kd.o \
 	 likelihoodinterface.o gaussian_process.o \
-	 chisq_1311.o  $(LIBRARIES) \
+	 chisq.o  $(LIBRARIES) \
 	 $(INCLUDE) -Wno-deprecated
 
 
@@ -173,18 +173,18 @@ likelihoodinterface.o kd.o camb_wrapper_wmap.o wmap_wrapper.o gaussian_process.o
 gp2mcmc: gp_to_mcmc_driver.cpp gp_to_mcmc.o mcmc.o
 	$(gg) -o gp2mcmc gp_to_mcmc_driver.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq_1311.o gp_to_mcmc.o mcmc.o \
+	chisq.o gp_to_mcmc.o mcmc.o \
 	$(LIBRARIES) $(INCLUDE)
 
 mcmc_test: mcmc.o mcmc_test.cpp
 	$(gg) -o mcmc_test mcmc_test.cpp \
-	goto_tools.o containers.o eigen_wrapper.o chisq_1311.o mcmc.o \
+	goto_tools.o containers.o eigen_wrapper.o chisq.o mcmc.o \
 	$(LIBRARIES) $(INCLUDE)
 
 validate: validate_gp2mcmc.cpp gp2mcmc
 	$(gg) -o validate validate_gp2mcmc.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq_1311.o gp_to_mcmc.o mcmc.o \
+	chisq.o gp_to_mcmc.o mcmc.o \
 	$(LIBRARIES) $(INCLUDE)
 
 posterior_cubes: posterior_from_hyper_cubes.cpp hyper_cubes.o

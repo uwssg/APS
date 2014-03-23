@@ -1,6 +1,6 @@
 #ifndef DUMMY_H
 #define DUMMY_H
-#include "chisq_1311.h"
+#include "chisq.h"
 
 class dummy_planet : public chisquared{
 

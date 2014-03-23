@@ -1,4 +1,4 @@
-#include "chisq_1311.h"
+#include "chisq.h"
 #include "kd.h"
 #include "gaussian_process.h"
 

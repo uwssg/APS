@@ -4,7 +4,7 @@
 #include <time.h>
 
 #include "gaussian_process.h"
-#include "chisq_1311.h"
+#include "chisq.h"
 
 
 class gp_to_mcmc : public chisquared{
