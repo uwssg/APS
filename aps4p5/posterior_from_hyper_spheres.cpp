@@ -53,7 +53,7 @@ for(i=0;i<dim;i++){
 
 kd_tree kd(data);
 
-array_1d<double> dd,radii;
+array_1d<double> dd;
 array_1d<int> neigh;
 
 FILE *output;
@@ -67,32 +67,25 @@ for(i=0;i<data.get_rows();i++){
 
 sort_and_check(chisq,sorted_chi,dexes);
 
+array_2d<double> radii;
 
+radii.set_cols(dim);
 
-int n_neigh,found_it;
+int k;
+int n_neigh=50+dim,found_it;
 for(i=0;i<data.get_rows();i++){
-    n_neigh=20;
-    found_it=0;
-    while(found_it==0){
-       kd.nn_srch(*data(dexes.get_data(i)),n_neigh,neigh,dd);
-       
-        //if(1==1){
-       if(chisq.get_data(dexes.get_data(i))>chimin+2.0*delta_chisq){
-           radii.set(dexes.get_data(i),dd.get_data(1));
-           found_it=1;
-       }
-       else{
-           for(j=0;j<n_neigh-1 && 
-               chisq.get_data(neigh.get_data(j))<=chisq.get_data(dexes.get_data(i));j++);
-           
-           if(j<n_neigh && 
-              chisq.get_data(neigh.get_data(j))>chisq.get_data(dexes.get_data(i))){    
-               radii.set(dexes.get_data(i),dd.get_data(j));
-               found_it=1;
-           }
-       }
-       
-       if(found_it==0)n_neigh+=10;
+    kd.nn_srch(*data(i),n_neigh,neigh,dd);
+    
+    for(j=1;j<n_neigh;j++){
+        for(k=0;k<dim;k++){
+            if(j==1 || fabs(data.get_data(neigh.get_data(j),k)-data.get_data(i,k))<radii.get_data(i,k)){
+                radii.set(i,k,fabs(data.get_data(neigh.get_data(j),k)-data.get_data(i,k)));
+            }
+        }
+    }
+    
+    for(k=0;k<dim;k++){
+        radii.multiply_val(i,k,0.5);
     }
 }
 
@@ -103,8 +96,10 @@ double lv,lp,total_p=0.0;;
 
 
 for(i=0;i<data.get_rows();i++){
-
-    lv=double(dim)*log(radii.get_data(i));
+    
+    lv=0.0;
+    for(j=0;j<dim;j++)lv+=log(radii.get_data(i,j));
+    
     nn=chisq.get_data(i)-chimin;
     l_probability.set(i,lv-0.5*nn);
     total_p+=exp(l_probability.get_data(i));
@@ -145,9 +140,9 @@ for(cc=0;cc<nchains;cc++){
         }
         
         pt.normalize();
-        rr=chaos.doub()*radii.get_data(dexes.get_data(i));
+        rr=chaos.doub();
         for(j=0;j<dim;j++){
-           fprintf(output,"%e ",data.get_data(dexes.get_data(i),j)+rr*pt.get_data(j));
+           fprintf(output,"%e ",data.get_data(dexes.get_data(i),j)+rr*pt.get_data(j)*radii.get_data(i,j));
         }
         
         
