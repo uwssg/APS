@@ -82,6 +82,7 @@ for(i=0;i<dim;i++)smallest_radius.set(i,1.0e30);
 
 
 for(i=0;i<data.get_rows();i++){
+    printf("\n");
     kd.nn_srch(*data(i),n_neigh,neigh,dd);
     
     for(j=0;j<dim;j++)radii.set(i,j,-1.0);
@@ -95,11 +96,18 @@ for(i=0;i<data.get_rows();i++){
         sort_and_check(r_dim,r_dim_sorted,r_dex);
         
         found_it=0;
-        for(k=dim-1;k>1 && found_it==0;k--){
-            if(radii.get_data(i,r_dex.get_data(k))<0.0)found_it=1;
+        for(k=dim-1;k>0 && found_it==0;){
+            if(radii.get_data(i,r_dex.get_data(k))<0.0){
+                //printf("     %d %d %e\n",r_dex.get_data(k),k,radii.get_data(i,r_dex.get_data(k)));
+                found_it=1;
+              
+            }
+            else k--;
         }
         
+        
         radii.set(i,r_dex.get_data(k),r_dim_sorted.get_data(k));
+        //printf("set %d %d %e\n",r_dex.get_data(k),k,radii.get_data(i,r_dex.get_data(k)));
         
     }
     
