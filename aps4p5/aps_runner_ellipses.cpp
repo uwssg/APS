@@ -64,7 +64,7 @@ aps_test.set_n_samples(1000);
 double chival,chivaltest,err,maxerr;
 
 i=-1;
-while(aps_test.get_called()<20000){
+while(aps_test.get_called()<40000){
     aps_test.search();    
 }
 

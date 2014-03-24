@@ -76,11 +76,11 @@ for(i=0;i<dim;i++){
 
 exit(1);*/
 
-mcmc mcmc_test(dim,16,"chains/integrable_test_chains",min,max,sig,2.0,&chaos);
+mcmc mcmc_test(dim,8,"chains/integrable_test_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
 mcmc_test.set_statname("chains/integrable_test_mcmc_status.sav");
-mcmc_test.begin_update(10000);
-mcmc_test.step_update(10000);
+mcmc_test.begin_update(300);
+mcmc_test.step_update(300);
 //mcmc_test.cutoff_update(30000);
 mcmc_test.sample(80000);
 
