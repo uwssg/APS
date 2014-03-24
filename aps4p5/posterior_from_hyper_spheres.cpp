@@ -72,23 +72,59 @@ array_2d<double> radii;
 radii.set_cols(dim);
 
 int k;
-int n_neigh=50+dim,found_it;
+int n_neigh=dim+1,found_it;
+array_1d<double> smallest_radius;
+array_1d<double> r_dim,r_dim_sorted;
+array_1d<int> r_dex;
+
+
+for(i=0;i<dim;i++)smallest_radius.set(i,1.0e30);
+
+
 for(i=0;i<data.get_rows();i++){
     kd.nn_srch(*data(i),n_neigh,neigh,dd);
     
+    for(j=0;j<dim;j++)radii.set(i,j,-1.0);
+    
     for(j=1;j<n_neigh;j++){
         for(k=0;k<dim;k++){
-            if(j==1 || fabs(data.get_data(neigh.get_data(j),k)-data.get_data(i,k))<radii.get_data(i,k)){
-                radii.set(i,k,fabs(data.get_data(neigh.get_data(j),k)-data.get_data(i,k)));
-            }
+            r_dim.set(k,fabs(data.get_data(i,k)-data.get_data(neigh.get_data(j),k)));
+            r_dex.set(k,k);
         }
+        
+        sort_and_check(r_dim,r_dim_sorted,r_dex);
+        
+        found_it=0;
+        for(k=dim-1;k>1 && found_it==0;k--){
+            if(radii.get_data(i,r_dex.get_data(k))<0.0)found_it=1;
+        }
+        
+        radii.set(i,r_dex.get_data(k),r_dim_sorted.get_data(k));
+        
     }
     
     for(k=0;k<dim;k++){
+        if(radii.get_data(i,k)<0.0){
+             printf("WARNING negative radius\n");
+             exit(1);
+        }
+    
         radii.multiply_val(i,k,0.5);
+        
+        if(fabs(radii.get_data(i,k))<1.0e-10){
+            printf("WARNING %d %d %e\n",i,k,radii.get_data(i,k));
+        }
+        
+        if(radii.get_data(i,k)<smallest_radius.get_data(k)){
+            smallest_radius.set(k,radii.get_data(i,k));
+        }
+        
     }
 }
 
+for(i=0;i<dim;i++){
+    printf("smallest radius %e\n",smallest_radius.get_data(i));
+}
 
 array_1d<double> l_probability;
 
@@ -120,7 +156,7 @@ double roll,sum,rr;
 array_1d<double> pt;
 
 for(cc=0;cc<nchains;cc++){
-    sprintf(outname,"chains/onion_hyper_sphere_chains_%d.txt",cc+1);
+    sprintf(outname,"chains/onion_hyper_ellipsoid_chains_%d.txt",cc+1);
     output=fopen(outname,"w");
     
     for(ii=0;ii<40000;ii++){
