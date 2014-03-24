@@ -1415,6 +1415,12 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     double dd,ddmin;
     int i,j,k;
     
+    array_1d<double> bisection_targets;
+    
+    bisection_targets.set(0,strad.get_target()+0.5*delta_chisquared);
+    bisection_targets.set(1,strad.get_target());
+    bisection_targets.set(2,strad.get_target()-0.5*delta_chisquared);
+    
     //printf("bisecting\n");
     
     if(good_pts.get_dim()==0){
@@ -1426,7 +1432,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         j=-1;
         for(i=0;i<good_pts.get_dim();i++){
             dd=gg.distance(good_pts.get_data(i),inpt);
-            if(gg.get_fn(good_pts.get_data(i))<chimin+0.75*delta_chisquared && (j==-1 || dd<ddmin)){
+            if(gg.get_fn(good_pts.get_data(i))<chimin+0.25*delta_chisquared && (j==-1 || dd<ddmin)){
                 ddmin=dd;
                 j=good_pts.get_data(i);
             }
@@ -1450,7 +1456,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     array_1d<double> dir;
     double rr,new_rr;
     
-    if(chi_in>strad.get_target()+delta_chisquared){
+    if(chi_in>bisection_targets.get_data(0)){
         for(i=0;i<gg.get_dim();i++)highball.set(i,inpt.get_data(i));
         fhigh=chi_in;
     }
@@ -1460,7 +1466,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         rr=dir.normalize();
         new_rr=2.0*rr;
         fhigh=chimin-delta_chisquared;
-        while(fhigh<strad.get_target()+delta_chisquared){
+        while(fhigh<bisection_targets.get_data(0)){
             
             for(i=0;i<gg.get_dim();i++){
                 highball.set(i,lowball.get_data(i)+new_rr*dir.get_data(i));
@@ -1475,12 +1481,10 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     
     int ii;
-    double mu,bisection_target;
+    double mu;
     array_1d<double> trial;
     
-    for(ii=0;ii<2;ii++){
-        if(ii==0)bisection_target=strad.get_target()+0.5*delta_chisquared;
-        else bisection_target=strad.get_target();
+    for(ii=0;ii<bisection_targets.get_dim();ii++){
         
         dd=gg.distance(lowball,highball);
         while(dd>1.0e-10){
@@ -1493,7 +1497,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 add_pt(trial,mu);
             }
         
-            if(mu>bisection_target){
+            if(mu>bisection_targets.get_data(ii)){
                 for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
                 fhigh=mu;
                 
@@ -1502,7 +1506,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
                 flow=mu;
                 
-                if(mu<strad.get_target()){
+                if(mu<bisection_targets.get_data(bisection_targets.get_dim()-1)){
                     original_flow=mu;
                     for(i=0;i<gg.get_dim();i++)original_lowball.set(i,trial.get_data(i));
                 }
