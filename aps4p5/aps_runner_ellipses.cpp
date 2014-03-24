@@ -45,8 +45,8 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-aps_test.set_timingname("aps_output/timing_file_ellipses_onion_p5.sav");
-aps_test.set_outname("aps_output/master_output_ellipses_onion_p5.sav");
+aps_test.set_timingname("aps_output/timing_file_ellipses_onion.sav");
+aps_test.set_outname("aps_output/master_output_ellipses_onion.sav");
 
 
 int i,j;

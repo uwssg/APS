@@ -7,7 +7,7 @@ char inname[letters],outname[letters];
 array_2d<double> data;
 array_1d<double> min,max;
 
-sprintf(inname,"aps_output/master_output_ellipses_onion_p5.sav");
+sprintf(inname,"aps_output/master_output_ellipses_onion.sav");
 
 FILE *input,*good_pts;
 array_1d<double> vv,chisq;
@@ -76,8 +76,8 @@ for(i=0;i<data.get_rows();i++){
     while(found_it==0){
        kd.nn_srch(*data(dexes.get_data(i)),n_neigh,neigh,dd);
        
-        if(1==1){
-       //if(chisq.get_data(dexes.get_data(i))>chimin+2.0*delta_chisq){
+        //if(1==1){
+       if(chisq.get_data(dexes.get_data(i))>chimin+2.0*delta_chisq){
            radii.set(dexes.get_data(i),dd.get_data(1));
            found_it=1;
        }
@@ -125,7 +125,7 @@ double roll,sum,rr;
 array_1d<double> pt;
 
 for(cc=0;cc<nchains;cc++){
-    sprintf(outname,"chains/onion_hyper_sphere_p5_chains_%d.txt",cc+1);
+    sprintf(outname,"chains/onion_hyper_sphere_chains_%d.txt",cc+1);
     output=fopen(outname,"w");
     
     for(ii=0;ii<40000;ii++){
