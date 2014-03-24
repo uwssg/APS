@@ -49,6 +49,9 @@ public:
     double normalize();
     double get_norm();
     double get_square_norm();
+    
+    void add_room(int);
+    int get_room();
 
 private:
     

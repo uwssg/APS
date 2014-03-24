@@ -1479,7 +1479,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     array_1d<double> trial;
     
     for(ii=0;ii<2;ii++){
-        if(ii==0)bisection_target=strad.get_target()+delta_chisquared;
+        if(ii==0)bisection_target=strad.get_target()+0.5*delta_chisquared;
         else bisection_target=strad.get_target();
         
         dd=gg.distance(lowball,highball);

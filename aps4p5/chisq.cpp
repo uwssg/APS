@@ -528,11 +528,42 @@ ellipses::ellipses(int id, int ic) : chisquared(id,ic){
 
 ellipses_integrable::~ellipses_integrable(){}
 
-ellipses_integrable::ellipses_integrable() : ellipses(){make_bases(-13);}
+ellipses_integrable::ellipses_integrable() : ellipses(){
+    make_bases(-13);
+    
+    /*int i,j;
+    for(i=1;i<ncenters;i++){
+        for(j=0;j<dim;j++){
+            widths.set(i,j,widths.get_data(0,j));
+        }
+    }*/
 
-ellipses_integrable::ellipses_integrable(int id) : ellipses(id){make_bases(-13);}
+}
 
-ellipses_integrable::ellipses_integrable(int id, int ic) : ellipses(id,ic){make_bases(-13);}
+ellipses_integrable::ellipses_integrable(int id) : ellipses(id){
+    make_bases(-13);
+
+    /*int i,j;
+    for(i=1;i<ncenters;i++){
+        for(j=0;j<dim;j++){
+            widths.set(i,j,widths.get_data(0,j));
+        }
+    }*/
+    
+}
+
+ellipses_integrable::ellipses_integrable(int id, int ic) : ellipses(id,ic){
+    make_bases(-13);
+
+    /*int i,j;
+    for(i=1;i<ncenters;i++){
+        for(j=0;j<dim;j++){
+            widths.set(i,j,widths.get_data(0,j));
+        }
+    }*/
+
+
+}
 
 linear_ellipses::~linear_ellipses(){}
 
@@ -1148,21 +1179,59 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
         }
     }
     
-    int icenter,k,imin;
+    /*for(i=0;i<dim;i++){
+        for(j=1;j<ncenters;j++){
+            if(fabs(widths.get_data(0,i)-widths.get_data(j,i))/widths.get_data(0,i)>1.0e-6){
+                printf("WARNING widths do not agree %e %e %d %d\n",
+                widths.get_data(0,i),widths.get_data(j,i),j,i);
+                exit(1);
+            }
+        }
+    }*/
+    
+    int icenter,k,imin,ct=0;
     array_1d<double> chiarr,xarr,yarr,trial;
     array_1d<int> dexes;
-    double xx,yy,xwidth,ywidth,nn,ddmin,total=0.0;;
+    double xx,yy,xwidth,ywidth,nn,ddmin,ddshld,total=0.0;
+    double xbound,ybound;
     
-    xwidth=-1.0;
-    ywidth=-1.0;
+    array_1d<double> l_marginalized_volume;
+    
     for(icenter=0;icenter<ncenters;icenter++){
-        if(widths.get_data(icenter,ix1)>xwidth)xwidth=widths.get_data(icenter,ix1);
-        if(widths.get_data(icenter,ix2)>ywidth)ywidth=widths.get_data(icenter,ix2);
+        l_marginalized_volume.set(icenter,0.0);
+        for(i=0;i<dim;i++){
+            if(i!=ix1 && i!=ix2){
+                l_marginalized_volume.add_val(icenter,log(widths.get_data(icenter,i)));
+            }
+        }
     }
     
     for(icenter=0;icenter<ncenters;icenter++){
-        for(xx=centers.get_data(icenter,ix1)-7.0*xwidth;xx<centers.get_data(icenter,ix1)+7.1*xwidth;xx+=0.05*xwidth){
-            for(yy=centers.get_data(icenter,ix2)-7.0*ywidth;yy<centers.get_data(icenter,ix2)+7.1*ywidth;yy+=0.05*ywidth){
+        printf("l_vol %e \n",l_marginalized_volume.get_data(icenter));
+    }
+    
+    for(icenter=0;icenter<ncenters;icenter++){
+        if(icenter==0 || widths.get_data(icenter,ix1)>xbound)xbound=widths.get_data(icenter,ix1);
+        if(icenter==0 || widths.get_data(icenter,ix1)<xwidth)xwidth=widths.get_data(icenter,ix1);
+        
+        if(icenter==0 || widths.get_data(icenter,ix2)>ybound)ybound=widths.get_data(icenter,ix2);
+        if(icenter==0 || widths.get_data(icenter,ix2)<ywidth)ywidth=widths.get_data(icenter,ix2);
+    }
+    
+    dexes.set_dim(100);
+    xarr.set_dim(100);
+    yarr.set_dim(100);
+    chiarr.set_dim(100);
+     
+    for(icenter=0;icenter<ncenters;icenter++){
+        //xwidth=widths.get_data(icenter,ix1);
+        //ywidth=widths.get_data(icenter,ix2);
+        
+        xbound=widths.get_data(icenter,ix1);
+        ybound=widths.get_data(icenter,ix2);
+        
+        for(xx=centers.get_data(icenter,ix1)-5.0*xbound;xx<centers.get_data(icenter,ix1)+5.1*xbound;xx+=0.1*xwidth){
+            for(yy=centers.get_data(icenter,ix2)-5.0*ybound;yy<centers.get_data(icenter,ix2)+5.1*ybound;yy+=0.1*ywidth){
                 
                 for(k=0;k<ncenters;k++){
                     for(i=0;i<dim;i++)trial.set(i,centers.get_data(k,i));
@@ -1177,22 +1246,58 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
                         ddmin=nn;
                         imin=k;
                     }
+                    if(k==icenter)ddshld=nn;
+                }
+                
+                if(imin!=icenter && ddmin<10.0){
+                    printf("CURIOUS icenter %d imin %d\n",imin,icenter);
+                    
+                    printf("%e %e -- %e %e %e %e -- %e %e %e %e\n",
+                    xx,yy,
+                    centers.get_data(icenter,ix1),widths.get_data(icenter,ix1),
+                    centers.get_data(icenter,ix2),widths.get_data(icenter,ix2),
+                    centers.get_data(imin,ix1),widths.get_data(imin,ix1),
+                    centers.get_data(imin,ix2),widths.get_data(imin,ix2));
+                    
+                    printf("%e %e\n",ddmin,ddshld);
+                    
+                    
+                    exit(1);
                 }
                 
                 for(i=0;i<dim;i++)trial.set(i,centers.get_data(imin,i));
                 trial.set(ix1,xx);
                 trial.set(ix2,yy);
                 
-                nn=(*this)(trial);
-                xarr.add(xx);
-                yarr.add(yy);
-                chiarr.add(nn);
-                dexes.add(chiarr.get_dim()-1);
+                nn=(*this)(trial)-2.0*l_marginalized_volume.get_data(imin);
+                xarr.set(ct,xx);
+                yarr.set(ct,yy);
+                chiarr.set(ct,nn);
+                dexes.set(ct,ct);
+                ct++;
                 total+=exp(-0.5*nn);
+                
+                if(dexes.get_room()==ct){
+                   //printf("adding room %d %d\n",dexes.get_dim(),ct);
+                   dexes.add_room(1000);
+                   xarr.add_room(1000);
+                   yarr.add_room(1000);
+                   chiarr.add_room(1000);
+                   //printf("done %d\n",dexes.get_dim());
+                   //exit(1);
+                }
+                
+                //if(ct%1000==0)printf("    %d\n",ct);
                 
             }//loop over yy
         }//loop overxx
     }
+    
+    if(dexes.get_dim()!=ct){
+        printf("WARNING dexes %d but ct %d\n",dexes.get_dim(),ct);
+        exit(1);
+    }
+    printf("time to sort %d -- %d\n",dexes.get_dim(),ct);
     
     array_1d<double> chisorted;
     sort_and_check(chiarr,chisorted,dexes);

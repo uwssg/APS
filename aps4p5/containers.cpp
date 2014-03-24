@@ -120,6 +120,56 @@ void array_1d<T>::multiply_val(int dex, T val){
 }
 
 template <typename T>
+int array_1d<T>::get_room(){
+    return room;
+}
+
+template <typename T>
+void array_1d<T>::add_room(int ii){
+
+    if(data==NULL && dim>0){
+       printf("dying from add_room\n");
+       die(0);
+    }
+    
+    if(data==NULL && room>0){
+        printf("dying from add_room\n");
+        die(0);
+    }
+    
+    if(room==0 && data!=NULL){
+        printf("dying from add_room\n");
+         die(0);
+    }
+    
+    if(dim>room){
+        printf("dying from add_room\n");
+        die(0);
+    }
+    
+    T *buffer;
+    int i,old_room=room;
+    
+    if(data==NULL){
+        room=ii;
+        data=new T[room];
+        for(i=0;i<room;i++)data[i]=0;
+    }
+    else{
+        buffer=new T[room];
+        for(i=0;i<room;i++)buffer[i]=data[i];
+        delete [] data;
+        room+=ii;
+        data=new T[room];
+        for(i=0;i<old_room;i++)data[i]=buffer[i];
+        delete [] buffer;
+    }
+    
+    
+    
+}
+
+template <typename T>
 void array_1d<T>::add(T in){
 
     if(data==NULL && dim>0){

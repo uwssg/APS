@@ -7,10 +7,12 @@ char inname[letters],outname[letters];
 array_2d<double> data;
 array_1d<double> min,max;
 
-sprintf(inname,"aps_output/master_output_ellipses_onion.sav");
+sprintf(inname,"aps_output/master_output_ellipses_onion_p5.sav");
 
-FILE *input;
+FILE *input,*good_pts;
 array_1d<double> vv,chisq;
+
+good_pts=fopen("aps_output/good_points.sav","w");
 
 char word[letters];
 int dim=8,i;
@@ -31,6 +33,18 @@ while(fscanf(input,"%le",&nn)>0){
     for(i=0;i<3;i++)fscanf(input,"%le",&nn);
 }
 fclose(input);
+
+int j;
+double delta_chisq=15.5;
+
+for(i=0;i<chisq.get_dim();i++){
+    if(chisq.get_data(i)<=chimin+delta_chisq){
+        for(j=0;j<dim;j++)fprintf(good_pts,"%e ",data.get_data(i,j));
+        fprintf(good_pts,"\n");
+    }
+}
+fclose(good_pts);
+
 
 for(i=0;i<dim;i++){
     min.set(i,-100.0);
@@ -53,9 +67,8 @@ for(i=0;i<data.get_rows();i++){
 
 sort_and_check(chisq,sorted_chi,dexes);
 
-double delta_chisq=15.5;
 
-int j;
+
 int n_neigh,found_it;
 for(i=0;i<data.get_rows();i++){
     n_neigh=20;
@@ -63,8 +76,8 @@ for(i=0;i<data.get_rows();i++){
     while(found_it==0){
        kd.nn_srch(*data(dexes.get_data(i)),n_neigh,neigh,dd);
        
-
-       if(chisq.get_data(dexes.get_data(i))>chimin+2.0*delta_chisq){
+        if(1==1){
+       //if(chisq.get_data(dexes.get_data(i))>chimin+2.0*delta_chisq){
            radii.set(dexes.get_data(i),dd.get_data(1));
            found_it=1;
        }
@@ -112,7 +125,7 @@ double roll,sum,rr;
 array_1d<double> pt;
 
 for(cc=0;cc<nchains;cc++){
-    sprintf(outname,"chains/onion_hyper_sphere_chains_%d.txt",cc+1);
+    sprintf(outname,"chains/onion_hyper_sphere_p5_chains_%d.txt",cc+1);
     output=fopen(outname,"w");
     
     for(ii=0;ii<40000;ii++){

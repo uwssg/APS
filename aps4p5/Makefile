@@ -109,6 +109,11 @@ ellipse: aps_runner_ellipses.cpp aps.o chisq.o
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
 	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
 
+integrate: integrate_boundary.cpp aps.o chisq.o
+	$(gg) -o integrate integrate_boundary.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
+
 dummy: aps_runner_dummy_planets.cpp aps.o dummy_planet.o
 	$(gg) -o dummy aps_runner_dummy_planets.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
