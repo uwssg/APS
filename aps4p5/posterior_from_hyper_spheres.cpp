@@ -82,7 +82,7 @@ for(i=0;i<dim;i++)smallest_radius.set(i,1.0e30);
 
 
 for(i=0;i<data.get_rows();i++){
-    printf("\n");
+    //printf("\n");
     kd.nn_srch(*data(i),n_neigh,neigh,dd);
     
     for(j=0;j<dim;j++)radii.set(i,j,-1.0);
@@ -186,7 +186,7 @@ for(cc=0;cc<nchains;cc++){
         pt.normalize();
         rr=chaos.doub();
         for(j=0;j<dim;j++){
-           fprintf(output,"%e ",data.get_data(dexes.get_data(i),j)+rr*pt.get_data(j)*radii.get_data(i,j));
+           fprintf(output,"%e ",data.get_data(dexes.get_data(i),j)+rr*pt.get_data(j)*radii.get_data(dexes.get_data(i),j));
         }
         
         
