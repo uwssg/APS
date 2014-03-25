@@ -81,6 +81,7 @@ int n_neigh=2*dim+1,found_it;
 array_1d<double> smallest_radius;
 array_1d<double> r_dim,r_dim_sorted;
 array_1d<int> r_dex;
+double mm;
 
 
 for(i=0;i<dim;i++)smallest_radius.set(i,1.0e30);
@@ -135,14 +136,15 @@ for(i=0;i<data.get_rows();i++){
         if(found_it==1){
             
             nn=data.get_data(neigh.get_data(j),r_dex.get_data(k));
+            mm=data.get_data(i,r_dex.get_data(k));
             
             if(nn<data.get_data(i,r_dex.get_data(k))){
-                box_min.set(i,r_dex.get_data(k),nn);
+                box_min.set(i,r_dex.get_data(k),0.5*(nn+mm));
                 
                 //printf("set min %d\n",r_dex.get_data(k));
             }
             else if(nn>data.get_data(i,r_dex.get_data(k))){
-                box_max.set(i,r_dex.get_data(k),nn);
+                box_max.set(i,r_dex.get_data(k),0.5*(nn+mm));
                 
                 //printf("set max %d\n",r_dex.get_data(k));
             }
