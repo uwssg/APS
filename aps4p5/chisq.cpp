@@ -1230,8 +1230,8 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
         xbound=widths.get_data(icenter,ix1);
         ybound=widths.get_data(icenter,ix2);
         
-        for(xx=centers.get_data(icenter,ix1)-4.0*xbound;xx<centers.get_data(icenter,ix1)+4.1*xbound;xx+=0.1*xwidth){
-            for(yy=centers.get_data(icenter,ix2)-4.0*ybound;yy<centers.get_data(icenter,ix2)+4.1*ybound;yy+=0.1*ywidth){
+        for(xx=centers.get_data(icenter,ix1)-7.0*xbound;xx<centers.get_data(icenter,ix1)+7.1*xbound;xx+=0.1*xwidth){
+            for(yy=centers.get_data(icenter,ix2)-7.0*ybound;yy<centers.get_data(icenter,ix2)+7.1*ybound;yy+=0.1*ywidth){
                 
                 for(k=0;k<ncenters;k++){
                     for(i=0;i<dim;i++)trial.set(i,centers.get_data(k,i));
@@ -1249,7 +1249,7 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
                     if(k==icenter)ddshld=nn;
                 }
                 
-                if(imin!=icenter && ddmin<10.0){
+                if(imin!=icenter && ddmin<50.0){
                     printf("CURIOUS icenter %d imin %d\n",imin,icenter);
                     
                     printf("%e %e -- %e %e %e %e -- %e %e %e %e\n",

@@ -1,5 +1,6 @@
 #include "kd.h"
 #include "goto_tools.h"
+#include "chisq.h"
 
 main(){
 
@@ -191,18 +192,46 @@ array_1d<double> l_probability;
 
 double lv,lp,total_p=0.0;;
 
+array_1d<double> c1,c2;
+double dd1,dd2,vv1=0.0,vv2=0.0;
+
+ellipses_integrable chifn(dim,2);
+
+for(i=0;i<dim;i++){
+    c1.set(i,chifn.get_real_center(0,i));
+    c2.set(i,chifn.get_real_center(1,i));
+}
 
 for(i=0;i<data.get_rows();i++){
     
     lv=0.0;
     for(j=0;j<dim;j++)lv+=log(box_max.get_data(i,j)-box_min.get_data(i,j));
     
+    if(chisq.get_data(i)<15.5){
+        dd1=0.0;
+        dd2=0.0;
+        for(j=0;j<dim;j++){
+        dd1+=power((data.get_data(i,j)-c1.get_data(j))/chifn.get_width(0,j),2);
+        dd2+=power((data.get_data(i,j)-c2.get_data(j))/chifn.get_width(1,j),2);
+        }
+     
+        if(dd1<dd2){
+            vv1+=exp(lv);
+        }
+        else{
+            vv2+=exp(lv);
+        }
+    }
+    
     nn=chisq.get_data(i)-chimin;
     l_probability.set(i,lv-0.5*nn);
     total_p+=exp(l_probability.get_data(i));
 }
 
-
+printf("vv1 %e vv2 %e\n",vv1,vv2);
+for(i=0;i<dim;i++){
+    printf("%e %e\n",chifn.get_width(0,i),chifn.get_width(1,i));
+}
 
 nn=log(total_p);
 for(i=0;i<data.get_rows();i++){
@@ -211,19 +240,28 @@ for(i=0;i<data.get_rows();i++){
 
 
 Ran chaos(99);
-int cc,nchains=8,ii;
+int cc,nchains=1,ii;
 double roll,sum,rr;
 
 array_1d<double> pt;
 
+dexes.reset();
+array_1d<double> sorted_prob;
+for(i=0;i<l_probability.get_dim();i++)dexes.set(i,i);
+sort_and_check(l_probability,sorted_prob,dexes);
+
 for(cc=0;cc<nchains;cc++){
-    sprintf(outname,"chains/onion_hyper_box_chains_%d.txt",cc+1);
+    sprintf(outname,"chains/onion_hyper_box_chains_alt_%d.txt",cc+1);
     output=fopen(outname,"w");
     
     for(ii=0;ii<40000;ii++){
         roll=chaos.doub();
         sum=0.0;
-        for(i=0;i<l_probability.get_dim()-1 && sum<roll; i++){
+        /*for(i=0;i<l_probability.get_dim()-1 && sum<roll; i++){
+            sum+=exp(l_probability.get_data(dexes.get_data(i)));
+        }*/
+        
+        for(i=l_probability.get_dim()-1;i>=0 && sum<roll;i--){
             sum+=exp(l_probability.get_data(dexes.get_data(i)));
         } 
     

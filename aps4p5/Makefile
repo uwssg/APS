@@ -192,9 +192,9 @@ validate: validate_gp2mcmc.cpp gp2mcmc
 	chisq.o gp_to_mcmc.o mcmc.o \
 	$(LIBRARIES) $(INCLUDE)
 
-posterior_cubes: posterior_from_hyper_cubes.cpp kd.o
+posterior_cubes: posterior_from_hyper_cubes.cpp kd.o chisq.o
 	$(gg) -o posterior_cubes posterior_from_hyper_cubes.cpp \
-	containers.o goto_tools.o kd.o
+	containers.o goto_tools.o kd.o chisq.o
 
 posterior_spheres: posterior_from_hyper_spheres.cpp kd.o
 	$(gg) -o posterior_spheres posterior_from_hyper_spheres.cpp \
