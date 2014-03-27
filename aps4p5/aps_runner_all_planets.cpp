@@ -71,15 +71,15 @@ for(i=1;i<nplanets;i++){
     max.set(i*3+2,1.0);
 }
 
-min.set(3,14.0);
-max.set(3,15.0);
+min.set(3,14.64);
+max.set(3,14.66);
 min.set(6,44.0);
 max.set(6,45.0);
 min.set(9,259.0);
 max.set(9,260.0);
 
 min.set(12,0.001);
-max.set(12,10.0);
+max.set(12,1000.0);
 
 array_1d<int> rr_i;
 
