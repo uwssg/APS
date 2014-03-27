@@ -172,7 +172,7 @@ double planet::true_chisq(array_1d<double> &period, array_1d<double> &vv) const{
         xx=true_chisq(period,eccentricity,omega,nu);
     }
     catch (int iex){
-         xx=exception;
+         xx=2.0*exception;
     }
     
     return xx;
