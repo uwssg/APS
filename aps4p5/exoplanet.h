@@ -36,6 +36,8 @@ private:
     double calculate_nu(array_1d<double>&,
            array_1d<double>&,array_1d<double>&,array_2d<double>&) const;
     
+    double true_chisq(array_1d<double>&,array_1d<double>&) const;
+    
     double true_chisq(array_1d<double>&,array_1d<double>&,
                       array_1d<double>&,array_2d<double>&) const;
     

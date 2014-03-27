@@ -25,9 +25,9 @@ matern_covariance cv;
 
 int nplanets=5;
 planet chisq(nplanets);
-dim=nplanets*3;
+dim=nplanets;
 
-aps aps_test(dim,20,40.1,seed);
+aps aps_test(dim,20,6.16,seed);
 //21 is the 95% CL for 12 dof (all 5 parameters for all planets 
 //+ two telescope velocities)
 
@@ -51,37 +51,23 @@ aps_test.set_characteristic_length(0,1.0);
 aps_test.set_timingname("timing_file_5planets.sav");
 aps_test.set_outname("master_output_5planets.sav");
 
-min.set(1,0.001);
-max.set(1,0.999);
-
-min.set(2,-1.0);
-max.set(2,1.0);
 
 int i,j;
 
 for(i=1;i<nplanets;i++){
-    min.set(i*3,0.01);
-    max.set(i*3,1000.0);
     aps_test.set_characteristic_length(i*3,1.0);
-    
-    min.set(i*3+1,0.001);
-    max.set(i*3+1,0.999);
-    
-    min.set(i*3+2,-1.0);
-    max.set(i*3+2,1.0);
 }
 
-min.set(3,14.64);
-max.set(3,14.66);
-min.set(6,44.0);
-max.set(6,45.0);
-min.set(9,259.0);
-max.set(9,260.0);
+min.set(1,14.64);
+max.set(1,14.66);
+min.set(2,44.0);
+max.set(2,45.0);
+min.set(3,259.0);
+max.set(3,260.0);
+min.set(4,0.001);
+max.set(4,1000.0);
 
-min.set(12,0.001);
-max.set(12,1000.0);
-
-array_1d<int> rr_i;
+/*array_1d<int> rr_i;
 
 for(i=0;i<nplanets;i++){
     for(j=0;j<3;j++){
@@ -89,7 +75,7 @@ for(i=0;i<nplanets;i++){
     }
     aps_test.set_gibbs_set(rr_i);
     rr_i.reset();
-}
+}*/
 
 printf("initializing\n");
 aps_test.initialize(100,min,max);
@@ -99,7 +85,7 @@ aps_test.set_n_samples(1000);
 double chival,chivaltest,err,maxerr;
 
 i=-1;
-while(aps_test.get_called()<1000000 && aps_test.get_chimin()>600.0){
+while(aps_test.get_called()<1000000 && aps_test.get_chimin()>610.0){
     aps_test.search();
     
     

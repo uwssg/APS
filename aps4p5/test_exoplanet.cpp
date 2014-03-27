@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <math.h>
+
+#include <time.h>
+
 #include "exoplanet.h"
 
 main(){
@@ -90,8 +93,13 @@ vv.set(nplanets*5+1,nn);*/
 
 fclose(input);
 
-double chisquared=solar_system(vv);
+array_1d<double> periods;
+for(i=0;i<nplanets;i++)periods.set(i,vv.get_data(i*3));
+
+double before=double(time(NULL));
+double chisquared=solar_system(periods);
 printf("chisquared %e\n",chisquared);
+printf("that took %e\n",double(time(NULL))-before);
 
 //exit(1);
 
@@ -120,7 +128,11 @@ fclose(input);
 
 printf("got better data\n");
 
-chisquared=solar_system(vv);
+for(i=0;i<nplanets;i++)periods.set(i,vv.get_data(i*3));
+
+before=double(time(NULL));
+chisquared=solar_system(periods);
 printf("better chisq %e\n",chisquared);
+printf("that took %e\n",double(time(NULL))-before);
 
 }

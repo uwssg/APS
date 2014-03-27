@@ -10,7 +10,7 @@ planet::planet(){
     exit(1);
 }
 
-planet::planet(int i) : chisquared(i*3){
+planet::planet(int i) : chisquared(i){
     nplanets=i;
     ndata=0;
     
@@ -149,6 +149,24 @@ double planet::calculate_nu(array_1d<double> &period, array_1d<double> &eccentri
             nu.set(i,j,2.0*atan(xx));
         }
     }
+
+}
+
+double planet::true_chisq(array_1d<double> &period, array_1d<double> &vv) const{
+
+    array_1d<double> T0,omega,eccentricity;
+    int i;
+    
+    for(i=0;i<nplanets;i++){
+        eccentricity.set(i,vv.get_data(i*3));
+        omega.set(i,vv.get_data(i*3+1));
+        T0.set(i,vv.get_data(i*3+2));
+    }
+    
+    array_2d<double> nu;
+    nu.set_cols(nplanets);
+    calculate_nu(period,eccentricity,T0,nu);
+    return true_chisq(period,eccentricity,omega,nu);
 
 }
 
@@ -393,42 +411,19 @@ double planet::find_E(double m, double ee) const{
 
 }
 
-double planet::operator()(array_1d<double> &vv_in) const{
+double planet::operator()(array_1d<double> &period) const{
     
-    array_1d<double> period,eccentricity,omega,T0;
-    array_2d<double> nu;
+    
     int i;
     
     called++;
     
-    nu.set_name("planet_nu");
-    nu.set_cols(nplanets);
-    
-    for(i=0;i<nplanets;i++){
-        period.set(i,vv_in.get_data(i*3));
-        /*if(i>0 && period.get_data(i)>period.get_data(i-1)){
-            return exception;
-        }*/
-        
-        //if(period.get_data(i)>8000.0) return exception;
-        
-        eccentricity.set(i,vv_in.get_data(i*3+1));
-        //omega.set(i,vv_in.get_data(i*4+2));
-        T0.set(i,vv_in.get_data(i*3+2));
-    }
-    
-    /*for(i=0;i<nplanets;i++){
-        printf("%e %e %e\n",period.get_data(i),eccentricity.get_data(i),T0.get_data(i));
-    }*/
-    
-    calculate_nu(period,eccentricity,T0,nu);
-    
     double alpha=1.0,beta=0.9,gamma=1.1;
-    array_1d<double> pbar,ps,pss,ff,min_pt;
+    array_1d<double> pbar,ps,pss,ff,min_pt,omega;
     array_2d<double>pts;
     double ffs,ffss,simplex_min;
     
-    int dim=nplanets;
+    int dim=nplanets*3;
     
     pts.set_cols(dim);
     
@@ -437,10 +432,17 @@ double planet::operator()(array_1d<double> &vv_in) const{
     Ran chaos(43);
     
     for(i=0;i<dim+1;i++){
-        for(j=0;j<dim;j++){
+        /*for(j=0;j<dim;j++){
             pts.set(i,j,chaos.doub()*360.0);
+        }*/
+        
+        for(j=0;j<nplanets;j++){
+            pts.set(i,j*3,chaos.doub()*1.0);
+            pts.set(i,j*3+1,chaos.doub()*360.0);
+            pts.set(i,j*3+2,-1.0+2.0*chaos.doub());
         }
-        ff.set(i,true_chisq(period,eccentricity,*pts(i),nu));
+        
+        ff.set(i,true_chisq(period,*pts(i)));
         if(il<0 || ff.get_data(i)<ff.get_data(il)){
             il=i;
             simplex_min=ff.get_data(i);
@@ -470,7 +472,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
         for(i=0;i<dim;i++){
             ps.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
         }
-        ffs=true_chisq(period,eccentricity,ps,nu);
+        ffs=true_chisq(period,ps);
         
         if(ffs<simplex_min){
             ct_abort=0;
@@ -488,7 +490,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
             for(i=0;i<dim;i++){
                 pss.set(i,gamma*ps.get_data(i)+(1.0-gamma)*pbar.get_data(i));
             }
-            ffss=true_chisq(period,eccentricity,pss,nu);
+            ffss=true_chisq(period,pss);
             if(ffss<simplex_min){
                 ct_abort=0;
                 simplex_min=ffss;
@@ -516,7 +518,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
             for(i=0;i<dim;i++){
                 pss.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
             }
-            ffss=true_chisq(period,eccentricity,pss,nu);
+            ffss=true_chisq(period,pss);
             if(ffss<simplex_min){
                 ct_abort=0;
                 simplex_min=ffss;
@@ -539,7 +541,7 @@ double planet::operator()(array_1d<double> &vv_in) const{
                             mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
                             pts.set(i,j,mu);
                         }
-                        ff.set(i,true_chisq(period,eccentricity,*pts(i),nu));
+                        ff.set(i,true_chisq(period,*pts(i)));
                         if(ff.get_data(i)<simplex_min){
                             ct_abort=0;
                             simplex_min=ff.get_data(i);
