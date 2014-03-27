@@ -1807,7 +1807,7 @@ void aps::write_pts(){
 	}
     }
      
-    output=fopen("candidates_log.sav","w");
+    /*output=fopen("candidates_log.sav","w");
     for(i=0;i<n_candidates;i++){
         fprintf(output,"%e %e %d\n",gg.get_pt(candidates.get_data(i),0),
         gg.get_pt(candidates.get_data(i),3),candidates.get_data(i));
@@ -1820,7 +1820,7 @@ void aps::write_pts(){
         gg.get_pt(known_minima.get_data(i),3));
     }
     
-    fclose(output);
+    fclose(output);*/
     
     output=fopen("startpts_log.sav","w");
     for(i=0;i<gradient_start_pts.get_dim();i++){
