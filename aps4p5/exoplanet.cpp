@@ -166,7 +166,16 @@ double planet::true_chisq(array_1d<double> &period, array_1d<double> &vv) const{
     array_2d<double> nu;
     nu.set_cols(nplanets);
     calculate_nu(period,eccentricity,T0,nu);
-    return true_chisq(period,eccentricity,omega,nu);
+    double xx;
+    
+    try{
+        xx=true_chisq(period,eccentricity,omega,nu);
+    }
+    catch (int iex){
+         xx=exception;
+    }
+    
+    return xx;
 
 }
 
