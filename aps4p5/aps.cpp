@@ -303,6 +303,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     
     for(i=0;i<gg.get_pts();i++){
         add_aps_pt(i,-2.0,-2.0);
+        wide_pts.add(i);
     }
     
     int before_grad=chisq->get_called();
@@ -319,15 +320,13 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
         
     write_pts();
     
-    for(i=0;i<gg.get_pts();i++){
+    /*for(i=0;i<gg.get_pts();i++){
         j=is_it_a_candidate(i);
 	if(j==1){
 	    set_as_candidate(i);
-	    /*if(gg.get_pt(i,11)<400.0){
-	        printf("set candidate at %e\n",gg.get_pt(i,11));
-	    }*/
+	    
 	}
-    }
+    }*/
     
     set_where("nowhere");
 }
@@ -1717,7 +1716,7 @@ void aps::write_pts(){
     
     n_candidates=0;
     
-    for(ii=0;ii<3;ii++){
+    for(ii=0;ii<1;ii++){
         if(ii==0)to_choose_from=&wide_pts;
         else if(ii==1)to_choose_from=&gibbs_pts;
         else if(ii==2)to_choose_from=&focus_pts;

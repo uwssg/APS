@@ -395,6 +395,7 @@ array_1d<double> &xx, int params){
     double err,maxerr,mindiag=-1.0,minfail,mm;
     int ifail;
     
+  
     maxerr=-1.0;
     for(row=0;row<params;row++){
         for(col=0;col<params;col++){
@@ -408,6 +409,7 @@ array_1d<double> &xx, int params){
 	    }
 	}
     }
+    
     
     /*if(maxerr>1.0e-6 || isnan(maxerr)){
         //printf("tridiagonalization: maxerr %e mindiag %e\n",maxerr,mindiag);
@@ -428,6 +430,7 @@ array_1d<double> &xx, int params){
         xx.set(dexes.get_data(i),buffer.get_data(i));
     }
     
+    
     for(ii=0;ii<params;ii++){
         nn=0.0;
 	for(col=0;col<params;col++){
@@ -441,6 +444,7 @@ array_1d<double> &xx, int params){
 	    //if(maxerr>1.0e-6)printf("maxerr %e -- %e %e\n",maxerr,nn,bb_in.get_data(ii));
 	}
     }
+    
     
     if(maxerr>1.0e-5 || isnan(maxerr) || isinf(maxerr)){
 

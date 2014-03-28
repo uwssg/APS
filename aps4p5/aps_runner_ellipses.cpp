@@ -45,8 +45,8 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-aps_test.set_timingname("aps_output/timing_file_ellipses_onion.sav");
-aps_test.set_outname("aps_output/master_output_ellipses_onion.sav");
+aps_test.set_timingname("aps_output/timing_file_ellipses_chk.sav");
+aps_test.set_outname("aps_output/master_output_ellipses_chk.sav");
 
 
 int i,j;
@@ -64,7 +64,7 @@ aps_test.set_n_samples(1000);
 double chival,chivaltest,err,maxerr;
 
 i=-1;
-while(aps_test.get_called()<80000){
+while(aps_test.get_called()<20000){
     aps_test.search();    
 }
 
