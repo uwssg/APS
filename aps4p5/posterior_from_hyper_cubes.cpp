@@ -7,7 +7,7 @@ char inname[letters],outname[letters];
 array_2d<double> data;
 array_1d<double> min,max;
 
-sprintf(inname,"aps_output/master_output_ellipses_onion.sav");
+sprintf(inname,"aps_output/master_output_ellipses_chk.sav");
 
 FILE *input,*good_pts;
 array_1d<double> vv,chisq;
@@ -212,7 +212,7 @@ for(i=0;i<l_probability.get_dim();i++)dexes.set(i,i);
 sort_and_check(l_probability,sorted_prob,dexes);
 
 
-sprintf(outname,"chains/onion_hyper_box_chain.txt");
+sprintf(outname,"chains/onion_hyper_box_chain_chk.txt");
 output=fopen(outname,"w");
     
 for(ii=0;ii<40000;ii++){
