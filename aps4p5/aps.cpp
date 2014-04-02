@@ -1395,9 +1395,9 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             }
         }
         
-        if(chitrue>strad.get_target() && which_aps!=iWIDE){
+        /*if(chitrue>strad.get_target() && which_aps!=iWIDE){
             bisection(sambest,chitrue);
-        }
+        }*/
         
     }
     
