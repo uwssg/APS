@@ -128,6 +128,8 @@ private:
     
     void set_where(char*);
     
+    void optimize();
+    
     void aps_choose_best(array_2d<double>&,int);
     
     void bisection(array_1d<double>&,double);
