@@ -1859,8 +1859,12 @@ void aps::write_pts(){
     global_median,chimin,strad.get_target(),volume);
     
     fprintf(output," -- %d %d %d ",candidates.get_dim(),known_minima.get_dim(),ngood);
-    fprintf(output," -- %e %e %e -- %e\n",mu_true,sig_true,chi_true,
-    hy.get_data(0));
+    fprintf(output," -- %e %e %e -- ",mu_true,sig_true,chi_true);
+    
+    for(i=0;i<hy.get_dim();i++){
+        fprintf(output,"%.3e ",hy.get_data(i));
+    }
+    fprintf(output,"\n");
     
     fclose(output);
      

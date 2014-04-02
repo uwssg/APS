@@ -21,7 +21,8 @@ printf("seed %d\n",seed);
 
 Ran chaos(seed);
 
-matern_covariance cv;
+//matern_covariance cv;
+gaussian_covariance_multiD cv;
 
 int nplanets=5;
 planet chisq(nplanets);
