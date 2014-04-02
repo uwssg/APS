@@ -366,9 +366,9 @@ void aps::resume(){
     
     int i,ct=0;
     array_2d<double> data;
-    array_1d<double> ff,ggmax,ggmin;
-    double nn,mu,sig;
-    int ling;
+    array_1d<double> ff;
+    double nn,mu,sig,local_min;
+    int ling,i_min;
     char word[500];
     FILE *input=fopen(outname,"r");
     for(i=0;i<dim+5;i++)fscanf(input,"%s",word);
@@ -385,6 +385,11 @@ void aps::resume(){
         fscanf(input,"%le",&nn);
         ff.set(ct,nn);
         
+        if(ct==0 || nn<local_min){
+            local_min=nn;
+            i_min=ct;
+        }
+        
         fscanf(input,"%le %le %d",&mu,&sig,&ling);
         if(ling==0){
             wide_pts.add(ct);
@@ -397,8 +402,22 @@ void aps::resume(){
     
     
     fclose(input);
-
-gg.initialize(data,ff,ggmax,ggmin);
+    
+    array_1d<double> ggmax,ggmin;
+    for(i=0;i<dim;i++){
+        ggmin.set(i,0.0);
+        if(characteristic_length.get_data(i)<0.0){
+            ggmax.set(i,range_max.get_data(i)-range_min.get_data(i));
+        }
+        else{
+            ggmax.set(i,characteristic_length.get_data(i));
+        }
+    }
+    
+    gg.initialize(data,ff,ggmax,ggmin);
+    set_chimin(local_min,(*gg.get_pt(i_min)));
+    
+    write_pts();
 }
 
 void aps::set_chimin(double cc,array_1d<double> &pt){
