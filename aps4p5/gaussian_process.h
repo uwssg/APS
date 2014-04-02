@@ -153,6 +153,26 @@ class matern_covariance_multiD : public covariance_function{
         virtual void set_dim(int);
 };
 
+class gaussian_covariance_multiD : public covariance_function{
+
+    private:
+        array_1d<double> ell;
+    
+    public:
+        gaussian_covariance_multiD();
+        
+        virtual double operator()(const array_1d<double>&,const array_1d<double>&, const array_1d<double>&,
+        const array_1d<double>&,array_1d<double>&, const int)const;
+	
+        virtual void set_hyper_parameters(array_1d<double>&);
+    
+        virtual void print_hyperparams();
+    
+        virtual void get_hyper_parameters(array_1d<double>&);
+        
+        virtual void set_dim(int);
+};
+
 class neighbor_cache{
 
 public:
