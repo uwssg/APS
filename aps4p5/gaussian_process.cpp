@@ -1371,6 +1371,11 @@ void gaussian_covariance::print_hyperparams(){
     printf("gaussian hyper params %e\n",ellsquared);
 }
 
+
+void gaussian_covariance::set_hyper_parameters(array_1d<double> &vin){
+    ellsquared=vin.get_data(0);
+}
+
 double gaussian_covariance::operator()
 (const array_1d<double> &v1, const array_1d<double> &v2, const array_1d<double> &mins, 
 const array_1d<double> &maxs, array_1d<double> &grad, const int swit)const{
@@ -1420,6 +1425,59 @@ const array_1d<double> &maxs, array_1d<double> &grad, const int swit)const{
  
  return ans;
  
+}
+
+gaussian_covariance_multiD::gaussian_covariance_multiD(){
+    dim=-1;
+    n_hyperparameters=-1;
+}
+
+void gaussian_covariance_multiD::get_hyper_parameters(array_1d<double> &output){
+    int i;
+    for(i=0;i<dim;i++){
+        output.set(i,ell.get_data(i));
+    }
+}
+
+void gaussian_covariance_multiD::set_dim(int ii){
+    dim=ii;
+    n_hyperparameters=dim;
+    int i;
+    ell.reset();
+    hyper_max.reset();
+    hyper_min.reset();
+    for(i=0;i<dim;i++){
+        ell.set(i,1.0);
+        hyper_max.set(i,10.0);
+        hyper_min.set(i,0.001);
+    }
+
+}
+
+void gaussian_covariance_multiD::set_hyper_parameters(array_1d<double> &input){
+    if(input.get_dim()!=n_hyperparameters){
+        printf("WARNING trying to set hyperparams for matern multiD but input has %d\n",
+        input.get_dim());
+        
+        printf("need %d\n",n_hyperparameters);
+        
+        throw -1;
+    }
+    
+    ell.reset();
+    int i;
+    for(i=0;i<n_hyperparameters;i++){
+        ell.set(i,input.get_data(i));
+    }
+}
+
+void gaussian_covariance_multiD::print_hyperparams(){
+    printf("in matern_covariance_multiD\n");
+    int i;
+    for(i=0;i<n_hyperparameters;i++){
+        printf("    ell %d %e\n",i,ell.get_data(i));
+    }
+    
 }
 
 double gaussian_covariance_multiD::operator()
@@ -1473,9 +1531,6 @@ const array_1d<double> &maxs, array_1d<double> &grad, const int swit)const{
  
 }
 
-void gaussian_covariance::set_hyper_parameters(array_1d<double> &vin){
-    ellsquared=vin.get_data(0);
-}
 
 matern_covariance::matern_covariance(){
     ell=0.25;
@@ -1605,43 +1660,17 @@ const array_1d<double> &min, const array_1d<double> &max, array_1d<double> &grad
  
 }
 
-gaussian_covariance_multiD::gaussian_covariance_multiD(){
-    dim=-1;
-    n_hyperparameters=-1;
-}
-
 matern_covariance_multiD::matern_covariance_multiD(){
     dim=-1;
     n_hyperparameters=-1;
 }
 
-void gaussian_covariance_multiD::get_hyper_parameters(array_1d<double> &output){
-    int i;
-    for(i=0;i<dim;i++){
-        output.set(i,ell.get_data(i));
-    }
-}
 
 void matern_covariance_multiD::get_hyper_parameters(array_1d<double> &output){
     int i;
     for(i=0;i<dim;i++){
         output.set(i,ell.get_data(i));
     }
-}
-
-void gaussian_covariance_multiD::set_dim(int ii){
-    dim=ii;
-    n_hyperparameters=dim;
-    int i;
-    ell.reset();
-    hyper_max.reset();
-    hyper_min.reset();
-    for(i=0;i<dim;i++){
-        ell.set(i,1.0);
-        hyper_max.set(i,10.0);
-        hyper_min.set(i,0.001);
-    }
-
 }
 
 void matern_covariance_multiD::set_dim(int ii){
@@ -1659,23 +1688,6 @@ void matern_covariance_multiD::set_dim(int ii){
 
 }
 
-void gaussian_covariance_multiD::set_hyper_parameters(array_1d<double> &input){
-    if(input.get_dim()!=n_hyperparameters){
-        printf("WARNING trying to set hyperparams for matern multiD but input has %d\n",
-        input.get_dim());
-        
-        printf("need %d\n",n_hyperparameters);
-        
-        throw -1;
-    }
-    
-    ell.reset();
-    int i;
-    for(i=0;i<n_hyperparameters;i++){
-        ell.set(i,input.get_data(i));
-    }
-}
-
 void matern_covariance_multiD::set_hyper_parameters(array_1d<double> &input){
     if(input.get_dim()!=n_hyperparameters){
         printf("WARNING trying to set hyperparams for matern multiD but input has %d\n",
@@ -1691,15 +1703,6 @@ void matern_covariance_multiD::set_hyper_parameters(array_1d<double> &input){
     for(i=0;i<n_hyperparameters;i++){
         ell.set(i,input.get_data(i));
     }
-}
-
-void gaussian_covariance_multiD::print_hyperparams(){
-    printf("in matern_covariance_multiD\n");
-    int i;
-    for(i=0;i<n_hyperparameters;i++){
-        printf("    ell %d %e\n",i,ell.get_data(i));
-    }
-    
 }
 
 void matern_covariance_multiD::print_hyperparams(){
