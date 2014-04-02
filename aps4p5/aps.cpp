@@ -1344,6 +1344,8 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         
 	mu=gg.user_predict(samv,&sig,0);
         
+        if(mu<0.0)mu=0.0;
+        
         //printf("mu %e sig %e\n",mu,sig);
         
 	stradval=strad(mu,sig);
@@ -1629,6 +1631,23 @@ void aps::write_pts(){
     double mu,sig;
     FILE *output;
     
+    array_1d<double> correct_ans;
+    
+    correct_ans.set(0,5205.0);
+    correct_ans.set(1,14.65160);
+    correct_ans.set(2,44.342);
+    correct_ans.set(3,259.8);
+    correct_ans.set(4,0.736539);
+    
+    array_1d<double> hy;
+    
+    gg.get_hyper_parameters(hy);
+    gg.optimize();
+    
+    double mu_true,sig_true,chi_true=(*chisq)(correct_ans);
+    mu_true=gg.user_predict(correct_ans,&sig_true,0);
+    
+    
     good_pts.reset();
     ngood=0;
     for(i=0;i<gg.get_pts();i++){
@@ -1839,8 +1858,9 @@ void aps::write_pts(){
     fprintf(output,"%e %e %e %e",
     global_median,chimin,strad.get_target(),volume);
     
-    fprintf(output," -- %d %d %d\n",candidates.get_dim(),known_minima.get_dim(),ngood);
-    
+    fprintf(output," -- %d %d %d ",candidates.get_dim(),known_minima.get_dim(),ngood);
+    fprintf(output," -- %e %e %e -- %e\n",mu_true,sig_true,chi_true,
+    hy.get_data(0));
     
     fclose(output);
      

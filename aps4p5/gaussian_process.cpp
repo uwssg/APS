@@ -2342,7 +2342,9 @@ const{
 	dex,raw_neigh.get_data(0),raw_dd.get_data(0));
 	
 	for(i=0;i<kk+1;i++){
-	    printf("dex %d dd %e\n",raw_neigh.get_data(i),raw_dd.get_data(i));
+	    printf("dex %d dd %e -- %e %d\n",
+            raw_neigh.get_data(i),raw_dd.get_data(i),
+            kptr->get_pt(raw_neigh.get_data(i),dim-1),dim);
 	}
 	
 	exit(1);

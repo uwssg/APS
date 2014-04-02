@@ -48,8 +48,8 @@ min.set(0,5150.0);
 max.set(0,5250.0);
 aps_test.set_characteristic_length(0,1.0);
 
-aps_test.set_timingname("timing_file_5planets_optall_b.sav");
-aps_test.set_outname("master_output_5planets_optall_b.sav");
+aps_test.set_timingname("timing_file_5planets_test.sav");
+aps_test.set_outname("master_output_5planets_test.sav");
 
 
 int i,j;

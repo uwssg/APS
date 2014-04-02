@@ -200,6 +200,10 @@ posterior_spheres: posterior_from_hyper_spheres.cpp kd.o
 	$(gg) -o posterior_spheres posterior_from_hyper_spheres.cpp \
 	containers.o goto_tools.o kd.o
 
+explore: test_exploration.cpp gaussian_process.o
+	$(gg) -o explore test_exploration.cpp \
+	goto_tools.o containers.o eigen_wrapper.o kd.o gaussian_process.o \
+	$(LIBRARIES) $(INCLUDE)
 
 
 clean:
