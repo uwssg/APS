@@ -234,6 +234,8 @@ class gp{
     
     void initialize(array_2d<double>&,array_1d<double>&);
     
+    void set_hyper_parameters(array_1d<double>&);
+    
     int is_kptr_null();
     
     int get_kk();

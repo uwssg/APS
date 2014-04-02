@@ -52,6 +52,11 @@ public:
     void initialize(int,array_1d<double>&,array_1d<double>&,
         int,array_2d<double>&);
     
+    void set_min(array_1d<double>&);
+    void set_max(array_1d<double>&);
+    void set_hyper_parameters(array_1d<double>&);
+    void resume();
+    
     int get_n_pts();
     double get_pt(int,array_1d<double>&);
     
@@ -86,7 +91,7 @@ private:
     char outname[letters],timingname[letters];
     char **paramnames;
     
-    array_1d<int> candidates,aps_pts,known_minima,gradient_start_pts;
+    array_1d<int> candidates,known_minima,gradient_start_pts;
     array_1d<int> wide_pts,focus_pts,gibbs_pts,good_pts;
     
     int n_candidates;

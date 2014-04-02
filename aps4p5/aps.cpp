@@ -50,7 +50,7 @@ void aps::set_where(char *word){
     good_max.set_where(word);
     good_min.set_where(word);
     candidates.set_where(word);
-    aps_pts.set_where(word);
+    wide_pts.set_where(word);
 }
 
 aps::aps(int dim_in, int kk, double dd, int seed){
@@ -63,7 +63,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     candidates.set_name("aps_candidates");
     good_max.set_name("aps_good_max");
     good_min.set_name("aps_good_min");
-    aps_pts.set_name("aps_aps_pts");
     wide_pts.set_name("aps_wide_pts");
     focus_pts.set_name("aps_focus_pts");
     gibbs_pts.set_name("aps_gibbs_pts");
@@ -114,7 +113,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     chisq=NULL;
     
-    n_aps_pts=0;
     global_median=200000.0;
     grat=1.0;
     
@@ -302,8 +300,9 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     
     
     for(i=0;i<gg.get_pts();i++){
-        add_aps_pt(i,-2.0,-2.0);
         wide_pts.add(i);
+        mu_storage.add(-2.0);
+        sig_storage.add(-2.0);
     }
     
     int before_grad=chisq->get_called();
@@ -329,6 +328,77 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     }*/
     
     set_where("nowhere");
+}
+
+void aps::set_min(array_1d<double> &mn){
+    int i;
+    if(mn.get_dim()!=dim){
+        printf("WARNING setting min with dim %d but should be %d\n",
+        mn.get_dim(),dim);
+        
+        exit(1);
+    }
+    
+    for(i=0;i<dim;i++){
+        range_min.set(i,mn.get_data(i));
+    }
+}
+
+void aps::set_max(array_1d<double> &mx){
+    int i;
+    if(mx.get_dim()!=dim){
+        printf("WARNING setting max with dim %d but should be %d\n",
+        mx.get_dim(),dim);
+        
+        exit(1);
+    }
+    
+    for(i=0;i<dim;i++){
+        range_max.set(i,mx.get_data(i));
+    }
+}
+
+void aps::set_hyper_parameters(array_1d<double> &hh){
+    gg.set_hyper_parameters(hh);
+}
+
+void aps::resume(){
+    
+    int i,ct=0;
+    array_2d<double> data;
+    array_1d<double> ff,ggmax,ggmin;
+    double nn,mu,sig;
+    int ling;
+    char word[500];
+    FILE *input=fopen(outname,"r");
+    for(i=0;i<dim+5;i++)fscanf(input,"%s",word);
+    printf("final word is %s\n",word);
+    
+    data.set_cols(dim);
+    while(fscanf(input,"%le",&nn)>0){
+        data.set(ct,0,nn);
+        for(i=1;i<dim;i++){
+            fscanf(input,"%le",&nn);
+            data.set(ct,i,nn);
+        }
+        
+        fscanf(input,"%le",&nn);
+        ff.set(ct,nn);
+        
+        fscanf(input,"%le %le %d",&mu,&sig,&ling);
+        if(ling==0){
+            wide_pts.add(ct);
+            mu_storage.add(mu);
+            sig_storage.add(sig);
+        }
+        
+        ct++;
+    }
+    
+    
+    fclose(input);
+
+gg.initialize(data,ff,ggmax,ggmin);
 }
 
 void aps::set_chimin(double cc,array_1d<double> &pt){
@@ -361,42 +431,6 @@ void aps::get_minpt(array_1d<double> &output){
     for(i=0;i<gg.get_dim();i++){
         output.set(i,minpt.get_data(i));
     }
-}
-
-void aps::add_aps_pt(int dex, double mu, double sig){
-    if(dex>=gg.get_pts() || dex<0){
-        printf("WARNING trying to add aps_pt %d but total %d\n",
-	dex,gg.get_pts());
-	
-	exit(1);
-    }
-
-    int use_it,i;
-
-    
-    use_it=1;
-    for(i=0;i<n_aps_pts && use_it==1;i++){
-        if(dex==aps_pts.get_data(i))use_it=0;
-    }
-    
-    if(use_it==1){
-        aps_pts.add(dex);
-	mu_storage.add(mu);
-	sig_storage.add(sig);
-        n_aps_pts++;
-    }
-    
-    if(n_aps_pts!=aps_pts.get_dim() ||
-       n_aps_pts!=mu_storage.get_dim() ||
-       n_aps_pts!=sig_storage.get_dim()){
-    
-       printf("WARNING disagreement on n_aps_pts\n");
-       printf("%d %d %d %d\n",n_aps_pts,aps_pts.get_dim(),
-       mu_storage.get_dim(),sig_storage.get_dim());
-       
-       exit(1);
-    }
-    
 }
 
 int aps::is_it_a_candidate(int dex){
@@ -1372,10 +1406,6 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     int o_mindex=global_mindex;
     if(chitrue<exception){
         actually_added=add_pt(sambest,chitrue);
-	
-	if(actually_added==1 && which_aps==iWIDE){
-	    add_aps_pt(gg.get_pts()-1,mubest,sigbest);
-	}
 
 	if(actually_added==1 && which_aps==iWIDE){
 	    i=is_it_a_candidate(gg.get_pts()-1);
@@ -1386,6 +1416,8 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         if(actually_added==1){
             if(which_aps==iWIDE){
                 wide_pts.add(gg.get_pts()-1);
+                mu_storage.add(mubest);
+                sig_storage.add(sigbest);
             }
             else if(which_aps==iGIBBS){
                 gibbs_pts.add(gg.get_pts()-1);
@@ -1717,7 +1749,7 @@ void aps::write_pts(){
     
     aps_dex=0;
     for(i=0;i<gg.get_pts();i++){
-        if(aps_dex<n_aps_pts && i==aps_pts.get_data(aps_dex)){
+        if(aps_dex<wide_pts.get_dim() && i==wide_pts.get_data(aps_dex)){
 	    lling=0;
 	    mu=mu_storage.get_data(aps_dex);
 	    sig=sig_storage.get_data(aps_dex);
@@ -1745,9 +1777,9 @@ void aps::write_pts(){
     array_1d<int> inn;
     inn.set_name("aps_write_pts_inn");
     
-    for(i=0;i<n_aps_pts;i++){
-        tosort.set(i,gg.get_fn(aps_pts.get_data(i)));
-	inn.set(i,aps_pts.get_data(i));
+    for(i=0;i<wide_pts.get_dim();i++){
+        tosort.set(i,gg.get_fn(wide_pts.get_data(i)));
+	inn.set(i,wide_pts.get_data(i));
     }
     
     sort_and_check(tosort,sorted,inn);
@@ -1803,7 +1835,7 @@ void aps::write_pts(){
         gg.refactor();
     }
     
-    if(n_aps_pts>last_optimized+1000){
+    if(wide_pts.get_dim()>last_optimized+1000){
         //printf("optimizing\n");
 	
 	nn=double(time(NULL));
@@ -1830,7 +1862,7 @@ void aps::write_pts(){
 	    
             optimize();
             
-	    last_optimized=n_aps_pts;
+	    last_optimized=wide_pts.get_dim();
 	}
     }
      

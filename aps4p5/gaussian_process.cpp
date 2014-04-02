@@ -41,6 +41,10 @@ gp::~gp(){
  
 }
 
+void gp::set_hyper_parameters(array_1d<double> &hh){
+    covariogram->set_hyper_parameters(hh);
+}
+
 int gp::get_kk(){
     return kk;
 }
