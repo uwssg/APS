@@ -21,10 +21,13 @@ gp::gp(){
   ct_predict=0;
   time_predict=0.0;
   
+  time_optimize=0.0;
+  
   covariogram=NULL;
   neighbor_storage=NULL;
   kptr=NULL;
-
+  
+  hhbest.set_name("gp_hhbest");
   
 }
 
@@ -2598,21 +2601,50 @@ void gp::optimize(array_1d<double> &pt, int n_use){
 
 void gp::optimize(array_1d<int> &use_dex, int n_use){
     
+    double before=double(time(NULL));
+    
+    called_opt=0;
+    last_set=0;
+    eebest=exception;
+    
+    if(covariogram->get_n_hyper_parameters()<=2){
+        optimize_grid(use_dex,n_use);
+    }
+    else{
+        optimize_simplex(use_dex,n_use);
+    }
+    
+    covariogram->set_hyper_parameters(hhbest);
+    last_optimized=pts;
+    time_optimize+=double(time(NULL))-before;
+    
+}
+
+double gp::get_time_optimize(){
+    return time_optimize;
+}
+
+void gp::optimize_grid(array_1d<int> &use_dex, int n_use){
+    
     int i,j,k,l;
+    
+    opt_dex.reset();
+    for(i=0;i<use_dex.get_dim();i++){
+       opt_dex.set(i,use_dex.get_data(i));
+    }
     
     use_dex.set_where("gp_optimize(array<int>,int)");
    
     int nhy=covariogram->get_n_hyper_parameters();
     
-    array_1d<double> hh,hhbest,dh;
+    array_1d<double> lhh,dh;
     
-    hh.set_name("gp_optimize(array<int>,int)_hh");
-    hhbest.set_name("gp_optimize(array<int>,int)_hhbest");
+    lhh.set_name("gp_optimize(array<int>,int)_lhh");
     dh.set_name("gp_optimize(array<int>,int)_dh");
     
     double nn;
     
-    hh.set_dim(nhy);
+    lhh.set_dim(nhy);
     hhbest.set_dim(nhy);
     dh.set_dim(nhy);
     
@@ -2627,7 +2659,7 @@ void gp::optimize(array_1d<int> &use_dex, int n_use){
     }
     
     int ii;
-    double E,Ebest,mu;
+    double E,mu;
     
     for(ii=0;ii<totalsteps;ii++){
         j=ii;
@@ -2641,23 +2673,14 @@ void gp::optimize(array_1d<int> &use_dex, int n_use){
 	    
 	    nn=log(covariogram->get_hyper_parameter_min(i))+k*dh.get_data(i);
 	    
-	    hh.set(i,exp(nn));
+	    lhh.set(i,nn);
 	    
 	    j-=k*l;
 	    l=l/nsteps;
 	    
 	}
 	
-	covariogram->set_hyper_parameters(hh);
-	
-	E=optimization_error(hh,use_dex);
-        
-	if(ii==0 || E<Ebest){
-	    Ebest=E;
-	    for(i=0;i<nhy;i++){
-	        hhbest.set(i,hh.get_data(i));
-	    }
-	}
+	E=optimization_error(lhh);
 	
 	
     }
@@ -2680,24 +2703,193 @@ void gp::optimize(array_1d<int> &use_dex, int n_use){
     for(i=0;i<nhy;i++)printf("%e ",hhbest[i]);
     printf("Ebest %e \n",Ebest/double(n_use));*/
     
-    covariogram->set_hyper_parameters(hhbest);
-    
-    last_optimized=pts;
     
     use_dex.set_where("nowhere");
 
 }
 
-double gp::optimization_error(array_1d<double> &hh, array_1d<int> &dex){
+void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
+    double alpha=1.0,beta=0.9,gamma=1.1;
+    
+    array_2d<double> opt_pts;
+    array_1d<double> ff,ps,pss,pbar;
+    double ffs,ffss;
+    int i,j,nparams=covariogram->get_n_hyper_parameters();
+    
+    opt_dex.reset();
+    for(i=0;i<use_dex.get_dim();i++){
+        opt_dex.set(i,use_dex.get_data(i));
+    }
+    
+    
+    opt_pts.set_cols(nparams);
 
+    
+    Ran chaos(99);
+    double nn;
+    
+    array_1d<double> lmin,lmax;
+    for(i=0;i<nparams;i++){
+        lmin.set(i,log(covariogram->get_hyper_parameter_min(i)));
+        lmax.set(i,log(covariogram->get_hyper_parameter_max(i)));
+    }
+    
+    for(i=0;i<nparams+1;i++){
+        nn=2.0*exception;
+        while(nn>=exception){
+            for(j=0;j<nparams;j++){
+                opt_pts.set(i,j,lmin.get_data(j)+chaos.doub()*(lmax.get_data(j)-lmin.get_data(j)));
+            }
+            nn=optimization_error(*opt_pts(i));
+        }
+        ff.set(i,nn);
+    }
+    
+    double mu,sig=1.0;
+    int abort_max=200;
+    
+    int il=0,ih=0;
+    
+    for(i=1;i<nparams+1;i++){
+        if(ff.get_data(i)>ff.get_data(ih)){
+            ih=i;
+        }
+        
+        if(ff.get_data(i)<ff.get_data(il)){
+            il=i;
+        }
+    }
+    
+    while(sig>1.0e-4 && called_opt-last_set<abort_max){
+        for(i=0;i<nparams;i++){
+            pbar.set(i,0.0);
+            for(j=0;j<nparams+1;j++){
+                if(j!=ih){
+                    pbar.add_val(i,opt_pts.get_data(j,i));
+                }
+            }
+            pbar.divide_val(i,double(nparams));
+        }
+        
+        for(i=0;i<nparams;i++){
+            ps.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*opt_pts.get_data(ih,i));
+        }
+        ffs=optimization_error(ps);
+        
+        if(ffs<ff.get_data(ih) && ffs>ff.get_data(il)){
+            ff.set(ih,ffs);
+            for(i=0;i<nparams;i++){
+                opt_pts.set(ih,i,ps.get_data(i));
+            }
+        }
+        else if(ffs<ff.get_data(il)){
+            for(i=0;i<nparams;i++){
+                pss.set(i,gamma*ps.get_data(i)+(1.0-gamma)*pbar.get_data(i));
+            }
+            ffss=optimization_error(pss);
+            
+            if(ffss<ff.get_data(il)){
+                for(i=0;i<nparams;i++)opt_pts.set(ih,i,pss.get_data(i));
+                ff.set(ih,ffss);
+            }
+            else{
+                for(i=0;i<nparams;i++)opt_pts.set(ih,i,ps.get_data(i));
+                ff.set(ih,ffs);
+            }
+        }
+        
+        j=1;
+        for(i=0;i<nparams+1;i++){
+            if(ffs<ff.get_data(i) && i!=ih){
+                j=0;
+            }
+        }
+        
+        if(j==1){
+            for(i=0;i<nparams;i++){
+                pss.set(i,beta*opt_pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
+            }
+            ffss=optimization_error(pss);
+            
+            if(ffss<ff.get_data(ih)){
+                for(i=0;i<nparams;i++)opt_pts.set(ih,i,pss.get_data(i));
+                ff.set(ih,ffss);
+            }
+            else{
+                for(i=0;i<nparams+1;i++){
+                    if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                        il=i;
+                    }
+                }
+                for(i=0;i<nparams+1;i++){
+                    if(i!=il){
+                        for(j=0;j<nparams;j++){
+                            mu=0.5*(opt_pts.get_data(i,j)+opt_pts.get_data(il,j));
+                            opt_pts.set(i,j,mu);
+                        }
+                        ff.set(i,optimization_error(*opt_pts(i)));
+                    }
+                }
+            }
+        }
+        
+        mu=0.0;
+        for(i=0;i<nparams+1;i++){
+            mu+=ff.get_data(i);
+        }
+        mu=mu/double(nparams+1);
+        sig=0.0;
+        for(i=0;i<nparams+1;i++){
+            sig+=power(mu-ff.get_data(i),2);
+        }
+        sig=sig/double(nparams+1);
+        sig=sqrt(sig);
+        
+        for(i=0;i<nparams+1;i++){
+            if(i==0 || ff.get_data(i)>ff.get_data(ih)){
+                ih=i;
+            }
+            if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                il=i;
+            }
+        }
+        
+        printf("mu %e sig %e eebest %e -- %d %d\n",mu,sig,eebest,called_opt,last_set);
+        
+    }//while sig, an last_set, etc.
+    
+    printf("done minimizing\n");
+    printf("mu %e sig %e delta_called %d\n",
+    mu,sig,called_opt-last_set);
+    
+}
+
+
+double gp::optimization_error(array_1d<double> &lhh){
+    
+    called_opt++;
     int i;
+    
+    array_1d<double> hh;
+    for(i=0;i<covariogram->get_n_hyper_parameters();i++){
+        hh.set(i,exp(lhh.get_data(i)));
+    }
+    
     covariogram->set_hyper_parameters(hh);
     
     double E=0.0,mu;
     
-    for(i=0;i<dex.get_dim();i++){
-        mu=self_predict(dex.get_data(i));
-        E+=power(fn.get_data(dex.get_data(i))-mu,2);
+    for(i=0;i<opt_dex.get_dim();i++){
+        mu=self_predict(opt_dex.get_data(i));
+        E+=power(fn.get_data(opt_dex.get_data(i))-mu,2);
+    }
+    
+    if(E<eebest){
+        last_set=called_opt;
+        eebest=E;
+        for(i=0;i<covariogram->get_n_hyper_parameters();i++){
+            hhbest.set(i,hh.get_data(i));
+        }
     }
     
     return E;

@@ -186,20 +186,21 @@ class gp{
     
     paranoid_backup paranoia;
     
-    array_1d<double> fn;
+    array_1d<double> fn,hhbest;
+    array_1d<int> opt_dex;
     kd_tree *kptr;
-    int pts,kk;
+    int pts,kk,called_opt,last_set;
     
     int initialized,allottedpts,dim;
     int last_optimized,last_validated,last_refactored;
-    double sigcap;
+    double sigcap,time_optimize,eebest;
    
     mutable int ct_search,ct_predict;
     mutable double time_search,time_predict;
     mutable double time_dummy_search;
     
  
-        double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
+    double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
  
   public:
 
@@ -248,13 +249,18 @@ class gp{
     int get_last_optimized();
     int get_last_refactored();
     
+    void optimize_grid(array_1d<int>&,int);
+    void optimize_simplex(array_1d<int>&,int);
+    
     void optimize(array_1d<int>&,int);
     void optimize();
     void optimize(int,int);
     int optimize(array_1d<double>&,double);
     void optimize(array_1d<double>&,int);
     
-    double optimization_error(array_1d<double>&, array_1d<int>&);
+    double optimization_error(array_1d<double>&);
+    
+    double get_time_optimize();
     
     void set_kk(int);
     double get_fn(int) const;
