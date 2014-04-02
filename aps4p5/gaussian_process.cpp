@@ -2372,7 +2372,16 @@ double gp::get_nearest_distance(){
     return neighbor_storage->get_dd(0);
 }
 
-double gp::self_predict(int dex)
+double gp::self_predict(int dex)const{
+    double nn;
+    return self_predict(dex,&nn,0);
+}
+
+double gp::self_predict(int dex, double *sigout)const{
+    return self_predict(dex,sigout,1);
+}
+
+double gp::self_predict(int dex, double *sigout, int sigswit)
 const{
   
   if(dex>=pts || dex<0){
@@ -2546,7 +2555,33 @@ const{
              mu+=ggq.get_data(i)*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(j))-fbar(vv));
 	}
     }
-    
+  
+  double ikp,xx;
+  if(sigswit==1){
+      sigout[0]=0.0;
+      
+      xx=0.0;
+      for(i=0;i<kk;i++){
+          kptr->get_pt(neigh.get_data(i),vv);
+          for(j=0;j<kk;j++){
+              kptr->get_pt(neigh.get_data(j),uu);
+              xx+=(fn.get_data(neigh.get_data(j))-fbar(uu))*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(i))-fbar(vv));
+          }
+      }
+      ikp=xx/double(kk);
+     
+      for(i=0;i<kk;i++){
+          for(j=0;j<kk;j++){
+              sigout[0]+=ggq.get_data(i)*ggin.get_data(i,j)*ggq.get_data(j);
+          }
+      }
+      
+      sigout[0]=(*covariogram)(pt,pt,pmin,pmax,grad,0)-sigout[0];
+      sigout[0]*=ikp;
+      
+      if(sigout[0]<=0.0)sigout[0]=1.0e-10;
+      else sigout[0]=sqrt(sigout[0]);
+  }  
     
    
   if(isnan(mu)){
@@ -2985,12 +3020,14 @@ double gp::optimization_error(array_1d<double> &lhh){
     
     covariogram->set_hyper_parameters(hh);
     
-    double E=0.0,mu;
+    double E=0.0,mu,sig;
     
     for(i=0;i<opt_dex.get_dim();i++){
-        mu=self_predict(opt_dex.get_data(i));
-        E+=power(fn.get_data(opt_dex.get_data(i))-mu,2);
+        mu=self_predict(opt_dex.get_data(i),&sig);
+        E+=power((fn.get_data(opt_dex.get_data(i))-mu)/sig,2);
     }
+    
+    E=sqrt(E);
     
     if(E<eebest){
         last_set=called_opt;

@@ -247,6 +247,8 @@ class gp{
     double user_predict(array_1d<double>&,double*,int,array_1d<double>&) const;
     
     double self_predict(int) const;
+    double self_predict(int,double*) const;
+    double self_predict(int,double*, int) const;
     
     void user_predict_gradient(array_1d<double>&,array_1d<double>&,int);
     double actual_gradient(int,array_1d<double>&);
