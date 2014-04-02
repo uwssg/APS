@@ -106,7 +106,6 @@ private:
     double time_cleaning,time_writing;
     int ct_node,ct_aps,ct_gradient;
     
-    int n_aps_pts;
     double global_median;
     
     double chimin,delta_chisquared,grat;
@@ -122,7 +121,6 @@ private:
     void find_global_minimum_meta();
     
     void set_chimin(double,array_1d<double>&);
-    void add_aps_pt(int,double,double);
     int is_it_a_candidate(int);
     void set_as_candidate(int);
     int choose_a_candidate();
