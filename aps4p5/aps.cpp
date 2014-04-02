@@ -292,7 +292,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
 	}
     }
     
-    gg.optimize();
+    optimize();
     
     //ct_aps=chisq->get_called();
     ct_aps=0;
@@ -1620,6 +1620,31 @@ void aps::gradient_search(){
     //printf("done gradient searching\n");
 }
 
+void aps::optimize(){
+    
+    if(wide_pts.get_dim()<=0)return;
+    
+    int i,j;
+    array_1d<int> use_dex;
+    double rat,roll;
+    
+    if(wide_pts.get_dim()<3000){
+        gg.optimize(wide_pts,wide_pts.get_dim());
+    }
+    else{
+        rat=3000.0/double(wide_pts.get_dim());
+        for(i=0;i<wide_pts.get_dim();i++){
+            roll=dice->doub();
+            if(roll<rat){
+                use_dex.add(wide_pts.get_data(i));
+            }
+        }
+        
+        gg.optimize(use_dex,use_dex.get_dim());
+    }
+    
+}
+
 void aps::write_pts(){
     
     set_where("write_pts");
@@ -1642,11 +1667,11 @@ void aps::write_pts(){
     array_1d<double> hy;
     
     gg.get_hyper_parameters(hy);
-    gg.optimize();
     
     double mu_true,sig_true,chi_true=(*chisq)(correct_ans);
     mu_true=gg.user_predict(correct_ans,&sig_true,0);
     
+    optimize();
     
     good_pts.reset();
     ngood=0;
@@ -1803,23 +1828,7 @@ void aps::write_pts(){
 	    nn=double(time(NULL));
 	    //printf("\n    OPTIMIZING\n");
 	    
-            if(n_aps_pts<3000){
-	        gg.optimize(aps_pts,n_aps_pts);
-	    }
-	    else{
-	        n_to_optimize=n_aps_pts/2;
-	        if(n_to_optimize>5000)n_to_optimize=5000;
-	    
-	        for(i=0,j=0;i<n_aps_pts && j<n_to_optimize;i++){
-	            if(dice->doub()<0.5){
-		        to_optimize.set(j,aps_pts.get_data(i));
-		        j++;
-		    }
-	        }
-	    
-	        gg.optimize(to_optimize,j);
-	   
-	    }
+            optimize();
             
 	    last_optimized=n_aps_pts;
 	}
