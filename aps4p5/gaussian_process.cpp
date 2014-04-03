@@ -3009,6 +3009,8 @@ void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
     printf("mu %e sig %e delta_called %d\n",
     mu,sig,called_opt-last_set);
     
+    covariogram->print_hyperparams();
+    
 }
 
 
@@ -3026,13 +3028,42 @@ double gp::optimization_error(array_1d<double> &lhh){
     
     double E=0.0,mu,sig;
     
-    for(i=0;i<opt_dex.get_dim();i++){
-        mu=self_predict(opt_dex.get_data(i),&sig);
-        E+=power((fn.get_data(opt_dex.get_data(i))-mu),2);
+    array_1d<double> xx,cum,shldbe;
+    
+    for(i=0;i<4;i++){
+        xx.add((i+1)*0.5);
+        cum.set(i,0.0);
     }
     
-    //E=sqrt(E);
+    shldbe.set(0,0.383);
+    shldbe.set(1,0.6826);
+    shldbe.set(2,0.8664);
+    shldbe.set(3,0.9544);
     
+    
+    double dd;
+    int j;
+    
+    for(i=0;i<opt_dex.get_dim();i++){
+        mu=self_predict(opt_dex.get_data(i),&sig);
+        dd=fabs((mu-fn.get_data(opt_dex.get_data(i)))/sig);
+        
+        for(j=0;j<xx.get_dim();j++){
+            if(dd<xx.get_data(j))cum.add_val(j,1.0);
+        }
+        
+        //E+=power((fn.get_data(opt_dex.get_data(i))-mu),2);
+    }
+    
+    for(j=0;j<xx.get_dim();j++){
+        cum.divide_val(j,double(opt_dex.get_dim()));
+    }
+    
+    E=0.0;
+    for(j=0;j<xx.get_dim();j++){
+        E+=power(cum.get_data(j)-shldbe.get_data(j),2);
+    }
+
     if(E<eebest){
         last_set=called_opt;
         eebest=E;
