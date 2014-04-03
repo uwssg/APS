@@ -1749,7 +1749,7 @@ void aps::write_pts(){
     double mu_true,sig_true,chi_true=(*chisq)(correct_ans);
     mu_true=gg.user_predict(correct_ans,&sig_true,0);
     
-    //optimize();
+    optimize();
     
     good_pts.reset();
     ngood=0;

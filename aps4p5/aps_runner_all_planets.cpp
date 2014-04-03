@@ -78,6 +78,10 @@ for(i=0;i<nplanets;i++){
     rr_i.reset();
 }*/
 
+array_1d<int> rr_i;
+rr_i.set(0,4);
+aps_test.set_gibbs_set(rr_i);
+
 printf("initializing\n");
 aps_test.initialize(100,min,max);
 
