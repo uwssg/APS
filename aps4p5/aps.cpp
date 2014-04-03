@@ -1693,25 +1693,24 @@ void aps::optimize(){
     double rat,roll;
     
     data_opt.set_cols(dim);
-    
+    rat=3000.0/double(wide_pts.get_dim());
     for(i=0;i<wide_pts.get_dim();i++){
-       // if(sig_storage.get_data(i)<0.0){
+        roll=dice->doub();
+        if(roll<rat){
             use_dex.add(wide_pts.get_data(i));
             
             ff_opt.add(gg.get_fn(wide_pts.get_data(i)));
             data_opt.add_row(*gg.get_pt(wide_pts.get_data(i)));
-            
-       // }
+       }     
+      
     }
     
     gg_opt.assign_covariogram(gg.get_covariogram());
     gg_opt.initialize(data_opt,ff_opt,ggmax,ggmin);
     
     use_dex.reset();
-    for(i=0;i<data_opt.get_rows();i++){
-        use_dex.set(i,i);
-    }
-    
+    for(i=0;i<data_opt.get_rows();i++)use_dex.set(i,i);
+  
     gg_opt.optimize(use_dex,use_dex.get_dim());
     
     
@@ -1720,20 +1719,7 @@ void aps::optimize(){
     gg_opt.get_hyper_parameters(hh);
     set_hyper_parameters(hh);
     
-    /*if(wide_pts.get_dim()<3000){
-        gg.optimize(wide_pts,wide_pts.get_dim());
-    }
-    else{
-        rat=3000.0/double(wide_pts.get_dim());
-        for(i=0;i<wide_pts.get_dim();i++){
-            roll=dice->doub();
-            if(roll<rat){
-                use_dex.add(wide_pts.get_data(i));
-            }
-        }
-        
-        gg.optimize(use_dex,use_dex.get_dim());
-    }*/
+
     
 }
 

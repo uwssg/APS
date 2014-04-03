@@ -3046,6 +3046,7 @@ double gp::optimization_error(array_1d<double> &lhh){
     double dd;
     int j;
     
+    E=0.0;
     for(i=0;i<opt_dex.get_dim();i++){
         mu=self_predict(opt_dex.get_data(i),&sig);
         dd=fabs((mu-fn.get_data(opt_dex.get_data(i)))/sig);
@@ -3054,17 +3055,17 @@ double gp::optimization_error(array_1d<double> &lhh){
             if(dd<xx.get_data(j))cum.add_val(j,1.0);
         }
         
-        //E+=power((fn.get_data(opt_dex.get_data(i))-mu),2);
+        E+=power((fn.get_data(opt_dex.get_data(i))-mu),2);
     }
     
     for(j=0;j<xx.get_dim();j++){
         cum.divide_val(j,double(opt_dex.get_dim()));
     }
-    
+    /*
     E=0.0;
     for(j=0;j<xx.get_dim();j++){
         E+=power(cum.get_data(j)-shldbe.get_data(j),2);
-    }
+    }*/
 
     if(E<eebest){
         last_set=called_opt;
