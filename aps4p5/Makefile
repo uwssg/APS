@@ -132,6 +132,12 @@ planet5: aps_runner_all_planets.cpp aps.o exoplanet.o
 	chisq.o exoplanet.o aps.o \
 	$(LIBRARIES) $(INCLUDE)
 
+planetTest: aps_planet_test.cpp aps.o exoplanet.o
+	$(gg) -o planetTest aps_planet_test.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq.o exoplanet.o aps.o \
+	$(LIBRARIES) $(INCLUDE)
+
 analyze_planets: goto_tools.o containers.o analyze_planets.cpp
 	$(gg) -o analyze_planets analyze_planets.cpp \
 	goto_tools.o containers.o 

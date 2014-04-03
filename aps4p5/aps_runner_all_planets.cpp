@@ -83,7 +83,21 @@ aps_test.initialize(100,min,max);
 
 aps_test.set_n_samples(1000);
 
+//aps_test.set_min(min);
+//aps_test.set_max(max);
+//aps_test.resume();
+
 double chival,chivaltest,err,maxerr;
+
+/*double mu,sig,strad,pp;
+FILE *output=fopen("strad_test.sav","w");
+for(pp=0.1;pp<1000.0;pp+=0.1){
+    mu=aps_test.absurd_planet_test(pp,&sig,&strad);
+    
+    fprintf(output,"%e %e %e %e\n",pp,mu,sig,strad);
+}
+fclose(output);
+aps_test.write_pts();*/
 
 i=-1;
 while(aps_test.get_called()<1000000 && aps_test.get_chimin()>610.0){
@@ -92,6 +106,7 @@ while(aps_test.get_called()<1000000 && aps_test.get_chimin()>610.0){
     
 }
 
+/*
 array_1d<double> minpt;
 
 aps_test.get_minpt(minpt);
@@ -104,7 +119,7 @@ printf("chimin %e\n",aps_test.get_chimin());
 printf("ct_aps %d ct_grad %d total %d\n",
 aps_test.get_ct_aps(),aps_test.get_ct_gradient(),
 aps_test.get_called());
-
+*/
 
 printf("maxerr %e npts %d\n",maxerr,aps_test.get_n_pts());
 

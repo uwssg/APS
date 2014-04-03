@@ -1722,7 +1722,7 @@ void aps::write_pts(){
     double mu_true,sig_true,chi_true=(*chisq)(correct_ans);
     mu_true=gg.user_predict(correct_ans,&sig_true,0);
     
-    optimize();
+    //optimize();
     
     good_pts.reset();
     ngood=0;
@@ -1854,7 +1854,7 @@ void aps::write_pts(){
         gg.refactor();
     }
     
-    if(wide_pts.get_dim()>last_optimized+1000){
+    /*if(wide_pts.get_dim()>last_optimized+1000){
         //printf("optimizing\n");
 	
 	nn=double(time(NULL));
@@ -1883,7 +1883,7 @@ void aps::write_pts(){
             
 	    last_optimized=wide_pts.get_dim();
 	}
-    }
+    }*/
      
     /*output=fopen("candidates_log.sav","w");
     for(i=0;i<n_candidates;i++){
@@ -1931,4 +1931,14 @@ void aps::write_pts(){
        
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
+}
+
+double aps::absurd_planet_test(double pp, double *sigout, double *stradout){
+    int i;
+    array_1d<double> trial;
+    for(i=0;i<dim;i++)trial.set(i,minpt.get_data(i));
+    trial.set(dim-1,pp);
+    double mu=gg.user_predict(trial,sigout,0);
+    stradout[0]=strad(mu,sigout[0]);
+    return mu;
 }

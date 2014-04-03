@@ -3028,10 +3028,10 @@ double gp::optimization_error(array_1d<double> &lhh){
     
     for(i=0;i<opt_dex.get_dim();i++){
         mu=self_predict(opt_dex.get_data(i),&sig);
-        E+=power((fn.get_data(opt_dex.get_data(i))-mu)/sig,2);
+        E+=power((fn.get_data(opt_dex.get_data(i))-mu),2);
     }
     
-    E=sqrt(E);
+    //E=sqrt(E);
     
     if(E<eebest){
         last_set=called_opt;

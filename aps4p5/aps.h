@@ -78,6 +78,8 @@ public:
     double get_chimin();
     void get_minpt(array_1d<double>&);
     
+    double absurd_planet_test(double,double*,double*);
+    
 private:
     Ran *dice;
     chisquared *chisq;
