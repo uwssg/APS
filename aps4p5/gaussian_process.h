@@ -312,6 +312,7 @@ class gp{
     void get_hyper_parameters(array_1d<double>&);
     
     array_1d<double>* get_pt(int);
+    covariance_function* get_covariogram();
     
 };
 

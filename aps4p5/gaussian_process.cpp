@@ -1476,7 +1476,7 @@ void gaussian_covariance_multiD::set_hyper_parameters(array_1d<double> &input){
 }
 
 void gaussian_covariance_multiD::print_hyperparams(){
-    printf("in matern_covariance_multiD\n");
+    printf("in gaussian_covariance_multiD\n");
     int i;
     for(i=0;i<n_hyperparameters;i++){
         printf("    ell %d %e\n",i,ell.get_data(i));
@@ -2762,6 +2762,9 @@ void gp::optimize(array_1d<int> &use_dex, int n_use){
     }
     
     covariogram->set_hyper_parameters(hhbest);
+    
+    covariogram->print_hyperparams();
+    
     last_optimized=pts;
     time_optimize+=double(time(NULL))-before;
     
@@ -3008,8 +3011,7 @@ void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
     printf("done minimizing\n");
     printf("mu %e sig %e delta_called %d\n",
     mu,sig,called_opt-last_set);
-    
-    covariogram->print_hyperparams();
+   
     
 }
 
@@ -3069,6 +3071,10 @@ double gp::optimization_error(array_1d<double> &lhh){
         eebest=E;
         for(i=0;i<covariogram->get_n_hyper_parameters();i++){
             hhbest.set(i,hh.get_data(i));
+        }
+        printf("\n");
+        for(j=0;j<xx.get_dim();j++){
+            printf("    %e %e\n",xx.get_data(j),cum.get_data(j));
         }
     }
     
@@ -3156,4 +3162,8 @@ int paranoid_backup::get_dim(){
 	exit(1);
     }
     return dim;
+}
+
+covariance_function* gp::get_covariogram(){
+    return covariogram;
 }

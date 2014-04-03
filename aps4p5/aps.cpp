@@ -1675,18 +1675,50 @@ void aps::optimize(){
     
     if(wide_pts.get_dim()<=0)return;
     
-    int i,j;
-    array_1d<int> use_dex;
-    double rat,roll;
+    gp gg_opt;
     
-    for(i=0;i<wide_pts.get_dim();i++){
-        if(sig_storage.get_data(i)<0.0){
-            use_dex.add(wide_pts.get_data(i));
-        }
+    gg_opt.set_kk(gg.get_kk());
+    array_1d<double> ggmin,ggmax;
+    
+    int i,j;
+    
+    for(i=0;i<dim;i++){
+        ggmin.set(i,gg.get_min(i));
+        ggmax.set(i,gg.get_max(i));
     }
     
+    array_1d<int> use_dex;
+    array_1d<double> ff_opt;
+    array_2d<double> data_opt;
+    double rat,roll;
     
-    gg.optimize(use_dex,use_dex.get_dim());
+    data_opt.set_cols(dim);
+    
+    for(i=0;i<wide_pts.get_dim();i++){
+       // if(sig_storage.get_data(i)<0.0){
+            use_dex.add(wide_pts.get_data(i));
+            
+            ff_opt.add(gg.get_fn(wide_pts.get_data(i)));
+            data_opt.add_row(*gg.get_pt(wide_pts.get_data(i)));
+            
+       // }
+    }
+    
+    gg_opt.assign_covariogram(gg.get_covariogram());
+    gg_opt.initialize(data_opt,ff_opt,ggmax,ggmin);
+    
+    use_dex.reset();
+    for(i=0;i<data_opt.get_rows();i++){
+        use_dex.set(i,i);
+    }
+    
+    gg_opt.optimize(use_dex,use_dex.get_dim());
+    
+    
+    array_1d<double> hh;
+    
+    gg_opt.get_hyper_parameters(hh);
+    set_hyper_parameters(hh);
     
     /*if(wide_pts.get_dim()<3000){
         gg.optimize(wide_pts,wide_pts.get_dim());
@@ -1948,6 +1980,7 @@ double aps::absurd_planet_test(double pp, double *sigout, double *stradout){
     for(i=0;i<dim;i++)trial.set(i,minpt.get_data(i));
     trial.set(dim-1,pp);
     double mu=gg.user_predict(trial,sigout,0);
+    if(mu<0.0)mu=0.0;
     stradout[0]=strad(mu,sigout[0]);
     return mu;
 }
