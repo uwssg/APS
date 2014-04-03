@@ -1679,7 +1679,16 @@ void aps::optimize(){
     array_1d<int> use_dex;
     double rat,roll;
     
-    if(wide_pts.get_dim()<3000){
+    for(i=0;i<wide_pts.get_dim();i++){
+        if(sig_storage.get_data(i)<0.0){
+            use_dex.add(wide_pts.get_data(i));
+        }
+    }
+    
+    
+    gg.optimize(use_dex,use_dex.get_dim());
+    
+    /*if(wide_pts.get_dim()<3000){
         gg.optimize(wide_pts,wide_pts.get_dim());
     }
     else{
@@ -1692,7 +1701,7 @@ void aps::optimize(){
         }
         
         gg.optimize(use_dex,use_dex.get_dim());
-    }
+    }*/
     
 }
 

@@ -75,6 +75,7 @@ public:
     
     void set_n_samples(int);
     
+    void optimize();
     double get_chimin();
     void get_minpt(array_1d<double>&);
     
@@ -132,8 +133,6 @@ private:
     void start_timingfile();
     
     void set_where(char*);
-    
-    void optimize();
     
     void aps_choose_best(array_2d<double>&,int);
     
