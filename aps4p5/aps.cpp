@@ -364,6 +364,10 @@ void aps::set_hyper_parameters(array_1d<double> &hh){
 }
 
 void aps::resume(){
+    resume(outname);
+}
+
+void aps::resume(char *filename){
     
     int i,ct=0;
     array_2d<double> data;
@@ -371,7 +375,7 @@ void aps::resume(){
     double nn,mu,sig,local_min;
     int ling,i_min;
     char word[500];
-    FILE *input=fopen(outname,"r");
+    FILE *input=fopen(filename,"r");
     for(i=0;i<dim+5;i++)fscanf(input,"%s",word);
     printf("final word is %s\n",word);
     

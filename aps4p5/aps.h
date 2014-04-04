@@ -56,6 +56,7 @@ public:
     void set_max(array_1d<double>&);
     void set_hyper_parameters(array_1d<double>&);
     void resume();
+    void resume(char*);
     
     int get_n_pts();
     double get_pt(int,array_1d<double>&);

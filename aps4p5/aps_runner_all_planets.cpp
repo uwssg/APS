@@ -82,9 +82,12 @@ array_1d<int> rr_i;
 rr_i.set(0,4);
 aps_test.set_gibbs_set(rr_i);
 
-printf("initializing\n");
-aps_test.initialize(100,min,max);
+//printf("initializing\n");
+//aps_test.initialize(100,min,max);
 
+aps_test.set_min(min);
+aps_test.set_max(max);
+aps_test.resume("master_seed.sav");
 aps_test.set_n_samples(1000);
 
 //aps_test.set_min(min);
