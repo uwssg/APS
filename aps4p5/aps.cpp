@@ -1691,8 +1691,17 @@ void aps::gradient_search(){
         if(i==0 || gg.get_fn(dexes.get_data(i))<nnmin){
             nnmin=gg.get_fn(dexes.get_data(i));
             j=dexes.get_data(i);
-            ix=i;
+            
         }
+    }
+    
+    ix=-1;
+    for(i=0;i<candidates.get_dim();i++){
+        if(candidates.get_data(i)==j)ix=i;
+    }
+    if(ix<0){
+        printf("WARNING could not find proper candidate to remove\n");
+        exit(1);
     }
     
     gradient_start_pts.add(j);
