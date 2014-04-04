@@ -844,7 +844,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     mindex=neigh.get_data(il);
     
     printf("    starting %e chimin %e\n    ",simplex_min,chimin);
-    for(i=0;i<(dim/3);i++)printf("%e ",pts.get_data(il,i*3)+min.get_data(i*3));
+    for(i=0;i<dim;i++)printf("%e ",pts.get_data(il,i)+min.get_data(i));
     printf("\n");
     
     
@@ -1064,26 +1064,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     printf("    ending %e -- %e %e %e\n",simplex_min,sig,mu,chimin);
     printf("    ");
-    for(i=0;i<dim/3;i++)printf("%e ",pts.get_data(il,i*3)+min.get_data(i*3));
-    i=(dim-2)/5-1;
+    for(i=0;i<dim;i++)printf("%e ",pts.get_data(il,i)+min.get_data(i));
+    
     
     printf("\n\n");
     printf("    ");
-    //for(i=0;i<gg.get_dim();i++){
-    //    printf("%e ",minpt.get_data(i));
-   // }
     printf("    chimin %e\n",chimin);
     
-    /*array_1d<double> v_min,gradient;
-    gg.get_pt(mindex,v_min);
-    printf("checking simplex min %e\n",gg.get_fn(mindex));
-    gg.actual_gradient(v_min,gradient);
-    
-    double dd=gradient.get_square_norm();
-    
-    printf("square norm of gradient %e\n",dd);
-    
-    exit(1);*/
+   
 
     
     set_where("nowhere");
@@ -1625,41 +1613,70 @@ void aps::gradient_search(){
 	
 	exit(1);
     }
+    
+    if(candidates.get_dim()<dim+1){
+        return;
+    }
 
     array_1d<double> vv;
     vv.set_name("gradient_search_vv");
    
-    int i,ix;
+    int i,ix,j;
     int o_mindex=global_mindex;
     
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
     
-    //find_global_minimum_meta();
     
-    /*for(i=0;i<n_candidates;i++){
-         printf("candidates %d %d\n",i,is_it_a_candidate(candidates.get_data(i)));
-    }*/
+    array_1d<double> dd,sorted;
+    array_1d<int> seed,dexes;
+    double nn,nnmin;
     
-    ix=choose_a_candidate();
-    if(ix<0 && mindex_is_candidate==1){
-        ix=global_mindex;
+    if(known_minima.get_dim()==0){
+        
+        for(i=0;i<candidates.get_dim();i++){
+            dd.set(i,gg.get_fn(candidates.get_data(i)));
+            dexes.set(i,candidates.get_data(i));
+        }
+        
+    }
+    else{
+        for(i=0;i<candidates.get_dim();i++){
+            nnmin=exception;
+            for(j=0;j<known_minima.get_dim();j++){
+                nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(known_minima.get_data(j)));
+                if(j==0 || nn<nnmin){
+                    nnmin=nn;
+                }
+            }
+            for(j=0;j<gradient_start_pts.get_dim();j++){
+                nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(gradient_start_pts.get_data(j)));
+                if(nn<nnmin){
+                    nnmin=nn;
+                }
+            }
+            
+            dd.set(i,-1.0*nnmin);
+            dexes.set(i,candidates.get_data(i));
+            
+        }
+    
+    
+    }
+    sort_and_check(dd,sorted,dexes);
+    
+    for(i=0;i<dim+1;i++){
+        seed.set(i,dexes.get_data(i));
+        if(i==0 || gg.get_fn(dexes.get_data(i))<nnmin){
+            nnmin=gg.get_fn(dexes.get_data(i));
+            j=dexes.get_data(i);
+        }
     }
     
-    if(ix>=0){
-       
-       gradient_start_pts.add(ix);
-       
-       //gg.get_pt(ix,vv);
-       
-       find_global_minimum(ix);
+    gradient_start_pts.add(j);
+    candidates.remove(j);
     
-    }
-    /*else{
-        printf("finding global minimum from minpt\n");
-        find_global_minimum(minpt);
-    }*/
-    
+    find_global_minimum(seed);
     
     if(global_mindex!=o_mindex){
         mindex_is_candidate=0;

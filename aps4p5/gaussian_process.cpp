@@ -2878,6 +2878,8 @@ void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
     Ran chaos(99);
     double nn;
     
+    printf("optimizing with simplex\n");
+    
     array_1d<double> lmin,lmax;
     for(i=0;i<nparams;i++){
         lmin.set(i,log(covariogram->get_hyper_parameter_min(i)));
@@ -3004,7 +3006,7 @@ void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
             }
         }
         
-        printf("mu %e sig %e eebest %e -- %d %d\n",mu,sig,eebest,called_opt,last_set);
+        //printf("mu %e sig %e eebest %e -- %d %d\n",mu,sig,eebest,called_opt,last_set);
         
     }//while sig, an last_set, etc.
     
@@ -3073,10 +3075,10 @@ double gp::optimization_error(array_1d<double> &lhh){
         for(i=0;i<covariogram->get_n_hyper_parameters();i++){
             hhbest.set(i,hh.get_data(i));
         }
-        printf("\n");
+        /*printf("\n");
         for(j=0;j<xx.get_dim();j++){
             printf("    %e %e\n",xx.get_data(j),cum.get_data(j));
-        }
+        }*/
     }
     
     return E;
