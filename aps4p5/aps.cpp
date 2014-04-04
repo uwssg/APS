@@ -82,6 +82,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     n_samples=250;
     
     last_optimized=0;
+    time_optimizing=0.0;
     failed_to_add=0;
     aps_failed=0;
     minuit_failed=0;
@@ -1673,6 +1674,8 @@ void aps::gradient_search(){
 
 void aps::optimize(){
     
+    double before=double(time(NULL));
+    
     if(wide_pts.get_dim()<=0)return;
     
     gp gg_opt;
@@ -1719,6 +1722,8 @@ void aps::optimize(){
     gg_opt.get_hyper_parameters(hh);
     set_hyper_parameters(hh);
     
+    last_optimized=wide_pts.get_dim();
+    time_optimizing+=double(time(NULL))-before;
 
     
 }
@@ -1749,7 +1754,12 @@ void aps::write_pts(){
     double mu_true,sig_true,chi_true=(*chisq)(correct_ans);
     mu_true=gg.user_predict(correct_ans,&sig_true,0);
     
-    optimize();
+    if(last_optimized==0 ||
+      (wide_pts.get_dim()>last_optimized+100 && 
+      time_optimizing<0.25*(double(time(NULL))-start_time))){
+    
+        optimize();
+    }
     
     good_pts.reset();
     ngood=0;
