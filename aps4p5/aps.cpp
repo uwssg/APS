@@ -1198,7 +1198,7 @@ void aps::search(){
     aps_score=ct_aps;
     
     
-    if(n_candidates==0 && mindex_is_candidate==0){
+    if(n_candidates==0){
         grad_score=aps_score+100;
     }
     else{
@@ -1451,7 +1451,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         
     }
     
-    if(global_mindex!=o_mindex){
+    if(global_mindex!=o_mindex && which_aps==iWIDE){
         mindex_is_candidate=1;
     }
     
@@ -1695,8 +1695,21 @@ void aps::gradient_search(){
         }
     }
     
+    if(mindex_is_candidate==1 && global_mindex>=0){
+        for(i=0;i<dim+1;i++){
+            if(i==0 || gg.get_fn(seed.get_data(i))>nn){
+                nn=gg.get_fn(dexes.get_data(i));
+                ix=i;
+            }
+        }
+        
+        seed.set(ix,global_mindex);
+    }
+    
+    
+    
     ix=-1;
-    for(i=0;i<candidates.get_dim();i++){
+    for(i=0;i<candidates.get_dim() && mindex_is_candidate==0;i++){
         if(candidates.get_data(i)==j)ix=i;
     }
     if(ix<0){
@@ -1705,8 +1718,11 @@ void aps::gradient_search(){
     }
     
     gradient_start_pts.add(j);
-    candidates.remove(ix);
-    n_candidates--;
+    
+    if(ix>=0){
+        candidates.remove(ix);
+        n_candidates--;
+    }
     
     find_global_minimum(seed);
     
