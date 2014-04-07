@@ -1,4 +1,5 @@
 #include "exoplanet.h"
+#include <omp.h>
 #include <time.h>
 
 //re-factor so that planets are ranked by amplitude
@@ -13,9 +14,6 @@ planet::planet(){
 planet::planet(int i) : chisquared(i){
     nplanets=i;
     ndata=0;
-    
-    ln_switch.set_dim(nplanets);
-    ln_switch.set_name("planet_ln_switch");
     
     vk=0.0;
     vl=0.0;
@@ -47,8 +45,6 @@ planet::planet(int i) : chisquared(i){
 	
 	time_max.set(j,1.0);
 	time_min.set(j,-1.0);
-        
-        ln_switch.set(j,0);
     }
     
     
@@ -71,10 +67,6 @@ planet::~planet(){
 
     if(label!=NULL)delete [] label;
     
-}
-
-void planet::use_ln(int ii){
-    ln_switch.set(ii,1);
 }
 
 void planet::set_ndata(int i){
@@ -150,6 +142,9 @@ double planet::calculate_nu(array_1d<double> &period, array_1d<double> &eccentri
     int i,j;
     double yy,xx,EE;
     
+    nu.set_dim(ndata,nplanets);
+    
+    #pragma omp parallel for private(i,j,yy,EE,xx)
     for (i=0;i<ndata;i++){
         for(j=0;j<nplanets;j++){
             yy=2.0*pi*(date.get_data(i)/period.get_data(j)-T0.get_data(j));
@@ -224,7 +219,8 @@ double planet::true_chisq(array_1d<double> &period,
          }
          if(period.get_data(i)<0.0)return exception;
      }
- 
+     
+      #pragma omp parallel for private(j,i)
       for(j=0;j<nplanets;j++){
          for(i=0;i<ndata;i++){
 	   
@@ -248,21 +244,24 @@ double planet::true_chisq(array_1d<double> &period,
     array_1d<double> mm;
     
     bb.set_dim(nplanets+2);
-    mm.set_dim(nplanets+2*nplanets+2);
+    mm.set_dim((nplanets+2)*(nplanets+2));
     
+    #pragma omp parallel for private(i,j)
     for(i=0;i<nplanets+2;i++){
         bb.set(i,0.0);
         for(j=0;j<nplanets+2;j++){
             mm.set(i*(nplanets+2)+j,0.0);
         }
     }
-       
+    
+    #pragma omp parallel for private(j,i)   
     for(j=0;j<nplanets;j++){
         for(i=0;i<ndata;i++){
             bb.add_val(j,velocity.get_data(i)*W.get_data(i,j));
         }
     }
     
+
     for(i=0;i<ndata;i++){
         if(label[i]=='L'){
             bb.add_val(nplanets,velocity.get_data(i));
@@ -272,6 +271,7 @@ double planet::true_chisq(array_1d<double> &period,
         }
     }
     
+    #pragma omp parallel for private(j,i,k)
     for(i=0;i<nplanets;i++){
         for(j=0;j<nplanets;j++){
             for(k=0;k<ndata;k++){
@@ -320,7 +320,20 @@ double planet::true_chisq(array_1d<double> &period,
     
     chisq=0.0;
     
+    int numthreads;
+    #pragma omp parallel
+    numthreads=omp_get_num_threads();
+    
+    //printf("num threads %d\n",numthreads);
+    
+    array_1d<double> c_arr;
+    c_arr.set_dim(numthreads);
+    for(i=0;i<numthreads;i++)c_arr.set(i,0.0);
+    
+    int ith;
+    #pragma omp parallel for private (i,j,nn,ith)
     for(i=0;i<ndata;i++){
+        ith=omp_get_thread_num();
         nn=0.0;
         for(j=0;j<nplanets;j++){
             nn+=amplitudes.get_data(j)*eccentricity.get_data(j)*cos(omega.get_data(j)*radians_per_degree);
@@ -335,9 +348,12 @@ double planet::true_chisq(array_1d<double> &period,
             nn+=amplitudes.get_data(nplanets+1);
         }
         
-        chisq+=power(nn-velocity.get_data(i),2)/sig2.get_data(i); 
+        //chisq+=power(nn-velocity.get_data(i),2)/sig2.get_data(i); 
+	c_arr.add_val(ith,power(nn-velocity.get_data(i),2)/sig2.get_data(i));
     }
     
+    chisq=0.0;
+    for(i=0;i<numthreads;i++)chisq+=c_arr.get_data(i);
     
     //printf("returning %e\n",chisq);
     
@@ -429,20 +445,10 @@ double planet::find_E(double m, double ee) const{
 
 }
 
-double planet::operator()(array_1d<double> &period_in) const{
+double planet::operator()(array_1d<double> &period) const{
     
     
     int i;
-    array_1d<double> period;
-    
-    for(i=0;i<nplanets;i++){
-        if(ln_switch.get_data(i)==1){
-            period.set(i,exp(period_in.get_data(i)));
-        }
-        else{
-            period.set(i,period_in.get_data(i));
-        }
-    }
     
     called++;
     
