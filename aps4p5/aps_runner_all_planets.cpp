@@ -49,8 +49,8 @@ min.set(0,5150.0);
 max.set(0,5250.0);
 aps_test.set_characteristic_length(0,1.0);
 
-aps_test.set_timingname("timing_file_5planets_testseed.sav");
-aps_test.set_outname("master_output_5planets_testseed.sav");
+aps_test.set_timingname("timing_file_5planets_symm.sav");
+aps_test.set_outname("master_output_5planets_symm.sav");
 
 
 int i,j;
@@ -65,7 +65,7 @@ min.set(2,44.0);
 max.set(2,45.0);
 min.set(3,259.0);
 max.set(3,260.0);
-min.set(4,0.001);
+min.set(4,-200.0);
 max.set(4,1000.0);
 
 /*array_1d<int> rr_i;
