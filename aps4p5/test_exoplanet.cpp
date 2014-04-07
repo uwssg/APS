@@ -101,6 +101,15 @@ double chisquared=solar_system(periods);
 printf("chisquared %e\n",chisquared);
 printf("that took %e\n",double(time(NULL))-before);
 
+printf("testing neg\n");
+periods.multiply_val(2,-1.0);
+before=double(time(NULL));
+
+chisquared=solar_system(periods);
+printf("chisquared %e\n",chisquared);
+printf("that took %e\n",double(time(NULL))-before);
+
+
 printf("testing log\n");
 for(i=2;i<nplanets;i++){
     solar_system.use_ln(i);
@@ -112,6 +121,7 @@ chisquared=solar_system(periods);
 printf("chisquared %e\n",chisquared);
 printf("that took %e\n",double(time(NULL))-before);
 
+printf("\n");
 
 //exit(1);
 
@@ -150,6 +160,15 @@ before=double(time(NULL));
 chisquared=solar_system(periods);
 printf("better chisq %e\n",chisquared);
 printf("that took %e\n",double(time(NULL))-before);
+
+printf("testing neg\n");
+periods.multiply_val(2,-1.0);
+before=double(time(NULL));
+
+chisquared=solar_system(periods);
+printf("chisquared %e\n",chisquared);
+printf("that took %e\n",double(time(NULL))-before);
+
 
 printf("testing log\n");
 for(i=2;i<nplanets;i++){

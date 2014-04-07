@@ -464,7 +464,10 @@ double planet::operator()(array_1d<double> &period_in) const{
     array_1d<double> period;
     
     for(i=0;i<nplanets;i++){
-        if(ln_switch.get_data(i)==0)period.set(i,period_in.get_data(i));
+        if(ln_switch.get_data(i)==0){
+            if(period_in.get_data(i)>0.0)period.set(i,period_in.get_data(i));
+            else period.set(i,-1.0*period_in.get_data(i));
+        }
         else period.set(i,exp(period_in.get_data(i)));
     }
     
