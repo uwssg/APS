@@ -5,14 +5,20 @@
 #ifndef EXOPLANET_H
 #define EXOPLANET_H
 
+#ifdef USE_OPENMP
+#include <omp.h>
+#else
+#define omp_get_num_threads() 1
+#define omp_get_thread_num() 0
+#endif
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
 
 #define radians_per_degree 1.745329252e-2
-
-
 
 class planet : public chisquared {
 

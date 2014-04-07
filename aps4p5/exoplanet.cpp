@@ -1,5 +1,4 @@
 #include "exoplanet.h"
-#include <omp.h>
 #include <time.h>
 
 //re-factor so that planets are ranked by amplitude
@@ -223,14 +222,6 @@ double planet::true_chisq(array_1d<double> &period,
       #pragma omp parallel for private(j,i)
       for(j=0;j<nplanets;j++){
          for(i=0;i<ndata;i++){
-	   
-	   if(isnan(nn)){
-	      printf("WARNING nu %e\n",nn);
-	      printf("yy %e \n",yy);
-	      printf("bigE %e ee %e xx %e atan %e\n",bigE,eccentricity.get_data(j),xx,atan(xx));
-	      printf("j %d\n",j);
-	      exit(1);
-	   }
 	    
            W.set(i,j,eccentricity.get_data(j)*cos(omega.get_data(j)*radians_per_degree)+cos(nu.get_data(i,j)+omega.get_data(j)*radians_per_degree));
             
@@ -273,12 +264,15 @@ double planet::true_chisq(array_1d<double> &period,
     
     #pragma omp parallel for private(j,i,k)
     for(i=0;i<nplanets;i++){
+        //printf("%d %d\n",i,omp_get_thread_num());
         for(j=0;j<nplanets;j++){
             for(k=0;k<ndata;k++){
+                //printf("%d %d %d %d\n",i,j,k,omp_get_thread_num());
                 mm.add_val(i*(nplanets+2)+j,W.get_data(k,i)*W.get_data(k,j));
             }
         }
     }
+    //printf("\n");
     
     nl=0.0;
     nk=0.0;
@@ -297,7 +291,10 @@ double planet::true_chisq(array_1d<double> &period,
         }
     }
     
+    //printf("done with first vl loop %d %d\n",nplanets,ndata);
+    
     for(i=0;i<ndata;i++){
+        
         if(label[i]=='L'){
             for(j=0;j<nplanets;j++){
                 mm.add_val(j*(nplanets+2)+nplanets,W.get_data(i,j));
@@ -310,6 +307,8 @@ double planet::true_chisq(array_1d<double> &period,
         }
     }
     
+    
+    //printf("done with second loop\n");
     mm.set(nplanets*(nplanets+2)+nplanets,nl);
     mm.set((nplanets+1)*(nplanets+2)+nplanets+1,nk);
     
@@ -331,6 +330,7 @@ double planet::true_chisq(array_1d<double> &period,
     for(i=0;i<numthreads;i++)c_arr.set(i,0.0);
     
     int ith;
+    
     #pragma omp parallel for private (i,j,nn,ith)
     for(i=0;i<ndata;i++){
         ith=omp_get_thread_num();
@@ -446,8 +446,7 @@ double planet::find_E(double m, double ee) const{
 }
 
 double planet::operator()(array_1d<double> &period) const{
-    
-    
+     
     int i;
     
     called++;
