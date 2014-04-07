@@ -101,6 +101,18 @@ double chisquared=solar_system(periods);
 printf("chisquared %e\n",chisquared);
 printf("that took %e\n",double(time(NULL))-before);
 
+printf("testing log\n");
+for(i=2;i<nplanets;i++){
+    solar_system.use_ln(i);
+    periods.set(i,log(vv.get_data(i*3)));
+}
+
+before=double(time(NULL));
+chisquared=solar_system(periods);
+printf("chisquared %e\n",chisquared);
+printf("that took %e\n",double(time(NULL))-before);
+
+
 //exit(1);
 
 input=fopen("exoplanet_data/planet_file_better_complete.sav","r");
@@ -128,11 +140,27 @@ fclose(input);
 
 printf("got better data\n");
 
-for(i=0;i<nplanets;i++)periods.set(i,vv.get_data(i*3));
+for(i=0;i<nplanets;i++){
+    solar_system.use_norm(i);
+    periods.set(i,vv.get_data(i*3));
+
+}
 
 before=double(time(NULL));
 chisquared=solar_system(periods);
 printf("better chisq %e\n",chisquared);
 printf("that took %e\n",double(time(NULL))-before);
+
+printf("testing log\n");
+for(i=2;i<nplanets;i++){
+    solar_system.use_ln(i);
+    periods.set(i,log(vv.get_data(i*3)));
+}
+
+before=double(time(NULL));
+chisquared=solar_system(periods);
+printf("chisquared %e\n",chisquared);
+printf("that took %e\n",double(time(NULL))-before);
+
 
 }

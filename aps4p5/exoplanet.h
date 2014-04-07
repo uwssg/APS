@@ -78,6 +78,7 @@ public:
     void set_vl_bounds(double,double);
     
     void use_ln(int);
+    void use_norm(int);
 
 };
 

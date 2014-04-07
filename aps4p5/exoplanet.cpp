@@ -34,6 +34,9 @@ planet::planet(int i) : chisquared(i){
     time_max.set_name("exo_time_max");
     time_min.set_name("exo_time_min");
     
+    ln_switch.set_name("exo_ln_switch");
+    ln_switch.set_dim(nplanets);
+    
     int j;
     for(j=0;j<nplanets;j++){
         ee_max.set(j,1.0);
@@ -44,6 +47,8 @@ planet::planet(int i) : chisquared(i){
 	
 	time_max.set(j,1.0);
 	time_min.set(j,-1.0);
+        
+        ln_switch.set(i,0);
     }
     
     
@@ -445,9 +450,23 @@ double planet::find_E(double m, double ee) const{
 
 }
 
-double planet::operator()(array_1d<double> &period) const{
+void planet::use_ln(int ii){
+    ln_switch.set(ii,1);
+}
+
+void planet::use_norm(int ii){
+    ln_switch.set(ii,0);
+}
+
+double planet::operator()(array_1d<double> &period_in) const{
      
     int i;
+    array_1d<double> period;
+    
+    for(i=0;i<nplanets;i++){
+        if(ln_switch.get_data(i)==0)period.set(i,period_in.get_data(i));
+        else period.set(i,exp(period_in.get_data(i)));
+    }
     
     called++;
     
