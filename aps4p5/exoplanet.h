@@ -24,6 +24,8 @@ private:
     array_1d<double> ee_max,ee_min,omega_max,omega_min,time_max,time_min;
     double vlmax,vlmin,vkmax,vkmin;
     
+    array_1d<int> ln_switch;
+    
     array_1d<double> sig2,date,velocity;
     double vl,vk;
     
@@ -68,6 +70,8 @@ public:
     void set_time_bounds(array_1d<double>&,array_1d<double>&);
     void set_vk_bounds(double,double);
     void set_vl_bounds(double,double);
+    
+    void use_ln(int);
 
 };
 

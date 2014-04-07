@@ -14,6 +14,9 @@ planet::planet(int i) : chisquared(i){
     nplanets=i;
     ndata=0;
     
+    ln_switch.set_dim(nplanets);
+    ln_switch.set_name("planet_ln_switch");
+    
     vk=0.0;
     vl=0.0;
     
@@ -44,6 +47,8 @@ planet::planet(int i) : chisquared(i){
 	
 	time_max.set(j,1.0);
 	time_min.set(j,-1.0);
+        
+        ln_switch.set(j,0);
     }
     
     
@@ -66,6 +71,10 @@ planet::~planet(){
 
     if(label!=NULL)delete [] label;
     
+}
+
+void planet::use_ln(int ii){
+    ln_switch.set(ii,1);
 }
 
 void planet::set_ndata(int i){
@@ -420,10 +429,20 @@ double planet::find_E(double m, double ee) const{
 
 }
 
-double planet::operator()(array_1d<double> &period) const{
+double planet::operator()(array_1d<double> &period_in) const{
     
     
     int i;
+    array_1d<double> period;
+    
+    for(i=0;i<nplanets;i++){
+        if(ln_switch.get_data(i)==1){
+            period.set(i,exp(period_in.get_data(i)));
+        }
+        else{
+            period.set(i,period_in.get_data(i));
+        }
+    }
     
     called++;
     
