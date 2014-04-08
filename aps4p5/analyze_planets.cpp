@@ -47,7 +47,7 @@ while(compare_char(word,"ling")==0){
 }
 int nparams=i-5;
 
-int npts=0,nplanets=nparams/3;
+int npts=0,nplanets=nparams;
 
 double nn,chi,chimin=exception;
 array_1d<double> min_periods,periods;
@@ -58,14 +58,14 @@ fprintf(output,"# npts chi periods...\n");
 while(fscanf(input,"%le",&nn)>0){
     npts++;
     periods.set(0,nn);
-    for(i=1;i<3;i++){
+    /*for(i=1;i<3;i++){
         fscanf(input,"%le",&nn);
-    }
+    }*/
     
     for(i=1;i<nplanets;i++){
         fscanf(input,"%le",&nn);
         periods.set(i,nn);
-        for(j=1;j<3;j++)fscanf(input,"%le",&nn);
+        //for(j=1;j<3;j++)fscanf(input,"%le",&nn);
     }
     
     fscanf(input,"%le",&chi);
