@@ -1617,7 +1617,7 @@ void aps::gradient_search(){
     //printf("\ngradient searching\n");
     set_where("gradient_search");
     
-    int ix,i,j;
+    int ix,i,j,imin;
     
     if(n_candidates!=candidates.get_dim()){
         printf("WARNING in gradient search, n %d cand_dim %d\n",
@@ -1651,47 +1651,55 @@ void aps::gradient_search(){
     
     array_1d<double> dd,sorted;
     array_1d<int> seed,dexes;
-    double nn,nnmin;
+    double nn,nnmin,ddchosen;
     
-    if(known_minima.get_dim()==0){
+    int ii;
+    
+    for(ii=0;ii<dim+1;ii++){
         
-        for(i=0;i<candidates.get_dim();i++){
-            dd.set(i,gg.get_fn(candidates.get_data(i)));
-            dexes.set(i,candidates.get_data(i));
-        }
-        
-    }
-    else{
-        for(i=0;i<candidates.get_dim();i++){
-            nnmin=exception;
-            for(j=0;j<known_minima.get_dim();j++){
-                nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(known_minima.get_data(j)));
-                if(j==0 || nn<nnmin){
-                    nnmin=nn;
+        if(known_minima.get_dim()==0 && gradient_start_pts.get_dim()==0 && seed.get_dim()==0){
+            for(i=0;i<candidates.get_dim();i++){
+                if(i==0 || gg.get_fn(candidates.get_data(i))<nnmin){
+                    ix=candidates.get_data(i);
+                    nnmin=gg.get_fn(candidates.get_data(i));
                 }
             }
-            for(j=0;j<gradient_start_pts.get_dim();j++){
-                nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(gradient_start_pts.get_data(j)));
-                if(nn<nnmin){
-                    nnmin=nn;
+        }
+        else{
+            ddchosen=-1.0*exception;
+            
+            for(i=0;i<candidates.get_dim();i++){
+                nnmin=exception;
+                
+                for(j=0;j<known_minima.get_dim();j++){
+                    nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(known_minima.get_data(j)));
+                    if(nn<nnmin)nnmin=nn;
+                }
+                
+                for(j=0;j<gradient_start_pts.get_dim();j++){
+                    nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(gradient_start_pts.get_data(j)));
+                    if(nn<nnmin)nnmin=nn;
+                }
+                
+                for(j=0;j<seed.get_dim();j++){
+                    nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(seed.get_data(j)));
+                    if(nn<nnmin)nnmin=nn;
+                }
+                
+                if(nnmin>ddchosen){
+                    ddchosen=nnmin;
+                    ix=candidates.get_data(i);
                 }
             }
-            
-            dd.set(i,-1.0*nnmin);
-            dexes.set(i,candidates.get_data(i));
-            
-        }
-    
-    
+        }   
+        
+        seed.add(ix); 
     }
-    sort_and_check(dd,sorted,dexes);
     
-    for(i=0;i<dim+1;i++){
-        seed.set(i,dexes.get_data(i));
-        if(i==0 || gg.get_fn(dexes.get_data(i))<nnmin){
-            nnmin=gg.get_fn(dexes.get_data(i));
-            j=dexes.get_data(i);
-            
+    for(i=0;i<seed.get_dim();i++){
+        if(i==0 || gg.get_fn(seed.get_data(i))<nnmin){
+            nnmin=gg.get_fn(seed.get_data(i));
+            imin=seed.get_data(i);
         }
     }
     
@@ -1710,14 +1718,14 @@ void aps::gradient_search(){
     
     ix=-1;
     for(i=0;i<candidates.get_dim() && mindex_is_candidate==0;i++){
-        if(candidates.get_data(i)==j)ix=i;
+        if(candidates.get_data(i)==imin)ix=i;
     }
     if(ix<0){
         printf("WARNING could not find proper candidate to remove\n");
         exit(1);
     }
     
-    gradient_start_pts.add(j);
+    gradient_start_pts.add(imin);
     
     if(ix>=0){
         candidates.remove(ix);
