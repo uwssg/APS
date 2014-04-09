@@ -1425,7 +1425,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     if(chitrue<exception){
         actually_added=add_pt(sambest,chitrue);
 
-	if(actually_added==1 && which_aps==iWIDE){
+	if(actually_added==1 && (which_aps==iWIDE || which_aps==iGIBBS)){
 	    i=is_it_a_candidate(gg.get_pts()-1);
 	    if(i==1)set_as_candidate(gg.get_pts()-1);
                
@@ -1909,6 +1909,11 @@ void aps::write_pts(){
     for(i=0;i<wide_pts.get_dim();i++){
         tosort.set(i,gg.get_fn(wide_pts.get_data(i)));
 	inn.set(i,wide_pts.get_data(i));
+    }
+    
+    for(i=0;i<gibbs_pts.get_dim();i++){
+        tosort.add(gg.get_fn(gibbs_pts.get_data(i)));
+        inn.add(gibbs_pts.get_data(i));
     }
     
     sort_and_check(tosort,sorted,inn);
