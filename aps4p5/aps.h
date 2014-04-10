@@ -76,6 +76,9 @@ public:
     
     void set_n_samples(int);
     
+    void disable_bisection();
+    void enable_bisection();
+    
     void optimize();
     double get_chimin();
     void get_minpt(array_1d<double>&);
@@ -87,7 +90,7 @@ private:
     chisquared *chisq;
     
     int write_every,n_printed,ngood,dim,last_optimized;
-    int global_mindex,mindex_is_candidate;
+    int global_mindex,mindex_is_candidate,do_bisection;
     
     int failed_to_add,n_samples;
     int aps_failed,minuit_failed,assess_failed;

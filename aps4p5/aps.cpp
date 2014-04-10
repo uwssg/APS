@@ -71,6 +71,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     write_every=1000;
     n_printed=0;
+    do_bisection=1;
     
     chimin=-1.0;
     
@@ -136,6 +137,14 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     start_timingfile();
     printf("dim is %d dd %d\n",dim,dim_in);
     
+}
+
+void aps::disable_bisection(){
+    do_bisection=0;
+}
+
+void aps::enable_bisection(){
+    do_bisection=1;
 }
 
 void aps::start_timingfile(){
@@ -1448,9 +1457,9 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             }
         }
         
-        /*if(chitrue>strad.get_target() && which_aps!=iWIDE){
-            bisection(sambest,chitrue);
-        }*/
+        if(chitrue>strad.get_target() && which_aps!=iWIDE){
+            if(do_bisection==1)bisection(sambest,chitrue);
+        }
         
     }
     
