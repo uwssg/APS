@@ -300,7 +300,11 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
 	}
     }
     
+    printf("time to optimize\n");
+    
     optimize();
+    
+    printf("done optimizing\n");
     
     //ct_aps=chisq->get_called();
     ct_aps=0;
@@ -326,6 +330,8 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     }
     
     if(nn<chimin || chimin<0.0)set_chimin(nn,(*gg.get_pt(j)));
+    
+    printf("about to write\n");
         
     write_pts();
     
@@ -1824,6 +1830,8 @@ void aps::write_pts(){
     double mu,sig;
     FILE *output;
     
+    
+    /*
     array_1d<double> correct_ans;
     
     correct_ans.set(0,5205.0);
@@ -1831,13 +1839,16 @@ void aps::write_pts(){
     correct_ans.set(2,44.342);
     correct_ans.set(3,259.8);
     correct_ans.set(4,0.736539);
+    */
     
     array_1d<double> hy;
     
     gg.get_hyper_parameters(hy);
     
+    /*
     double mu_true,sig_true,chi_true=(*chisq)(correct_ans);
     mu_true=gg.user_predict(correct_ans,&sig_true,0);
+    */
     
     if(last_optimized==0 ||
       (wide_pts.get_dim()>last_optimized+100 && 
@@ -2046,11 +2057,11 @@ void aps::write_pts(){
     global_median,chimin,strad.get_target(),volume);
     
     fprintf(output," -- %d %d %d ",candidates.get_dim(),known_minima.get_dim(),ngood);
-    fprintf(output," -- %e %e %e -- ",mu_true,sig_true,chi_true);
+    //fprintf(output," -- %e %e %e -- ",mu_true,sig_true,chi_true);
     
-    for(i=0;i<hy.get_dim();i++){
+    /*for(i=0;i<hy.get_dim();i++){
         fprintf(output,"%.3e ",hy.get_data(i));
-    }
+    }*/
     fprintf(output,"\n");
     
     fclose(output);

@@ -58,6 +58,7 @@ for(i=0;i<dim;i++){
 
 printf("initializing\n");
 aps_test.initialize(1000,min,max);
+printf("done initializing\n");
 
 aps_test.set_n_samples(1000);
 
