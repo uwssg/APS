@@ -1197,8 +1197,16 @@ void aps::search(){
     
     aps_score=ct_aps;
     
+    for(i=0;i<candidates.get_dim();i++){
+        if(is_it_a_candidate(candidates.get_data(i))==0){
+            candidates.remove(i);
+            n_candidates--;
+            i--;
+        }
+    }
     
-    if(n_candidates==0){
+    
+    if(n_candidates<dim+1){
         grad_score=aps_score+100;
     }
     else{
@@ -1209,17 +1217,12 @@ void aps::search(){
     if(grad_score<aps_score){
         //printf("gradient searching\n");
         gradient_search();
-	printf("done gradient searching\n");
+	//printf("done gradient searching\n");
     }
-    else{
-        //printf("aps searching\n");
-        //aps_scatter_search();
-	aps_search(n_samples);
-        
-        //gradient_search();
-        
-	//printf("done aps searching\n");
-    }
+    
+    aps_search(n_samples);
+    
+    
     
     if(gg.get_pts()>n_printed+write_every){
         //printf("writing\n");
