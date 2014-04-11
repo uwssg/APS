@@ -863,8 +863,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     mindex=neigh.get_data(il);
     
     printf("    starting %e chimin %e\n    ",simplex_min,chimin);
-    for(i=0;i<dim;i++)printf("%e ",pts.get_data(il,i)+min.get_data(i));
-    printf("\n");
+    for(j=0;j<dim+1;j++){
+        for(i=0;i<dim;i++)printf("%e ",pts.get_data(j,i)+min.get_data(i));
+        printf(" -- %e\n",ff.get_data(j));
+    }
     
     
     mu=0.0;
@@ -1041,8 +1043,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         //printf("    sig %e\n",sig);
         //if(chisq->get_called()-last_found%100==0 && chisq->get_called()-last_found>0){
-            printf("sig %e mu %e ih %e il %e -- %e\n",
-            sig,mu,ff.get_data(ih),ff.get_data(il),pts.get_data(il,4)+min.get_data(4));
+            //printf("sig %e mu %e ih %e il %e -- %e\n",
+            //sig,mu,ff.get_data(ih),ff.get_data(il),pts.get_data(il,4)+min.get_data(4));
         //}
     }
        /* printf("    iteration %d chimin %e\n",iteration,chimin);
