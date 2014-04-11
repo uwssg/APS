@@ -1674,7 +1674,7 @@ void aps::gradient_search(){
     double nn,nnmin,ddchosen;
     
     int ii;
-    
+    printf("\n\nchoosing seeds\n");
     for(ii=0;ii<dim+1;ii++){
         
         if(known_minima.get_dim()==0 && gradient_start_pts.get_dim()==0 && seed.get_dim()==0){
@@ -1713,8 +1713,11 @@ void aps::gradient_search(){
             }
         }   
         
+        for(j=0;j<dim;j++)printf("%e ",gg.get_pt(ix,j));
+        printf(" -- %e %d\n",ddchosen,ix);
         seed.add(ix); 
     }
+    printf("\n");
     
     for(i=0;i<seed.get_dim();i++){
         if(i==0 || gg.get_fn(seed.get_data(i))<nnmin){
@@ -1745,13 +1748,13 @@ void aps::gradient_search(){
         exit(1);
     }
     
-    gradient_start_pts.add(imin);
-    
     if(ix>=0){
         candidates.remove(ix);
         n_candidates--;
     }
     
+    gradient_start_pts.add(imin);
+
     find_global_minimum(seed);
     
     if(global_mindex!=o_mindex){
