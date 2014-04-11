@@ -1464,9 +1464,8 @@ void aps::gradient_search(){
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
     
-    
-    array_1d<double> dd,sorted;
-    array_1d<int> seed,dexes;
+   
+    array_1d<int> seed;
     double nn,nnmin,ddchosen;
     
     int ii;
@@ -1525,7 +1524,7 @@ void aps::gradient_search(){
     if(mindex_is_candidate==1 && global_mindex>=0){
         for(i=0;i<dim+1;i++){
             if(i==0 || gg.get_fn(seed.get_data(i))>nn){
-                nn=gg.get_fn(dexes.get_data(i));
+                nn=gg.get_fn(seed.get_data(i));
                 ix=i;
             }
         }
