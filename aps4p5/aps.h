@@ -98,10 +98,8 @@ private:
     char outname[letters],timingname[letters];
     char **paramnames;
     
-    array_1d<int> candidates,known_minima,gradient_start_pts;
+    array_1d<int> known_minima,gradient_start_pts;
     array_1d<int> wide_pts,focus_pts,gibbs_pts,good_pts;
-    
-    int n_candidates;
     
     array_1d<double> characteristic_length;
     
@@ -129,8 +127,6 @@ private:
     
     void set_chimin(double,array_1d<double>&);
     int is_it_a_candidate(int);
-    void set_as_candidate(int);
-    int choose_a_candidate();
     
     int add_pt(array_1d<double>&,double);
 

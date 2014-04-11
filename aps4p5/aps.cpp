@@ -49,7 +49,6 @@ void aps::set_where(char *word){
     sig_storage.set_where(word);
     good_max.set_where(word);
     good_min.set_where(word);
-    candidates.set_where(word);
     wide_pts.set_where(word);
 }
 
@@ -60,7 +59,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     mu_storage.set_name("aps_mu_storage");
     sig_storage.set_name("aps_sig_storage");
-    candidates.set_name("aps_candidates");
     good_max.set_name("aps_good_max");
     good_min.set_name("aps_good_min");
     wide_pts.set_name("aps_wide_pts");
@@ -111,7 +109,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     
     delta_chisquared=dd;
-    n_candidates=0;
     
     chisq=NULL;
     
@@ -479,204 +476,24 @@ int aps::is_it_a_candidate(int dex){
 	exit(1);
     }
     
-    
-    if(n_candidates!=candidates.get_dim()){
-        printf("WARNING candidates_dim %d n_candidates %d\n",
-	candidates.get_dim(),n_candidates);
-	
-	exit(1);
-    }
-    
     int i,use_it;
     
     //printf("  is %e a candidate -- med %e grat %e min %e\n",gg.get_fn(dex),global_median,grat,chimin);
     
+    for(i=0;i<gradient_start_pts.get_dim();i++){
+        if(dex==gradient_start_pts.get_data(i))return 0;
+    }
+    
+    for(i=0;i<known_minima.get_dim();i++){
+        if(dex==known_minima.get_data(i))return 0;
+    }
+    
     if(gg.get_fn(dex)<chimin+grat*(global_median-chimin) && gg.get_fn(dex)>strad.get_target()){
         //printf(" yes it is\n");
-	use_it=1;
-	for(i=0;i<n_candidates && use_it==1;i++){
-	    if(dex==candidates.get_data(i))use_it=0;
-	}
 	
-	if(use_it==1){
-	    return 1;
-	}
-	else{
-	    return 2;
-	}
+        return 1;
     }
     else return 0;
-}
-
-
-void aps::set_as_candidate(int dex){
-
-    if(dex>=gg.get_pts() || dex<0){
-        printf("WARNING assessing candidacy of %d but total %d\n",dex,gg.get_pts());
-	exit(1);
-    }
-    
-    candidates.add(dex);
-    n_candidates++;
-    
-    if(n_candidates!=candidates.get_dim()){
-        printf("WARNING (adding candidate) disagreement on number of candidates %d %d\n",
-	n_candidates,candidates.get_dim());
-	
-	exit(1);
-    }
-	 	
-}
-
-int aps::choose_a_candidate(){
-
-    
-    if(n_candidates!=candidates.get_dim()){
-        printf("WARNING in choose_a_candidates n %d dim %d\n",
-	n_candidates,candidates.get_dim());
-	
-	exit(1);
-    }
-    
-    int i;
-    for(i=0;i<n_candidates;i++){
-        if(is_it_a_candidate(candidates.get_data(i))==0){
-            candidates.remove(i);
-            n_candidates--;
-            i--;
-        }
-    }
-    
- 
-    if(n_candidates==0){
-        //printf("WARNING trying to choose candidate, but n_candidates is zero\n");
-	//exit(1);
-        return -1;
-    }
-    
-    int ichoice=-1,j,ii;
-    double minval,ddmin,dd,ddmax;
-   
-    
-    array_1d<int> under_consideration,neigh;
-    array_1d<double> distances;
-    
-    double mu,sig;
-    
-    if(n_candidates==1){
-        ichoice=candidates.get_data(0);
-    }  
-    else{//if more than one candidate
-        for(i=0;i<n_candidates;i++){
-            j=candidates.get_data(i);
-            
-            gg.nn_srch(j,gg.get_kk()+1,neigh,distances);
-            
-            mu=0.0;
-            for(ii=1;ii<gg.get_kk()+1;ii++){
-                mu+=gg.get_fn(neigh.get_data(ii));
-            }
-            mu=mu/double(gg.get_kk());
-            sig=0.0;
-            for(ii=1;ii<gg.get_kk()+1;ii++){
-                sig+=power(mu-gg.get_fn(neigh.get_data(ii)),2);
-            }
-            sig=sig/double(gg.get_kk());
-            sig=sqrt(sig);
-            
-            dd=(mu-gg.get_fn(j))/sig;
-            if(dd>1.0){
-                under_consideration.add(j);
-            }
-            
-        }
-        
-        if(under_consideration.get_dim()==0){
-            
-            printf("\nhave to evaluate all candidates\n");
-            
-            for(i=0;i<n_candidates;i++){
-                under_consideration.add(candidates.get_data(i));
-            }
-        }
-        else{
-            printf("\nonly choosing candidates with large mu-chisq\n");
-        }
-        
-        if(known_minima.get_dim()==0){
-            for(i=0;i<under_consideration.get_dim();i++){
-                if(gg.get_fn(under_consideration.get_data(i))<dd || ichoice<0){
-                    ichoice=under_consideration.get_data(i);
-                    dd=gg.get_fn(under_consideration.get_data(i));
-                }
-            }
-        }//if there are no known minima
-        else{
-            
-            for(i=0;i<under_consideration.get_dim();i++){
-                ii=under_consideration.get_data(i);
-                
-                for(j=0;j<known_minima.get_dim();j++){
-                    dd=gg.distance(*(gg.get_pt(ii)),*(gg.get_pt(known_minima.get_data(j))));
-                    if(j==0 || dd<ddmin){
-                        ddmin=dd;
-                    }    
-                }
-                
-                for(j=0;j<gradient_start_pts.get_dim();j++){
-                    dd=gg.distance(*(gg.get_pt(ii)),*(gg.get_pt(gradient_start_pts.get_data(j))));
-                    
-                    if(dd<ddmin){
-                        ddmin=dd;
-                    }
-                }
-                
-                if(i==0 || ddmin>ddmax){
-                    ddmax=ddmin;
-                    ichoice=ii;
-                }
-            }
-            
-        }
-        
-        
-    }
-    
-    
-  
-    
-    int dex;
-    if(ichoice>=0){
-        
-        for(dex=0;candidates.get_data(dex)!=ichoice;dex++);
-        
-        if(candidates.get_data(dex)!=ichoice){
-            printf("WARNING about to eliminate the wrong candidate\n");
-            exit(1);
-        }
-        
-        candidates.remove(dex);
-     
-        n_candidates--;
-        
-        if(n_candidates!=candidates.get_dim()){
-            printf("WARNING after decrementing ncand %d dim %d\n",
-            n_candidates,candidates.get_dim());
-            
-            exit(1);
-        }
-        
-        
-        return ichoice;
-    }
-    else{
-        n_candidates=0;
-        candidates.set_dim(0);
-        return -1;
-        
-    }
-    
-
 }
 
 void aps::find_global_minimum_meta(){
@@ -1214,22 +1031,8 @@ void aps::search(){
     
     aps_score=ct_aps;
     
-    for(i=0;i<candidates.get_dim();i++){
-        if(is_it_a_candidate(candidates.get_data(i))==0){
-            candidates.remove(i);
-            n_candidates--;
-            i--;
-        }
-    }
+    grad_score=ct_gradient;
     
-    
-    if(n_candidates<dim+1){
-        grad_score=aps_score+100;
-    }
-    else{
-        //grad_score=time_gradient;
-        grad_score=ct_gradient;
-    }
 
     if(grad_score<aps_score){
         //printf("gradient searching\n");
@@ -1445,12 +1248,6 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     if(chitrue<exception){
         actually_added=add_pt(sambest,chitrue);
 
-	if(actually_added==1 && (which_aps==iWIDE || which_aps==iGIBBS)){
-	    i=is_it_a_candidate(gg.get_pts()-1);
-	    if(i==1)set_as_candidate(gg.get_pts()-1);
-               
-	}
-        
         if(actually_added==1){
             if(which_aps==iWIDE){
                 wide_pts.add(gg.get_pts()-1);
@@ -1639,18 +1436,17 @@ void aps::gradient_search(){
     
     int ix,i,j,imin;
     
-    if(n_candidates!=candidates.get_dim()){
-        printf("WARNING in gradient search, n %d cand_dim %d\n",
-	n_candidates,candidates.get_dim());
-	
-	exit(1);
+    array_1d<int> candidates;
+    
+    for(i=0;i<wide_pts.get_dim();i++){
+        if(is_it_a_candidate(wide_pts.get_data(i))>0){
+            candidates.add(wide_pts.get_data(i));
+        }
     }
     
-    for(i=0;i<candidates.get_dim();i++){
-        if(is_it_a_candidate(candidates.get_data(i))==0){
-            candidates.remove(i);
-            n_candidates--;
-            i--;
+    for(i=0;i<gibbs_pts.get_dim();i++){
+        if(is_it_a_candidate(gibbs_pts.get_data(i))>0){
+            candidates.add(gibbs_pts.get_data(i));
         }
     }
     
@@ -1674,7 +1470,7 @@ void aps::gradient_search(){
     double nn,nnmin,ddchosen;
     
     int ii;
-    printf("\n\nchoosing seeds\n");
+    printf("\n\nchoosing seeds from %d candidates\n",candidates.get_dim());
     for(ii=0;ii<dim+1;ii++){
         
         if(known_minima.get_dim()==0 && gradient_start_pts.get_dim()==0 && seed.get_dim()==0){
@@ -1737,20 +1533,9 @@ void aps::gradient_search(){
         seed.set(ix,global_mindex);
     }
     
-    
-    
-    ix=-1;
-    for(i=0;i<candidates.get_dim() && mindex_is_candidate==0;i++){
-        if(candidates.get_data(i)==imin)ix=i;
-    }
     if(ix<0){
         printf("WARNING could not find proper candidate to remove\n");
         exit(1);
-    }
-    
-    if(ix>=0){
-        candidates.remove(ix);
-        n_candidates--;
     }
     
     gradient_start_pts.add(imin);
@@ -1947,37 +1732,9 @@ void aps::write_pts(){
     sort_and_check(tosort,sorted,inn);
     global_median=sorted.get_data(tosort.get_dim()/10);
     
-    candidates.reset();
     
     array_1d<int> *to_choose_from;
     int ii,jj;
-    
-    n_candidates=0;
-    
-    for(ii=0;ii<1;ii++){
-        if(ii==0)to_choose_from=&wide_pts;
-        else if(ii==1)to_choose_from=&gibbs_pts;
-        else if(ii==2)to_choose_from=&focus_pts;
-        
-        for(jj=0;jj<to_choose_from->get_dim();jj++){
-            i=to_choose_from->get_data(jj);
-            j=1;
-            for(k=0;k<known_minima.get_dim() && j==1;k++){
-                if(i==known_minima.get_data(k))j=0;
-            }
-            for(k=0;k<gradient_start_pts.get_dim() && j==1;k++){
-                if(i==gradient_start_pts.get_data(k))j=0;
-            }
-        
-            if(j==1){
-                if(is_it_a_candidate(i)==1){
-                    candidates.add(i);
-                    n_candidates++;
-                }
-            }
-    }
-    
-    }
     
     n_printed=gg.get_pts();
     
@@ -2061,7 +1818,7 @@ void aps::write_pts(){
     fprintf(output,"%e %e %e %e",
     global_median,chimin,strad.get_target(),volume);
     
-    fprintf(output," -- %d %d %d ",candidates.get_dim(),known_minima.get_dim(),ngood);
+    fprintf(output," -- %d %d ",known_minima.get_dim(),ngood);
     //fprintf(output," -- %e %e %e -- ",mu_true,sig_true,chi_true);
     
     /*for(i=0;i<hy.get_dim();i++){
