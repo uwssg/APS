@@ -326,7 +326,11 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
 	}
     }
     
-    if(nn<chimin || chimin<0.0)set_chimin(nn,(*gg.get_pt(j)));
+    if(nn<chimin || chimin<0.0){
+        set_chimin(nn,(*gg.get_pt(j)));
+        global_mindex=j;
+        mindex_is_candidate=1;
+    }
     
     printf("about to write\n");
         
@@ -433,6 +437,8 @@ void aps::resume(char *filename){
     
     gg.initialize(data,ff,ggmax,ggmin);
     set_chimin(local_min,(*gg.get_pt(i_min)));
+    mindex_is_candidate=1;
+    global_mindex=i_min;
     
     write_pts();
 }
