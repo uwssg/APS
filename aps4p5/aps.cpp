@@ -1444,6 +1444,7 @@ void aps::gradient_search(){
     
     array_1d<int> candidates;
     
+    
     for(i=0;i<wide_pts.get_dim();i++){
         if(is_it_a_candidate(wide_pts.get_data(i))>0){
             candidates.add(wide_pts.get_data(i));
@@ -1473,6 +1474,8 @@ void aps::gradient_search(){
    
     array_1d<int> seed;
     double nn,nnmin,ddchosen;
+    
+    double mu,sig;
     
     int ii;
     printf("\n\nchoosing seeds from %d candidates\n",candidates.get_dim());
@@ -1514,8 +1517,10 @@ void aps::gradient_search(){
             }
         }   
         
+        mu=gg.self_predict(ix,&sig);
+        
         for(j=0;j<dim;j++)printf("%e ",gg.get_pt(ix,j));
-        printf(" -- %e %d\n",ddchosen,ix);
+        printf(" -- %e %d -- %e %e\n",ddchosen,ix,mu,sig);
         seed.add(ix); 
     }
     printf("\n");
