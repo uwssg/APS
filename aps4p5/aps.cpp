@@ -1537,7 +1537,8 @@ void aps::gradient_search(){
         exit(1);
     }
     
-    gradient_start_pts.add(imin);
+    //gradient_start_pts.add(imin);
+    for(i=0;i<seed.get_dim();i++)gradient_start_pts.add(seed.get_data(i));
 
     find_global_minimum(seed);
     
