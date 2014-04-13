@@ -1474,63 +1474,36 @@ void aps::gradient_search(){
    
     array_1d<int> seed;
     double nn,nnmin,ddchosen;
-    
-    double mu,sig;
-    
+        
     int ii;
     printf("\n\nchoosing seeds from %d candidates\n",candidates.get_dim());
-    for(ii=0;ii<dim+1;ii++){
-        
-        if(known_minima.get_dim()==0 && gradient_start_pts.get_dim()==0 && seed.get_dim()==0){
-            for(i=0;i<candidates.get_dim();i++){
-                if(i==0 || gg.get_fn(candidates.get_data(i))<nnmin){
-                    ix=candidates.get_data(i);
-                    nnmin=gg.get_fn(candidates.get_data(i));
-                }
-            }
-        }
-        else{
-            ddchosen=-1.0*exception;
-            
-            for(i=0;i<candidates.get_dim();i++){
-                nnmin=exception;
-                
-                for(j=0;j<known_minima.get_dim();j++){
-                    nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(known_minima.get_data(j)));
-                    if(nn<nnmin)nnmin=nn;
-                }
-                
-                for(j=0;j<gradient_start_pts.get_dim();j++){
-                    nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(gradient_start_pts.get_data(j)));
-                    if(nn<nnmin)nnmin=nn;
-                }
-                
-                for(j=0;j<seed.get_dim();j++){
-                    nn=gg.distance(*gg.get_pt(candidates.get_data(i)),*gg.get_pt(seed.get_data(j)));
-                    if(nn<nnmin)nnmin=nn;
-                }
-                
-                if(nnmin>ddchosen){
-                    ddchosen=nnmin;
-                    ix=candidates.get_data(i);
-                }
-            }
-        }   
-        
-        mu=gg.self_predict(ix,&sig);
-        
-        for(j=0;j<dim;j++)printf("%e ",gg.get_pt(ix,j));
-        printf(" -- %e %d -- %e %e\n",ddchosen,ix,mu,sig);
-        seed.add(ix); 
-    }
-    printf("\n");
     
-    for(i=0;i<seed.get_dim();i++){
+    array_1d<double> dd,dd_sorted,mu;
+    array_1d<int> dexes;
+    
+    for(i=0;i<candidates.get_dim();i++){
+       mu.set(i,gg.self_predict(candidates.get_data(i)));
+       dd.set(i,gg.get_fn(candidates.get_data(i))-mu.get_data(i));
+       dexes.set(i,candidates.get_data(i));
+    }
+    
+    sort_and_check(dd,dd_sorted,dexes);
+    
+    for(i=0;i<dim+1;i++){
+        seed.set(i,dexes.get_data(i));
+        for(ii=0;ii<dim;ii++){
+            printf("%e ",gg.get_pt(seed.get_data(i),ii));
+        }
+        printf(" -- %e %e %e\n",gg.self_predict(seed.get_data(i)),gg.get_fn(seed.get_data(i)),dd_sorted.get_data(i));
+    }
+    
+    
+   /* for(i=0;i<seed.get_dim();i++){
         if(i==0 || gg.get_fn(seed.get_data(i))<nnmin){
             nnmin=gg.get_fn(seed.get_data(i));
             imin=seed.get_data(i);
         }
-    }
+    }*/
     
     if(mindex_is_candidate==1 && global_mindex>=0){
         for(i=0;i<dim+1;i++){
