@@ -506,7 +506,7 @@ int aps::is_it_a_candidate(int dex){
             mid_pt.set(i,0.5*(minpt.get_data(i)+gg.get_pt(dex,i)));
         }
         chitrial=(*chisq)(mid_pt);
-        if(chitrial>exception){
+        if(chitrial<exception){
             add_pt(mid_pt,chitrial);
         }
         
