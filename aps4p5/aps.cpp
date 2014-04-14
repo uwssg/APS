@@ -1439,7 +1439,7 @@ void aps::aps_search(int in_samples){
 double aps::distance(int i1, int i2, array_1d<double> &range){
     double dd=0.0;
     int i;
-    for(i=0;i<range.get_dim();i++){
+    for(i=0;i<dim;i++){
         if(range.get_data(i)>0.0){
             dd+=power((gg.get_pt(i1,i)-gg.get_pt(i2,i))/range.get_data(i),2);
         }
