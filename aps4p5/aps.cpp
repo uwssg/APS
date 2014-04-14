@@ -685,7 +685,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     simplex_min=ff.get_data(il);
     mindex=neigh.get_data(il);
     
-    printf("    starting %e chimin %e\n    ",simplex_min,chimin);
+    printf("    starting %e chimin %e\n",simplex_min,chimin);
     for(j=0;j<dim+1;j++){
         for(i=0;i<dim;i++)printf("%e ",pts.get_data(j,i)+min.get_data(i));
         printf(" -- %e\n",ff.get_data(j));
@@ -1436,6 +1436,18 @@ void aps::aps_search(int in_samples){
     
 }
 
+double aps::distance(int i1, int i2, array_1d<double> &range){
+    double dd=0.0;
+    int i;
+    for(i=0;i<range.get_dim();i++){
+        if(range.get_data(i)>0.0){
+            dd+=power((gg.get_pt(i1,i)-gg.get_pt(i2,i))/range.get_data(i),2);
+        }
+    }
+    
+    return sqrt(dd);
+}
+
 void aps::gradient_search(){
     //printf("\ngradient searching\n");
     set_where("gradient_search");
@@ -1443,8 +1455,8 @@ void aps::gradient_search(){
     int ix,i,j,imin;
     
     array_1d<int> candidates;
-    
-    
+    array_1d<double> local_max,local_min,local_range;
+
     for(i=0;i<wide_pts.get_dim();i++){
         if(is_it_a_candidate(wide_pts.get_data(i))>0){
             candidates.add(wide_pts.get_data(i));
@@ -1461,7 +1473,24 @@ void aps::gradient_search(){
     if(candidates.get_dim()<dim+1){
         return;
     }
-
+    
+    for(i=0;i<candidates.get_dim();i++){
+        ix=candidates.get_data(i);
+        for(j=0;j<dim;j++){
+            if(i==0 || gg.get_pt(ix,j)<local_min.get_data(j)){
+                local_min.set(j,gg.get_pt(ix,j));
+            }
+            
+            if(i==0 || gg.get_pt(ix,j)>local_max.get_data(j)){
+                local_max.set(j,gg.get_pt(ix,j));
+            }
+        }
+    }
+    
+    for(i=0;i<dim;i++){
+        local_range.set(i,local_max.get_data(i)-local_min.get_data(i));
+    }
+    
     array_1d<double> vv;
     vv.set_name("gradient_search_vv");
    
@@ -1473,28 +1502,73 @@ void aps::gradient_search(){
     
    
     array_1d<int> seed;
-    double nn,nnmin,ddchosen;
+    double nn,nnmin,nnchosen;
         
     int ii;
     printf("\n\nchoosing seeds from %d candidates\n",candidates.get_dim());
     
-    array_1d<double> dd,dd_sorted,mu;
-    array_1d<int> dexes;
+    array_1d<double> delta,mu,sig,delta_out;
+    double ss,delta_max;
+    int ichosen;
     
     for(i=0;i<candidates.get_dim();i++){
-       mu.set(i,gg.self_predict(candidates.get_data(i)));
-       dd.set(i,gg.get_fn(candidates.get_data(i))-mu.get_data(i));
-       dexes.set(i,candidates.get_data(i));
+       mu.set(i,gg.self_predict(candidates.get_data(i),&ss));
+       sig.set(i,ss);
+       delta.set(i,(mu.get_data(i)-gg.get_fn(candidates.get_data(i)))/sig.get_data(i));
+
     }
     
-    sort_and_check(dd,dd_sorted,dexes);
+    for(ii=0;ii<dim+1;ii++){
+        if(gradient_start_pts.get_dim()==0 && known_minima.get_dim()==0 && seed.get_dim()==0){
+        
+            for(i=0;i<candidates.get_dim();i++){     
+                if(i==0 || delta.get_data(i)>delta_max){
+                    delta_max=delta.get_data(i);
+                    ichosen=i;
+                }
+            }
+
+        }
+        else{
+        
+            for(i=0;i<candidates.get_dim();i++){
+                nnmin=exception;
+                for(j=0;j<known_minima.get_dim();j++){
+                    nn=distance(candidates.get_data(i),known_minima.get_data(j),local_range);
+                    if(nn<nnmin)nnmin=nn;
+                }
+            
+                for(j=0;j<gradient_start_pts.get_dim();j++){
+                    nn=distance(candidates.get_data(i),gradient_start_pts.get_data(j),local_range);
+                    if(nn<nnmin)nnmin=nn;
+                } 
+                
+                for(j=0;j<seed.get_dim();j++){
+                    nn=distance(candidates.get_data(i),seed.get_data(j),local_range);
+                    if(nn<nnmin)nnmin=nn;
+                }
+                
+                ss=delta.get_data(i)+nn;
+                if(i==0 || ss>delta_max){
+                    ichosen=i;
+                    delta_max=ss;
+                }
+            }
     
+        }
+        
+        seed.set(ii,candidates.get_data(ichosen));
+        delta_out.set(ii,delta.get_data(ichosen));
+        candidates.remove(ichosen);
+        delta.remove(ichosen);
+        
+    }//loop over ii
+
     for(i=0;i<dim+1;i++){
-        seed.set(i,dexes.get_data(i));
         for(ii=0;ii<dim;ii++){
             printf("%e ",gg.get_pt(seed.get_data(i),ii));
         }
-        printf(" -- %e %e %e\n",gg.self_predict(seed.get_data(i)),gg.get_fn(seed.get_data(i)),dd_sorted.get_data(i));
+        printf(" -- %e %e %e\n",gg.self_predict(seed.get_data(i)),gg.get_fn(seed.get_data(i)),delta_out.get_data(i));
     }
     
     
