@@ -1477,6 +1477,9 @@ void aps::gradient_search(){
     
     FILE *output=fopen("gradient_results.sav","a");
     
+    double before=double(time(NULL));
+    int ibefore=chisq->get_called();
+    
     int ix,i,j,imin;
     
     array_1d<int> candidates;
@@ -1496,6 +1499,8 @@ void aps::gradient_search(){
     
     
     if(candidates.get_dim()<dim+1){
+        ct_gradient+=chisq->get_called()-ibefore;
+        time_gradient+=double(time(NULL))-before;
         return;
     }
     
@@ -1522,8 +1527,7 @@ void aps::gradient_search(){
     
     int o_mindex=global_mindex;
     
-    double before=double(time(NULL));
-    int ibefore=chisq->get_called();
+
     
    
     array_1d<int> seed;
