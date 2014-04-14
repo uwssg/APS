@@ -67,6 +67,9 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     good_pts.set_name("aps_good_pts");
     
     
+    FILE *output=fopen("gradient_results.sav","w");
+    fclose(output);
+    
     write_every=1000;
     n_printed=0;
     do_bisection=1;
