@@ -486,6 +486,8 @@ int aps::is_it_a_candidate(int dex){
     }
     
     int i,use_it;
+    array_1d<double> mid_pt;
+    double chitrial;
     
     //printf("  is %e a candidate -- med %e grat %e min %e\n",gg.get_fn(dex),global_median,grat,chimin);
     
@@ -500,7 +502,18 @@ int aps::is_it_a_candidate(int dex){
     if(gg.get_fn(dex)<chimin+grat*(global_median-chimin) && gg.get_fn(dex)>strad.get_target()){
         //printf(" yes it is\n");
 	
-        return 1;
+        for(i=0;i<dim;i++){
+            mid_pt.set(i,0.5*(minpt.get_data(i)+gg.get_pt(dex,i)));
+        }
+        chitrial=(*chisq)(trial);
+        if(chitrial>exception){
+            add_pt(mid_pt,chitrial);
+        }
+        
+        if(chitrial>gg.get_fn(dex)){
+            return 1;
+        }
+        else return 0;
     }
     else return 0;
 }
