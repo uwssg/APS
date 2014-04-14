@@ -510,7 +510,7 @@ int aps::is_it_a_candidate(int dex){
             add_pt(mid_pt,chitrial);
         }
         
-        if(chitrial>gg.get_fn(dex)){
+        if(chitrial>gg.get_fn(dex)-0.25*(gg.get_fn(dex)-chimin)){
             return 1;
         }
         else return 0;
