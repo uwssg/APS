@@ -1631,9 +1631,7 @@ void aps::gradient_search(){
     
     find_global_minimum(seed);
     
-    if(global_mindex!=o_mindex){
-        mindex_is_candidate=0;
-    }
+    mindex_is_candidate=0;
     
     ct_gradient+=chisq->get_called()-ibefore;
     time_gradient+=double(time(NULL))-before;
