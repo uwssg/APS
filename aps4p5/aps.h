@@ -96,6 +96,7 @@ private:
     int aps_failed,minuit_failed,assess_failed;
     
     char outname[letters],timingname[letters];
+    char minimaname[letters];
     char **paramnames;
     
     array_1d<int> known_minima,gradient_start_pts;

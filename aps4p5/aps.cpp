@@ -56,6 +56,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     sprintf(outname,"master_output.sav");
     sprintf(timingname,"timing_file.sav");
+    sprintf(minimaname,"minima.sav");
     
     mu_storage.set_name("aps_mu_storage");
     sig_storage.set_name("aps_sig_storage");
@@ -513,7 +514,11 @@ int aps::is_it_a_candidate(int dex){
         if(chitrial>gg.get_fn(dex)-0.25*(gg.get_fn(dex)-chimin)){
             return 1;
         }
-        else return 0;
+        else{
+            gradient_start_pts.add(dex);
+            return 0;
+        }
+    
     }
     else return 0;
 }
@@ -1706,6 +1711,18 @@ void aps::write_pts(){
     int i,j,k,lling,aps_dex;
     double mu,sig;
     FILE *output;
+    
+    
+    output=fopen(minimaname,"w");
+    fprintf(output,"known_minima %d\n",known_minima.get_dim());
+    for(i=0;i<known_minima.get_dim();i++){
+        fprintf(output,"%d\n",known_minima.get_data(i));
+    }
+    fprintf(output,"gradient_start_pts %d\n",gradient_start_pts.get_dim());
+    for(i=0;i<gradient_start_pts.get_dim();i++){
+        fprintf(output,"%d\n",gradient_start_pts.get_data(i));
+    }
+    fclose(output);
     
     
     /*
