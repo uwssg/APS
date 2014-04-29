@@ -2358,7 +2358,7 @@ double gross_gp::user_predict(array_1d<double> &q, double *sig) const{
           printf("WARNING gross is returning sig^2 %e\n",sig[0]);
           //exit(1);
 	  
-	  mu=exception;
+	  mu=chisq_exception;
 	  sig[0]=0.0;
      }
      
@@ -2752,7 +2752,7 @@ void gp::optimize(array_1d<int> &use_dex, int n_use){
     
     called_opt=0;
     last_set=0;
-    eebest=exception;
+    eebest=chisq_exception;
     
     if(covariogram->get_n_hyper_parameters()<=2){
         optimize_grid(use_dex,n_use);
@@ -2887,8 +2887,8 @@ void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
     }
     
     for(i=0;i<nparams+1;i++){
-        nn=2.0*exception;
-        while(nn>=exception){
+        nn=2.0*chisq_exception;
+        while(nn>=chisq_exception){
             for(j=0;j<nparams;j++){
                 opt_pts.set(i,j,lmin.get_data(j)+chaos.doub()*(lmax.get_data(j)-lmin.get_data(j)));
             }

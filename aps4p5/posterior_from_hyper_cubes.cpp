@@ -19,7 +19,7 @@ int dim=8,i;
 
 input=fopen(inname,"r");
 for(i=0;i<dim+5;i++)fscanf(input,"%s",word);
-double nn,chimin=exception;
+double nn,chimin=chisq_exception;
 while(fscanf(input,"%le",&nn)>0){
     vv.set(0,nn);
     for(i=1;i<dim;i++){
@@ -84,8 +84,8 @@ for(i=0;i<data.get_rows();i++){
     kd.nn_srch(*data(i),n_neigh,neigh,dd);
     
     for(j=0;j<dim;j++){
-        box_max.set(i,j,2.0*exception);
-        box_min.set(i,j,2.0*exception);
+        box_max.set(i,j,2.0*chisq_exception);
+        box_min.set(i,j,2.0*chisq_exception);
     }
     
     for(j=1;j<n_neigh;j++){
@@ -99,12 +99,12 @@ for(i=0;i<data.get_rows();i++){
         found_it=0;
         for(k=dim-1;k>0 && found_it==0;){
             if(data.get_data(neigh.get_data(j),r_dex.get_data(k))<data.get_data(i,r_dex.get_data(k)) &&
-               box_min.get_data(i,r_dex.get_data(k))>=exception){
+               box_min.get_data(i,r_dex.get_data(k))>=chisq_exception){
                 found_it=1;
               
             }
             else if(data.get_data(neigh.get_data(j),r_dex.get_data(k))>data.get_data(i,r_dex.get_data(k)) &&
-               box_max.get_data(i,r_dex.get_data(k))>=exception){
+               box_max.get_data(i,r_dex.get_data(k))>=chisq_exception){
             
                 found_it=1;
             }   
@@ -113,12 +113,12 @@ for(i=0;i<data.get_rows();i++){
         
         if(k==0){
             if(data.get_data(neigh.get_data(j),r_dex.get_data(k))>data.get_data(i,r_dex.get_data(k)) &&
-               box_max.get_data(i,r_dex.get_data(k))>=exception){
+               box_max.get_data(i,r_dex.get_data(k))>=chisq_exception){
                
                    found_it=1;
             }
             if(data.get_data(neigh.get_data(j),r_dex.get_data(k))<data.get_data(i,r_dex.get_data(k)) &&
-               box_min.get_data(i,r_dex.get_data(k))>=exception){
+               box_min.get_data(i,r_dex.get_data(k))>=chisq_exception){
               
                 found_it=1;
                
@@ -150,17 +150,17 @@ for(i=0;i<data.get_rows();i++){
     }
     
     for(k=0;k<dim;k++){
-        if(box_max.get_data(i,k)>=exception && box_min.get_data(i,k)>=exception){
+        if(box_max.get_data(i,k)>=chisq_exception && box_min.get_data(i,k)>=chisq_exception){
             printf("WARNING failed to find a bound\n");
             exit(1);
         }
-        else if(box_max.get_data(i,k)>=exception && box_min.get_data(i,k)<exception){
+        else if(box_max.get_data(i,k)>=chisq_exception && box_min.get_data(i,k)<chisq_exception){
             box_max.set(i,k,2.0*data.get_data(i,k)-box_min.get_data(i,k));
             
            
             
         }
-        else if(box_min.get_data(i,k)>=exception && box_max.get_data(i,k)<exception){
+        else if(box_min.get_data(i,k)>=chisq_exception && box_max.get_data(i,k)<chisq_exception){
             box_min.set(i,k,2.0*data.get_data(i,k)-box_max.get_data(i,k));
             
             

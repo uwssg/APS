@@ -8,7 +8,7 @@ gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd,
     called_true=0;
     called_opt=0;
     last_set=0;
-    eebest=2.0*exception;
+    eebest=2.0*chisq_exception;
     
     int j,i,dim,npts;
     
@@ -50,7 +50,7 @@ gp_to_mcmc::gp_to_mcmc(array_2d<double> &dd,
     
     called_opt=0;
     last_set=0;
-    eebest=2.0*exception;
+    eebest=2.0*chisq_exception;
     
     int j,i,dim,npts;
     
@@ -328,8 +328,8 @@ void gp_to_mcmc::optimize_simplex(){
     }
     
     for(i=0;i<dim+1;i++){
-        nn=2.0*exception;
-        while(nn>=exception){
+        nn=2.0*chisq_exception;
+        while(nn>=chisq_exception){
             for(j=0;j<dim;j++){
                 pts.set(i,j,lmin.get_data(j)+chaos.doub()*(lmax.get_data(j)-lmin.get_data(j)));
             }

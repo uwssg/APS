@@ -19,7 +19,7 @@ int dim=8,i;
 
 input=fopen(inname,"r");
 for(i=0;i<dim+5;i++)fscanf(input,"%s",word);
-double nn,chimin=exception;
+double nn,chimin=chisq_exception;
 while(fscanf(input,"%le",&nn)>0){
     vv.set(0,nn);
     for(i=1;i<dim;i++){

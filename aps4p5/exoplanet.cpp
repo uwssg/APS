@@ -180,7 +180,7 @@ double planet::true_chisq(array_1d<double> &period, array_1d<double> &vv) const{
         xx=true_chisq(period,eccentricity,omega,nu);
     }
     catch (int iex){
-         xx=2.0*exception;
+         xx=2.0*chisq_exception;
     }
     
     return xx;
@@ -219,9 +219,9 @@ double planet::true_chisq(array_1d<double> &period,
 
      for(i=0;i<nplanets;i++){
          if(eccentricity.get_data(i)>1.0 || eccentricity.get_data(i)<0.0){
-             return exception;
+             return chisq_exception;
          }
-         if(period.get_data(i)<0.0)return exception;
+         if(period.get_data(i)<0.0)return chisq_exception;
      }
      
       #pragma omp parallel for private(j,i)

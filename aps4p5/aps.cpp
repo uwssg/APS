@@ -22,7 +22,7 @@ double straddle_parameter::operator()(double mu, double sig) const{
 	exit(1);
     }
     
-    if(isnan(mu) || isnan(target))return -1.0*exception;
+    if(isnan(mu) || isnan(target))return -1.0*chisq_exception;
     
     return sig-fabs(mu-target);
 }
@@ -234,7 +234,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
 
 	ff.set(i,(*chisq)(vector));
 	
-	while(!(ff.get_data(i)<exception)){
+	while(!(ff.get_data(i)<chisq_exception)){
 	    for(j=0;j<dim;j++){
 	        vector.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
 	    }
@@ -248,8 +248,8 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     printf("done guessing\n");
     for(;i<npts;i++){
         //printf("%d\n",i);
-        ff.set(i,2.0*exception);
-	while(!(ff.get_data(i)<exception)){
+        ff.set(i,2.0*chisq_exception);
+	while(!(ff.get_data(i)<chisq_exception)){
             
 	    for(j=0;j<dim;j++)vector.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
 	    ff.set(i,(*chisq)(vector));
@@ -507,7 +507,7 @@ int aps::is_it_a_candidate(int dex){
             mid_pt.set(i,0.5*(minpt.get_data(i)+gg.get_pt(dex,i)));
         }
         chitrial=(*chisq)(mid_pt);
-        if(chitrial<exception){
+        if(chitrial<chisq_exception){
             add_pt(mid_pt,chitrial);
         }
         
@@ -566,7 +566,7 @@ void aps::find_global_minimum(array_1d<double> &vv){
         }
         trial.add_val(i,0.01*(gg.get_max(i)-gg.get_min(i)));
         ftrial=(*chisq)(trial);
-        if(ftrial<exception){
+        if(ftrial<chisq_exception){
             add_pt(trial,ftrial);
         }
     }
@@ -614,7 +614,7 @@ void aps::find_global_minimum(int ix){
             trial.set(j,gg.get_pt(ix,j)+(dice->doub()-0.5)*s_length.get_data(j));
         }
         chitrial=(*chisq)(trial);
-        if(chitrial<exception){
+        if(chitrial<chisq_exception){
             actually_added=add_pt(trial,chitrial);
             if(actually_added==1){
                 neigh.set(i,gg.get_pts()-1);
@@ -740,7 +740,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     fclose(output);
     
-    while(sig>0.01 && simplex_min<exception && 
+    while(sig>0.01 && simplex_min<chisq_exception && 
     double(time(NULL))-time_last_found < 600.0){
     //chisq->get_called()-last_found<ct_abort_max){
         
@@ -761,7 +761,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }
         fstar=(*chisq)(true_var);
         
-        if(fstar<exception){
+        if(fstar<chisq_exception){
             actually_added=add_pt(true_var,fstar);
         }
         if(fstar<simplex_min){
@@ -784,7 +784,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             fstarstar=(*chisq)(true_var);
-            if(fstarstar<exception){
+            if(fstarstar<chisq_exception){
                 actually_added=add_pt(true_var,fstarstar);
             }
             
@@ -821,7 +821,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 true_var.set(i,min.get_data(i)+pstarstar.get_data(i));
             }
             fstarstar=(*chisq)(true_var);
-            if(fstarstar<exception){
+            if(fstarstar<chisq_exception){
                 actually_added=add_pt(true_var,fstarstar);
             }
             if(fstarstar<simplex_min){
@@ -851,7 +851,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             true_var.set(j,min.get_data(j)+pts.get_data(i,j));
                         }
                         ff.set(i,(*chisq)(true_var));
-                        if(ff.get_data(i)<exception){
+                        if(ff.get_data(i)<chisq_exception){
                             actually_added=add_pt(true_var,ff.get_data(i));
                         }
                         if(ff.get_data(i)<simplex_min){
@@ -912,7 +912,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     true_var.set(j,min.get_data(j)+pts.get_data(i,j));
                 }
                 mu=(*chisq)(true_var);
-                if(mu<exception){
+                if(mu<chisq_exception){
                     add_pt(true_var,mu);
                 }
                 if(mu<simplex_min){
@@ -1040,7 +1040,7 @@ void aps::guess(array_1d<double> &pt){
     
     chitrue=(*chisq)(pt);
     
-    if(chitrue<exception){
+    if(chitrue<chisq_exception){
         actually_added=add_pt(pt,chitrue);	
     }
     
@@ -1279,7 +1279,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     int actually_added;
     
     int o_mindex=global_mindex;
-    if(chitrue<exception){
+    if(chitrue<chisq_exception){
         actually_added=add_pt(sambest,chitrue);
 
         if(actually_added==1){
@@ -1330,7 +1330,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         flow=chimin;
     }
     else{
-        ddmin=exception;
+        ddmin=chisq_exception;
         j=-1;
         for(i=0;i<good_pts.get_dim();i++){
             dd=gg.distance(good_pts.get_data(i),inpt);
@@ -1374,7 +1374,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 highball.set(i,lowball.get_data(i)+new_rr*dir.get_data(i));
             }
             fhigh=(*chisq)(highball);
-            if(fhigh<exception){
+            if(fhigh<chisq_exception){
                 add_pt(highball,fhigh);
             }
             
@@ -1395,7 +1395,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             }
             mu=(*chisq)(trial);
         
-            if(mu<exception){
+            if(mu<chisq_exception){
                 add_pt(trial,mu);
             }
         
@@ -1566,7 +1566,7 @@ void aps::gradient_search(){
         else{
         
             for(i=0;i<candidates.get_dim();i++){
-                nnmin=exception;
+                nnmin=chisq_exception;
                 for(j=0;j<known_minima.get_dim();j++){
                     nn=distance(candidates.get_data(i),known_minima.get_data(j),local_range);
                     if(nn<nnmin)nnmin=nn;

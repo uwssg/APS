@@ -4,7 +4,7 @@
 #define GOTO_H
 #define pi 3.141592654
 
-#define exception 1.0e30
+#define chisq_exception 1.0e30
 
 
 void kill(char*);

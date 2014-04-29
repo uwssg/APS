@@ -262,7 +262,7 @@ void mcmc::sample(int npts){
      system(word);
      
      if(start.get_rows()<=i){
-         nn=2.0*exception;
+         nn=2.0*chisq_exception;
      }
      else{
          nn=(*chisqfn[i])(*start(i));
@@ -270,7 +270,7 @@ void mcmc::sample(int npts){
      
      printf("nn %e\n",nn);
      
-     while(nn>=exception){
+     while(nn>=chisq_exception){
        
          for(j=0;j<dim;j++){
              start.set(i,j,min.get_data(j)+chaos->doub()*(max.get_data(j)-min.get_data(j)));
@@ -577,7 +577,7 @@ void mcmc::calculate_covariance(){
             
             //printf("    maxlen %d dlen %d covar %e\n",maxlen,dlen,covar);
             
-            covar=exception;
+            covar=chisq_exception;
             
 	    while(covar>tol && len<ndata.get_data(cc)-1){
                 mu=0.0;

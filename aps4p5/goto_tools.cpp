@@ -479,7 +479,7 @@ double compare_arr(array_1d<double> &v1, array_1d<double> &v2){
     if(v1.get_dim()!=v2.get_dim()){
         //printf("WARNING in compare_arr the two arrays do not have same dim\n");
 	//printf("%d %d\n",v1.get_dim(),v2.get_dim());
-        maxerr=exception;
+        maxerr=chisq_exception;
     }
     
     if(v1.get_dim()<v2.get_dim()){
