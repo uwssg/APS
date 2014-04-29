@@ -61,7 +61,7 @@ mcmc_extractor.o: mcmc_extractor.h mcmc_extractor.cpp goto_tools.o
 
 mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o mcmc_extractor.o
 	$(gg) -c mcmc.cpp \
-	goto_tools.o containers.o chisq.o eigen_wrapper.o mcmc_extractor.o\
+	goto_tools.o containers.o chisq.o eigen_wrapper.o mcmc_extractor.o \
 	$(LIBRARIES) $(INCLUDE)
 
 gp_to_mcmc.o: gp_to_mcmc.cpp gp_to_mcmc.h chisq.o gaussian_process.o
@@ -196,7 +196,7 @@ gp2mcmc: gp_to_mcmc_driver.cpp gp_to_mcmc.o mcmc.o
 mcmc_test: mcmc.o mcmc_test.cpp
 	$(gg) -o mcmc_test mcmc_test.cpp \
 	goto_tools.o containers.o eigen_wrapper.o chisq.o mcmc.o \
-	mcmc_extractor.o\
+	mcmc_extractor.o \
 	$(LIBRARIES) $(INCLUDE)
 
 validate: validate_gp2mcmc.cpp gp2mcmc

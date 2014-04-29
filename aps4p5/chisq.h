@@ -59,6 +59,8 @@ public:
     void set_min(int,double);
     
     double get_time_spent();
+    
+    virtual void set_i_chain(int);
 };
 
 

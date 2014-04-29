@@ -12,6 +12,11 @@ void chisquared::activate_small_m(){
     death_knell("used nonsense small m");
 }
 
+void chisquared::set_i_chain(int ii){
+    printf("sorry; you cannot set i_chain for this chisquared function\n");
+    throw -1;
+}
+
 void chisquared::allot_arrays(){
     int ix,iy;
     
