@@ -275,6 +275,12 @@ void array_1d<T>::set_dim(int ii){
 }
 
 template <typename T>
+void array_1d<T>::zero(){
+    int i;
+    for(i=0;i<room;i++)data[i]=0;
+}
+
+template <typename T>
 void array_1d<T>::remove(int dex){
 
     if(dex<0 || dex>=dim){
@@ -730,6 +736,14 @@ void array_2d<T>::add_row(array_1d<T> &in){
 	}
     }
     rows++;
+}
+
+template <typename T>
+void array_2d<T>::zero(){
+    int i;
+    for(i=0;i<row_room;i++){
+        data[i].zero();
+    }
 }
 
 template <typename T>
@@ -1223,6 +1237,12 @@ void asymm_array_2d<T>::die(int ir) const{
     int ifail=1;
     
     throw ifail;
+}
+
+template <typename T>
+void asymm_array_2d<T>::zero(){
+    int i;
+    for(i=0;i<row_room;i++)data[i].zero();
 }
 
 template <typename T>

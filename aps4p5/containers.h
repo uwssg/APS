@@ -27,6 +27,7 @@ public:
     void divide_val(int,T);
     void multiply_val(int,T);
     
+    void zero();
     void remove(int);
     
     void set_dim(int);
@@ -87,6 +88,8 @@ public:
     void set_row(int,array_1d<T>&);
     void set(int,int,T);
     
+    void zero();
+    
     void add_val(int,int,T);
     void subtract_val(int,int,T);
     void multiply_val(int,int,T);
@@ -126,6 +129,7 @@ public:
     void add_row(const array_1d<T>&);
     
     void remove_row(int);
+    void zero();
     
     void set(int,int,T);
     T get_data(int,int);
