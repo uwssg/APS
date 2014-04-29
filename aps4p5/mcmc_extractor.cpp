@@ -100,7 +100,7 @@ void mcmc_extractor::learn_discard(){
         
         total_per_chain.set(cc,total);
         
-        printf("cc %d total %d\n",cc,total);
+        //printf("cc %d total %d\n",cc,total);
         
         discardtest=int((1.0-keep_frac)*ct);
         if(cc==0 || discardtest>discardmax)discardmax=discardtest;
@@ -111,12 +111,12 @@ void mcmc_extractor::learn_discard(){
     
     discard=discardmax;
     shortest_kept=shortest_total-discard;
-    printf("discard %d\n",discard);
+    //printf("discard %d\n",discard);
     ct=0;
     for(cc=0;cc<nchains;cc++){
         ct+=total_per_chain.get_data(cc)-discard;
     }
-    printf("keeping %d\n",ct);
+    //printf("keeping %d\n",ct);
 }
 
 

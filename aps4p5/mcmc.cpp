@@ -468,6 +468,8 @@ void mcmc::update_directions(){
     }
     
     write_directions();
+    
+    //printf("done updating directions\n");
 
 }
 
@@ -486,6 +488,8 @@ void mcmc::step_update(int i){
 
 void mcmc::calculate_covariance(){
     
+    //printf("ready to try calculating covariance\n");
+    
     char root[500];
     int i;
     for(i=0;i<500 && names[0][i]!=0;i++);
@@ -494,8 +498,10 @@ void mcmc::calculate_covariance(){
     
     
     int j;
-    for(j=0;j<500 && j<i;j++)root[j]=names[0][i];
+    for(j=0;j<500 && j<i;j++)root[j]=names[0][j];
     root[j]=0;
+    
+    //printf("root %s\n",root);
     
     mcmc_extractor covar_extractor;
     covar_extractor.set_nparams(dim);
@@ -557,7 +563,7 @@ void mcmc::calculate_covariance(){
             last_updated=n_samples/chains;
     }
     //exit(1);
-    
+    //printf("done with covariance\n");
 }  
 
 double mcmc::calculate_acceptance(){
