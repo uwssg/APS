@@ -3,6 +3,7 @@
 
 #include "chisq.h"
 #include "eigen_wrapper.h"
+#include "mcmc_extractor.h"
 
 class mcmc{
   private:
@@ -18,7 +19,7 @@ class mcmc{
     int chains,dim,called,n_samples;
     char **names;
     Ran *chaos;
-    char statname[500];     
+    char statname[500],diagname[500];     
     
     array_1d<double> sigs,max,min,p_values;
     array_2d<double> start,p_vectors;
@@ -45,6 +46,7 @@ class mcmc{
     int get_seed();
     
     void set_statname(char*);
+    void set_diagname(char*);
     
     void disable_update();
     void cutoff_update(int);

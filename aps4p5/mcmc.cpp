@@ -16,8 +16,17 @@ mcmc::mcmc(){
 
 void mcmc::set_statname(char *word){
     int i;
-    for(i=0;word[i]!=0;i++)statname[i]=word[i];
+    for(i=0;i<499 && word[i]!=0;i++)statname[i]=word[i];
     statname[i]=0;
+}
+
+void mcmc::set_diagname(char *word){
+    int i;
+    for(i=0;i<499 && word[i]!=0;i++)diagname[i]=word[i];
+    diagname[i]=0;
+    FILE *output;
+    output=fopen(diagname,"w");
+    fclose(output);
 }
 
 void mcmc::set_seed(int i){
@@ -42,6 +51,7 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
   start_update=4000;
   stop_update=-1;
   sprintf(statname,"mcmc_status.sav"); 
+  sprintf(diagname,"mcmc_diagnostic.sav");
   
   dofastslow=0;
   
@@ -246,7 +256,7 @@ void mcmc::sample(int npts){
   oldl.set_dim(chains);
   degen.set_dim(chains);
   
-  printf("starting with start rows %d\n",start.get_rows());
+  //printf("starting with start rows %d\n",start.get_rows());
 
   
   if(called==0 && resumed==0){
@@ -268,12 +278,13 @@ void mcmc::sample(int npts){
          nn=(*chisqfn[i])(*start(i));
      }
      
-     printf("nn %e\n",nn);
+     //printf("nn %e\n",nn);
      
      while(nn>=chisq_exception){
        
          for(j=0;j<dim;j++){
              start.set(i,j,min.get_data(j)+chaos->doub()*(max.get_data(j)-min.get_data(j)));
+             //printf("starting %e \n",start.get_data(i,j));
          }
 
          nn=(*chisqfn[i])(*start(i));  
@@ -285,12 +296,12 @@ void mcmc::sample(int npts){
     }
   }
   else{
-      printf("calling old start pts\n");
+      //printf("calling old start pts\n");
       for(i=0;i<chains;i++){
           nn=(*chisqfn[i])(*start(i));
           oldchi.set(i,nn);
           oldl.set(i,-0.5*nn);
-          printf("chi %e\n",nn);
+          //printf("chi %e\n",nn);
       }
   }
   
@@ -302,6 +313,8 @@ void mcmc::sample(int npts){
   trial.set_dim(dim);
   
   
+  double before=double(time(NULL));
+  
   for(cc=0;cc<chains;cc++)degen.set(cc,1);
   
   for(ii=0;ii<npts;ii++){
@@ -309,7 +322,11 @@ void mcmc::sample(int npts){
       
   for(cc=0;cc<chains;cc++){
     n_samples++;
-   
+    
+    if(dofastslow==1){
+        chisqfn[cc]->set_i_chain(cc);
+    }
+    
     
    // printf("oldl %e oldchi %e\n",oldl,oldchi);
     
@@ -340,7 +357,11 @@ void mcmc::sample(int npts){
         inbounds=1;
 
       }//while inbounds==0     
-
+      
+      /*for(j=0;j<dim;j++){
+          printf("    %e \n",trial.get_data(j));
+      }*/
+      
       newchi=(*chisqfn[cc])(trial);
       newl=-0.5*newchi;
       rr=chaos->doub();
@@ -372,6 +393,15 @@ void mcmc::sample(int npts){
       }
       else degen.add_val(cc,1);
       
+      if(n_samples%100==0 && n_samples>1){
+          output=fopen(diagname,"a");
+          fprintf(output,"   samples %d time %e -> %e\n",
+              n_samples,
+              double(time(NULL))-before,
+              (double(time(NULL))-before)/double(n_samples));
+          fclose(output);
+      }
+      
       
      }//loop over chains 
      
@@ -389,10 +419,10 @@ void mcmc::sample(int npts){
    
   }//loop over npts
   
-  printf("ending with chi\n");
+  /*printf("ending with chi\n");
   for(i=0;i<chains;i++){
       printf("%e\n",oldchi.get_data(i));
-  }
+  }*/
   
   output=fopen(statname,"a");
   fprintf(output,"total samples %d\n",n_samples);
@@ -402,9 +432,11 @@ void mcmc::sample(int npts){
 void mcmc::update_directions(){
     
     double ratio=calculate_acceptance();
-    
-    printf("found ratio to be %e\n",ratio);
-    
+
+    FILE *output=fopen(diagname,"a");
+    fprintf(output,"found ratio to be %e\n",ratio);
+    fclose(output);
+
     if(ratio>1.0/2.5 || ratio < 1.0/6.0){
     
         try{
@@ -418,7 +450,9 @@ void mcmc::update_directions(){
             }
         }
         catch (int iex){
-            printf("could not complete the directional update\n");
+            output=fopen(diagname,"a");
+            fprintf(output,"could not complete the directional update\n");
+            fclose(output);
         }
         
         if(ratio>1.0/2.5){
@@ -428,7 +462,9 @@ void mcmc::update_directions(){
             p_factor=p_factor*0.75;
         }
         
-        printf("    p_factor %e\n",p_factor);
+        output=fopen(diagname,"a");
+        fprintf(output,"    p_factor %e\n",p_factor);
+        fclose(output);
     }
     
     write_directions();
@@ -449,236 +485,35 @@ void mcmc::step_update(int i){
 }
 
 void mcmc::calculate_covariance(){
-    int cc,i,j,k,len,maxlen,ii,jj,toburn,burnin,ct,nmasterold;
-    int dlen;
-    double covar,***data,nn,mm,maxerr,mincov,tol;
-    double xx;
     
-    array_1d<int> ndata,ntot;
-    array_1d<double> v;
-    
-
-    FILE *input,*output;
-    
-    for(cc=0;cc<chains;cc++){
-        
-        input=fopen(names[cc],"r");
-        if(input==NULL){
-            throw 1;
-        }
-        fclose(input);
-        
-    }
-
-    tol=5.0e-2;
-    printf("calculating covariance tol %e\n",tol);
-    mincov=-1.0;
-    burnin=2;
-    
-    v.set_dim(dim);
-    ntot.set_dim(chains);
-    
-    data=new double**[chains];
-    
-    ndata.set_dim(chains);
-
-    for(cc=0;cc<chains;cc++){
-        ntot.set(cc,0);
-    }
-    
-    maxlen=-1;
-    for(cc=0;cc<chains;cc++){
-     //printf("cc %d\n",cc);
-        input=fopen(names[cc],"r");
-        while(fscanf(input,"%d %le",&ii,&mm)>0){
-	    for(i=0;i<dim;i++){
-                fscanf(input,"%le",&xx);
-                v.set(i,xx);
- 	    }
-            ntot.add_val(cc,ii);
-           
-	}
-        fclose(input);
-	
-        if(last_updated<1){
-            toburn=ntot.get_data(cc)/burnin;
-	 
-        }
-        else{
-            toburn=last_updated;
-        }
-        
-        //printf("toburn %d\n",toburn);
-        
-        i=ntot.get_data(cc)-toburn;
-        
-        if(i>0){
-            ndata.set(cc,i);
-	}
-        else{
-            ndata.set(cc,0);
-        }
-        
-        printf("want to allocate %d\n",ndata.get_data(cc));
-        
-        if(ndata.get_data(cc)>0){
-	    data[cc]=new double*[ndata.get_data(cc)];
-	
-	    for(i=0;i<ndata.get_data(cc);i++)data[cc][i]=new double[dim];
-	}
-        
-	k=0;
-	ct=0;
-	input=fopen(names[cc],"r");
-	while(fscanf(input,"%d %le",&ii,&mm)>0){
-	    for(i=0;i<dim;i++){
-                fscanf(input,"%le",&xx);
-                v.set(i,xx);
-	    }
-            ct+=ii;
-	    if(ct>toburn){
-	        if(ct-ii>toburn)jj=ii;
-		else jj=ct-toburn;
-		
-		for(j=0;j<jj;j++){
-		    for(i=0;i<dim;i++){
-		        if(k>=ndata.get_data(cc)){
-                            printf("WARNING you are about to overstep k %d %d\n",
-                            k,ndata.get_data(cc));
-                        }
-                        
-                        data[cc][k][i]=v.get_data(i);
-	            }
-		    k++;
-		}
-	    }
-	}
-	
-	
-	
-	if(k!=ndata.get_data(cc)){
-	    printf("WARNING k %d shld be ndata %d\n",k,ndata.get_data(cc));
-	    exit(1);
-	}
-	
-	fclose(input);
-	
-	printf("    assigned data\n");
-	
-	double mu,var,nmu;
-	for(i=0;i<dim;i++){
-	    //len=1;
-            //dlen=1;
-            len=maxlen/2;
-            if(len<1)len=1;
-            
-            dlen=maxlen/100;
-            if(dlen<1)dlen=1;
-            
-            //printf("    maxlen %d dlen %d covar %e\n",maxlen,dlen,covar);
-            
-            covar=chisq_exception;
-            
-	    while(covar>tol && len<ndata.get_data(cc)-1){
-                mu=0.0;
-                nmu=0.0;
-                for(j=0;j<ndata.get_data(cc);j+=len){
-                    mu+=data[cc][j][i];
-                    nmu+=1.0;
-                }
-                mu=mu/nmu;
-                
-                var=0.0;
-                for(j=0;j<ndata.get_data(cc);j+=len){
-                    var+=power(data[cc][j][i]-mu,2);
-                }
-                var=var/nmu;
-                
-                nmu=0.0;
-	        covar=0.0;
-		for(j=0;j<ndata.get_data(cc)-len;j+=len){
-                    nmu+=1.0;
-		    covar+=(data[cc][j][i]-mu)*(data[cc][j+len][i]-mu);
-		}
-		covar=covar/nmu;
-		covar=fabs(covar/var);
-		
-		if(mincov<0.0 || covar<mincov)mincov=covar;
-		
-		//printf("len %d covar %e\n",len,covar);
-		if(covar<tol || len==ndata.get_data(cc)-1){
-		    //printf("covar %e assigning maxlen %d\n",covar,len);
-		    if(len>maxlen)maxlen=len;
-		    if(len==ndata.get_data(cc)-1){
-		        printf("WARNING len %d ndata %d\n",len,ndata.get_data(cc));
-		    }
-		}
-		len+=dlen;
-	    }
-	}
-	//printf("maxlen %d\n",maxlen);
-    }
+    char root[500];
+    int i;
+    for(i=0;i<500 && names[0][i]!=0;i++);
+    i-=4;
+    while(names[0][i]!='_')i--;
     
     
-    //printf("maxlen %d mincov %e tol %e\n",maxlen,mincov,tol);
-    if(maxlen<0){
-        for(cc=0;cc<chains;cc++){
-	    if(ndata.get_data(cc)/100>maxlen)maxlen=ndata.get_data(cc)/100;
-	}
-    }
+    int j;
+    for(j=0;j<500 && j<i;j++)root[j]=names[0][i];
+    root[j]=0;
     
-    printf("assigned maxlen %d of %d last %d\n",maxlen,ndata.get_data(0),
-    last_updated);
+    mcmc_extractor covar_extractor;
+    covar_extractor.set_nparams(dim);
+    covar_extractor.set_nchains(chains);
+    covar_extractor.set_chainname(root);
+    covar_extractor.set_keep_frac(0.5);
+    covar_extractor.learn_thinby();
     
     array_2d<double> master;
-    int nmaster;
     
-    nmaster=0;
-    for(cc=0;cc<chains;cc++)nmaster+=ndata.get_data(cc)/maxlen+10;
-    
-    master.set_dim(nmaster,dim);
-
-    
-    k=0;
-    for(cc=0;cc<chains;cc++){
-        for(i=0,j=maxlen;i<ndata.get_data(cc) && k<nmaster;i++,j++){
-	    if(j==maxlen){
-		
-		if(k>=nmaster){
-		   printf("WARNING k %d nmaster %d\n",k,nmaster);
-		   exit(1);
-		}
-		
-		for(ii=0;ii<dim;ii++){
-                    master.set(k,ii,data[cc][i][ii]);
-		}
-                k++;
-		j=0;
-		
-		
-		
-	    }
-	} 
-    }
-    if(k>nmaster){
-        printf("WARNING k %d shld be nmaster %d\n",k,nmaster);
-	exit(1);
-    }
-    
-    nmasterold=nmaster;
-    nmaster=k;
-    
-    printf("nmaster %d\n",nmaster);
-    
-    for(cc=0;cc<chains;cc++){
-        if(ndata.get_data(cc)>0){
-            for(i=0;i<ndata.get_data(cc);i++)delete [] data[cc][i];
-	    delete [] data[cc];
+    master.set_cols(dim);
+    for(i=0;i<covar_extractor.get_nsamples();i++){
+        for(j=0;j<dim;j++){
+            master.set(i,j,covar_extractor.get_sample(i,j));
         }
-	
     }
-    delete [] data;
-    ndata.reset();
+    
+    int nmaster=master.get_rows();
     
     if(covariance.get_cols()!=dim){
         covariance.set_dim(dim,dim);
@@ -688,7 +523,8 @@ void mcmc::calculate_covariance(){
     for(i=0;i<dim;i++){
         for(j=0;j<dim;j++)covariance.set(i,j,0.0);
     }
-    
+   
+    int ii; 
     array_1d<double> v_mu;
     
     for(i=0;i<dim;i++)v_mu.set(i,0.0);
@@ -714,7 +550,9 @@ void mcmc::calculate_covariance(){
             
 	}
     }
-     
+
+    int cc;
+ 
     for(cc=0;cc<chains;cc++){
             last_updated=n_samples/chains;
     }
