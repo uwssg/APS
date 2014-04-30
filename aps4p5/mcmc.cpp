@@ -455,12 +455,12 @@ void mcmc::update_directions(){
             fclose(output);
         }
         
-        if(ratio>1.0/2.5){
+        /*if(ratio>1.0/2.5){
             p_factor=p_factor*1.5;
         }
         else if(ratio<1.0/6.0){
             p_factor=p_factor*0.75;
-        }
+        }*/
         
         output=fopen(diagname,"a");
         fprintf(output,"    p_factor %e\n",p_factor);
@@ -605,6 +605,8 @@ void mcmc::update_eigen(){
 
     double tolerance=1.0e-5;
     
+    FILE *output;
+    
     array_1d<double> e_values,v;
     array_2d<double> e_vectors;
     
@@ -686,7 +688,16 @@ void mcmc::update_eigen(){
        }
    }//try to invert
    catch (int iex){
-       printf("could not find eigen vectors... oh well\n");
+       //printf("could not find eigen vectors... oh well\n");
+       
+       output=fopen(diagname,"a");
+       fprintf(output,"could not find eigen vectors... assigning variance\n");
+       fclose(output);
+       
+       for(i=0;i<dim;i++){
+           p_values.set(i,2.38*sqrt(covariance.get_data(i,i)/double(dim)));
+       }
+       
    }
    
    /*
