@@ -692,10 +692,15 @@ void mcmc::update_eigen(){
        
        output=fopen(diagname,"a");
        fprintf(output,"could not find eigen vectors... assigning variance\n");
+       for(i=0;i<dim;i++){
+           fprintf(output,"        %e\n",covariance.get_data(i,i));
+       }
        fclose(output);
        
        for(i=0;i<dim;i++){
-           p_values.set(i,2.38*sqrt(covariance.get_data(i,i)/double(dim)));
+           if(covariance.get_data(i,i)>0.0){
+               p_values.set(i,2.38*sqrt(covariance.get_data(i,i)/double(dim)));
+           }
        }
        
    }
