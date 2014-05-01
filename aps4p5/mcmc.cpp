@@ -675,7 +675,7 @@ void mcmc::update_eigen(){
         }
         
         output=fopen(diagname,"a");
-        if(maxerr>1.0e-10)fprintf(output,"maxerr %e\n",maxerr);
+        if(maxerr>1.0e-10)fprintf(output,"eigen maxerr %e\n",maxerr);
         fclose(output);
 
         if(maxerr<=tolerance){
