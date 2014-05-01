@@ -82,7 +82,7 @@ mcmc_test.set_statname("chains/integrable_test_mcmc_status.sav");
 mcmc_test.begin_update(300);
 mcmc_test.step_update(300);
 //mcmc_test.cutoff_update(30000);
-mcmc_test.sample(80000);
+mcmc_test.sample(10000);
 
 
 }

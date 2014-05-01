@@ -434,7 +434,7 @@ void mcmc::update_directions(){
     double ratio=calculate_acceptance();
 
     FILE *output=fopen(diagname,"a");
-    fprintf(output,"found ratio to be %e\n",ratio);
+    fprintf(output,"\nfound ratio to be %e\n",ratio);
     fclose(output);
 
     if(ratio>1.0/2.5 || ratio < 1.0/6.0){
@@ -521,6 +521,10 @@ void mcmc::calculate_covariance(){
     
     int nmaster=master.get_rows();
     
+    if(nmaster==0){
+        throw -1;
+    }
+    
     if(covariance.get_cols()!=dim){
         covariance.set_dim(dim,dim);
 
@@ -556,14 +560,22 @@ void mcmc::calculate_covariance(){
             
 	}
     }
+    
+    for(i=0;i<dim;i++){
+        for(j=0;j<dim;j++){
+            if(isnan(covariance.get_data(i,j))){
+                throw -1;
+            }
+        }
+    }
+    
 
     int cc;
  
     for(cc=0;cc<chains;cc++){
             last_updated=n_samples/chains;
     }
-    //exit(1);
-    //printf("done with covariance\n");
+
 }  
 
 double mcmc::calculate_acceptance(){
@@ -616,10 +628,6 @@ void mcmc::update_eigen(){
     v.set_dim(dim);
     
     
-    //eigen_solve(covariance,dim,dim,p_values,p_vectors);
-    
-    eval_symm(covariance,e_vectors,e_values,dim-2,dim,1);
-    
     array_2d<double> vbuff;
     array_1d<double> evbuff;
     
@@ -629,7 +637,7 @@ void mcmc::update_eigen(){
     int j,ii;
     
     try{
-    
+        eval_symm(covariance,e_vectors,e_values,dim-2,dim,1);
         eval_symm(covariance,vbuff,evbuff,2,dim,-1);
     
         e_values.set(dim-2,evbuff.get_data(0));
@@ -663,6 +671,9 @@ void mcmc::update_eigen(){
 
           for(i=0;i<dim;i++)v.set(i,e_vectors.get_data(i,ii));
           nn=eigen_check(covariance,v,e_values.get_data(ii),dim);
+          output=fopen(diagname,"a");
+          fprintf(output,"evec %d err %e\n",i,nn);
+          fclose(output);
           if(nn>maxerr)maxerr=nn;
           if(isnan(nn)){
              printf("WARNING eigen error is nan\n");

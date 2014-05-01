@@ -339,6 +339,22 @@ void eval_symm(array_2d<double> &m, array_2d<double> &vecs, array_1d<double> &va
  delete [] select;
  delete [] d;
  delete [] z;
+ 
+  for(i=0;i<nev;i++){
+      if(isnan(vals.get_data(i))){
+          //printf("WARNING nan eval\n");
+          throw -1;
+      }
+  }
+  
+  for(i=0;i<nev;i++){
+      for(j=0;j<n;j++){
+          if(isnan(vecs.get_data(j,i))){
+              //printf("WARNING nan evec\n");
+              throw -1;
+          }
+      }
+  }
 }
 
 
