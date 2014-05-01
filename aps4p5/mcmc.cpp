@@ -393,7 +393,7 @@ void mcmc::sample(int npts){
       }
       else degen.add_val(cc,1);
       
-      if(n_samples%100==0 && n_samples>1){
+      if(n_samples%1000==0 && n_samples>1){
           output=fopen(diagname,"a");
           fprintf(output,"   samples %d time %e -> %e\n",
               n_samples,
@@ -673,9 +673,11 @@ void mcmc::update_eigen(){
           }
       
         }
-    
-        if(maxerr>1.0e-10)printf("maxerr %e\n",maxerr);
-    
+        
+        output=fopen(diagname,"a");
+        if(maxerr>1.0e-10)fprintf(output,"maxerr %e\n",maxerr);
+        fclose(output);
+
         if(maxerr<=tolerance){
             for(i=0;i<dim;i++){
                 p_values.set(i,2.38*sqrt(e_values.get_data(i)/double(dim)));
@@ -683,9 +685,16 @@ void mcmc::update_eigen(){
             for(i=0;i<dim;i++){
 	        for(j=0;j<dim;j++)p_vectors.set(i,j,e_vectors.get_data(i,j));
 	    }
-	
-	
        }
+       else{
+           for(i=0;i<dim;i++){
+               if(covariance.get_data(i,i)>0.0){
+                   p_values.set(i,2.38*sqrt(covariance.get_data(i,i)/double(dim)));
+               }
+           }   
+       }
+       
+       
    }//try to invert
    catch (int iex){
        //printf("could not find eigen vectors... oh well\n");
