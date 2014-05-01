@@ -143,7 +143,7 @@ void mcmc_extractor::learn_thinby(){
     }
     
     FILE *input;
-    int cc,wgt,ct,thin_best,thin_lim,kept_buffer=0,imax;
+    int cc,wgt,ct,thin_best,thin_lim,kept_buffer=0,imax,total_independent;
     array_1d<double> mean,var,covar,vv;
     double max_covar,best_covar=10.0,nn,d_wgt;
     
@@ -153,6 +153,8 @@ void mcmc_extractor::learn_thinby(){
     
     //try considering the total covariance, rather than
     //the chain-by-chain covariance
+    
+    printf("thin_lim %d\n",thin_lim);
     
     for(thinval=10;best_covar>0.1 && thinval<thin_lim;thinval+=10){
         for(i=0;i<nparams;i++){
@@ -253,7 +255,10 @@ void mcmc_extractor::learn_thinby(){
         
         //fprintf(output,"%d %e %d\n",thinval,max_covar,imax);
         
-        if(max_covar<best_covar && independent_samples.get_rows()>0){
+        total_independent=0;
+        for(cc=0;cc<nchains;cc++)total_independent+=data[cc].get_rows();
+        
+        if(max_covar<best_covar && total_independent>0){
             best_covar=max_covar;
             thin_best=thinval;
             
@@ -283,6 +288,7 @@ void mcmc_extractor::learn_thinby(){
     
     delete [] data;
     
+    printf("nmaster %d thin %d -- %e\n\n",independent_samples.get_rows(),thin_best,best_covar);
     //printf("total_kept %d\n",total_kept);
 }
 

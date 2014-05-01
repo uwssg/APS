@@ -14,6 +14,9 @@ Ran chaos(seed);
 int i,j,dim=8;
 
 ellipses_integrable chifn(dim,2);
+
+
+//ellipses chifn(dim,2);
 array_1d<double> min,max,c1,c2,sig;
 
 for(i=0;i<dim;i++){
@@ -76,13 +79,16 @@ for(i=0;i<dim;i++){
 
 exit(1);*/
 
-mcmc mcmc_test(dim,8,"chains/integrable_test_chains",min,max,sig,2.0,&chaos);
+//mcmc mcmc_test(dim,8,"chains/integrable_test_chains",min,max,sig,2.0,&chaos);
+
+mcmc mcmc_test(dim,8,"chains/test_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
-mcmc_test.set_statname("chains/integrable_test_mcmc_status.sav");
-mcmc_test.begin_update(300);
+//mcmc_test.set_statname("chains/integrable_test_mcmc_status.sav");
+mcmc_test.set_statname("chains/test_status.sav");
+mcmc_test.begin_update(5000);
 mcmc_test.step_update(300);
 //mcmc_test.cutoff_update(30000);
-mcmc_test.sample(10000);
+mcmc_test.sample(20000);
 
 
 }

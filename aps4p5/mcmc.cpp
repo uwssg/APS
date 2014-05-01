@@ -442,25 +442,29 @@ void mcmc::update_directions(){
         try{
 	    calculate_covariance();
 	    
+            p_factor=1.0;
+            
 	    if(dofastslow==0){
                 update_eigen();
             }
             else{
                 update_fastslow();
             }
+            
+            
         }
         catch (int iex){
             output=fopen(diagname,"a");
             fprintf(output,"could not complete the directional update\n");
             fclose(output);
+            
+            if(ratio<1.0/6.0){
+                p_factor*=0.5;
+            }
+            else{
+                p_factor*=1.5;
+            }
         }
-        
-        /*if(ratio>1.0/2.5){
-            p_factor=p_factor*1.5;
-        }
-        else if(ratio<1.0/6.0){
-            p_factor=p_factor*0.75;
-        }*/
         
         output=fopen(diagname,"a");
         fprintf(output,"    p_factor %e\n",p_factor);
@@ -568,7 +572,6 @@ void mcmc::calculate_covariance(){
             }
         }
     }
-    
 
     int cc;
  
@@ -672,7 +675,7 @@ void mcmc::update_eigen(){
           for(i=0;i<dim;i++)v.set(i,e_vectors.get_data(i,ii));
           nn=eigen_check(covariance,v,e_values.get_data(ii),dim);
           output=fopen(diagname,"a");
-          fprintf(output,"evec %d err %e\n",i,nn);
+          fprintf(output,"evec %d err %e\n",ii,nn);
           fclose(output);
           if(nn>maxerr)maxerr=nn;
           if(isnan(nn)){
