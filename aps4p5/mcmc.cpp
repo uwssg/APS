@@ -58,6 +58,7 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
   chaos=dice;
   dim=dd;
   chains=cc;
+  degen.set_dim(chains);
   called=0;
   
   chisqfn=new chisquared*[chains];
@@ -244,7 +245,6 @@ void mcmc::guess(array_1d<double> &input){
 void mcmc::sample(int npts){
   
   int i,j,k,l,cc,ii,inbounds;
-  array_1d<int> degen;
   
   array_1d<double> oldchi,oldl,trial,proposed;
   double newchi,newl,rr,diff,nn;
@@ -254,7 +254,6 @@ void mcmc::sample(int npts){
   
   oldchi.set_dim(chains);
   oldl.set_dim(chains);
-  degen.set_dim(chains);
   
   //printf("starting with start rows %d\n",start.get_rows());
 
@@ -607,6 +606,9 @@ double mcmc::calculate_acceptance(){
             }
             
         }
+        
+        steps++;
+        tot+=degen.get_data(cc);
         
         fclose(input);
     }

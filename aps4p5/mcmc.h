@@ -21,6 +21,7 @@ class mcmc{
     Ran *chaos;
     char statname[500],diagname[500];     
     
+    array_1d<int> degen;
     array_1d<double> sigs,max,min,p_values;
     array_2d<double> start,p_vectors;
     
