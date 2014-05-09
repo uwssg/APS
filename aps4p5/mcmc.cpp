@@ -53,6 +53,8 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
   sprintf(statname,"mcmc_status.sav"); 
   sprintf(diagname,"mcmc_diagnostic.sav");
   
+  _do_gibbs=0;
+  
   dofastslow=0;
   
   chaos=dice;
@@ -128,10 +130,14 @@ mcmc::~mcmc(){
   
 }
 
-
+void mcmc::do_gibbs(){
+    _do_gibbs=1;
+    dofastslow=0;
+}
 
 void mcmc::activate_fastslow(int ii){
     dofastslow=1;
+    _do_gibbs=0;
     ifast=ii;
     if(ii>=dim)ifast=dim;
 }
@@ -256,7 +262,11 @@ void mcmc::sample(int npts){
   oldl.set_dim(chains);
   
   //printf("starting with start rows %d\n",start.get_rows());
-
+  
+  if(_do_gibbs==1 && i_gibbs.get_dim()!=chains){
+      i_gibbs.set_dim(chains);
+      for(i=0;i<chains;i++)i_gibbs.set(i,0);
+  }
   
   if(called==0 && resumed==0){
     for(i=0;i<chains;i++){
@@ -313,6 +323,7 @@ void mcmc::sample(int npts){
   
   
   double before=double(time(NULL));
+  int use_this_dex;
   
   for(cc=0;cc<chains;cc++)degen.set(cc,1);
   
@@ -337,25 +348,46 @@ void mcmc::sample(int npts){
 	for(i=0;i<dim;i++)trial.set(i,start.get_data(cc,i));
 	
 	for(i=0;i<dim;i++){
-	    proposed.set(i,normal_deviate(chaos,0.0,p_factor*p_values.get_data(i)));
+            use_this_dex=0;
+            if(dofastslow==0 && _do_gibbs==0){
+                use_this_dex=1;
+            }
+            else if(dofastslow==1 && ii%2==0 && i<ifast){
+                use_this_dex=1;
+            }
+            else if(dofastslow==1 && ii%2==1 && i>=ifast){
+                use_this_dex=1;
+            }
+            else if(_do_gibbs==1 && i==i_gibbs.get_data(cc)){
+                use_this_dex=1;
+            }
+            
+            if(use_this_dex==1){
+	        proposed.set(i,normal_deviate(chaos,0.0,p_factor*p_values.get_data(i)));
 	    
-	   
-	    if(dofastslow==0 ||
-	        (ii%2==0 && i<ifast) ||
-		(ii%2==1 && i>=ifast))
-	    {
+	    //if(dofastslow==0 ||
+	        //(ii%2==0 && i<ifast) ||
+		//(ii%2==1 && i>=ifast))
+	    
                 //only step if we are not doing fast/slow
 		//or the dimension is in the appropriate range for fast vs. slow
 	        for(j=0;j<dim;j++){
                     trial.add_val(j,proposed.get_data(i)*p_vectors.get_data(j,i));
                 }
-	    }
+	    
+            }
 	}
-	
-	
+        
         inbounds=1;
 
       }//while inbounds==0     
+      
+      if(_do_gibbs==1){
+          i_gibbs.add_val(cc,1);
+          if(i_gibbs.get_data(cc)>=dim){
+              i_gibbs.set(cc,0);
+          }
+      }
       
       /*for(j=0;j<dim;j++){
           printf("    %e \n",trial.get_data(j));

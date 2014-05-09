@@ -89,6 +89,8 @@ mcmc_test.set_diagname("chains/test_diagnostic.sav");
 mcmc_test.begin_update(5000);
 mcmc_test.step_update(300);
 //mcmc_test.cutoff_update(30000);
+
+mcmc_test.do_gibbs();
 mcmc_test.sample(20000);
 
 

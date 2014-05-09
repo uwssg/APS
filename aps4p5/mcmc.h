@@ -9,7 +9,7 @@ class mcmc{
   private:
     chisquared **chisqfn;
     int seed,do_update,stop_update,start_update,update_interval;
-    int resumed,last_updated;
+    int resumed,last_updated,_do_gibbs;
     
     int dofastslow,ifast;
     
@@ -21,7 +21,7 @@ class mcmc{
     Ran *chaos;
     char statname[500],diagname[500];     
     
-    array_1d<int> degen;
+    array_1d<int> degen,i_gibbs;
     array_1d<double> sigs,max,min,p_values;
     array_2d<double> start,p_vectors;
     
@@ -61,6 +61,8 @@ class mcmc{
     
     int get_n_samples();
     int get_last_updated();
+    
+    void do_gibbs();
 };
 
 #endif
