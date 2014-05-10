@@ -14,6 +14,7 @@ Ran chaos(seed);
 int i,j,dim=8;
 
 ellipses_integrable chifn(dim,2);
+//chifn.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_0_1.sav");
 
 
 //ellipses chifn(dim,2);
@@ -81,7 +82,7 @@ exit(1);*/
 
 //mcmc mcmc_test(dim,8,"chains/integrable_test_chains",min,max,sig,2.0,&chaos);
 
-mcmc mcmc_test(dim,8,"chains/test_chains",min,max,sig,2.0,&chaos);
+mcmc mcmc_test(dim,8,"chains/test_gibbs2_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
 //mcmc_test.set_statname("chains/integrable_test_mcmc_status.sav");
 mcmc_test.set_statname("chains/test_status.sav");

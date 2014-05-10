@@ -54,6 +54,7 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
   sprintf(diagname,"mcmc_diagnostic.sav");
   
   _do_gibbs=0;
+  n_calc_covar=0;
   
   dofastslow=0;
   
@@ -468,8 +469,9 @@ void mcmc::update_directions(){
     fprintf(output,"\nfound ratio to be %e\n",ratio);
     fclose(output);
 
-    if(ratio>1.0/2.5 || ratio < 1.0/6.0){
-    
+    if(n_calc_covar==0 || ratio>1.0/2.5 || ratio < 1.0/6.0){
+        
+        printf("\n%d %e\n",n_calc_covar,ratio);
         try{
 	    calculate_covariance();
 	    
@@ -482,7 +484,8 @@ void mcmc::update_directions(){
                 update_fastslow();
             }
             
-            
+            n_calc_covar++;
+            printf("successfully updated\n");
         }
         catch (int iex){
             output=fopen(diagname,"a");

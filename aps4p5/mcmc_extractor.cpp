@@ -288,7 +288,7 @@ void mcmc_extractor::learn_thinby(){
     
     delete [] data;
     
-    printf("nmaster %d thin %d -- %e\n\n",independent_samples.get_rows(),thin_best,best_covar);
+    printf("nmaster %d thin %d -- %e\n",independent_samples.get_rows(),thin_best,best_covar);
     //printf("total_kept %d\n",total_kept);
 }
 

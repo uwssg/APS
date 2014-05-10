@@ -4,14 +4,14 @@ main(){
 
 mcmc_extractor test;
 
-int nparams=22;
+int nparams=8;
 
 //nparams=46;
 
 test.set_nchains(8);
 test.set_nparams(nparams);
 
-test.set_chainname("chains/test_chains");
+test.set_chainname("chains/test_gibbs2_chains");
 
 //test.set_chainname("/Users/noldor/physics/planckLikelihood/base_planck_lowl/base/planck_lowl/base_planck_lowl");
 
@@ -19,7 +19,7 @@ test.set_keep_frac(0.5);
 
 test.learn_thinby();
 
-test.print_samples("test_samples.sav");
+test.print_samples("test_gibbs2_samples.sav");
 
 
 array_1d<double> RR,VV,WW;
