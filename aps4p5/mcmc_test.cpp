@@ -82,17 +82,17 @@ exit(1);*/
 
 //mcmc mcmc_test(dim,8,"chains/integrable_test_chains",min,max,sig,2.0,&chaos);
 
-mcmc mcmc_test(dim,8,"chains/test_gibbs2_chains",min,max,sig,2.0,&chaos);
+mcmc mcmc_test(dim,8,"chains/test_nogibbs_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
 //mcmc_test.set_statname("chains/integrable_test_mcmc_status.sav");
-mcmc_test.set_statname("chains/test_status.sav");
-mcmc_test.set_diagname("chains/test_diagnostic.sav");
+mcmc_test.set_statname("chains/test_nogibbs_status.sav");
+mcmc_test.set_diagname("chains/test_nogibbs_diagnostic.sav");
 mcmc_test.begin_update(5000);
 mcmc_test.step_update(300);
 //mcmc_test.cutoff_update(30000);
 
-mcmc_test.do_gibbs();
-mcmc_test.sample(20000);
+//mcmc_test.do_gibbs();
+mcmc_test.sample(40000);
 
 
 }
