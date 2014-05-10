@@ -473,18 +473,30 @@ void mcmc::update_directions(){
         
         printf("\n%d %e\n",n_calc_covar,ratio);
         try{
-	    calculate_covariance();
+            if(n_calc_covar%2==0){
+	        calculate_covariance();
 	    
-            p_factor=1.0;
+                //p_factor=1.0;
             
-	    if(dofastslow==0){
-                update_eigen();
+	        if(dofastslow==0){
+                    update_eigen();
+                }
+                else{
+                    update_fastslow();
+                }
             }
             else{
-                update_fastslow();
+                if(ratio<1.0/6.0){
+                    p_factor*=0.5;
+                }
+                else{
+                    p_factor*=1.5;
+                }
             }
             
+            
             n_calc_covar++;
+            
             printf("successfully updated\n");
         }
         catch (int iex){
