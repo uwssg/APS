@@ -64,9 +64,10 @@ mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o mcmc_extractor.o
 	goto_tools.o containers.o chisq.o eigen_wrapper.o mcmc_extractor.o \
 	$(LIBRARIES) $(INCLUDE)
 
-extract: mcmc_extraction_runner.cpp mcmc_extractor.o
+extract: mcmc_extraction_runner.cpp mcmc_extractor.o eigen_wrapper.o
 	$(gg) -o extract mcmc_extraction_runner.cpp containers.o \
-	goto_tools.o mcmc_extractor.o
+	goto_tools.o mcmc_extractor.o eigen_wrapper.o \
+        $(LIBRARIES) $(INCLUDE)
 
 gp_to_mcmc.o: gp_to_mcmc.cpp gp_to_mcmc.h chisq.o gaussian_process.o
 	$(gg) -c gp_to_mcmc.cpp \

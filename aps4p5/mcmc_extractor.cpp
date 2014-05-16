@@ -75,7 +75,7 @@ void mcmc_extractor::learn_discard(){
     char inname[letters];
     
     double nn,d_wgt;
-    int wgt,ct,discardmax,discardtest,i,total,shortest_total;
+    int wgt,ct,discardmin,discardtest,i,total,shortest_total;
     
     array_1d<int> total_per_chain;
     
@@ -103,13 +103,13 @@ void mcmc_extractor::learn_discard(){
         //printf("cc %d total %d\n",cc,total);
         
         discardtest=int((1.0-keep_frac)*ct);
-        if(cc==0 || discardtest>discardmax)discardmax=discardtest;
+        if(cc==0 || discardtest<discardmin)discardmin=discardtest;
         
         if(cc==0 || total<shortest_total)shortest_total=total;
         
     }
     
-    discard=discardmax;
+    discard=discardmin;
     shortest_kept=shortest_total-discard;
     //printf("discard %d\n",discard);
     ct=0;
