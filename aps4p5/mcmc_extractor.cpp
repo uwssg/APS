@@ -154,7 +154,7 @@ void mcmc_extractor::learn_thinby(){
     //try considering the total covariance, rather than
     //the chain-by-chain covariance
     
-    printf("thin_lim %d\n",thin_lim);
+    //printf("thin_lim %d\n",thin_lim);
     
     for(thinval=10;best_covar>0.1 && thinval<thin_lim;thinval+=10){
         for(i=0;i<nparams;i++){
@@ -288,7 +288,7 @@ void mcmc_extractor::learn_thinby(){
     
     delete [] data;
     
-    printf("nmaster %d thin %d -- %e\n",independent_samples.get_rows(),thin_best,best_covar);
+    //printf("nmaster %d thin %d -- %e\n",independent_samples.get_rows(),thin_best,best_covar);
     //printf("total_kept %d\n",total_kept);
 }
 

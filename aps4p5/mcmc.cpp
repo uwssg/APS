@@ -471,7 +471,7 @@ void mcmc::update_directions(){
 
     if(n_calc_covar==0 || ratio>1.0/2.5 || ratio < 1.0/6.0){
         
-        printf("\n%d %e\n",n_calc_covar,ratio);
+        //printf("\n%d %e\n",n_calc_covar,ratio);
         try{
             if(n_calc_covar%2==0){
 	        calculate_covariance();
@@ -497,7 +497,7 @@ void mcmc::update_directions(){
             
             n_calc_covar++;
             
-            printf("successfully updated\n");
+            //printf("successfully updated\n");
         }
         catch (int iex){
             output=fopen(diagname,"a");
