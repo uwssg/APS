@@ -12,6 +12,8 @@ int nparams=22;
 test.set_nchains(8);
 test.set_nparams(nparams);
 
+test.set_cutoff(500);
+
 test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planck140513gibbs_chain");
 
 //test.set_chainname("chains/test_nogibbs_chains");

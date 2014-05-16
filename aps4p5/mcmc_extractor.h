@@ -27,6 +27,8 @@ public:
     int get_nsamples();
     double get_sample(int,int);
     
+    void set_cutoff(int);
+    
     void print_samples(char*);
     void calculate_r(array_1d<double>&,array_1d<double>&,array_1d<double>&);
     void calculate_r(array_1d<double>&,array_1d<double>&,array_1d<double>&,int);
@@ -34,7 +36,7 @@ public:
 private:
     int nchains,nparams,thinby;
     double keep_frac;
-    int discard,shortest_kept;
+    int discard,shortest_kept,cutoff;
     char chainname[letters];
     
     void check_validity();

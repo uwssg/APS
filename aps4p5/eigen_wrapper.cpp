@@ -304,6 +304,7 @@ void eval_symm(array_2d<double> &m, array_2d<double> &vecs, array_1d<double> &va
  }
  if(info!=0){printf("after dsaupd info is %d ido %d ncv %d n %d\n",info,ido,ncv,n);
      printf("iterations %d n %d\n",iparam[2],n);
+     printf("iparam5 %d\n",iparam[4]);
      throw -1;
  }
 /* for(i=0;i<ncv;i++){

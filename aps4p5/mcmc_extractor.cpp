@@ -7,6 +7,8 @@ mcmc_extractor::mcmc_extractor(){
     nparams=-1;
     chainname[0]=0;
     
+    cutoff = -1;
+    
     keep_frac=-1.0;
     discard=-1;
     
@@ -16,6 +18,10 @@ mcmc_extractor::mcmc_extractor(){
 }
 
 mcmc_extractor::~mcmc_extractor(){}
+
+void mcmc_extractor::set_cutoff(int ii){
+    cutoff=ii;
+}
 
 void mcmc_extractor::check_validity(){
     if(nchains<=0 || nparams<=0){
@@ -89,7 +95,7 @@ void mcmc_extractor::learn_discard(){
         sprintf(inname,"%s_%d.txt",chainname,cc+1);
         input=fopen(inname,"r");
         ct=0;
-        while(fscanf(input,"%le",&d_wgt)>0){
+        while(fscanf(input,"%le",&d_wgt)>0 && (cutoff<0 || total<cutoff)){
             fscanf(input,"%le",&nn);
             for(i=0;i<nparams;i++)fscanf(input,"%le",&nn);
             wgt=int(d_wgt);
@@ -171,7 +177,7 @@ void mcmc_extractor::learn_thinby(){
             sprintf(inname,"%s_%d.txt",chainname,cc+1);
             
             input=fopen(inname,"r");
-            while(fscanf(input,"%le",&d_wgt)>0){
+            while(fscanf(input,"%le",&d_wgt)>0 && (cutoff<0 || ct<cutoff)){
                 wgt=int(d_wgt);
                 fscanf(input,"%le",&nn);
                 
