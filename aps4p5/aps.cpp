@@ -1290,7 +1290,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
 void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     array_1d<double> lowball,highball,original_lowball;
-    double flow,fhigh,original_flow;
+    double flow,fhigh,fnearest,original_flow;
     
     double dd,ddmin;
     int i,j,k;
@@ -1301,7 +1301,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     bisection_targets.set(1,strad.get_target());
     bisection_targets.set(2,strad.get_target()-0.5*delta_chisquared);
     
-    bisection_tolerance.set(0,1.0e-1*delta_chisquared);
+    bisection_tolerance.set(0,1.0e-2*delta_chisquared);
     bisection_tolerance.set(1,1.0e-6*delta_chisquared);
     bisection_tolerance.set(2,1.0e-2*delta_chisquared);
     
@@ -1368,8 +1368,11 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     for(ii=0;ii<bisection_targets.get_dim();ii++){
         
+        if(bisection_targets.get_data(ii)-flow<fhigh-bisection_targets.get_data(ii))fnearest-flow;
+        else fnearest=fhigh;
+        
         dd=gg.distance(lowball,highball);
-        while(dd>1.0e-10 && bisection_targets.get_data(ii)-flow > bisection_tolerance.get_data(ii)){
+        while(dd>1.0e-10 && fabs(bisection_targets.get_data(ii)-fnearest) > bisection_tolerance.get_data(ii)){
             for(i=0;i<gg.get_dim();i++){
                 trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
             }
@@ -1394,7 +1397,10 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 }
                 
             }
-        
+            
+            if(bisection_targets.get_data(ii)-flow < fhigh-bisection_targets.get_data(ii))fnearest=flow;
+            else fnearest=fhigh;
+            
             dd*=0.5;
         
         }
