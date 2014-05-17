@@ -1295,11 +1295,15 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     double dd,ddmin;
     int i,j,k;
     
-    array_1d<double> bisection_targets;
+    array_1d<double> bisection_targets,bisection_tolerance;
     
     bisection_targets.set(0,strad.get_target()+0.5*delta_chisquared);
     bisection_targets.set(1,strad.get_target());
     bisection_targets.set(2,strad.get_target()-0.5*delta_chisquared);
+    
+    bisection_tolerance.set(0,1.0e-2);
+    bisection_tolerance.set(1,1.0e-6);
+    bisection_tolerance.set(2,1.0e-2);
     
     if(good_pts.get_dim()==0){
         for(i=0;i<gg.get_dim();i++)lowball.set(i,minpt.get_data(i));
@@ -1365,7 +1369,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     for(ii=0;ii<bisection_targets.get_dim();ii++){
         
         dd=gg.distance(lowball,highball);
-        while(dd>1.0e-10){
+        while(dd>bisection_tolerance.get_data(ii)){
             for(i=0;i<gg.get_dim();i++){
                 trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
             }
