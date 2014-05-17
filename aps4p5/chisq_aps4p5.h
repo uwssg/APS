@@ -28,7 +28,6 @@ public:
     udder_likelihood();
     ~udder_likelihood();
     virtual double operator()(array_1d<double>&) const;
-    virtual int get_type();
     
     int get_n3();
     int get_p3();
@@ -42,7 +41,6 @@ public:
     wmap_likelihood();
     ~wmap_likelihood();
     virtual double operator()(array_1d<double>&) const;
-    virtual int get_type();
 };
 
 #endif

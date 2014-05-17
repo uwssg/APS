@@ -502,6 +502,14 @@ int aps::is_it_a_candidate(int dex){
     if(gg.get_fn(dex)<chimin+grat*(global_median-chimin) && gg.get_fn(dex)>strad.get_target()){
         //printf(" yes it is\n");
         
+        
+        /*
+        * Test the point halfway between the new point (dex) and the midpoint.
+        * If chisquared at the test point is more than chimin + 0.75 *(fn(dex) - chimin),
+        * then this is a new candidate for function minimization.  If not, this is probably just 
+        * a part of the same low chisquared locus associated with chimin.  Do not consider
+        * it a candidate for function minimization.
+        */
         for(i=0;i<dim;i++){
             mid_pt.set(i,0.5*(minpt.get_data(i)+gg.get_pt(dex,i)));
         }
@@ -523,7 +531,9 @@ int aps::is_it_a_candidate(int dex){
 }
 
 void aps::find_global_minimum_meta(){
-
+    
+    //this is not called
+    
     if(known_minima.get_dim()<dim+1){
         return;
     }
@@ -627,6 +637,12 @@ void aps::find_global_minimum(int ix){
 }
 
 void aps::find_global_minimum(array_1d<int> &neigh){
+    
+    /*
+    * Use simplex minimization, seeded by the sampled points whose
+    * indices are stored in neigh[] to search for a new local or global
+    * minimum in chisquared.
+    */
     
     if(neigh.get_dim()!=dim+1){
         printf("WARNING you just called find_global_minimum with an improper number of neighbors\n");
@@ -1063,25 +1079,17 @@ void aps::search(){
     //aps_score=time_aps;
     
     aps_score=ct_aps;
-    
     grad_score=ct_gradient;
     
-
     if(grad_score<aps_score){
-        //printf("gradient searching\n");
         gradient_search();
-        //printf("done gradient searching\n");
     }
     
     aps_search(n_samples);
-    
-    
-    
+
     if(gg.get_pts()>n_printed+write_every){
-        //printf("writing\n");
         write_pts();
     }
-    //printf("done searching\n");
         
     time_total+=double(time(NULL))-before;
 }
@@ -1089,10 +1097,7 @@ void aps::search(){
 void aps::aps_wide(int in_samples){
 
     array_2d<double> samples;
-    
-    
-    //printf("wide searching\n");
-    
+   
     int i,j;
     samples.set_cols(dim);
     for(i=0;i<in_samples;i++){
@@ -1103,10 +1108,6 @@ void aps::aps_wide(int in_samples){
     
     i=gg.get_pts();
     aps_choose_best(samples,iWIDE);
-    /*if(gg.get_pts()!=i){
-        wide_pts.add(gg.get_pts()-1);
-    }*/
-    
     called_wide++;
    
 }
@@ -1164,11 +1165,7 @@ void aps::aps_focus(int in_samples){
     //printf("about to choose best\n");
     
     i=gg.get_pts();
-    aps_choose_best(samples,iFOCUS);
-    /*if(gg.get_pts()!=i){
-        focus_pts.add(gg.get_pts()-1);
-    }*/
-    
+    aps_choose_best(samples,iFOCUS);    
     called_focus++;
 
 }
@@ -1189,13 +1186,7 @@ void aps::aps_gibbs(int in_samples){
     if(i_gibbs>=gibbs_sets.get_rows()){
         i_gibbs=0;
     }
-    
-    //printf("gibbs searching ");
-    /*for(i=0;i<gibbs_sets.get_cols(i_gibbs);i++){
-        printf("%d ",gibbs_sets.get_data(i_gibbs,i));
-    }
-    printf("\n");*/
-    
+
     for(i=0;i<in_samples;i++){
         for(j=0;j<dim;j++){
             samples.set(i,j,minpt.get_data(j));
@@ -1211,9 +1202,6 @@ void aps::aps_gibbs(int in_samples){
     
     i=gg.get_pts();
     aps_choose_best(samples,iGIBBS);
-    /*if(gg.get_pts()!=i){
-        gibbs_pts.add(gg.get_pts()-1);
-    }*/
     
     i_gibbs++;
     called_gibbs++;
@@ -1230,7 +1218,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     
     gg.reset_cache();
     while(samples.get_rows()>0){
-        //printf("rows %d\n",samples.get_rows());
+
         if(samples.get_rows()==in_samples){
             i_sample=0;
         }
@@ -1246,15 +1234,10 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         
         for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
         
-        /*for(i=0;i<gg.get_dim();i++){
-            printf("    %e %e\n",samples.get_data(i_sample,i),samv.get_data(i));
-        }*/
         
         mu=gg.user_predict(samv,&sig,0);
         
         if(mu<0.0)mu=0.0;
-        
-        //printf("mu %e sig %e\n",mu,sig);
         
         stradval=strad(mu,sig);
 
@@ -1269,11 +1252,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         
     }
     
-    //printf("time for chitrue\n");
-    
     double chitrue=(*chisq)(sambest);
-    
-    //printf("chitrue %e\n",chitrue);
     
     int actually_added;
     
@@ -1321,8 +1300,6 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     bisection_targets.set(0,strad.get_target()+0.5*delta_chisquared);
     bisection_targets.set(1,strad.get_target());
     bisection_targets.set(2,strad.get_target()-0.5*delta_chisquared);
-    
-    //printf("bisecting\n");
     
     if(good_pts.get_dim()==0){
         for(i=0;i<gg.get_dim();i++)lowball.set(i,minpt.get_data(i));
@@ -1423,15 +1400,10 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         
         
     }
-   // printf("done bisecting\n");
 }
 
 void aps::aps_search(int in_samples){
 
-    //set_where("aps_scatter_search");
-    
-    //printf("aps searching\n");
-    
     if(chisq==NULL){
         printf("WARNING chisq is null in aps_scatter_search\n");
         exit(1);
@@ -1439,8 +1411,6 @@ void aps::aps_search(int in_samples){
 
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
-
-    
 
     if(called_gibbs<called_focus && called_gibbs<called_wide){
         aps_gibbs(in_samples);
@@ -1451,15 +1421,10 @@ void aps::aps_search(int in_samples){
     else{
         aps_wide(in_samples);
     }
-    
-    
-    
-   
+
     time_aps+=double(time(NULL))-before;
     ct_aps+=chisq->get_called()-ibefore;
     set_where("nowhere");
-    
-    //printf("ct_aps %d time %e\n",ct_aps,time_aps);
     
 }
 
@@ -1530,10 +1495,7 @@ void aps::gradient_search(){
    
     
     int o_mindex=global_mindex;
-    
 
-    
-   
     array_1d<int> seed;
     double nn,nnmin,nnchosen;
         
@@ -1553,14 +1515,12 @@ void aps::gradient_search(){
     
     for(ii=0;ii<dim+1;ii++){
         if(gradient_start_pts.get_dim()==0 && known_minima.get_dim()==0 && seed.get_dim()==0){
-        
             for(i=0;i<candidates.get_dim();i++){     
                 if(i==0 || delta.get_data(i)>delta_max){
                     delta_max=delta.get_data(i);
                     ichosen=i;
                 }
             }
-
         }
         else{
         
@@ -1604,14 +1564,6 @@ void aps::gradient_search(){
         fprintf(output," -- %e %e %e\n",gg.self_predict(seed.get_data(i)),gg.get_fn(seed.get_data(i)),delta_out.get_data(i));
     }
     
-    
-   /* for(i=0;i<seed.get_dim();i++){
-        if(i==0 || gg.get_fn(seed.get_data(i))<nnmin){
-            nnmin=gg.get_fn(seed.get_data(i));
-            imin=seed.get_data(i);
-        }
-    }*/
-    
     if(mindex_is_candidate==1 && global_mindex>=0){
         for(i=0;i<dim+1;i++){
             if(i==0 || gg.get_fn(seed.get_data(i))>nn){
@@ -1628,8 +1580,9 @@ void aps::gradient_search(){
         exit(1);
     }
     
-    //gradient_start_pts.add(imin);
-    for(i=0;i<seed.get_dim();i++)gradient_start_pts.add(seed.get_data(i));
+    //only add the minimum of seed; not all of them
+    gradient_start_pts.add(imin);
+    //for(i=0;i<seed.get_dim();i++)gradient_start_pts.add(seed.get_data(i));
     
     fclose(output);
     
@@ -1672,8 +1625,7 @@ void aps::optimize(){
     for(i=0;i<wide_pts.get_dim();i++){
         roll=dice->doub();
         if(roll<rat){
-            use_dex.add(wide_pts.get_data(i));
-            
+           
             ff_opt.add(gg.get_fn(wide_pts.get_data(i)));
             data_opt.add_row(*gg.get_pt(wide_pts.get_data(i)));
        }     
@@ -1912,8 +1864,9 @@ void aps::write_pts(){
     fclose(output);
    
     output=fopen(timingname,"a");
-    fprintf(output,"%d %d %e ",
-    gg.get_pts(),chisq->get_called(),double(time(NULL))-start_time);
+    fprintf(output,"%d %d %e %e %e ",
+    gg.get_pts(),chisq->get_called(),chisq->get_time_spent(),
+    chisq->get_time_spent()/double(chisq->get_called()),double(time(NULL))-start_time);
     
     fprintf(output,"%d %e ",ct_aps,time_aps);
     fprintf(output,"%d %e ",ct_gradient,time_gradient);
@@ -1922,11 +1875,7 @@ void aps::write_pts(){
     global_median,chimin,strad.get_target(),volume);
     
     fprintf(output," -- %d %d ",known_minima.get_dim(),ngood);
-    //fprintf(output," -- %e %e %e -- ",mu_true,sig_true,chi_true);
-    
-    /*for(i=0;i<hy.get_dim();i++){
-        fprintf(output,"%.3e ",hy.get_data(i));
-    }*/
+
     fprintf(output,"\n");
     
     fclose(output);
