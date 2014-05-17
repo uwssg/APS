@@ -1368,7 +1368,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     for(ii=0;ii<bisection_targets.get_dim();ii++){
         
-        if(bisection_targets.get_data(ii)-flow<fhigh-bisection_targets.get_data(ii))fnearest-flow;
+        if(bisection_targets.get_data(ii)-flow<fhigh-bisection_targets.get_data(ii))fnearest=flow;
         else fnearest=fhigh;
         
         dd=gg.distance(lowball,highball);
