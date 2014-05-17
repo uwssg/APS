@@ -1455,13 +1455,13 @@ void aps::gradient_search(){
     array_1d<double> local_max,local_min,local_range;
 
     for(i=0;i<wide_pts.get_dim();i++){
-        if(is_it_a_candidate(wide_pts.get_data(i))>0){
+        if(ct_gradient<10 || is_it_a_candidate(wide_pts.get_data(i))>0){
             candidates.add(wide_pts.get_data(i));
         }
     }
     
     for(i=0;i<gibbs_pts.get_dim();i++){
-        if(is_it_a_candidate(gibbs_pts.get_data(i))>0){
+        if(ct_gradient <10 || is_it_a_candidate(gibbs_pts.get_data(i))>0){
             candidates.add(gibbs_pts.get_data(i));
         }
     }
