@@ -19,7 +19,7 @@ double straddle_parameter::get_target(){
 double straddle_parameter::operator()(double mu, double sig) const{
     if(target<0.0){
         printf("WARNING target %e in straddle parameter \n",target);
-	exit(1);
+        exit(1);
     }
     
     if(isnan(mu) || isnan(target))return -1.0*chisq_exception;
@@ -124,7 +124,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     int i;
     for(i=0;i<dim;i++){
         paramnames[i]=new char[letters];
-	sprintf(paramnames[i],"p%d",i);
+        sprintf(paramnames[i],"p%d",i);
     }
     
     for(i=0;i<dim;i++){
@@ -207,13 +207,13 @@ void aps::initialize(int npts,array_1d<double> &min, array_1d<double> &max){
 void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int nguesses, array_2d<double> &guesses){
     if(chisq==NULL){
         printf("WARNING chisq is null in APS initializer\n");
-	exit(1);
+        exit(1);
     }
     
     if(nguesses!=guesses.get_rows()){
         printf("WARNING nguesses %d but guess_rows %d\n",
-	nguesses,guesses.get_rows());
-	exit(1);
+        nguesses,guesses.get_rows());
+        exit(1);
     }
     printf("dim %d\n",dim);
     
@@ -232,42 +232,42 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     for(i=0;i<nguesses;i++){
         for(j=0;j<dim;j++)vector.set(j,guesses.get_data(i,j));
 
-	ff.set(i,(*chisq)(vector));
-	
-	while(!(ff.get_data(i)<chisq_exception)){
-	    for(j=0;j<dim;j++){
-	        vector.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
-	    }
+        ff.set(i,(*chisq)(vector));
+        
+        while(!(ff.get_data(i)<chisq_exception)){
+            for(j=0;j<dim;j++){
+                vector.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
+            }
 
-	    ff.set(i,(*chisq)(vector));
-	}
-	
-	data.add_row(vector);
+            ff.set(i,(*chisq)(vector));
+        }
+        
+        data.add_row(vector);
     }
     
     printf("done guessing\n");
     for(;i<npts;i++){
         //printf("%d\n",i);
         ff.set(i,2.0*chisq_exception);
-	while(!(ff.get_data(i)<chisq_exception)){
+        while(!(ff.get_data(i)<chisq_exception)){
             
-	    for(j=0;j<dim;j++)vector.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
-	    ff.set(i,(*chisq)(vector));
+            for(j=0;j<dim;j++)vector.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
+            ff.set(i,(*chisq)(vector));
             
             /*printf("ff %e \n",ff.get_data(i));
             for(j=0;j<dim;j++){
                 printf("%e\n",vector.get_data(j));
             }*/
             
-	}
-	data.add_row(vector);
+        }
+        data.add_row(vector);
     }
     printf("done assembling points\n");
     
     
     for(i=0;i<dim;i++){
         range_max.set(i,max.get_data(i));
-	range_min.set(i,min.get_data(i));
+        range_min.set(i,min.get_data(i));
     }
     
     array_1d<double> ggmin,ggmax;
@@ -287,18 +287,17 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     
     if(gg.get_dim()!=dim){
         printf("WARNING gg.get_dim %d dim %d\n",
-	gg.get_dim(),dim);
-	
-	exit(1);
+        gg.get_dim(),dim);
+        
+        exit(1);
     }
     
-    if(chisq!=NULL){
-        if(chisq->get_dim()!=gg.get_dim() || chisq->get_dim()!=dim){
-	    printf("WARNING chisq dim %d gg %d dim %d\n",
-	    chisq->get_dim(),gg.get_dim(),dim);
-	    
-	    exit(1);
-	}
+
+    if(chisq->get_dim()!=gg.get_dim() || chisq->get_dim()!=dim){
+        printf("WARNING chisq dim %d gg %d dim %d\n",
+        chisq->get_dim(),gg.get_dim(),dim);
+            
+        exit(1);
     }
     
     printf("time to optimize\n");
@@ -325,9 +324,9 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     double nn;
     for(i=0;i<gg.get_pts();i++){
         if(i==0 || gg.get_fn(i)<nn){
-	    j=i;
-	    nn=gg.get_fn(i);
-	}
+            j=i;
+            nn=gg.get_fn(i);
+        }
     }
     
     if(nn<chimin || chimin<0.0){
@@ -342,10 +341,10 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     
     /*for(i=0;i<gg.get_pts();i++){
         j=is_it_a_candidate(i);
-	if(j==1){
-	    set_as_candidate(i);
-	    
-	}
+        if(j==1){
+            set_as_candidate(i);
+            
+        }
     }*/
     
     set_where("nowhere");
@@ -483,7 +482,7 @@ int aps::is_it_a_candidate(int dex){
 
     if(dex>=gg.get_pts() || dex<0){
         printf("WARNING assessing candidacy of %d but total %d\n",dex,gg.get_pts());
-	exit(1);
+        exit(1);
     }
     
     int i,use_it;
@@ -502,7 +501,7 @@ int aps::is_it_a_candidate(int dex){
     
     if(gg.get_fn(dex)<chimin+grat*(global_median-chimin) && gg.get_fn(dex)>strad.get_target()){
         //printf(" yes it is\n");
-	
+        
         for(i=0;i<dim;i++){
             mid_pt.set(i,0.5*(minpt.get_data(i)+gg.get_pt(dex,i)));
         }
@@ -768,7 +767,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             last_found=chisq->get_called();
             time_last_found=double(time(NULL));
             simplex_min=fstar;
-	    if(actually_added==1)mindex=gg.get_pts()-1;
+            if(actually_added==1)mindex=gg.get_pts()-1;
         }
         
         if(fstar<ff.get_data(ih) && fstar>ff.get_data(il)){
@@ -792,9 +791,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 last_found=chisq->get_called();
                 time_last_found=double(time(NULL));
                 simplex_min=fstarstar;
-		if(actually_added==1){
-		    mindex=gg.get_pts()-1;
-		}
+                if(actually_added==1){
+                    mindex=gg.get_pts()-1;
+                }
             }
             
             if(fstarstar<ff.get_data(il)){
@@ -828,9 +827,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 last_found=chisq->get_called();
                 time_last_found=double(time(NULL));
                 simplex_min=fstarstar;
-		if(actually_added==1){
-		    mindex=gg.get_pts()-1;
-		}
+                if(actually_added==1){
+                    mindex=gg.get_pts()-1;
+                }
             }
             
             if(fstarstar<ff.get_data(ih)){
@@ -857,11 +856,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         if(ff.get_data(i)<simplex_min){
                             last_found=chisq->get_called();
                             time_last_found=double(time(NULL));
-			    simplex_min=ff.get_data(i);
-			    if(actually_added==1){
-			        mindex=gg.get_pts()-1;
-			    }
-			}
+                            simplex_min=ff.get_data(i);
+                            if(actually_added==1){
+                                mindex=gg.get_pts()-1;
+                            }
+                        }
                     }
                 }
             }
@@ -1031,7 +1030,7 @@ double aps::get_pt(int dex, array_1d<double> &output){
 void aps::guess(array_1d<double> &pt){
     if(chisq==NULL){
         printf("WARNING guessing, but chisq is null\n");
-	exit(1);
+        exit(1);
     }
     
     double chitrue;
@@ -1041,7 +1040,7 @@ void aps::guess(array_1d<double> &pt){
     chitrue=(*chisq)(pt);
     
     if(chitrue<chisq_exception){
-        actually_added=add_pt(pt,chitrue);	
+        actually_added=add_pt(pt,chitrue);        
     }
     
     ct_aps+=chisq->get_called()-ibefore;
@@ -1053,7 +1052,7 @@ void aps::search(){
     
     if(chisq==NULL){
         printf("WARNING in search, chisq is null\n");
-	exit(1);
+        exit(1);
     }
     
     double aps_score,grad_score;
@@ -1071,7 +1070,7 @@ void aps::search(){
     if(grad_score<aps_score){
         //printf("gradient searching\n");
         gradient_search();
-	//printf("done gradient searching\n");
+        //printf("done gradient searching\n");
     }
     
     aps_search(n_samples);
@@ -1233,41 +1232,41 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     while(samples.get_rows()>0){
         //printf("rows %d\n",samples.get_rows());
         if(samples.get_rows()==in_samples){
-	    i_sample=0;
-	}
-	else{
-	    for(i=0;i<samples.get_rows();i++){
-	        nn=gg.distance((*samples(i)),samv);
-		if(i==0 || nn<dd){
-		    dd=nn;
-		    i_sample=i;
-		}
-	    }
-	}
+            i_sample=0;
+        }
+        else{
+            for(i=0;i<samples.get_rows();i++){
+                nn=gg.distance((*samples(i)),samv);
+                if(i==0 || nn<dd){
+                    dd=nn;
+                    i_sample=i;
+                }
+            }
+        }
         
-	for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
-	
+        for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
+        
         /*for(i=0;i<gg.get_dim();i++){
             printf("    %e %e\n",samples.get_data(i_sample,i),samv.get_data(i));
         }*/
         
-	mu=gg.user_predict(samv,&sig,0);
+        mu=gg.user_predict(samv,&sig,0);
         
         if(mu<0.0)mu=0.0;
         
         //printf("mu %e sig %e\n",mu,sig);
         
-	stradval=strad(mu,sig);
+        stradval=strad(mu,sig);
 
-	if(samples.get_rows()==in_samples || stradval>stradmax){
+        if(samples.get_rows()==in_samples || stradval>stradmax){
             mubest=mu;
             sigbest=sig;
-	    stradmax=stradval;
-	    for(i=0;i<gg.get_dim();i++)sambest.set(i,samv.get_data(i));
-	}
-	
-	samples.remove_row(i_sample);
-	
+            stradmax=stradval;
+            for(i=0;i<gg.get_dim();i++)sambest.set(i,samv.get_data(i));
+        }
+        
+        samples.remove_row(i_sample);
+        
     }
     
     //printf("time for chitrue\n");
@@ -1435,7 +1434,7 @@ void aps::aps_search(int in_samples){
     
     if(chisq==NULL){
         printf("WARNING chisq is null in aps_scatter_search\n");
-	exit(1);
+        exit(1);
     }
 
     double before=double(time(NULL));
@@ -1756,26 +1755,26 @@ void aps::write_pts(){
     for(i=0;i<gg.get_pts();i++){
         if(gg.get_fn(i)<strad.get_target()){
             good_pts.add(i);
-	    if(ngood==0){
-	        for(j=0;j<gg.get_dim();j++){
-		    good_min.set(j,gg.get_pt(i,j));
-		    good_max.set(j,gg.get_pt(i,j));
-		}
-	    }
-	    else{
-	        for(j=0;j<gg.get_dim();j++){
-		    if(gg.get_pt(i,j)<good_min.get_data(j)){
-		        good_min.set(j,gg.get_pt(i,j));
-		    }
-		    if(gg.get_pt(i,j)>good_max.get_data(j)){
-		        good_max.set(j,gg.get_pt(i,j));
-		    }
-		}
-	    }
-	    
-	    ngood++;
-	    
-	}
+            if(ngood==0){
+                for(j=0;j<gg.get_dim();j++){
+                    good_min.set(j,gg.get_pt(i,j));
+                    good_max.set(j,gg.get_pt(i,j));
+                }
+            }
+            else{
+                for(j=0;j<gg.get_dim();j++){
+                    if(gg.get_pt(i,j)<good_min.get_data(j)){
+                        good_min.set(j,gg.get_pt(i,j));
+                    }
+                    if(gg.get_pt(i,j)>good_max.get_data(j)){
+                        good_max.set(j,gg.get_pt(i,j));
+                    }
+                }
+            }
+            
+            ngood++;
+            
+        }
     }
     
     double volume=good_max.get_data(0)-good_min.get_data(0);
@@ -1796,22 +1795,22 @@ void aps::write_pts(){
     aps_dex=0;
     for(i=0;i<gg.get_pts();i++){
         if(aps_dex<wide_pts.get_dim() && i==wide_pts.get_data(aps_dex)){
-	    lling=0;
-	    mu=mu_storage.get_data(aps_dex);
-	    sig=sig_storage.get_data(aps_dex);
-	    aps_dex++;
-	}
-	else{
-	    lling=1;
-	    mu=-2.0;
-	    sig=-2.0;
-	}
+            lling=0;
+            mu=mu_storage.get_data(aps_dex);
+            sig=sig_storage.get_data(aps_dex);
+            aps_dex++;
+        }
+        else{
+            lling=1;
+            mu=-2.0;
+            sig=-2.0;
+        }
     
     
         for(j=0;j<gg.get_dim();j++){
-	    fprintf(output,"%.18e ",gg.get_pt(i,j));
-	}
-	fprintf(output,"%.18e %.18e %.18e %d\n",gg.get_fn(i),mu,sig,lling);
+            fprintf(output,"%.18e ",gg.get_pt(i,j));
+        }
+        fprintf(output,"%.18e %.18e %.18e %d\n",gg.get_fn(i),mu,sig,lling);
     }
     fclose(output);
    
@@ -1825,7 +1824,7 @@ void aps::write_pts(){
     
     for(i=0;i<wide_pts.get_dim();i++){
         tosort.set(i,gg.get_fn(wide_pts.get_data(i)));
-	inn.set(i,wide_pts.get_data(i));
+        inn.set(i,wide_pts.get_data(i));
     }
     
     for(i=0;i<gibbs_pts.get_dim();i++){
@@ -1860,11 +1859,11 @@ void aps::write_pts(){
     
     /*if(wide_pts.get_dim()>last_optimized+1000){
         //printf("optimizing\n");
-	
-	nn=double(time(NULL));
-	//printf("    time refactoring %e\n",double(time(NULL))-nn);
         
-	gg.get_hyper_parameters(hyper_params);
+        nn=double(time(NULL));
+        //printf("    time refactoring %e\n",double(time(NULL))-nn);
+        
+        gg.get_hyper_parameters(hyper_params);
         if(compare_arr(hyper_params,old_hyper_1)<0.1 &&
            compare_arr(hyper_params,old_hyper_2)<0.1){
     
@@ -1872,21 +1871,21 @@ void aps::write_pts(){
         }
     
         for(i=0;i<old_hyper_1.get_dim();i++){
-	    old_hyper_2.set(i,old_hyper_1.get_data(i));
-	}
-	
-	for(i=0;i<hyper_params.get_dim();i++){
-	    old_hyper_1.set(i,hyper_params.get_data(i));
-	}
-	
-	if(go_ahead_and_optimize==1){
-	    nn=double(time(NULL));
-	    //printf("\n    OPTIMIZING\n");
-	    
+            old_hyper_2.set(i,old_hyper_1.get_data(i));
+        }
+        
+        for(i=0;i<hyper_params.get_dim();i++){
+            old_hyper_1.set(i,hyper_params.get_data(i));
+        }
+        
+        if(go_ahead_and_optimize==1){
+            nn=double(time(NULL));
+            //printf("\n    OPTIMIZING\n");
+            
             optimize();
             
-	    last_optimized=wide_pts.get_dim();
-	}
+            last_optimized=wide_pts.get_dim();
+        }
     }*/
      
     /*output=fopen("candidates_log.sav","w");
