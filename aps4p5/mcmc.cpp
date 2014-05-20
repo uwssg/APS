@@ -560,16 +560,15 @@ void mcmc::calculate_covariance(){
     covar_extractor.set_keep_frac(0.5);
     covar_extractor.learn_thinby();
     
-    array_2d<double> master;
-    
-    master.set_cols(dim);
+    independent_samples.reset();
+    independent_samples.set_cols(dim);
     for(i=0;i<covar_extractor.get_nsamples();i++){
         for(j=0;j<dim;j++){
-            master.set(i,j,covar_extractor.get_sample(i,j));
+            independent_samples.set(i,j,covar_extractor.get_sample(i,j));
         }
     }
     
-    int nmaster=master.get_rows();
+    int nmaster=independent_samples.get_rows();
     
     if(nmaster==0){
         throw -1;
@@ -589,15 +588,16 @@ void mcmc::calculate_covariance(){
     
     for(i=0;i<dim;i++)v_mu.set(i,0.0);
     for(i=0;i<nmaster;i++){
-        for(j=0;j<dim;j++)v_mu.add_val(j,master.get_data(i,j));
+        for(j=0;j<dim;j++)v_mu.add_val(j,independent_samples.get_data(i,j));
     }
     for(i=0;i<dim;i++)v_mu.divide_val(i,double(nmaster));
     
     for(ii=0;ii<nmaster;ii++){
         for(i=0;i<dim;i++){
-            covariance.add_val(i,i,power(master.get_data(ii,i)-v_mu.get_data(i),2));
+            covariance.add_val(i,i,power(independent_samples.get_data(ii,i)-v_mu.get_data(i),2));
 	    for(j=i+1;j<dim;j++){
-                covariance.add_val(i,j,(master.get_data(ii,i)-v_mu.get_data(i))*(master.get_data(ii,j)-v_mu.get_data(j)));
+                covariance.add_val(i,j,(independent_samples.get_data(ii,i)-v_mu.get_data(i))*
+                                          (independent_samples.get_data(ii,j)-v_mu.get_data(j)));
 	    }
 	}
     }

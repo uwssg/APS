@@ -24,6 +24,7 @@ class mcmc{
     array_1d<int> degen,i_gibbs;
     array_1d<double> sigs,max,min,p_values;
     array_2d<double> start,p_vectors;
+    array_2d<double> independent_samples;
     
     double dof,junk;
     

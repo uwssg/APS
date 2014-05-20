@@ -299,7 +299,7 @@ void eval_symm(array_2d<double> &m, array_2d<double> &vecs, array_1d<double> &va
   }
   else if(ido!=99){
     printf("WARNING ido came bac %d\n",ido);
-    scanf("%lf",&junk);
+    throw -1;
   }
  }
  if(info!=0){printf("after dsaupd info is %d ido %d ncv %d n %d\n",info,ido,ncv,n);
