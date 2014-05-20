@@ -685,9 +685,16 @@ void mcmc::update_eigen(){
     
     vbuff.set_dim(dim,2);
     
+    random_basis.set_name("random_basis");
+    projected_independent_samples.set_name("projected_independent_samples");
+    basis_vector.set_name("basis_vector");
+    means.set_name("means");
+    variances.set_name("variances");
+    
     double nn,maxerr,mm;
     
     try{
+ 
         eval_symm(covariance,e_vectors,e_values,dim-2,dim,1);
         eval_symm(covariance,vbuff,evbuff,2,dim,-1);
     
@@ -759,19 +766,21 @@ void mcmc::update_eigen(){
        
    }//try to invert
    catch (int iex){
-       //printf("could not find eigen vectors... oh well\n");
+       //printf("could not find eigen vectors... oh well %d\n",
+       //independent_samples.get_rows());
        
        if(independent_samples.get_rows()==0)throw -1;
        
        output=fopen(diagname,"a");
        fprintf(output,"could not find eigen vectors... attempting random basis\n");
+       fclose(output);
        
        means.reset();
        means.set_dim(dim);
        for(i=0;i<independent_samples.get_rows();i++){
            for(j=0;j<dim;j++)means.add_val(j,independent_samples.get_data(i,j));
        }
-       for(i=0;i<independent_samples.get_rows();i++){
+       for(i=0;i<dim;i++){
            means.divide_val(i,double(independent_samples.get_rows()));
        }
        
@@ -808,7 +817,7 @@ void mcmc::update_eigen(){
                    }
                
                    for(k=0;k<dim;k++){
-                       mm=nn*basis_vector.get_data(k);
+                       mm=nn*random_basis.get_data(j,k);
                        basis_vector.subtract_val(k,mm);
                    }
                }
@@ -820,6 +829,7 @@ void mcmc::update_eigen(){
                
                if(nn>1.0e-25 && !(isnan(nn))){
                    ii=1;
+                   nn=sqrt(nn);
                    for(k=0;k<dim;k++){
                        basis_vector.divide_val(k,nn);
                        random_basis.set(i,k,basis_vector.get_data(k));
@@ -830,6 +840,37 @@ void mcmc::update_eigen(){
            }
            
        }
+       
+       for(i=0;i<dim;i++){
+           nn=0.0;
+           for(j=0;j<dim;j++){
+               nn+=random_basis.get_data(i,j)*random_basis.get_data(i,j);
+           }
+           nn=sqrt(nn);
+           if(fabs(1.0-nn)>1.0e-2){
+               output=fopen(diagname,"a");
+               fprintf(output,"WARNING not normalized -- %e\n",nn);
+               fclose(output);
+               throw -1;
+           }
+           
+           for(j=0;j<dim;j++){
+               if(j!=i){
+                   nn=0.0;
+                   for(k=0;k<dim;k++){
+                       nn+=random_basis.get_data(i,k)*random_basis.get_data(j,k);
+                   }
+                   
+                   if(fabs(nn)>1.0e-2){
+                       output=fopen(diagname,"a");
+                       fprintf(output,"WARNING not orthogonal %d %d %e\n",i,j,nn);
+                       fclose(output);
+                       throw -1;
+                   }
+               }
+           }
+       }
+       
        
        means.reset();
        means.set_dim(dim);
@@ -859,7 +900,7 @@ void mcmc::update_eigen(){
            }
        }
        
-       for(i=0;i<projected_independent_samples.get_rows();i++){
+       for(i=0;i<dim;i++){
            variances.divide_val(i,double(projected_independent_samples.get_rows()));
        }
        
@@ -869,13 +910,14 @@ void mcmc::update_eigen(){
            }
        }
        
+       output=fopen(diagname,"a");
        for(i=0;i<dim;i++){
-           fprintf(output,"        %e\n",variances.get_data(i));
+           fprintf(output,"        %e -- %e\n",variances.get_data(i),means.get_data(i));
        }
        fclose(output);
        
        for(i=0;i<dim;i++){
-           if(covariance.get_data(i,i)>0.0){
+           if(variances.get_data(i)>0.0){
                p_values.set(i,2.38*sqrt(variances.get_data(i)/double(dim)));
            }
        }
