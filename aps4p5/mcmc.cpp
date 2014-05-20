@@ -665,7 +665,7 @@ double mcmc::calculate_acceptance(){
 }
 
 void mcmc::update_eigen(){
-    int i;
+    int i,j,k,l,ii,random_ct;
 
     double tolerance=1.0e-5;
     
@@ -680,13 +680,12 @@ void mcmc::update_eigen(){
     v.set_dim(dim);
     
     
-    array_2d<double> vbuff;
-    array_1d<double> evbuff;
+    array_2d<double> vbuff,random_basis,projected_independent_samples;
+    array_1d<double> evbuff,basis_vector,means,variances;
     
     vbuff.set_dim(dim,2);
     
-    double nn,maxerr;
-    int j,ii;
+    double nn,maxerr,mm;
     
     try{
         eval_symm(covariance,e_vectors,e_values,dim-2,dim,1);
@@ -762,16 +761,122 @@ void mcmc::update_eigen(){
    catch (int iex){
        //printf("could not find eigen vectors... oh well\n");
        
+       if(independent_samples.get_rows()==0)throw -1;
+       
        output=fopen(diagname,"a");
-       fprintf(output,"could not find eigen vectors... assigning variance\n");
+       fprintf(output,"could not find eigen vectors... attempting random basis\n");
+       
+       means.reset();
+       means.set_dim(dim);
+       for(i=0;i<independent_samples.get_rows();i++){
+           for(j=0;j<dim;j++)means.add_val(j,independent_samples.get_data(i,j));
+       }
+       for(i=0;i<independent_samples.get_rows();i++){
+           means.divide_val(i,double(independent_samples.get_rows()));
+       }
+       
+       random_basis.set_cols(dim);
+       
+       nn=0.0;
        for(i=0;i<dim;i++){
-           fprintf(output,"        %e\n",covariance.get_data(i,i));
+           random_basis.set(0,i,2.0*(0.5-chaos->doub())*means.get_data(i));
+           nn+=random_basis.get_data(0,i)*random_basis.get_data(0,i);
+       }
+       nn=sqrt(nn);
+       for(i=0;i<dim;i++){
+           random_basis.divide_val(0,i,nn);
+       }
+       
+       for(i=1;i<dim;i++){
+           ii=-1;
+           random_ct=0;
+           while(ii<0){
+               
+               if(random_ct>1000){
+                   printf("WARNING spent %d on one random basis vector\n");
+                   throw -1;
+               }
+               
+               for(j=0;j<dim;j++){
+                   basis_vector.set(j,2.0*(0.5-chaos->doub())*means.get_data(j));
+               }
+           
+               for(j=0;j<i;j++){
+                   nn=0.0;
+                   for(k=0;k<dim;k++){
+                       nn+=basis_vector.get_data(k)*random_basis.get_data(j,k);
+                   }
+               
+                   for(k=0;k<dim;k++){
+                       mm=nn*basis_vector.get_data(k);
+                       basis_vector.subtract_val(k,mm);
+                   }
+               }
+               
+               nn=0.0;
+               for(k=0;k<dim;k++){
+                   nn+=basis_vector.get_data(k)*basis_vector.get_data(k);
+               }
+               
+               if(nn>1.0e-25 && !(isnan(nn))){
+                   ii=1;
+                   for(k=0;k<dim;k++){
+                       basis_vector.divide_val(k,nn);
+                       random_basis.set(i,k,basis_vector.get_data(k));
+                   }
+               }
+               random_ct++;
+               
+           }
+           
+       }
+       
+       means.reset();
+       means.set_dim(dim);
+       variances.set_dim(dim);
+       projected_independent_samples.set_cols(dim);
+       for(i=0;i<independent_samples.get_rows();i++){
+           for(j=0;j<dim;j++){
+               nn=0.0;
+               for(k=0;k<dim;k++){
+                   nn+=independent_samples.get_data(i,k)*random_basis.get_data(j,k);
+               }
+               means.add_val(j,nn);
+               
+               projected_independent_samples.set(i,j,nn);
+               
+           }
+       }
+       
+       for(i=0;i<dim;i++){
+           means.divide_val(i,double(independent_samples.get_rows()));
+       }
+       
+       for(i=0;i<projected_independent_samples.get_rows();i++){
+           for(j=0;j<dim;j++){
+               nn=power(means.get_data(j)-projected_independent_samples.get_data(i,j),2);
+               variances.add_val(j,nn);
+           }
+       }
+       
+       for(i=0;i<projected_independent_samples.get_rows();i++){
+           variances.divide_val(i,double(projected_independent_samples.get_rows()));
+       }
+       
+       for(i=0;i<dim;i++){
+           for(j=0;j<dim;j++){
+               p_vectors.set(i,j,random_basis.get_data(j,i));
+           }
+       }
+       
+       for(i=0;i<dim;i++){
+           fprintf(output,"        %e\n",variances.get_data(i));
        }
        fclose(output);
        
        for(i=0;i<dim;i++){
            if(covariance.get_data(i,i)>0.0){
-               p_values.set(i,2.38*sqrt(covariance.get_data(i,i)/double(dim)));
+               p_values.set(i,2.38*sqrt(variances.get_data(i)/double(dim)));
            }
        }
        
