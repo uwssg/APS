@@ -381,7 +381,7 @@ void mcmc::sample(int npts){
             }
 	}
         
-        newchi=(*chisqfn[cc])(trial)
+        newchi=(*chisqfn[cc])(trial);
         
         inbounds=1;
 
