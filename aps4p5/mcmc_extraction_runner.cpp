@@ -14,7 +14,7 @@ test.set_nparams(nparams);
 
 test.set_cutoff(500);
 
-test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planck140516gibbs_chain");
+test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
 //test.set_chainname("chains/test_nogibbs_chains");
 
@@ -26,7 +26,7 @@ test.learn_thinby();
 
 printf("done learning thinby %d\n",test.get_nsamples());
 
-test.print_samples("test_nogibbs_samples.sav");
+test.print_samples("test_gibbs_samples.sav");
 
 
 array_1d<double> RR,VV,WW;
