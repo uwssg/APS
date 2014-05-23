@@ -343,7 +343,9 @@ void mcmc::sample(int npts){
     
       inbounds=0;  
      // printf("   ii %d\n",ii);    
-      while(inbounds==0){
+      newchi = 2.0 * chisq_exception;
+      
+      while(inbounds==0 && !(newchi<chisq_exception)){
         nn=0.0;
 		
 	for(i=0;i<dim;i++)trial.set(i,start.get_data(cc,i));
@@ -379,6 +381,8 @@ void mcmc::sample(int npts){
             }
 	}
         
+        newchi=(*chisqfn[cc])(trial)
+        
         inbounds=1;
 
       }//while inbounds==0     
@@ -390,11 +394,6 @@ void mcmc::sample(int npts){
           }
       }
       
-      /*for(j=0;j<dim;j++){
-          printf("    %e \n",trial.get_data(j));
-      }*/
-      
-      newchi=(*chisqfn[cc])(trial);
       newl=-0.5*newchi;
       rr=chaos->doub();
       
