@@ -25,6 +25,9 @@ public:
     
     
     int get_nsamples();
+    int get_thinby();
+    int get_total_used();
+    int get_total_kept();
     double get_sample(int,int);
     
     void set_cutoff(int);
@@ -34,7 +37,7 @@ public:
     void calculate_r(array_1d<double>&,array_1d<double>&,array_1d<double>&,int);
     
 private:
-    int nchains,nparams,thinby;
+    int nchains,nparams,thinby,total_used,total_kept;
     double keep_frac;
     int discard,shortest_kept,cutoff;
     char chainname[letters];

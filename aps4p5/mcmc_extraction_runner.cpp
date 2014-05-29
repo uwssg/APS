@@ -9,24 +9,29 @@ int nparams=22;
 
 //nparams=46;
 
-test.set_nchains(8);
+nparams = 81;
+
+test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(500);
+test.set_cutoff(2000);
 
-test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
+//test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
 //test.set_chainname("chains/test_nogibbs_chains");
 
 //test.set_chainname("/Users/noldor/physics/planckLikelihood/base_planck_lowl/base/planck_lowl/base_planck_lowl");
+
+test.set_chainname("/Users/noldor/physics/recreate_getdist/ieuchains_1304/wmap7_learn");
 
 test.set_keep_frac(0.5);
 
 test.learn_thinby();
 
 printf("done learning thinby %d\n",test.get_nsamples());
+printf("thinby %d\nused %d\nkept %d\n",test.get_thinby(),test.get_total_used(),test.get_total_kept());
 
-test.print_samples("test_gibbs_samples.sav");
+test.print_samples("test_wmap7_samples.sav");
 
 
 array_1d<double> RR,VV,WW;
@@ -38,10 +43,13 @@ WW.set_name("WW");
 test.calculate_r(RR,VV,WW);
 int i;
 for(i=0;i<nparams;i++){
+    
     printf("%d %e\n",i,RR.get_data(i));
 }
 
 ///////////////////////////covariance matrix////////////
+
+/*
 
 array_2d<double> covariance;
 array_1d<double> mean;
@@ -114,5 +122,7 @@ for(i=0;i<nparams;i++){
     for(j=0;j<nparams;j++)printf("%.3e ",e_vectors.get_data(i,j));
     printf("\n");
 }
+
+*/
 
 }

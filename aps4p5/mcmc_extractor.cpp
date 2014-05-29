@@ -7,10 +7,15 @@ mcmc_extractor::mcmc_extractor(){
     nparams=-1;
     chainname[0]=0;
     
-    cutoff = -1;
+    cutoff=-1;
     
     keep_frac=-1.0;
     discard=-1;
+    
+    total_used=-1;
+    total_kept=-1;
+    thinby=-1;
+    
     
     independent_samples.set_name("independent_samples");
     independent_dex.set_name("independent_dex");
@@ -18,6 +23,18 @@ mcmc_extractor::mcmc_extractor(){
 }
 
 mcmc_extractor::~mcmc_extractor(){}
+
+int mcmc_extractor::get_thinby(){
+    return thinby;
+}
+
+int mcmc_extractor::get_total_kept(){
+    return total_kept;
+}
+
+int mcmc_extractor::get_total_used(){
+    return total_used;
+}
 
 void mcmc_extractor::set_cutoff(int ii){
     cutoff=ii;
@@ -92,7 +109,9 @@ void mcmc_extractor::learn_discard(){
     
     for(cc=0;cc<nchains;cc++){
         total=0;
+        
         sprintf(inname,"%s_%d.txt",chainname,cc+1);
+        
         input=fopen(inname,"r");
         ct=0;
         while(fscanf(input,"%le",&d_wgt)>0 && (cutoff<0 || total<cutoff)){
@@ -134,7 +153,10 @@ void mcmc_extractor::learn_thinby(){
         throw -1;
     }
     
-    int ithin,thinval,total_kept=-1;
+    int ithin,thinval;
+    
+    total_kept=-1;
+    
     array_2d<double> *data;
     data=new array_2d<double>[nchains];
     
@@ -150,6 +172,7 @@ void mcmc_extractor::learn_thinby(){
     
     FILE *input;
     int cc,wgt,ct,thin_best,thin_lim,kept_buffer=0,imax,total_independent;
+    int used_buffer;
     array_1d<double> mean,var,covar,vv;
     double max_covar,best_covar=10.0,nn,d_wgt;
     
@@ -169,6 +192,9 @@ void mcmc_extractor::learn_thinby(){
             covar.set(i,0.0);
         }
         
+        kept_buffer=0;
+        used_buffer=0;
+        
         for(cc=0;cc<nchains;cc++){
             ct=0;
             ithin=-1;
@@ -187,6 +213,7 @@ void mcmc_extractor::learn_thinby(){
                 }
                 
                 ct+=wgt;
+                used_buffer += wgt;
                 
                 if(ct>discard){
                     if(ithin==-1){
@@ -196,11 +223,11 @@ void mcmc_extractor::learn_thinby(){
                     
                     if(ct-wgt>discard){
                         ithin+=wgt;
-                        if(total_kept<0)kept_buffer+=wgt;
+                        kept_buffer+=wgt;
                     }
                     else{
                         ithin+=ct-discard;
-                        if(total_kept<0)kept_buffer+=ct-discard;
+                        kept_buffer+=ct-discard;
                     }
 
                     while(ithin>thinval){
@@ -277,13 +304,15 @@ void mcmc_extractor::learn_thinby(){
                 }
             }
             
+            total_kept=kept_buffer;
+            total_used=used_buffer;
             
             //printf("best_covar %e thin_best %d pts %d i %d %e\n",best_covar,thin_best,
             //independent_samples.get_rows(),imax,var.get_data(imax));
         }
         
         
-        if(total_kept<0)total_kept=kept_buffer;
+      
         
         
     }//loop over thinval
