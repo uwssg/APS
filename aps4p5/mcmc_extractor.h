@@ -28,6 +28,7 @@ public:
     int get_thinby();
     int get_total_used();
     int get_total_kept();
+    int get_total_rows();
     double get_sample(int,int);
     
     void set_cutoff(int);
@@ -39,7 +40,7 @@ public:
     void calculate_mean(array_1d<double>&,array_1d<double>&);
     
 private:
-    int nchains,nparams,thinby,total_used,total_kept;
+    int nchains,nparams,thinby,total_used,total_kept,total_rows;
     double keep_frac;
     int discard,shortest_kept,cutoff;
     char chainname[letters];

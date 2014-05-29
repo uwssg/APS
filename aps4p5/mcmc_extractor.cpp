@@ -16,6 +16,8 @@ mcmc_extractor::mcmc_extractor(){
     total_kept=-1;
     thinby=-1;
     
+    total_rows=0;
+    
     
     independent_samples.set_name("independent_samples");
     independent_dex.set_name("independent_dex");
@@ -34,6 +36,10 @@ int mcmc_extractor::get_total_kept(){
 
 int mcmc_extractor::get_total_used(){
     return total_used;
+}
+
+int mcmc_extractor::get_total_rows(){
+    return total_rows;
 }
 
 void mcmc_extractor::set_cutoff(int ii){
@@ -115,6 +121,9 @@ void mcmc_extractor::learn_discard(){
         input=fopen(inname,"r");
         ct=0;
         while(fscanf(input,"%le",&d_wgt)>0 && (cutoff<0 || total<cutoff)){
+            total_rows++;
+        
+        
             fscanf(input,"%le",&nn);
             for(i=0;i<nparams;i++)fscanf(input,"%le",&nn);
             wgt=int(d_wgt);

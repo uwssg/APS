@@ -14,7 +14,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(2000);
+test.set_cutoff(5000);
 
 //test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
@@ -24,12 +24,13 @@ test.set_cutoff(2000);
 
 test.set_chainname("/Users/noldor/physics/recreate_getdist/ieuchains_1304/wmap7_learn");
 
-test.set_keep_frac(0.5);
+test.set_keep_frac(0.75);
 
 test.learn_thinby();
 
-printf("done learning thinby %d\n",test.get_nsamples());
+printf("independent samples %d\n",test.get_nsamples());
 printf("thinby %d\nused %d\nkept %d\n",test.get_thinby(),test.get_total_used(),test.get_total_kept());
+printf("rows %d\n",test.get_total_rows());
 
 test.print_samples("test_wmap7_samples.sav");
 
