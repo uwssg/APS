@@ -34,17 +34,19 @@ printf("thinby %d\nused %d\nkept %d\n",test.get_thinby(),test.get_total_used(),t
 test.print_samples("test_wmap7_samples.sav");
 
 
-array_1d<double> RR,VV,WW;
+array_1d<double> RR,VV,WW,mean,var;
 
 RR.set_name("RR");
 VV.set_name("VV");
 WW.set_name("WW");
 
 test.calculate_r(RR,VV,WW);
+test.calculate_mean(mean,var);
 int i;
 for(i=0;i<nparams;i++){
-    
-    printf("%d %e\n",i,RR.get_data(i));
+    if(fabs(var.get_data(i)/mean.get_data(i))>1.0e-20){
+        printf("%d %e -- %e %e\n",i,RR.get_data(i),mean.get_data(i),var.get_data(i));
+    }
 }
 
 ///////////////////////////covariance matrix////////////

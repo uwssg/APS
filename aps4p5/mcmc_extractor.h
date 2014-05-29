@@ -36,6 +36,8 @@ public:
     void calculate_r(array_1d<double>&,array_1d<double>&,array_1d<double>&);
     void calculate_r(array_1d<double>&,array_1d<double>&,array_1d<double>&,int);
     
+    void calculate_mean(array_1d<double>&,array_1d<double>&);
+    
 private:
     int nchains,nparams,thinby,total_used,total_kept;
     double keep_frac;

@@ -327,6 +327,39 @@ void mcmc_extractor::learn_thinby(){
     //printf("total_kept %d\n",total_kept);
 }
 
+void mcmc_extractor::calculate_mean(array_1d<double> &mean_out, array_1d<double> &var_out){
+    if(independent_samples.get_rows()==0){
+        printf("Cannot calculate mean; no indepdendent samples\n");
+        return;
+    }
+    
+    mean_out.reset();
+    var_out.reset();
+    
+    mean_out.set_dim(nparams);
+    var_out.set_dim(nparams);
+    
+    int i,j;
+    for(i=0;i<independent_samples.get_rows();i++){
+        for(j=0;j<nparams;j++){
+            mean_out.add_val(j,independent_samples.get_data(i,j));
+        }
+    }
+    
+    for(i=0;i<nparams;i++)mean_out.divide_val(i,double(independent_samples.get_rows()));
+    
+    for(i=0;i<independent_samples.get_rows();i++){
+        for(j=0;j<nparams;j++){
+            var_out.add_val(j,power(independent_samples.get_data(i,j)-mean_out.get_data(j),2));
+        }
+    }
+    
+    for(i=0;i<nparams;i++){
+        var_out.divide_val(i,double(independent_samples.get_rows()));
+    }
+    
+}
+
 void mcmc_extractor::calculate_r(array_1d<double> &rr, array_1d<double> &vv, array_1d<double> &ww){
     if(independent_samples.get_rows()==0){
         printf("Cannot calculate r; no independent samples\n");
