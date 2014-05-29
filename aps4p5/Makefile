@@ -59,6 +59,13 @@ eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h containers.o
 mcmc_extractor.o: mcmc_extractor.h mcmc_extractor.cpp goto_tools.o
 	$(gg) -c mcmc_extractor.cpp
 
+aps_extractor.o: aps_extractor.h aps_extractor.cpp goto_tools.o
+	$(gg) -c aps_extractor.cpp
+
+aps_extract: aps_extraction_runner.cpp aps_extractor.o
+	$(gg) -o aps_extract aps_extraction_runner.cpp \
+	containers.o goto_tools.o
+
 mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o mcmc_extractor.o
 	$(gg) -c mcmc.cpp \
 	goto_tools.o containers.o chisq.o eigen_wrapper.o mcmc_extractor.o \
