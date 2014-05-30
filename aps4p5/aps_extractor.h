@@ -17,9 +17,14 @@ public:
 private:
 
     char filename[letters];
-    double chi_min,delta_chi;
+    double chi_min,delta_chi,tol;
+    int nparams;
     
-    void find_chimin();
-}
+    array_1d<double> min_pt;
+    
+    void learn_chimin();
+    void learn_nparams();
+    void validate();
+};
 
 #endif
