@@ -825,6 +825,7 @@ void mcmc::generate_random_basis(array_1d<double> &sigs,
         
     }
     
+    write_directions();
     
 }
 
