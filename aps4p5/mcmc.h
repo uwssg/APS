@@ -64,6 +64,10 @@ class mcmc{
     int get_last_updated();
     
     void do_gibbs();
+    
+    void generate_random_basis();
+    void generate_random_basis(array_2d<double>&);
+    void generate_random_basis(array_1d<double>&,array_2d<double>&);
 };
 
 #endif

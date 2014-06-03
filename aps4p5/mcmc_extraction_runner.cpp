@@ -14,7 +14,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(5000);
+test.set_cutoff(2500);
 
 //test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
@@ -24,7 +24,7 @@ test.set_cutoff(5000);
 
 test.set_chainname("/Users/noldor/physics/recreate_getdist/ieuchains_1304/wmap7_learn");
 
-test.set_keep_frac(0.75);
+test.set_keep_frac(0.9);
 
 test.learn_thinby();
 

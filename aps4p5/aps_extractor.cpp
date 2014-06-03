@@ -48,7 +48,7 @@ void aps_extractor::learn_nparams(){
         fscanf(input,"%s",word);
         ct++;
     }
-    ct--;
+    ct-=4;
     
     nparams=ct;
     printf("set nparams to %d\n",nparams);
@@ -91,7 +91,9 @@ void aps_extractor::write_good_points(char *outname){
     learn_chimin();
     
     int i;
-    FILE *output=fopen(outname,"w"),*input=fopen(filename,"r");
+    FILE *output=fopen(outname,"w");
+    FILE *input=fopen(filename,"r");
+    
     char word[letters];
     for(i=0;i<nparams+5;i++)fscanf(input,"%s",word);
     
@@ -114,6 +116,35 @@ void aps_extractor::write_good_points(char *outname){
         
         for(i=0;i<3;i++)fscanf(input,"%le",&nn);
     }
+    
+    fclose(output);
+    fclose(input);
+}
+
+void aps_extractor::plot_chimin(char *outname){
+    learn_nparams();
+    
+    double temp_min=-1.0;
+    int ct=0;
+    FILE *output=fopen(outname,"w");
+    FILE *input=fopen(filename,"r");
+    char word[letters];
+    int i;
+    for(i=0;i<nparams+5;i++)fscanf(input,"%s",word);
+    double nn;
+    while(fscanf(input,"%le",&nn)>0){
+        for(i=1;i<nparams;i++)fscanf(input,"%le",&nn);
+        ct++;
+        fscanf(input,"%le",&nn);
+        if(nn<temp_min || temp_min<0.0){
+            temp_min=nn;
+            
+            fprintf(output,"%d %le\n",ct,temp_min);
+        } 
+        
+        for(i=0;i<3;i++)fscanf(input,"%le",&nn);
+    }
+    
     
     fclose(output);
     fclose(input);
