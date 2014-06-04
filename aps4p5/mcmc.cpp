@@ -405,7 +405,9 @@ void mcmc::sample(int npts){
 	fprintf(output,"%d %e ",degen.get_data(cc),oldchi.get_data(cc));
 	for(i=0;i<dim;i++)fprintf(output,"%e ",start.get_data(cc,i));
 	fprintf(output,"\n");
-	degen.set(cc,1);
+	fclose(output);
+        
+        degen.set(cc,1);
         
         if(ii!=npts-1){
             /*if(newchi>100.0 && oldchi.get_data(cc)<20.0){
@@ -420,7 +422,6 @@ void mcmc::sample(int npts){
 	   for(i=0;i<dim;i++)start.set(cc,i,trial.get_data(i));
 	}
         
-	fclose(output);
       }
       else degen.add_val(cc,1);
       
@@ -789,7 +790,13 @@ void mcmc::generate_random_basis(array_1d<double> &sigs,
     double pmean,pvar;
     
     if(input_independent_samples.get_rows()<dim){
-        for(i=0;i<dim;i++)p_values.set(i,1.0);
+        for(i=0;i<dim;i++){
+            nn=0.0;
+            for(j=0;j<dim;j++){
+                nn+=power(sigs.get_data(j)*p_vectors.get_data(j,i),2);
+            }
+            p_values.set(i,sqrt(nn));
+        }
     }
     else{
         
@@ -889,9 +896,11 @@ void mcmc::update_eigen(){
 
           for(i=0;i<dim;i++)v.set(i,e_vectors.get_data(i,ii));
           nn=eigen_check(covariance,v,e_values.get_data(ii),dim);
+          
           output=fopen(diagname,"a");
           fprintf(output,"evec %d err %e\n",ii,nn);
           fclose(output);
+          
           if(nn>maxerr)maxerr=nn;
           if(isnan(nn)){
              printf("WARNING eigen error is nan\n");
