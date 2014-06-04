@@ -67,10 +67,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     gibbs_pts.set_name("aps_gibbs_pts");
     good_pts.set_name("aps_good_pts");
     
-    
-    FILE *output=fopen("gradient_results.sav","w");
-    fclose(output);
-    
     write_every=1000;
     n_printed=0;
     do_bisection=1;
@@ -669,8 +665,6 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     vv.set_name("find_global_min_vv");
     
-    FILE *output;
-    
     array_2d<double> pts;
     array_1d<double> pbar,ff,pstar,pstarstar;
     array_1d<double> min,max,true_var;
@@ -721,16 +715,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     simplex_min=ff.get_data(il);
     mindex=neigh.get_data(il);
-    
-    output=fopen("gradient_results.sav","a");
-    
-    fprintf(output,"    starting %e chimin %e\n",simplex_min,chimin);
-    for(j=0;j<dim+1;j++){
-        for(i=0;i<dim;i++)fprintf(output,"%e ",pts.get_data(j,i)+min.get_data(i));
-        fprintf(output," -- %e\n",ff.get_data(j));
-    }
-    
-    
+        
     mu=0.0;
     sig=0.0;
     for(i=0;i<dim+1;i++){
@@ -743,8 +728,6 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     sig=sig/double(dim+1);
     sig=sqrt(sig);
     
-    fprintf(output,"    sig starts at %e with mu %e\n",sig,mu);
-    
     int ct_abort_max=1000,last_found;
     int iteration,last_good;
     double time_last_found=double(time(NULL));
@@ -752,8 +735,6 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     //for(iteration=0;iteration<4;iteration++){
     
     last_found=chisq->get_called();
-    
-    fclose(output);
     
     while(sig>0.01 && simplex_min<chisq_exception && 
     double(time(NULL))-time_last_found < 600.0){
@@ -952,20 +933,6 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     */
     
     known_minima.add(mindex);
-    
-    output=fopen("gradient_results.sav","a");
-    
-    fprintf(output,"    ending %e -- %e %e %e\n",simplex_min,sig,mu,chimin);
-    fprintf(output,"    ");
-    for(i=0;i<dim;i++)fprintf(output,"%e ",pts.get_data(il,i)+min.get_data(i));
-    
-    
-    fprintf(output,"\n\n");
-    fprintf(output,"    ");
-    fprintf(output,"    chimin %e\n\n",chimin);
-    fclose(output);
-   
-
     
     set_where("nowhere");
 }
@@ -1453,9 +1420,7 @@ double aps::distance(int i1, int i2, array_1d<double> &range){
 void aps::gradient_search(){
     //printf("\ngradient searching\n");
     set_where("gradient_search");
-    
-    FILE *output=fopen("gradient_results.sav","a");
-    
+  
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
     
@@ -1510,7 +1475,6 @@ void aps::gradient_search(){
     double nn,nnmin,nnchosen;
         
     int ii;
-    fprintf(output,"\n\nchoosing seeds from %d candidates\n",candidates.get_dim());
     
     array_1d<double> delta,mu,sig,delta_out;
     double ss,delta_max;
@@ -1567,13 +1531,7 @@ void aps::gradient_search(){
         
     }//loop over ii
 
-    for(i=0;i<dim+1;i++){
-        for(ii=0;ii<dim;ii++){
-            fprintf(output,"%e ",gg.get_pt(seed.get_data(i),ii));
-        }
-        fprintf(output," -- %e %e %e\n",gg.self_predict(seed.get_data(i)),gg.get_fn(seed.get_data(i)),delta_out.get_data(i));
-    }
-    
+
     if(mindex_is_candidate==1 && global_mindex>=0){
         for(i=0;i<dim+1;i++){
             if(i==0 || gg.get_fn(seed.get_data(i))>nn){
@@ -1593,8 +1551,6 @@ void aps::gradient_search(){
     //only add the minimum of seed; not all of them
     gradient_start_pts.add(imin);
     //for(i=0;i<seed.get_dim();i++)gradient_start_pts.add(seed.get_data(i));
-    
-    fclose(output);
     
     find_global_minimum(seed);
     
