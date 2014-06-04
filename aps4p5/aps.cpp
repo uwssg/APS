@@ -1815,7 +1815,7 @@ void aps::write_pts(){
     if(i<1000)i=1000;
     
     if(gg.get_pts()>gg.get_last_refactored()+i && gg.get_pts()<20000){
-        printf("refactoring\n");
+        //printf("refactoring\n");
         gg.refactor();
     }
     
