@@ -218,14 +218,14 @@ array_1d<double> &mx, array_1d<double> &mn){
 
   kptr=new kd_tree(seed,mn,mx);//store data points in a kd tree
   kptr->check_tree(-1);//make sure kd tree is properly constructed
-  printf("tree diagnostic %d\n",kptr->get_diagnostic());
+  //printf("tree diagnostic %d\n",kptr->get_diagnostic());
   if(kptr->get_diagnostic()!=1){
       printf("WARNING: did not properly construct tree\n");
       exit(1);
   }
   
   pts=kptr->get_pts();
-  printf("setting pts to %d\n",pts);
+  //printf("setting pts to %d\n",pts);
   
   if(kptr->get_diagnostic()!=1){
       printf("WARNING kd_tree diagnostic %d\n",kptr->get_diagnostic());
@@ -2878,7 +2878,7 @@ void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
     Ran chaos(99);
     double nn;
     
-    printf("optimizing with simplex\n");
+    //printf("optimizing with simplex\n");
     
     array_1d<double> lmin,lmax;
     for(i=0;i<nparams;i++){
