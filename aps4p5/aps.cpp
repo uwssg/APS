@@ -1829,15 +1829,18 @@ void aps::write_pts(){
     }
     fclose(output);
    
+    double time_now = double(time(NULL));
+   
     output=fopen(timingname,"a");
-    fprintf(output,"%d %d %e %e %e ",
+    fprintf(output,"%d %d %e %e %e %e -- ",
     gg.get_pts(),chisq->get_called(),chisq->get_time_spent(),
-    chisq->get_time_spent()/double(chisq->get_called()),double(time(NULL))-start_time);
+    chisq->get_time_spent()/double(chisq->get_called()),time_now-start_time,
+    (time_now-start_time)/double(chisq->get_called()));
     
-    fprintf(output,"%d %e ",ct_aps,time_aps);
-    fprintf(output,"%d %e ",ct_gradient,time_gradient);
+    fprintf(output,"%d %e -- ",ct_aps,time_aps);
+    fprintf(output,"%d %e -- ",ct_gradient,time_gradient);
     
-    fprintf(output,"%e ",time_optimizing);
+    fprintf(output,"%e -- ",time_optimizing);
     
     fprintf(output,"%e %e %e %e",
     global_median,chimin,strad.get_target(),volume);
