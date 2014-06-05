@@ -1837,6 +1837,8 @@ void aps::write_pts(){
     fprintf(output,"%d %e ",ct_aps,time_aps);
     fprintf(output,"%d %e ",ct_gradient,time_gradient);
     
+    fprintf(output,"%e ",time_optimizing);
+    
     fprintf(output,"%e %e %e %e",
     global_median,chimin,strad.get_target(),volume);
     
