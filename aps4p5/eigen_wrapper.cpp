@@ -201,6 +201,9 @@ void invert_lapack(array_2d<double> &matin, array_2d<double> &min, int verb){
 	
 	if(info!=0){
             printf("WARNING after dgetrf in inversion info %d\n",info);
+            delete [] matrix;
+            delete [] work;
+            delete [] ipiv;
             throw -1;
         }
 	
@@ -299,12 +302,30 @@ void eval_symm(array_2d<double> &m, array_2d<double> &vecs, array_1d<double> &va
   }
   else if(ido!=99){
     printf("WARNING ido came bac %d\n",ido);
+    delete [] resid;
+    delete [] v;
+    delete [] workd;
+    delete [] workl;
+    delete [] select;
+    delete [] d;
+    delete [] z;
     throw -1;
   }
  }
- if(info!=0){printf("after dsaupd info is %d ido %d ncv %d n %d\n",info,ido,ncv,n);
+ if(info!=0){
+     
+     /*printf("after dsaupd info is %d ido %d ncv %d n %d\n",info,ido,ncv,n);
      printf("iterations %d n %d\n",iparam[2],n);
-     printf("iparam5 %d\n",iparam[4]);
+     printf("iparam5 %d\n",iparam[4]);*/
+     
+     delete [] resid;
+     delete [] v;
+     delete [] workd;
+     delete [] workl;
+     delete [] select;
+     delete [] d;
+     delete [] z;
+     
      throw -1;
  }
 /* for(i=0;i<ncv;i++){
@@ -313,12 +334,23 @@ void eval_symm(array_2d<double> &m, array_2d<double> &vecs, array_1d<double> &va
  printf("\n");*/
  dseupd_(&rvec,&howmny,select,d,z,&ldz,&sigma,&bmat,&n,which,&nev,&tol,resid,&ncv,v,&ldv,iparam,ipntr,workd,workl,&lworkl,&info);
  
- if(info!=0){printf("after dseupd info is %d ipntr7 %d n %d\n",info,ipntr[7],n);
+ if(info!=0){
+    
+    /*
+    printf("after dseupd info is %d ipntr7 %d n %d\n",info,ipntr[7],n);
  
     for(i=0;i<ncv;i++){
        printf("ritzvalue %e\n",workl[ipntr[7]+i]);
     }
-    printf("\n");
+    printf("\n");*/
+    
+    delete [] resid;
+    delete [] v;
+    delete [] workd;
+    delete [] workl;
+    delete [] select;
+    delete [] d;
+    delete [] z;
     
     throw -1;
  }

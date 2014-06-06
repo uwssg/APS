@@ -250,7 +250,7 @@ void mcmc::guess(array_1d<double> &input){
 }
 
 void mcmc::sample(int npts){
-  
+
   int i,j,k,l,cc,ii,inbounds;
   
   array_1d<double> oldchi,oldl,trial,proposed;
@@ -345,7 +345,7 @@ void mcmc::sample(int npts){
      // printf("   ii %d\n",ii);    
       newchi = 2.0 * chisq_exception;
       
-      while(inbounds==0 && !(newchi<chisq_exception)){
+      while(inbounds==0 || !(newchi<chisq_exception)){
         nn=0.0;
 		
 	for(i=0;i<dim;i++)trial.set(i,start.get_data(cc,i));
