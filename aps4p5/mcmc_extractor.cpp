@@ -422,6 +422,8 @@ void mcmc_extractor::calculate_r(array_1d<double> &R, array_1d<double> &V, array
             printf("WARNING buffer_dex %d buffer.get_rows() %d\n",
             buffer_dex.get_dim(),buffer.get_rows());
             
+            delete [] data;
+            
             throw -1;
         }
         
@@ -445,6 +447,9 @@ void mcmc_extractor::calculate_r(array_1d<double> &R, array_1d<double> &V, array
     }
     if(i!=use){
         printf("WARNING i %d but use %d\n",i,use);
+        
+        delete [] data;
+        
         throw -1;
     }
 
