@@ -16,8 +16,8 @@ INCLUDE =
 #ff = gfortran -O3
 
 #use these compilers if you are going to use omp
-gg = /opt/local/bin/g++-mp-4.8 -Wno-write-strings -O3 -fopenmp -DUSE_OPENMP
-ff = /opt/local/bin/gfortran-mp-4.8 -O3
+gg = /opt/local/bin/g++-mp-4.8 -Wno-write-strings -O3 -fopenmp -DUSE_OPENMP -g
+ff = /opt/local/bin/gfortran-mp-4.8 -O3 -g
 
 containers.o: containers.cpp containers.h
 	$(gg) -c containers.cpp
