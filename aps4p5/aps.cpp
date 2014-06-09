@@ -82,6 +82,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     last_optimized=0;
     time_optimizing=0.0;
+    time_refactoring=0.0;
     failed_to_add=0;
     aps_failed=0;
     minuit_failed=0;
@@ -1770,9 +1771,13 @@ void aps::write_pts(){
     i=gg.get_last_refactored()/2;
     if(i<1000)i=1000;
     
+    
     if(gg.get_pts()>gg.get_last_refactored()+i && gg.get_pts()<20000){
         //printf("refactoring\n");
+    
+        nn=double(time(NULL));
         gg.refactor();
+        time_refactoring+=double(time(NULL))-nn;
     }
     
     /*if(wide_pts.get_dim()>last_optimized+1000){
@@ -1840,7 +1845,7 @@ void aps::write_pts(){
     fprintf(output,"%d %e -- ",ct_aps,time_aps);
     fprintf(output,"%d %e -- ",ct_gradient,time_gradient);
     
-    fprintf(output,"%e -- ",time_optimizing);
+    fprintf(output,"%e -- %e -- ",time_optimizing,time_refactoring);
     
     fprintf(output,"%e %e %e %e",
     global_median,chimin,strad.get_target(),volume);
