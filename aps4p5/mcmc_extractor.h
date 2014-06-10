@@ -42,8 +42,8 @@ public:
     void import_independent_samples(char*);
     void import_independent_samples(array_2d<double>&);
     
-    void plot_contour(int,int,double,double,char*);
-    void plot_contour(int,int,double,double,double,double,char*);
+    void plot_contour(int,int,double,double,char*,double);
+    void plot_contour(int,int,double,double,double,double,char*,double);
     
 private:
     int nchains,nparams,thinby,total_used,total_kept,total_rows;
@@ -56,6 +56,9 @@ private:
     array_2d<double> independent_samples;
     array_1d<int> independent_dex;
 
+
+    void add_to_grid(double,double,double,double,double,
+         array_2d<double>&,array_1d<double>&);
 
 };
 

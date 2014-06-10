@@ -621,12 +621,12 @@ double mcmc_extractor::get_sample(int ix, int iy){
     return independent_samples.get_data(ix,iy);
 }
 
-void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy, char *filename){
-    plot_contour(ix,iy,dx,dy,-1.0,-1.0,filename);
+void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy, char *filename, double fraction){
+    plot_contour(ix,iy,dx,dy,-1.0,-1.0,filename,fraction);
 }
 
 void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy, 
-                    double smoothx, double smoothy, char *filename){
+                    double smoothx, double smoothy, char *filename, double fraction){
 
     if(independent_samples.get_rows()<=0){
         printf("WARNING cannot plot contours; do not yet have independent samples\n");
@@ -642,5 +642,93 @@ void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy,
         printf("WARNING nparams %d but iy in plot_contour %d\n",nparams,iy);
     }
 
+    double xmin,xmax,ymin,ymax;
+    int i,j,k,l;
+    for(i=0;i<independent_samples.get_rows();i++){
+        if(i==0 || independent_samples.get_data(i,ix)<xmin)xmin=independent_samples.get_data(i,ix);
+        if(i==0 || independent_samples.get_data(i,ix)>xmax)xmax=independent_samples.get_data(i,ix);
+        if(i==0 || independent_samples.get_data(i,iy)<ymin)ymin=independent_samples.get_data(i,iy);
+        if(i==0 || independent_samples.get_data(i,iy)>ymax)ymax=independent_samples.get_data(i,iy);
+    }
+    
+    
+    array_2d<double> raw_grid;
+    array_1d<double> raw_grid_wgt;
+    
+    raw_grid.set_cols(2);
+    double cx,cy,sx,sy,sw;
+    
+    for(i=0;i<independent_samples.get_rows();i++){
+        cx=xmin-0.5*dx;
+        cy=ymin-0.5*dy;
+        while(cx<independent_samples.get_data(i,ix)){
+            cx+=dx;
+        }
+        
+        if(cx-independent_samples.get_data(i,ix)>0.5*dx){
+            cx-=dx;
+        }
+        
+        while(cy<independent_samples.get_data(i,iy)){
+            cy+=dy;
+        }
+        
+        if(cy-independent_samples.get_data(i,iy)>0.5*dy){
+            cy-=dy;
+        }
+        
+        if(smoothx<0.0 && smoothy<0.0){
+            add_to_grid(cx,cy,1.0,dx,dy,raw_grid,raw_grid_wgt);
+        }
+        else{
+            for(sx=cx-3.0*smoothx;sx<cx+3.0*smoothx;sx+=dx){
+                for(sy=cy-3.0*smoothy;sy<cy+3.0*smoothy;sy+=dy){
+                    sw=exp(-0.5*(cx-sx)*(cx-sx)/(smoothx*smoothx)-0.5*(cy-sy)*(cy-sy)/(smoothy*smoothy));
+                    
+                    add_to_grid(sx,sy,sw,dx,dy,raw_grid,raw_grid_wgt);
+                }
+            }
+        }
+        
+    }
+    
+    
+}
 
+void mcmc_extractor::add_to_grid(double xx, double yy, double ww, double dx, double dy,
+          array_2d<double> &grid, array_1d<double> &wgt){
+    
+    int i,j;
+    
+    if(grid.get_rows()==0){
+        grid.set(0,0,xx);
+        grid.set(0,1,yy);
+        wgt.set(0,ww);
+        return;
+    }
+    
+    double dxmin,dymin,ddmin,dd;
+    int imin;
+    
+    for(i=0;i<grid.get_rows();i++){
+        dd=power(xx-grid.get_data(i,0),2)+power(yy-grid.get_data(i,1),2);
+        if(i==0 || dd<ddmin){
+            ddmin=dd;
+            dxmin=fabs(xx-grid.get_data(i,0));
+            dymin=fabs(yy-grid.get_data(i,1));
+            imin=i;
+        }
+    }
+    
+    if(dxmin<=0.5*dx && dymin<=0.5*dy){
+        wgt.add_val(imin,ww);
+        return;
+    }
+    else{
+        i=grid.get_rows();
+        grid.set(i,0,xx);
+        grid.set(i,1,yy);
+        wgt.set(i,ww);
+    }
+    
 }
