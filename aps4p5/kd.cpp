@@ -53,6 +53,16 @@ void kd_tree::build_tree(array_2d<double> &mm){
 void kd_tree::build_tree(array_2d<double> &mm,
 array_1d<double> &nmin, array_1d<double> &nmax){
    
+   if(nmin.get_dim()!=mm.get_cols()){
+       printf("WARNING nimin dim %d cols %d\n",nmin.get_dim(),mm.get_cols());
+       throw -1;
+   }
+   
+   if(nmax.get_dim()!=mm.get_cols()){
+       printf("WARNING nmax dim %d cols %d\n",nmax.get_dim(),mm.get_cols());
+       throw -1;
+   } 
+   
    data.reset();
    tree.reset();
    

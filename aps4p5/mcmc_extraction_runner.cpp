@@ -38,7 +38,8 @@ test.print_samples("test_wmap7_samples.sav");
 kde kde_test;
 kde_test.set_data(test.get_samples());
 
-kde_test.plot_density(0,0.0001,1,0.0005,0.68,"test_pixels.sav");
+kde_test.plot_density(0,0.0001,1,0.0005,0.68,"test_pixels_smoothed.sav",1);
+kde_test.plot_boundary(0,0.0001,1,0.0005,0.68,"test_boundary_smoothed.sav",1);
 
 array_1d<double> RR,VV,WW,mean,var;
 
