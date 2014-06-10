@@ -620,3 +620,27 @@ int mcmc_extractor::get_nsamples(){
 double mcmc_extractor::get_sample(int ix, int iy){
     return independent_samples.get_data(ix,iy);
 }
+
+void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy, char *filename){
+    plot_contour(ix,iy,dx,dy,-1.0,-1.0,filename);
+}
+
+void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy, 
+                    double smoothx, double smoothy, char *filename){
+
+    if(independent_samples.get_rows()<=0){
+        printf("WARNING cannot plot contours; do not yet have independent samples\n");
+        throw -1;
+    }
+    
+    if(ix<0 || ix>=nparams){
+        printf("WARNING nparams %d but ix in plot_contour %d\n",nparams,ix);
+        throw -1;
+    }
+    
+    if(iy<0 || iy>=nparams){
+        printf("WARNING nparams %d but iy in plot_contour %d\n",nparams,iy);
+    }
+
+
+}

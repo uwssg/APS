@@ -42,6 +42,9 @@ public:
     void import_independent_samples(char*);
     void import_independent_samples(array_2d<double>&);
     
+    void plot_contour(int,int,double,double,char*);
+    void plot_contour(int,int,double,double,double,double,char*);
+    
 private:
     int nchains,nparams,thinby,total_used,total_kept,total_rows;
     double keep_frac;
