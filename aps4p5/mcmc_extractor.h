@@ -1,6 +1,7 @@
 //header file for code to extract independent samples from mcmc chains
 
 #include "goto_tools.h"
+#include "kd.h"
 #include <stdio.h>
 
 #ifndef MCMC_EXTRACTOR_H

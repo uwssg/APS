@@ -56,7 +56,7 @@ eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h containers.o
 	$(gg) -c eigen_wrapper.cpp goto_tools.o $(LIBRARIES) \
 	$(INCLUDE) -Wno-deprecated
 
-mcmc_extractor.o: mcmc_extractor.h mcmc_extractor.cpp goto_tools.o
+mcmc_extractor.o: mcmc_extractor.h mcmc_extractor.cpp goto_tools.o kd.o
 	$(gg) -c mcmc_extractor.cpp
 
 aps_extractor.o: aps_extractor.h aps_extractor.cpp goto_tools.o
@@ -66,13 +66,14 @@ aps_extract: aps_extraction_runner.cpp aps_extractor.o
 	$(gg) -o aps_extract aps_extraction_runner.cpp \
 	containers.o goto_tools.o aps_extractor.o
 
-mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o mcmc_extractor.o
+mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o mcmc_extractor.o kd.o
 	$(gg) -c mcmc.cpp \
 	goto_tools.o containers.o chisq.o eigen_wrapper.o mcmc_extractor.o \
+        kd.o \
 	$(LIBRARIES) $(INCLUDE)
 
-extract: mcmc_extraction_runner.cpp mcmc_extractor.o eigen_wrapper.o
-	$(gg) -o extract mcmc_extraction_runner.cpp containers.o \
+extract: mcmc_extraction_runner.cpp mcmc_extractor.o eigen_wrapper.o kd.o
+	$(gg) -o extract mcmc_extraction_runner.cpp containers.o kd.o \
 	goto_tools.o mcmc_extractor.o eigen_wrapper.o \
         $(LIBRARIES) $(INCLUDE)
 
@@ -208,7 +209,7 @@ gp2mcmc: gp_to_mcmc_driver.cpp gp_to_mcmc.o mcmc.o
 mcmc_test: mcmc.o mcmc_test.cpp
 	$(gg) -o mcmc_test mcmc_test.cpp \
 	goto_tools.o containers.o eigen_wrapper.o chisq.o mcmc.o \
-	mcmc_extractor.o \
+	mcmc_extractor.o kd.o \
 	$(LIBRARIES) $(INCLUDE)
 
 validate: validate_gp2mcmc.cpp gp2mcmc

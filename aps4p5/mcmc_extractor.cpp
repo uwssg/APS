@@ -641,7 +641,8 @@ void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy,
     if(iy<0 || iy>=nparams){
         printf("WARNING nparams %d but iy in plot_contour %d\n",nparams,iy);
     }
-
+    
+    FILE *output;
     double xmin,xmax,ymin,ymax;
     int i,j,k,l;
     for(i=0;i<independent_samples.get_rows();i++){
@@ -656,7 +657,10 @@ void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy,
     array_1d<double> raw_grid_wgt;
     
     raw_grid.set_cols(2);
-    double cx,cy,sx,sy,sw;
+    double cx,cy,sx,sy,sw,wx,wy;
+    
+    wx=int(3.0*smoothx/dx)*dx;
+    wy=int(3.0*smoothy/dy)*dy;
     
     for(i=0;i<independent_samples.get_rows();i++){
         cx=xmin-0.5*dx;
@@ -677,12 +681,12 @@ void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy,
             cy-=dy;
         }
         
-        if(smoothx<0.0 && smoothy<0.0){
+        if(smoothx<0.0 || smoothy<0.0){
             add_to_grid(cx,cy,1.0,dx,dy,raw_grid,raw_grid_wgt);
         }
         else{
-            for(sx=cx-3.0*smoothx;sx<cx+3.0*smoothx;sx+=dx){
-                for(sy=cy-3.0*smoothy;sy<cy+3.0*smoothy;sy+=dy){
+            for(sx=cx-wx;sx<cx+wx;sx+=dx){
+                for(sy=cy-wy;sy<cy+wy;sy+=dy){
                     sw=exp(-0.5*(cx-sx)*(cx-sx)/(smoothx*smoothx)-0.5*(cy-sy)*(cy-sy)/(smoothy*smoothy));
                     
                     add_to_grid(sx,sy,sw,dx,dy,raw_grid,raw_grid_wgt);
@@ -691,6 +695,88 @@ void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy,
         }
         
     }
+    
+    double total=0.0;
+    array_1d<int> dexes;
+    for(i=0;i<raw_grid_wgt.get_dim();i++){
+        total+=raw_grid_wgt.get_data(i);
+        dexes.set(i,i);
+    }
+    
+    array_1d<double> sorted_wgt;
+    double limit=fraction*total;
+    sort_and_check(raw_grid_wgt,sorted_wgt,dexes);
+    
+    array_2d<double> kept_pixels;
+    double sum=0.0;
+    int npixels=raw_grid_wgt.get_dim();
+    
+    for(i=0;i<npixels && sum<limit;i++){
+        j=dexes.get_data(npixels-1-i);
+        kept_pixels.add_row(*raw_grid(j));
+        sum+=raw_grid_wgt.get_data(j);
+    }
+    
+    raw_grid_wgt.reset();
+    raw_grid.reset();
+    array_1d<double> min,max;
+    min.set(0,0.0);
+    min.set(1,0.0);
+    max.set(0,dx);
+    max.set(1,dy);
+    
+    kd_tree *kept_tree;
+    
+    kept_tree=new kd_tree(kept_pixels,min,max);
+    
+    output=fopen("test_pixels.sav","w");
+    for(i=0;i<kept_pixels.get_rows();i++){
+        fprintf(output,"%e %e\n",kept_pixels.get_data(i,0),kept_pixels.get_data(i,1));
+    }
+    fclose(output);
+    
+    
+    kept_pixels.reset();
+    
+    array_2d<double> boundary_pts;
+    array_1d<int> neigh;
+    array_1d<double> ddneigh;
+    
+    boundary_pts.set_cols(2);
+    j=0;
+    for(i=0;i<kept_tree->get_pts();i++){
+        kept_tree->nn_srch(i,5,neigh,ddneigh);
+        if(ddneigh.get_data(4)>1.001){
+            boundary_pts.set(j,0,kept_tree->get_pt(i,0));
+            boundary_pts.set(j,1,kept_tree->get_pt(i,1));
+        }
+    }
+    
+    delete kept_tree;
+    
+    kd_tree boundary_tree(boundary_pts);
+    
+    array_1d<double> origin,lastpt;
+    origin.set(0,boundary_tree.get_pt(0,0));
+    origin.set(1,boundary_tree.get_pt(0,1));
+    
+    lastpt.set(0,boundary_tree.get_pt(0,0));
+    lastpt.set(1,boundary_tree.get_pt(0,1));
+    
+    int lastdex=0;
+    
+    output=fopen(filename,"w");
+    while(boundary_tree.get_pts()>1){
+        fprintf(output,"%e %e\n",lastpt.get_data(0),lastpt.get_data(1));
+        boundary_tree.remove(lastdex);
+        
+        boundary_tree.nn_srch(lastpt,1,neigh,ddneigh);
+        lastdex=neigh.get_data(0);
+        lastpt.set(0,boundary_tree.get_pt(lastdex,0));
+        lastpt.set(1,boundary_tree.get_pt(lastdex,1));
+    }
+    fprintf(output,"%e %e\n",origin.get_data(0),origin.get_data(1));
+    fclose(output);
     
     
 }
