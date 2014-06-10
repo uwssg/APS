@@ -39,6 +39,9 @@ kd.o: kd.cpp kd.h goto_tools.o containers.o
 	$(gg) -c kd.cpp goto_tools.o containers.o $(LIBRARIES) $(INCLUDE) \
          -Wno-deprecated
 
+kde.o: kde.cpp kde.h
+	$(gg) -c kde.cpp
+
 test_kd: test_kd.cpp kd.o
 	$(gg) -o test_kd test_kd.cpp containers.o goto_tools.o kd.o
 
@@ -56,7 +59,7 @@ eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h containers.o
 	$(gg) -c eigen_wrapper.cpp goto_tools.o $(LIBRARIES) \
 	$(INCLUDE) -Wno-deprecated
 
-mcmc_extractor.o: mcmc_extractor.h mcmc_extractor.cpp goto_tools.o kd.o
+mcmc_extractor.o: mcmc_extractor.h mcmc_extractor.cpp goto_tools.o kd.o kde.o
 	$(gg) -c mcmc_extractor.cpp
 
 aps_extractor.o: aps_extractor.h aps_extractor.cpp goto_tools.o
@@ -69,12 +72,12 @@ aps_extract: aps_extraction_runner.cpp aps_extractor.o
 mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o mcmc_extractor.o kd.o
 	$(gg) -c mcmc.cpp \
 	goto_tools.o containers.o chisq.o eigen_wrapper.o mcmc_extractor.o \
-        kd.o \
+        kd.o kde.o \
 	$(LIBRARIES) $(INCLUDE)
 
 extract: mcmc_extraction_runner.cpp mcmc_extractor.o eigen_wrapper.o kd.o
 	$(gg) -o extract mcmc_extraction_runner.cpp containers.o kd.o \
-	goto_tools.o mcmc_extractor.o eigen_wrapper.o \
+	goto_tools.o mcmc_extractor.o eigen_wrapper.o kde.o \
         $(LIBRARIES) $(INCLUDE)
 
 gp_to_mcmc.o: gp_to_mcmc.cpp gp_to_mcmc.h chisq.o gaussian_process.o

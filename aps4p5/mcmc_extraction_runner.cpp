@@ -1,5 +1,6 @@
 #include "mcmc_extractor.h"
 #include "eigen_wrapper.h"
+#include "kde.h"
 
 main(){
 
@@ -34,7 +35,10 @@ printf("rows %d\n",test.get_total_rows());
 
 test.print_samples("test_wmap7_samples.sav");
 
-test.plot_contour(0,1,0.0001,0.0005,0.0002,0.001,"test_boundary2.sav",0.68);
+kde kde_test;
+kde_test.set_data(test.get_samples());
+
+kde_test.plot_density(0,0.0001,1,0.0005,0.68,"test_pixels.sav");
 
 array_1d<double> RR,VV,WW,mean,var;
 
