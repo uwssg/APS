@@ -14,7 +14,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(2500);
+//test.set_cutoff(2500);
 
 //test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
@@ -24,7 +24,7 @@ test.set_cutoff(2500);
 
 test.set_chainname("/Users/noldor/physics/recreate_getdist/ieuchains_1304/wmap7_learn");
 
-test.set_keep_frac(0.9);
+test.set_keep_frac(0.5);
 
 test.learn_thinby();
 
@@ -34,6 +34,7 @@ printf("rows %d\n",test.get_total_rows());
 
 test.print_samples("test_wmap7_samples.sav");
 
+test.plot_contour(0,1,0.0001,0.0005,0.0002,0.001,"test_boundary2.sav",0.68);
 
 array_1d<double> RR,VV,WW,mean,var;
 

@@ -746,15 +746,17 @@ void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy,
     j=0;
     for(i=0;i<kept_tree->get_pts();i++){
         kept_tree->nn_srch(i,5,neigh,ddneigh);
+        //printf("%e %e -- %e\n",kept_tree->get_pt(i,0),kept_tree->get_pt(i,1),ddneigh.get_data(4));
         if(ddneigh.get_data(4)>1.001){
             boundary_pts.set(j,0,kept_tree->get_pt(i,0));
             boundary_pts.set(j,1,kept_tree->get_pt(i,1));
+            j++;
         }
     }
     
     delete kept_tree;
     
-    kd_tree boundary_tree(boundary_pts);
+    kd_tree boundary_tree(boundary_pts,min,max);
     
     array_1d<double> origin,lastpt;
     origin.set(0,boundary_tree.get_pt(0,0));
@@ -764,6 +766,8 @@ void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy,
     lastpt.set(1,boundary_tree.get_pt(0,1));
     
     int lastdex=0;
+    
+    printf("total boundary pts %d\n",boundary_tree.get_pts());
     
     output=fopen(filename,"w");
     while(boundary_tree.get_pts()>1){
@@ -775,6 +779,7 @@ void mcmc_extractor::plot_contour(int ix, int iy, double dx, double dy,
         lastpt.set(0,boundary_tree.get_pt(lastdex,0));
         lastpt.set(1,boundary_tree.get_pt(lastdex,1));
     }
+    fprintf(output,"%e %e\n",boundary_tree.get_pt(0,0),boundary_tree.get_pt(0,1));
     fprintf(output,"%e %e\n",origin.get_data(0),origin.get_data(1));
     fclose(output);
     
