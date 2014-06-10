@@ -39,6 +39,9 @@ public:
     
     void calculate_mean(array_1d<double>&,array_1d<double>&);
     
+    void import_independent_samples(char*);
+    void import_independent_samples(array_2d<double>&);
+    
 private:
     int nchains,nparams,thinby,total_used,total_kept,total_rows;
     double keep_frac;

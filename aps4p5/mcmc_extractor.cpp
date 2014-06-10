@@ -336,6 +336,62 @@ void mcmc_extractor::learn_thinby(){
     //printf("total_kept %d\n",total_kept);
 }
 
+void mcmc_extractor::import_independent_samples(char *filename){
+    /*
+        Set independent samples by hand
+    */
+    
+    if(nparams<=0){
+        printf("WARNING in import_independent_samples, nparams %d\n",nparams);
+        throw -1;
+    }
+    
+    array_2d<double> in_samples;
+    int i,j;
+    in_samples.set_cols(nparams);
+    double ct,nn,wgt;
+    array_1d<double> vv;
+    FILE *input=fopen(filename,"r");
+    while(fscanf(input,"%le",&wgt)>0){
+        fscanf(input,"%le",&nn);
+        for(i=0;i<nparams;i++){
+            fscanf(input,"%le",&nn);
+            vv.set(i,nn);
+        }
+        
+        ct=0.0;
+        while(wgt-ct>0.5){
+            in_samples.add_row(vv);
+            ct+=1.0;
+        }
+        
+    }
+    fclose(input);
+    
+    import_independent_samples(in_samples);
+}
+
+void mcmc_extractor::import_independent_samples(array_2d<double> &input){
+    
+    if(nparams<=0){
+        printf("WARNING in import_independent_samples, nparams %d\n",nparams);
+        throw -1;
+    }
+    
+    int i,j;
+    
+    independent_samples.reset();
+    independent_dex.reset();
+    independent_samples.set_cols(nparams);
+    for(i=0;i<input.get_rows();i++){
+        for(j=0;j<input.get_cols();j++){
+            independent_samples.set(i,j,input.get_data(i,j));
+        } 
+        independent_dex.add(0);
+    }
+
+}
+
 void mcmc_extractor::calculate_mean(array_1d<double> &mean_out, array_1d<double> &var_out){
     if(independent_samples.get_rows()==0){
         printf("Cannot calculate mean; no indepdendent samples\n");
@@ -534,8 +590,6 @@ void mcmc_extractor::calculate_r(array_1d<double> &R, array_1d<double> &V, array
 }
 
 void mcmc_extractor::print_samples(char *outname){
-
-    check_validity();
     
     if(independent_samples.get_rows() != independent_dex.get_dim()){
         printf("WARNING independent samples %d dexes %d\n",
