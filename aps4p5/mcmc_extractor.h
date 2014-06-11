@@ -41,6 +41,7 @@ public:
     void calculate_mean(array_1d<double>&,array_1d<double>&);
     void show_minpt();
 
+    void plot_chimin(char*);
     
     array_2d<double>* get_samples();
     

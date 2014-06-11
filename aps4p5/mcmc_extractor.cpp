@@ -602,4 +602,55 @@ array_2d<double>* mcmc_extractor::get_samples(){
     return &independent_samples;
 }
 
-
+void mcmc_extractor::plot_chimin(char *outname){
+    
+    char inname[letters];
+    int cc;
+    chi_min=2.0*chisq_exception;
+    min_pt.reset();
+    
+    FILE **input;
+    input=new FILE*[nchains];
+    
+    for(cc=0;cc<nchains;cc++){
+        sprintf(inname,"%s_%d.txt",chainname,cc+1);
+        input[cc]=fopen(inname,"r");
+    }
+    
+    int tally=0,goon=1,wgt,i;
+    double d_wgt,chival,nn;
+    array_1d<double> vv;
+    FILE *output=fopen(outname,"w");
+    
+    while(goon==1){
+        goon=0;
+        for(cc=0;cc<nchains;cc++){
+            if(fscanf(input[cc],"%le",&d_wgt)>0){
+                goon=1;
+                wgt=int(d_wgt);
+                tally+=wgt;
+                fscanf(input[cc],"%le",&chival);
+                for(i=0;i<nparams;i++){
+                    fscanf(input[cc],"%le",&nn);
+                    vv.set(i,nn);
+                }
+                
+                if(chival<chi_min){
+                    chi_min=chival;
+                    for(i=0;i<nparams;i++)min_pt.set(i,vv.get_data(i));
+                    fprintf(output,"%d %e -- ",tally,chi_min);
+                    for(i=0;i<nparams;i++)fprintf(output,"%e ",min_pt.get_data(i));
+                    fprintf(output,"\n");
+                }
+                
+            }
+        }
+    }
+    
+    fclose(output);
+    for(cc=0;cc<nchains;cc++){
+        fclose(input[cc]);
+    }
+    
+    
+}
