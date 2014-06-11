@@ -22,6 +22,7 @@ mcmc_extractor::mcmc_extractor(){
     
     independent_samples.set_name("independent_samples");
     independent_dex.set_name("independent_dex");
+    min_pt.set_name("mcmc_extractor_minpt");
     
 }
 
@@ -204,6 +205,7 @@ void mcmc_extractor::learn_thinby(){
     
     //printf("thin_lim %d\n",thin_lim);
     
+
     for(thinval=10;best_covar>0.1 && thinval<thin_lim;thinval+=10){
         for(i=0;i<nparams;i++){
             mean.set(i,0.0);
@@ -233,25 +235,16 @@ void mcmc_extractor::learn_thinby(){
                 
                 
                 if(chival<chi_min){
-                    printf("vv0 %e -- %d %d\n",vv.get_data(0),vv.get_dim(),nparams);
                     chi_min=chival;
                     for(i=0;i<nparams;i++){
-                        min_pt.set(i,vv.get_data(i));
-                        if(i==0)printf("vv0 %e\n",vv.get_data(0));
-                        
-                        if(vv.get_data(0)>0.49){
-                            printf("WARNING chimin %e i %d vv0 %e\n",
-                            chi_min,i,vv.get_data(0));
-                            
-                            exit(1);
-                        }
-                        
+                        min_pt.set(i,vv.get_data(i)); 
                     }
-                    printf("%e\n",vv.get_data(0));
-                    printf("%d %d\n",min_pt.get_dim(),vv.get_dim());
-                    printf("just set minpt %e %e\n\n",min_pt.get_data(0),vv.get_data(0));
                 }
                 
+                /*if(vv.get_data(0)>0.4){
+                    printf("failure\n");
+                    exit(1);
+                }*/
                 
                 ct+=wgt;
                 used_buffer += wgt;
@@ -608,3 +601,5 @@ array_2d<double>* mcmc_extractor::get_samples(){
     
     return &independent_samples;
 }
+
+

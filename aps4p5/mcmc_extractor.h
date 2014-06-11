@@ -40,6 +40,7 @@ public:
     
     void calculate_mean(array_1d<double>&,array_1d<double>&);
     void show_minpt();
+
     
     array_2d<double>* get_samples();
     
@@ -52,7 +53,8 @@ private:
     void check_validity();
     
     array_2d<double> independent_samples;
-    array_1d<int> independent_dex,min_pt;
+    array_1d<int> independent_dex;
+    array_1d<double> min_pt;
 
 
 };
