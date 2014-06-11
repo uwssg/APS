@@ -13,13 +13,16 @@ public:
     void set_delta_chi(double);
     void write_good_points(char*);
     void plot_chimin(char*);
-    void sample_posterior(char*);
+    
+    void sample_posterior(char*,int);
+    void sample_posterior(array_2d<double>&,int);
+    void sample_posterior(char*,array_2d<double>&,int,int);
 
 private:
 
     char filename[letters];
     double chi_min,delta_chi,tol;
-    int nparams;
+    int nparams,extra_words;
     
     array_1d<double> min_pt;
     

@@ -6,6 +6,8 @@ aps_extractor::aps_extractor(){
     filename[0]=0;
     nparams=-1;
     
+    extra_words=5;
+    
     tol=1.0e-6;
 }
 
@@ -48,7 +50,7 @@ void aps_extractor::learn_nparams(){
         fscanf(input,"%s",word);
         ct++;
     }
-    ct-=4;
+    ct-=(extra-words-1);
     
     nparams=ct;
     printf("set nparams to %d\n",nparams);
@@ -66,7 +68,7 @@ void aps_extractor::learn_chimin(){
     
     min_pt.reset();
     
-    for(i=0;i<nparams+5;i++)fscanf(input,"%s",word);
+    for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
     
     while(fscanf(input,"%le",&nn)>0){
         vv.set(0,nn);
@@ -81,7 +83,7 @@ void aps_extractor::learn_chimin(){
             for(i=0;i<nparams;i++)min_pt.set(i,vv.get_data(i));
         }
         
-        for(i=0;i<3;i++)fscanf(input,"%le",&nn);
+        for(i=0;i<extra_words-2;i++)fscanf(input,"%le",&nn);
     }
     
     fclose(input);
@@ -95,7 +97,7 @@ void aps_extractor::write_good_points(char *outname){
     FILE *input=fopen(filename,"r");
     
     char word[letters];
-    for(i=0;i<nparams+5;i++)fscanf(input,"%s",word);
+    for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
     
     double nn;
     array_1d<double> vv;
@@ -114,7 +116,7 @@ void aps_extractor::write_good_points(char *outname){
             fprintf(output,"%le\n",nn);
         }
         
-        for(i=0;i<3;i++)fscanf(input,"%le",&nn);
+        for(i=0;i<extra_words-2;i++)fscanf(input,"%le",&nn);
     }
     
     fclose(output);
@@ -130,7 +132,7 @@ void aps_extractor::plot_chimin(char *outname){
     FILE *input=fopen(filename,"r");
     char word[letters];
     int i;
-    for(i=0;i<nparams+5;i++)fscanf(input,"%s",word);
+    for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
     double nn;
     while(fscanf(input,"%le",&nn)>0){
         for(i=1;i<nparams;i++)fscanf(input,"%le",&nn);
@@ -142,7 +144,7 @@ void aps_extractor::plot_chimin(char *outname){
             fprintf(output,"%d %le\n",ct,temp_min);
         } 
         
-        for(i=0;i<3;i++)fscanf(input,"%le",&nn);
+        for(i=0;i<extra_words-2;i++)fscanf(input,"%le",&nn);
     }
     
     
@@ -150,32 +152,45 @@ void aps_extractor::plot_chimin(char *outname){
     fclose(input);
 }
 
+void aps_extractor::sample_posterior(char *outname, int nsamples){
+    array_2d<double> dummy;
+    sample_posterior(outname,dummy,nsamples,1);
+}
 
+void aps_extractor::sample_posterior(array_2d<double> &samples, int nsamples){
+    char *dummy;
+    sample_posterior(dummy,samples,nsamples,2);
+}
 
-///////////spock
-
-void aps_extractor::sample_posterior(char *outname){
-
-    char inname[letters],outname[letters];
+void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, int nsamples, int which_output){
+    
+    if(filename[0]==0){
+        printf("WARNING filename no set in sample_posterior\n");
+        exit(1);
+    }
+    
+    if(!(delta_chi<chisq_exception)){
+        printf("WARNING delta_chi %e in sample_posterior\n");
+        exit(1);
+    }
+    
     array_2d<double> data;
     array_1d<double> min,max;
-
-    sprintf(inname,"aps_output/master_output_ellipses_chk.sav");
-
-    FILE *input,*good_pts;
+    
+    data.set_name("data");
+    
+    FILE *input;
     array_1d<double> vv,chisq;
 
-    good_pts=fopen("aps_output/good_points.sav","w");
-
     char word[letters];
-    int dim=8,i;
+    int i;
 
     input=fopen(inname,"r");
-    for(i=0;i<dim+5;i++)fscanf(input,"%s",word);
+    for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
     double nn,chimin=chisq_exception;
     while(fscanf(input,"%le",&nn)>0){
         vv.set(0,nn);
-        for(i=1;i<dim;i++){
+        for(i=1;i<nparams;i++){
             fscanf(input,"%le",&nn);
             vv.set(i,nn);
         }
@@ -183,22 +198,11 @@ void aps_extractor::sample_posterior(char *outname){
         fscanf(input,"%le",&nn);
         chisq.add(nn);
         if(nn<chimin)chimin=nn;
-        for(i=0;i<3;i++)fscanf(input,"%le",&nn);
+        for(i=0;i<extra_words-2;i++)fscanf(input,"%le",&nn);
     }
     fclose(input);
 
-    int j;
-    double delta_chisq=15.5;
-
-    for(i=0;i<chisq.get_dim();i++){
-        if(chisq.get_data(i)<=chimin+delta_chisq){
-            for(j=0;j<dim;j++)fprintf(good_pts,"%e ",data.get_data(i,j));
-            fprintf(good_pts,"\n");
-        }
-    }
-    fclose(good_pts);
-
-    for(i=0;i<dim;i++){
+    for(i=0;i<nparams;i++){
         min.set(i,-100.0);
         max.set(i,100.0);
     }
@@ -212,34 +216,33 @@ void aps_extractor::sample_posterior(char *outname){
 
     array_2d<double> box_max,box_min;
 
-    data.set_name("data");
     box_max.set_name("max");
     box_min.set_name("min");
 
-    box_max.set_cols(dim);
-    box_min.set_cols(dim);
+    box_max.set_cols(nparams);
+    box_min.set_cols(nparams);
 
-    int k;
-    int n_neigh=2*dim+1,found_it;
+    int j,k;
+    int n_neigh=2*nparams+1,found_it;
     array_1d<double> smallest_radius;
     array_1d<double> r_dim,r_dim_sorted;
     array_1d<int> r_dex;
     double mm;
     
-    for(i=0;i<dim;i++)smallest_radius.set(i,1.0e30);
+    for(i=0;i<nparams;i++)smallest_radius.set(i,1.0e30);
 
 
     for(i=0;i<data.get_rows();i++){
         //printf("\n");
         kd.nn_srch(*data(i),n_neigh,neigh,dd);
     
-        for(j=0;j<dim;j++){
+        for(j=0;j<nparams;j++){
             box_max.set(i,j,2.0*chisq_exception);
             box_min.set(i,j,2.0*chisq_exception);
         }
     
         for(j=1;j<n_neigh;j++){
-            for(k=0;k<dim;k++){
+            for(k=0;k<nparams;k++){
                 r_dim.set(k,fabs(data.get_data(i,k)-data.get_data(neigh.get_data(j),k)));
                 r_dex.set(k,k);
             }
@@ -247,7 +250,7 @@ void aps_extractor::sample_posterior(char *outname){
             sort_and_check(r_dim,r_dim_sorted,r_dex);
         
             found_it=0;
-            for(k=dim-1;k>0 && found_it==0;){
+            for(k=nparams-1;k>0 && found_it==0;){
                 if(data.get_data(neigh.get_data(j),r_dex.get_data(k))<data.get_data(i,r_dex.get_data(k)) &&
                    box_min.get_data(i,r_dex.get_data(k))>=chisq_exception){
 
@@ -300,7 +303,7 @@ void aps_extractor::sample_posterior(char *outname){
            
         }
     
-        for(k=0;k<dim;k++){
+        for(k=0;k<nparams;k++){
             if(box_max.get_data(i,k)>=chisq_exception && box_min.get_data(i,k)>=chisq_exception){
                 printf("WARNING failed to find a bound\n");
                 exit(1);
@@ -321,7 +324,7 @@ void aps_extractor::sample_posterior(char *outname){
         }
     }
 
-    for(i=0;i<dim;i++){
+    for(i=0;i<nparams;i++){
         printf("smallest radius %e\n",smallest_radius.get_data(i));
     }
 
@@ -335,7 +338,7 @@ void aps_extractor::sample_posterior(char *outname){
     for(i=0;i<data.get_rows();i++){
     
         lv=0.0;
-        for(j=0;j<dim;j++)lv+=log(box_max.get_data(i,j)-box_min.get_data(i,j));
+        for(j=0;j<nparams;j++)lv+=log(box_max.get_data(i,j)-box_min.get_data(i,j));
     
         nn=chisq.get_data(i)-chimin;
         l_probability.set(i,lv-0.5*nn);
@@ -358,12 +361,15 @@ void aps_extractor::sample_posterior(char *outname){
     array_1d<double> sorted_prob;
     for(i=0;i<l_probability.get_dim();i++)dexes.set(i,i);
     sort_and_check(l_probability,sorted_prob,dexes);
-
-
-    sprintf(outname,"chains/onion_hyper_box_chain_chk.txt");
-    output=fopen(outname,"w");
     
-    for(ii=0;ii<40000;ii++){
+    if(which_output==1){
+        output=fopen(outname,"w");
+    }
+    else{
+        samples.reset()
+    }
+    
+    for(ii=0;ii<nsamples;ii++){
         roll=chaos.doub();
         sum=0.0;
  
@@ -372,19 +378,24 @@ void aps_extractor::sample_posterior(char *outname){
         } 
     
         k=dexes.get_data(i);
-        fprintf(output,"%d %e ",1,chisq.get_data(k));
-        for(j=0;j<dim;j++){
-            pt.set(j,box_min.get_data(k,j)+chaos.doub()*(box_max.get_data(k,j)-box_min.get_data(k,j)));   
-         
-        }
-
-        for(j=0;j<dim;j++){
-           fprintf(output,"%e ",pt.get_data(j));
+        
+        for(j=0;j<nparams;j++){
+            pt.set(j,box_min.get_data(k,j)+chaos.doub()*(box_max.get_data(k,j)-box_min.get_data(k,j)));    
         }
         
-        
-        fprintf(output,"\n");
+        if(which_output==1){
+            fprintf(output,"%d %e ",1,chisq.get_data(k));
+            for(j=0;j<nparams;j++){
+               fprintf(output,"%e ",pt.get_data(j));
+            }
+            fprintf(output,"\n");
+        }
+        else{
+            samples.add_row(pt);
+        }
     }
     
-    fclose(output);
+    if(which_output==1){
+        fclose(output);
+    }
 }
