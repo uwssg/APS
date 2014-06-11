@@ -50,7 +50,7 @@ void aps_extractor::learn_nparams(){
         fscanf(input,"%s",word);
         ct++;
     }
-    ct-=(extra-words-1);
+    ct-=(extra_words-1);
     
     nparams=ct;
     printf("set nparams to %d\n",nparams);
@@ -185,7 +185,7 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     char word[letters];
     int i;
 
-    input=fopen(inname,"r");
+    input=fopen(filename,"r");
     for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
     double nn,chimin=chisq_exception;
     while(fscanf(input,"%le",&nn)>0){
@@ -366,7 +366,7 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
         output=fopen(outname,"w");
     }
     else{
-        samples.reset()
+        samples.reset();
     }
     
     for(ii=0;ii<nsamples;ii++){

@@ -65,9 +65,9 @@ mcmc_extractor.o: mcmc_extractor.h mcmc_extractor.cpp goto_tools.o kd.o kde.o
 aps_extractor.o: aps_extractor.h aps_extractor.cpp goto_tools.o
 	$(gg) -c aps_extractor.cpp
 
-aps_extract: aps_extraction_runner.cpp aps_extractor.o
+aps_extract: aps_extraction_runner.cpp aps_extractor.o kd.o
 	$(gg) -o aps_extract aps_extraction_runner.cpp \
-	containers.o goto_tools.o aps_extractor.o
+	containers.o goto_tools.o aps_extractor.o kd.o
 
 mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o mcmc_extractor.o kd.o
 	$(gg) -c mcmc.cpp \

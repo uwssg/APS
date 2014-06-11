@@ -1,4 +1,5 @@
 #include "goto_tools.h"
+#include "kd.h"
 
 #ifndef APS_EXTRACTOR_H
 #define APS_EXTRACTOR_H
@@ -23,6 +24,7 @@ private:
     char filename[letters];
     double chi_min,delta_chi,tol;
     int nparams,extra_words;
+    int cutoff;
     
     array_1d<double> min_pt;
     
