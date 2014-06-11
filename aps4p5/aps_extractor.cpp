@@ -13,6 +13,15 @@ aps_extractor::aps_extractor(){
 
 aps_extractor::~aps_extractor(){}
 
+void aps_extractor::show_minpt(){
+    int i;
+    printf("\nminpt\n");
+    for(i=0;i<nparams;i++){
+        printf("%e\n",min_pt.get_data(i));
+    }
+    printf("\nat %e\n",chi_min);
+}
+
 void aps_extractor::validate(){
     if(filename[0]==0){
         printf("WARNING, no filename\n");
@@ -360,7 +369,12 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     array_1d<int> dexes;
     array_1d<double> sorted_prob;
     for(i=0;i<l_probability.get_dim();i++)dexes.set(i,i);
-    sort_and_check(l_probability,sorted_prob,dexes);
+    
+    //sort_and_check(l_probability,sorted_prob,dexes);
+    
+    for(i=0;i<chisq.get_dim();i++)chisq.multiply_val(i,-1.0);
+    sort_and_check(chisq,sorted_prob,dexes);
+    
     
     if(which_output==1){
         output=fopen(outname,"w");

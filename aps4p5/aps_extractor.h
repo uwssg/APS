@@ -15,6 +15,8 @@ public:
     void write_good_points(char*);
     void plot_chimin(char*);
     
+    void show_minpt();
+    
     void sample_posterior(char*,int);
     void sample_posterior(array_2d<double>&,int);
     void sample_posterior(char*,array_2d<double>&,int,int);
