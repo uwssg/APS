@@ -13,6 +13,7 @@ public:
     void set_delta_chi(double);
     void write_good_points(char*);
     void plot_chimin(char*);
+    void sample_posterior(char*);
 
 private:
 
