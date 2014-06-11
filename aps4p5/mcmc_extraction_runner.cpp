@@ -56,6 +56,8 @@ for(i=0;i<nparams;i++){
     }
 }
 
+test.show_minpt();
+
 ///////////////////////////covariance matrix////////////
 
 /*
