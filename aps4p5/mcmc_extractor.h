@@ -39,19 +39,20 @@ public:
     void calculate_r(array_1d<double>&,array_1d<double>&,array_1d<double>&,int);
     
     void calculate_mean(array_1d<double>&,array_1d<double>&);
+    void show_minpt();
     
     array_2d<double>* get_samples();
     
 private:
     int nchains,nparams,thinby,total_used,total_kept,total_rows;
-    double keep_frac;
+    double keep_frac,chi_min;
     int discard,shortest_kept,cutoff;
     char chainname[letters];
     
     void check_validity();
     
     array_2d<double> independent_samples;
-    array_1d<int> independent_dex;
+    array_1d<int> independent_dex,min_pt;
 
 
 };

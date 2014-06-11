@@ -18,6 +18,7 @@ mcmc_extractor::mcmc_extractor(){
     
     total_rows=0;
     
+    chi_min=2.0*chisq_exception;
     
     independent_samples.set_name("independent_samples");
     independent_dex.set_name("independent_dex");
@@ -25,6 +26,15 @@ mcmc_extractor::mcmc_extractor(){
 }
 
 mcmc_extractor::~mcmc_extractor(){}
+
+void mcmc_extractor::show_minpt(){
+    int i;
+    printf("\nminpt\n");
+    for(i=0;i<nparams;i++){
+        printf("%e\n",min_pt.get_data(i));
+    }
+    printf("\nat %e\n",chi_min);
+}
 
 int mcmc_extractor::get_thinby(){
     return thinby;
@@ -183,7 +193,7 @@ void mcmc_extractor::learn_thinby(){
     int cc,wgt,ct,thin_best,thin_lim,kept_buffer=0,imax,total_independent;
     int used_buffer;
     array_1d<double> mean,var,covar,vv;
-    double max_covar,best_covar=10.0,nn,d_wgt;
+    double max_covar,best_covar=10.0,nn,d_wgt,chival;
     
     thin_lim=shortest_kept/3;
     
@@ -214,12 +224,20 @@ void mcmc_extractor::learn_thinby(){
             input=fopen(inname,"r");
             while(fscanf(input,"%le",&d_wgt)>0 && (cutoff<0 || ct<cutoff)){
                 wgt=int(d_wgt);
-                fscanf(input,"%le",&nn);
+                fscanf(input,"%le",&chival);
                 
                 for(i=0;i<nparams;i++){
                     fscanf(input,"%le",&nn);
                     vv.set(i,nn);
                 }
+                
+                if(chival<chi_min){
+                    chi_min=chival;
+                    for(i=0;i<nparams;i++){
+                        min_pt.set(i,vv.get_data(i));
+                    }
+                }
+                
                 
                 ct+=wgt;
                 used_buffer += wgt;
