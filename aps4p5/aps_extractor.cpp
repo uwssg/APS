@@ -6,6 +6,8 @@ aps_extractor::aps_extractor(){
     filename[0]=0;
     nparams=-1;
     
+    cutoff=-1;
+    
     extra_words=5;
     
     tol=1.0e-6;
@@ -98,10 +100,14 @@ void aps_extractor::learn_chimin(){
     fclose(input);
 }
 
+void aps_extractor::set_cutoff(int ii){
+    cutoff=ii;
+}
+
 void aps_extractor::write_good_points(char *outname){
     learn_chimin();
     
-    int i;
+    int i,ct=0;
     FILE *output=fopen(outname,"w");
     FILE *input=fopen(filename,"r");
     
@@ -110,7 +116,8 @@ void aps_extractor::write_good_points(char *outname){
     
     double nn;
     array_1d<double> vv;
-    while(fscanf(input,"%le",&nn)>0){
+    while(fscanf(input,"%le",&nn)>0 && (ct<cutoff || cutoff<0)){
+        ct++;
         vv.set(0,nn);
         for(i=1;i<nparams;i++){
             fscanf(input,"%le",&nn);
@@ -192,12 +199,13 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     array_1d<double> vv,chisq;
 
     char word[letters];
-    int i;
+    int i,ct=0;
 
     input=fopen(filename,"r");
     for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
     double nn,chimin=chisq_exception;
-    while(fscanf(input,"%le",&nn)>0){
+    while(fscanf(input,"%le",&nn)>0 && (ct<cutoff || cutoff<0)){
+        ct++;
         vv.set(0,nn);
         for(i=1;i<nparams;i++){
             fscanf(input,"%le",&nn);
@@ -358,7 +366,12 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     for(i=0;i<data.get_rows();i++){
         l_probability.subtract_val(i,nn);
     }
-
+    
+    total_p=0.0;
+    for(i=0;i<data.get_rows();i++){
+        total_p+=exp(l_probability.get_data(i));
+    }
+    printf("\ntotal_p %e\n",total_p);
 
     Ran chaos(99);
     int cc,nchains=1,ii;
@@ -370,10 +383,10 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     array_1d<double> sorted_prob;
     for(i=0;i<l_probability.get_dim();i++)dexes.set(i,i);
     
-    //sort_and_check(l_probability,sorted_prob,dexes);
+    sort_and_check(l_probability,sorted_prob,dexes);
     
-    for(i=0;i<chisq.get_dim();i++)chisq.multiply_val(i,-1.0);
-    sort_and_check(chisq,sorted_prob,dexes);
+    //for(i=0;i<chisq.get_dim();i++)chisq.multiply_val(i,-1.0);
+    //sort_and_check(chisq,sorted_prob,dexes);
     
     
     if(which_output==1){

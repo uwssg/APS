@@ -20,6 +20,8 @@ public:
     void sample_posterior(char*,int);
     void sample_posterior(array_2d<double>&,int);
     void sample_posterior(char*,array_2d<double>&,int,int);
+    
+    void set_cutoff(int);
 
 private:
 

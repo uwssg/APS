@@ -15,7 +15,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-//test.set_cutoff(2500);
+//test.set_cutoff(10000);
 
 //test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
@@ -38,8 +38,8 @@ test.print_samples("test_wmap7_samples.sav");
 kde kde_test;
 kde_test.set_data(test.get_samples());
 
-kde_test.plot_density(0,0.0001,1,0.0005,0.68,"test_pixels_smoothed.sav",1);
-kde_test.plot_boundary(0,0.0001,1,0.0005,0.68,"test_boundary_smoothed.sav",1);
+kde_test.plot_density(0,0.0001,1,0.0005,0.95,"test_pixels.sav",2);
+kde_test.plot_boundary(0,0.0001,1,0.0005,0.95,"test_boundary.sav",2);
 
 array_1d<double> RR,VV,WW,mean,var;
 
@@ -56,6 +56,7 @@ for(i=0;i<nparams;i++){
     }
 }
 
+test.plot_chimin("mcmc_chi_min.sav");
 test.show_minpt();
 
 ///////////////////////////covariance matrix////////////
