@@ -1263,15 +1263,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     double dd,ddmin;
     int i,j,k;
     
-    array_1d<double> bisection_targets,bisection_tolerance;
-    
-    bisection_targets.set(0,strad.get_target()+0.5*delta_chisquared);
-    bisection_targets.set(1,strad.get_target());
-    bisection_targets.set(2,strad.get_target()-0.5*delta_chisquared);
-    
-    bisection_tolerance.set(0,1.0e-2*delta_chisquared);
-    bisection_tolerance.set(1,1.0e-6*delta_chisquared);
-    bisection_tolerance.set(2,1.0e-2*delta_chisquared);
+    double bisection_tolerance = 0.1;
     
     if(good_pts.get_dim()==0){
         for(i=0;i<gg.get_dim();i++)lowball.set(i,minpt.get_data(i));
@@ -1306,7 +1298,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     array_1d<double> dir;
     double rr,new_rr;
     
-    if(chi_in>bisection_targets.get_data(0)){
+    if(chi_in>strad.get_target()){
         for(i=0;i<gg.get_dim();i++)highball.set(i,inpt.get_data(i));
         fhigh=chi_in;
     }
@@ -1316,7 +1308,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         rr=dir.normalize();
         new_rr=2.0*rr;
         fhigh=chimin-delta_chisquared;
-        while(fhigh<bisection_targets.get_data(0)){
+        while(fhigh<strad.get_target()){
             
             for(i=0;i<gg.get_dim();i++){
                 highball.set(i,lowball.get_data(i)+new_rr*dir.get_data(i));
@@ -1332,52 +1324,87 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     int ii;
     double mu;
-    array_1d<double> trial;
+    array_1d<double> trial,nearest_pt;
+    int found_inside_pt=0;
+        
+    if(strad.get_target()-flow<fhigh-strad.get_target()){
+        fnearest=flow;
+        for(i=0;i<gg.get_dim();i++){
+            nearest_pt.set(i,lowball.get_data(i));
+        }
     
-    for(ii=0;ii<bisection_targets.get_dim();ii++){
+    }
+    else{
+        fnearest=fhigh;
+        for(i=0;i<gg.get_dim();i++){
+            nearest_pt.set(i,highball.get_data(i));
+        }
+    }
         
-        if(bisection_targets.get_data(ii)-flow<fhigh-bisection_targets.get_data(ii))fnearest=flow;
-        else fnearest=fhigh;
+    dd=gg.distance(lowball,highball);
+    while(dd>1.0e-10 && 
+         (fabs(strad.get_target()-fnearest) > bisection_tolerance ||
+         strad.get_target()-fnearest < 0.0))
+    {
+        for(i=0;i<gg.get_dim();i++){
+            trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
+        }
+        mu=(*chisq)(trial);
         
-        dd=gg.distance(lowball,highball);
-        while(dd>1.0e-10 && fabs(bisection_targets.get_data(ii)-fnearest) > bisection_tolerance.get_data(ii)){
-            for(i=0;i<gg.get_dim();i++){
-                trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
-            }
-            mu=(*chisq)(trial);
-        
-            if(mu<chisq_exception){
-                add_pt(trial,mu);
-            }
-        
-            if(mu>bisection_targets.get_data(ii)){
-                for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
-                fhigh=mu;
-                
-            }
-            else{
-                for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
-                flow=mu;
-                
-                if(mu<bisection_targets.get_data(bisection_targets.get_dim()-1)){
-                    original_flow=mu;
-                    for(i=0;i<gg.get_dim();i++)original_lowball.set(i,trial.get_data(i));
-                }
-                
-            }
-            
-            if(bisection_targets.get_data(ii)-flow < fhigh-bisection_targets.get_data(ii))fnearest=flow;
-            else fnearest=fhigh;
-            
-            dd*=0.5;
-        
+        if(mu<chisq_exception){
+            add_pt(trial,mu);
         }
         
-        flow=original_flow;
-        for(i=0;i<gg.get_dim();i++)lowball.set(i,original_lowball.get_data(i));
-        
+        if(mu>strad.get_target()){
+            for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
+            fhigh=mu;
+                
+        }
+        else{
+            for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
+            flow=mu;  
+        }
+            
+        if(strad.get_target()-flow < fhigh-strad.get_target()){
+            fnearest=flow;
+            for(i=0;i<gg.get_dim();i++){
+                nearest_pt.set(i,lowball.get_data(i));
+            }
+        }
+        else{
+            fnearest=fhigh;
+            for(i=0;i<gg.get_dim();i++){
+                nearest_pt.set(i,highball.get_data(i));
+            }
+        }
+            
+        dd*=0.5;
         
     }
+        
+    for(i=0;i<dim;i++){
+        dir.set(i,nearest_pt.get_data(i)-original_lowball.get_data(i));
+    }
+    dd=dir.normalize();
+    
+    for(i=0;i<gg.get_dim();i++){
+        trial.set(i,original_lowball.get_data(i)+1.5*dd*dir.get_data(i));
+    }
+    
+    mu=(*chisq)(trial);
+    if(mu<chisq_exception){
+        add_pt(trial,mu);
+    }
+    
+    for(i=0;i<gg.get_dim();i++){
+        trial.set(i,original_lowball.get_data(i)+0.5*dd*dir.get_data(i));
+    }
+    
+    mu=(*chisq)(trial);
+    if(mu<chisq_exception){
+        add_pt(trial,mu);
+    }
+    
 }
 
 void aps::aps_search(int in_samples){
