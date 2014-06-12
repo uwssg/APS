@@ -1720,9 +1720,15 @@ void aps::write_pts(){
     mu_true=gg.user_predict(correct_ans,&sig_true,0);
     */
     
+    double per_chisq,per_total,overhead;
+    per_chisq=chisq->get_time_spent()/chisq->get_called();
+    per_total=(double(time(NULL))-start_time)/chisq->get_called();
+    overhead=per_total-per_chisq;
+    
+    
     if(last_optimized==0 ||
       (wide_pts.get_dim()>last_optimized+100 && 
-      time_optimizing<0.25*(double(time(NULL))-start_time))){
+      overhead<0.1*per_chisq)){
     
         optimize();
     }
