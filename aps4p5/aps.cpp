@@ -1242,7 +1242,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             }
         }
         
-        if(chitrue>strad.get_target() && which_aps!=iWIDE){
+        if(chitrue>strad.get_target()){
             if(do_bisection==1)bisection(sambest,chitrue);
         }
         
@@ -1264,7 +1264,9 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     double dd,ddmin;
     int i,j,k;
     
-    double bisection_tolerance = 0.1;
+    double bisection_tolerance=0.1*delta_chisquared;
+    
+    if(bisection_tolerance>0.1)bisection_tolerance=0.1;
     
     if(good_pts.get_dim()==0){
         for(i=0;i<gg.get_dim();i++)lowball.set(i,minpt.get_data(i));
@@ -1297,7 +1299,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             
             gg.nn_srch(trial,1,neigh,ddneigh);
             
-            if(ddneigh.get_data(0)>1.0e-6){
+            if(ddneigh.get_data(0)>1.0e-8){
                 mu=(*chisq)(trial);
                 if(mu<chisq_exception){
                     add_pt(trial,mu);
@@ -1345,12 +1347,13 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 add_pt(highball,fhigh);
             }
             
+            new_rr*=1.5;
+            
         }
     }
     
     
     array_1d<double> nearest_pt;
-    int found_inside_pt=0;
         
     if(strad.get_target()-flow<fhigh-strad.get_target()){
         fnearest=flow;
@@ -1367,10 +1370,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     }
         
     dd=gg.distance(lowball,highball);
-    while(dd>1.0e-10 && 
-         (fabs(strad.get_target()-fnearest) > bisection_tolerance ||
-         strad.get_target()-fnearest < 0.0))
-    {
+    while(dd>1.0e-10 && strad.get_target()-flow>bisection_tolerance){
         for(i=0;i<gg.get_dim();i++){
             trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
         }
@@ -1383,26 +1383,27 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         if(mu>strad.get_target()){
             for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
             fhigh=mu;
+            
+            if(fhigh-strad.get_target() < fabs(fnearest-strad.get_target())){
+                fnearest=fhigh;
+                for(i=0;i<gg.get_dim();i++){
+                    nearest_pt.set(i,highball.get_data(i));
+                }
+            }
                 
         }
         else{
             for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
             flow=mu;  
-        }
             
-        if(strad.get_target()-flow < fhigh-strad.get_target()){
-            fnearest=flow;
-            for(i=0;i<gg.get_dim();i++){
-                nearest_pt.set(i,lowball.get_data(i));
+            if(strad.get_target()-flow < fabs(fnearest-strad.get_target())){
+                fnearest=flow;
+                for(i=0;i<gg.get_dim();i++){
+                    nearest_pt.set(i,lowball.get_data(i));
+                }
             }
         }
-        else{
-            fnearest=fhigh;
-            for(i=0;i<gg.get_dim();i++){
-                nearest_pt.set(i,highball.get_data(i));
-            }
-        }
-            
+                        
         dd*=0.5;
         
     }
@@ -1416,18 +1417,26 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         trial.set(i,original_lowball.get_data(i)+1.5*dd*dir.get_data(i));
     }
     
-    mu=(*chisq)(trial);
-    if(mu<chisq_exception){
-        add_pt(trial,mu);
+    gg.nn_srch(trial,1,neigh,ddneigh);
+    
+    if(ddneigh.get_data(0)>1.0e-8){
+        mu=(*chisq)(trial);
+        if(mu<chisq_exception){
+            add_pt(trial,mu);
+        }
     }
     
     for(i=0;i<gg.get_dim();i++){
         trial.set(i,original_lowball.get_data(i)+0.5*dd*dir.get_data(i));
     }
     
-    mu=(*chisq)(trial);
-    if(mu<chisq_exception){
-        add_pt(trial,mu);
+    gg.nn_srch(trial,1,neigh,ddneigh);
+    
+    if(ddneigh.get_data(0)>1.0e-8){
+        mu=(*chisq)(trial);
+        if(mu<chisq_exception){
+            add_pt(trial,mu);
+        }
     }
     
 }
