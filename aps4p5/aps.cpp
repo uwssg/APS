@@ -1257,8 +1257,9 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
 
 void aps::bisection(array_1d<double> &inpt, double chi_in){
     
-    array_1d<double> lowball,highball,original_lowball;
-    double flow,fhigh,fnearest,original_flow;
+    array_1d<double> lowball,highball,original_lowball,trial,ddneigh;
+    array_1d<int> neigh;
+    double flow,fhigh,fnearest,mu;
     
     double dd,ddmin;
     int i,j,k;
@@ -1285,6 +1286,31 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 lowball.set(i,gg.get_pt(j,i));
             }
             flow=gg.get_fn(j);
+            
+            //now: let's see if this nearest minimum point is actually a part of the
+            //locus associated with chimin
+            //in that case, original_lowball will be set to minpt for purposes of the
+            //stratified search at the end of bisection
+            for(i=0;i<gg.get_dim();i++){
+                trial.set(i,0.5*(lowball.get_data(i)+minpt.get_data(i)));
+            }
+            
+            gg.nn_srch(trial,1,neigh,ddneigh);
+            
+            if(ddneigh.get_data(0)>1.0e-6){
+                mu=(*chisq)(trial);
+                if(mu<chisq_exception){
+                    add_pt(trial,mu);
+                }
+            }
+            else{
+                mu=gg.get_fn(neigh.get_data(0));
+            }
+            
+            if(mu<strad.get_target()){
+                for(i=0;i<gg.get_dim();i++)original_lowball.set(i,minpt.get_data(i));
+            }
+            
         }
         else{
             flow=chimin;
@@ -1292,8 +1318,9 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         }
     }
     
-    for(i=0;i<gg.get_dim();i++)original_lowball.set(i,lowball.get_data(i));
-    original_flow=flow;
+    if(original_lowball.get_dim()==0){
+        for(i=0;i<gg.get_dim();i++)original_lowball.set(i,lowball.get_data(i));
+    }
     
     array_1d<double> dir;
     double rr,new_rr;
@@ -1322,9 +1349,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     }
     
     
-    int ii;
-    double mu;
-    array_1d<double> trial,nearest_pt;
+    array_1d<double> nearest_pt;
     int found_inside_pt=0;
         
     if(strad.get_target()-flow<fhigh-strad.get_target()){
