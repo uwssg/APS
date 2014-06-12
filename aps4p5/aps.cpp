@@ -1390,12 +1390,9 @@ void aps::aps_search(int in_samples){
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
 
-    if(called_gibbs<called_focus && called_gibbs<called_wide){
+    if(gibbs_sets.get_rows()>0 && called_gibbs<called_wide){
         aps_gibbs(in_samples);
     }    
-    else if(called_focus<called_wide){
-        aps_focus(in_samples);
-    }
     else{
         aps_wide(in_samples);
     }
