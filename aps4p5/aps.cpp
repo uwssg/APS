@@ -1242,7 +1242,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             }
         }
         
-        if(fabs(chitrue-strad.get_target())>0.1*strad.get_target()){
+        if(fabs(chitrue-strad.get_target())>0.1*strad.get_target() && chitrue<global_median){
              if(do_bisection==1)bisection(sambest,chitrue);
         }
         
