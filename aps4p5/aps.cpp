@@ -938,6 +938,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
    
     known_minima.add(mindex);
+    j=centers.get_rows();
+    for(i=0;i<gg.get_dim();i++){
+        centers.set(j,i,gg.get_pt(mindex,i));
+    }
     recenter();
     
     set_where("nowhere");
