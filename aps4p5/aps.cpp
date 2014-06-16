@@ -1141,58 +1141,45 @@ void aps::aps_wide(int in_samples){
 
 void aps::aps_focus(int in_samples){
 
-    array_2d<double> samples;
-    array_1d<double> min,max,length;
-   
-    int i,j;
-    
-    //printf("focus searching\n");
-    
-    samples.set_cols(dim);
-    
-    for(i=0;i<dim;i++){
-        length.set(i,gg.get_max(i)-gg.get_min(i));
-        if(length.get_data(i)<0.0){
-            printf("WARNING in aps_focus length %d %e\n",i,length.get_data(i));
-            printf("%e %e\n",gg.get_min(i),gg.get_max(i));
-            exit(1);
-        }
-        //printf("    length %e\n",length.get_data(i));
-    }
-    
-    if(ngood<2){
-        for(i=0;i<dim;i++){
-            min.set(i,minpt.get_data(i)-0.5*length.get_data(i));
-            max.set(i,minpt.get_data(i)+0.5*length.get_data(i));
-        }
-    }
-    else{
-        for(i=0;i<dim;i++){
-            min.set(i,1.5*good_min.get_data(i)-0.5*minpt.get_data(i));
-            max.set(i,1.5*good_max.get_data(i)+0.5*-minpt.get_data(i));
-        }
-    }
-    
-    //printf("about to make sure max>min\n");
-    
-    for(i=0;i<dim;i++){
-        while(!(max.get_data(i)-min.get_data(i)>0.0)){
-            max.add_val(i,0.0001*length.get_data(i));
-            min.subtract_val(i,0.0001*length.get_data(i));
-        }
-    }
-    
-    //printf("setting samples\n");
+    double ddmax=-1.0;
+    array_1d<int> neigh;
+    array_1d<double> trial,best,ddneigh,rr;
+    int i,j,k,l;
     
     for(i=0;i<in_samples;i++){
-        for(j=0;j<dim;j++){
-            samples.set(i,j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
+        for(j=0;j<gg.get_dim();j++)rr.set(j,normal_deviate(dice,0.0,1.0));
+        rr.normalize();
+        
+        for(j=0;j<centers.get_rows();j++){
+            for(k=0;k<gg.get_dim();k++){
+                trial.set(k,centers.get_data(j,k)+rr.get_data(k)*characteristic_length.get_data(k));
+            }
+            
+            gg.nn_srch(trial,1,neigh,ddneigh);
+            if(ddneigh.get_data(0)>ddmax){
+                ddmax=ddneigh.get_data(0);
+                for(k=0;k<gg.get_dim();k++){
+                    best.set(k,trial.get_data(k));
+                }
+            }
+            
         }
     }
-    //printf("about to choose best\n");
     
-    i=gg.get_pts();
-    aps_choose_best(samples,iFOCUS);    
+    int actually_added=0;
+    double chitrue;
+    chitrue=(*chisq)(best);
+    if(chitrue<chisq_exception){
+        actually_added=add_pt(best,chitrue);
+    }
+    
+    if(actually_added==1){
+        focus_pts.add(gg.get_pts()-1);
+        if(fabs(chitrue-strad.get_target())>0.1*delta_chisquared){
+             if(do_bisection==1)bisection(best,chitrue);
+        }
+    }
+    
     called_focus++;
 
 }
@@ -1324,7 +1311,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             }
         }
         
-        if(fabs(chitrue-strad.get_target())>0.1*strad.get_target() && chitrue<global_median){
+        if(fabs(chitrue-strad.get_target())>0.1*delta_chisquared && chitrue<global_median){
              if(do_bisection==1)bisection(sambest,chitrue);
         }
         
