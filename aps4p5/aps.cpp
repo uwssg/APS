@@ -1297,7 +1297,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
                 mu_storage.add(mubest);
                 sig_storage.add(sigbest);
                 
-                if(actually_added==1){
+                if(actually_added==1 && chitrue<strad.get_target()){
                     dex=gg.get_pts()-1;
                     for(i=0;i<gg.get_dim();i++){
                         trial.set(i,0.5*(minpt.get_data(i)+sambest.get_data(i)));
