@@ -129,7 +129,7 @@ private:
     
     void find_global_minimum_meta();
     
-    void set_chimin(double,array_1d<double>&);
+    void set_chimin(double,array_1d<double>&,int);
     int is_it_a_candidate(int);
     
     int add_pt(array_1d<double>&,double);

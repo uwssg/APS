@@ -330,8 +330,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int
     }
     
     if(nn<chimin || chimin<0.0){
-        set_chimin(nn,(*gg.get_pt(j)));
-        global_mindex=j;
+        set_chimin(nn,(*gg.get_pt(j)),j);
         mindex_is_candidate=1;
     }
     
@@ -439,14 +438,13 @@ void aps::resume(char *filename){
     }
     
     gg.initialize(data,ff,ggmax,ggmin);
-    set_chimin(local_min,(*gg.get_pt(i_min)));
+    set_chimin(local_min,(*gg.get_pt(i_min)),i_min);
     mindex_is_candidate=1;
-    global_mindex=i_min;
     
     write_pts();
 }
 
-void aps::set_chimin(double cc,array_1d<double> &pt){
+void aps::set_chimin(double cc,array_1d<double> &pt, int dex){
     chimin=cc;
     
     int i;
@@ -455,6 +453,8 @@ void aps::set_chimin(double cc,array_1d<double> &pt){
     }
     
     strad.set_target(cc+delta_chisquared);
+    
+    global_mindex=dex;
     
     //printf("    setting chimin to %e\n",chimin);
     
@@ -1011,17 +1011,16 @@ int aps::add_pt(array_1d<double> &vv, double chitrue){
     if(dneigh.get_data(0)>1.0e-10){
         gg.add_pt(vv,chitrue);
         use_it=1;
+        
+        if(chitrue<chimin || chimin<0.0){
+            set_chimin(chitrue,vv,gg.get_pts()-1);
+        }
     }
     else{
         failed_to_add++;
     }
     
-    if(chitrue<chimin || chimin<0.0){
-        set_chimin(chitrue,vv);
-        if(use_it==1){
-            global_mindex=gg.get_pts()-1;
-        }
-    }
+
     
     if(chitrue<strad.get_target()){
         if(use_it==1)good_pts.add(gg.get_pts()-1);
@@ -1282,6 +1281,10 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     
     double chitrue=(*chisq)(sambest);
     
+    array_1d<double> trial;
+    int dex;
+    double midchi;
+    
     int actually_added;
     
     int o_mindex=global_mindex;
@@ -1293,6 +1296,25 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
                 wide_pts.add(gg.get_pts()-1);
                 mu_storage.add(mubest);
                 sig_storage.add(sigbest);
+                
+                if(actually_added==1){
+                    dex=gg.get_pts()-1;
+                    for(i=0;i<gg.get_dim();i++){
+                        trial.set(i,0.5*(minpt.get_data(i)+sambest.get_data(i)));
+                    }
+                    midchi=(*chisq)(trial);
+                    
+                    if(midchi<chisq_exception){
+                        add_pt(trial,midchi);
+                    }
+                    
+                    if(midchi>strad.get_target()){
+                        centers.add_row(sambest);
+                        center_dexes.add(dex);
+                    }
+                }
+                
+                
             }
             else if(which_aps==iGIBBS){
                 gibbs_pts.add(gg.get_pts()-1);
