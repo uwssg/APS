@@ -66,6 +66,8 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     focus_pts.set_name("aps_focus_pts");
     gibbs_pts.set_name("aps_gibbs_pts");
     good_pts.set_name("aps_good_pts");
+    centers.set_name("aps_centers");
+    
     
     write_every=1000;
     n_printed=0;
@@ -105,8 +107,8 @@ aps::aps(int dim_in, int kk, double dd, int seed){
 
     gg.set_kk(kk);
     
-    good_max.set_dim(gg.get_dim());
-    good_min.set_dim(gg.get_dim());
+    good_max.set_dim(dim_in);
+    good_min.set_dim(dim_in);
     
     
     delta_chisquared=dd;
@@ -131,6 +133,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     if(seed<-1)seed=int(time(NULL));
     dice=new Ran(seed);
     
+    centers.set_cols(dim);
     
     start_timingfile();
     printf("dim is %d dd %d\n",dim,dim_in);
@@ -729,7 +732,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     sig=sig/double(dim+1);
     sig=sqrt(sig);
     
-    int ct_abort_max=1000,last_found;
+    int ct_min=0,last_found;
     int iteration,last_good;
     double time_last_found=double(time(NULL));
     
@@ -739,7 +742,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     while(sig>0.01 && simplex_min<chisq_exception && 
     double(time(NULL))-time_last_found < 600.0){
-    //chisq->get_called()-last_found<ct_abort_max){
+        ct_min++;
         
         //printf("    simplex min %e\n",simplex_min);
         for(i=0;i<dim;i++){
@@ -933,9 +936,61 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     }//loop over iteration
     */
     
+   
     known_minima.add(mindex);
+    recenter();
     
     set_where("nowhere");
+}
+
+void aps::recenter(){
+    array_2d<double> buffer;
+    int i,j;
+    buffer.set_cols(gg.get_dim());
+    for(i=0;i<centers.get_rows();i++){
+        for(j=0;j<gg.get_dim();j++){
+            buffer.set(i,j,centers.get_data(i,j));
+        }
+    }
+    
+    centers.reset();
+    centers.set_cols(gg.get_dim());
+    for(i=0;i<gg.get_dim();i++){
+        centers.set(0,i,minpt.get_data(i));
+    }
+    
+    int k,use_it;
+    double mu;
+    array_1d<double> trial,ddneigh;
+    array_1d<int> neigh;
+    for(i=0;i<buffer.get_rows();i++){
+        use_it=1;
+        for(j=0;j<centers.get_rows() && use_it==1;j++){
+            for(k=0;k<gg.get_dim();k++){
+                trial.set(k,0.5*(centers.get_data(j,k)+buffer.get_data(i,j)));
+            }
+            
+            gg.nn_srch(trial,1,neigh,ddneigh);
+            if(ddneigh.get_data(0)<1.0e-8){
+                mu=gg.get_fn(neigh.get_data(0));
+            }
+            else{
+                mu=(*chisq)(trial);
+                if(mu<chisq_exception){
+                    add_pt(trial,mu);
+                }
+            }
+            
+            if(mu<strad.get_target()){
+                use_it=0;
+            }
+        
+        }
+        
+        if(use_it==1){
+            centers.add_row(*buffer(i));
+        }
+    }
 }
 
 int aps::add_pt(array_1d<double> &vv, double chitrue){

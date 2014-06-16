@@ -108,6 +108,8 @@ private:
     array_1d<double> old_hyper_1,old_hyper_2,minpt;
     array_1d<double> range_max,range_min;
     
+    array_2d<double> centers;
+    
     double time_node,time_aps,time_gradient,time_total,start_time;
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
     int ct_node,ct_aps,ct_gradient;
@@ -138,6 +140,8 @@ private:
     void aps_choose_best(array_2d<double>&,int);
     
     void bisection(array_1d<double>&,double);
+    
+    void recenter();
     
     void aps_wide(int);
     void aps_focus(int);
