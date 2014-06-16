@@ -109,6 +109,7 @@ private:
     array_1d<double> range_max,range_min;
     
     array_2d<double> centers;
+    array_1d<int> center_dexes;
     
     double time_node,time_aps,time_gradient,time_total,start_time;
     double time_cleaning,time_writing,time_optimizing,time_refactoring;

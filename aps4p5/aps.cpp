@@ -945,19 +945,23 @@ void aps::find_global_minimum(array_1d<int> &neigh){
 
 void aps::recenter(){
     array_2d<double> buffer;
+    array_1d<int> buffer_dex;
     int i,j;
     buffer.set_cols(gg.get_dim());
     for(i=0;i<centers.get_rows();i++){
+        buffer_dex.set(i,center_dexes.get_data(i));
         for(j=0;j<gg.get_dim();j++){
             buffer.set(i,j,centers.get_data(i,j));
         }
     }
     
     centers.reset();
+    center_dexes.reset();
     centers.set_cols(gg.get_dim());
     for(i=0;i<gg.get_dim();i++){
         centers.set(0,i,minpt.get_data(i));
     }
+    center_dexes.set(0,global_mindex);
     
     int k,use_it;
     double mu;
@@ -989,6 +993,7 @@ void aps::recenter(){
         
         if(use_it==1){
             centers.add_row(*buffer(i));
+            center_dexes.add(buffer_dex.get_data(i));
         }
     }
 }
@@ -1332,12 +1337,12 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     else{
         ddmin=chisq_exception;
         j=-1;
-        for(i=0;i<good_pts.get_dim();i++){
-            dd=gg.distance(good_pts.get_data(i),inpt);
-            if(gg.get_fn(good_pts.get_data(i))<chimin+0.25*delta_chisquared && (j==-1 || dd<ddmin) && 
-                gg.get_fn(good_pts.get_data(i)<chi_in)){
+        
+        for(i=0;i<centers.get_rows();i++){
+            dd=gg.distance(*centers(i),inpt);
+            if((j==-1 || dd<ddmin) && gg.get_fn(center_dexes.get_data(i))<chi_in){
                 ddmin=dd;
-                j=good_pts.get_data(i);
+                j=center_dexes.get_data(i);
             }
         }
         
@@ -1346,30 +1351,6 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 dir_origin.set(i,gg.get_pt(j,i));
             }
             fdir_origin=gg.get_fn(j);
-            
-            //now: let's see if this nearest minimum point is actually a part of the
-            //locus associated with chimin
-            //in that case, original_lowball will be set to minpt for purposes of the
-            //stratified search at the end of bisection
-            for(i=0;i<gg.get_dim();i++){
-                trial.set(i,0.5*(dir_origin.get_data(i)+minpt.get_data(i)));
-            }
-            
-            gg.nn_srch(trial,1,neigh,ddneigh);
-            
-            if(ddneigh.get_data(0)>1.0e-8){
-                mu=(*chisq)(trial);
-                if(mu<chisq_exception){
-                    add_pt(trial,mu);
-                }
-            }
-            else{
-                mu=gg.get_fn(neigh.get_data(0));
-            }
-            
-            if(mu<strad.get_target()){
-                for(i=0;i<gg.get_dim();i++)dir_origin.set(i,minpt.get_data(i));
-            }
             
         }
         else{
