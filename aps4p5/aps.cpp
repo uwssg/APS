@@ -1007,6 +1007,12 @@ void aps::recenter(){
 void aps::calculate_good_rr(){
     int i,j,ct;
     double dd,ddmin;
+    
+    if(good_pts.get_dim()<3){
+        good_rr_avg=0.1;
+        return;
+    }
+    
     good_rr_avg=0.0;
     ct=0;
     
