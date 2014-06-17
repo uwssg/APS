@@ -103,6 +103,7 @@ private:
     array_1d<int> wide_pts,focus_pts,gibbs_pts,good_pts;
     
     array_1d<double> characteristic_length;
+    double good_rr_avg;
     
     array_1d<double> mu_storage,sig_storage,good_max,good_min;
     array_1d<double> old_hyper_1,old_hyper_2,minpt;

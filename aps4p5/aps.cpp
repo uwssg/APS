@@ -68,7 +68,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     good_pts.set_name("aps_good_pts");
     centers.set_name("aps_centers");
     
-    
+    good_rr_avg=1.0;
     write_every=1000;
     n_printed=0;
     do_bisection=1;
@@ -1156,7 +1156,7 @@ void aps::aps_focus(int in_samples){
         
         for(j=0;j<centers.get_rows();j++){
             for(k=0;k<gg.get_dim();k++){
-                trial.set(k,centers.get_data(j,k)+rr.get_data(k)*characteristic_length.get_data(k));
+                trial.set(k,centers.get_data(j,k)+good_rr_avg*rr.get_data(k)*characteristic_length.get_data(k));
             }
             
             gg.nn_srch(trial,1,neigh,ddneigh);
