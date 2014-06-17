@@ -1000,6 +1000,30 @@ void aps::recenter(){
             center_dexes.add(buffer_dex.get_data(i));
         }
     }
+    
+    calculate_good_rr();
+}
+
+void aps::calculate_good_rr(){
+    int i,j,ct;
+    double dd,ddmin;
+    good_rr_avg=0.0;
+    ct=0;
+    
+    for(i=0;i<good_pts.get_dim();i++){
+        ddmin=2.0*chisq_exception;
+        for(j=0;j<centers.get_rows();j++){
+            dd=gg.distance(good_pts.get_data(i),*centers(j));
+            if(j==0 || dd<ddmin){
+                ddmin=dd;
+            }
+        }
+        ct++;
+        good_rr_avg+=ddmin;
+    }
+    
+    good_rr_avg=good_rr_avg/double(ct);
+    
 }
 
 int aps::add_pt(array_1d<double> &vv, double chitrue){
@@ -1977,6 +2001,8 @@ void aps::write_pts(){
     
     fclose(output);
      
+    
+    calculate_good_rr();
        
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
