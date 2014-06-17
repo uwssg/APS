@@ -68,7 +68,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     good_pts.set_name("aps_good_pts");
     centers.set_name("aps_centers");
     
-    good_rr_avg=1.0;
+    good_rr_avg=0.1;
     write_every=1000;
     n_printed=0;
     do_bisection=1;
