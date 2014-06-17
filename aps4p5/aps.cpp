@@ -67,6 +67,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     gibbs_pts.set_name("aps_gibbs_pts");
     good_pts.set_name("aps_good_pts");
     centers.set_name("aps_centers");
+    center_dexes.set_name("aps_center_dexes");
     
     good_rr_avg=0.1;
     write_every=1000;
@@ -939,9 +940,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
    
     known_minima.add(mindex);
     j=centers.get_rows();
-    for(i=0;i<gg.get_dim();i++){
-        centers.set(j,i,gg.get_pt(mindex,i));
-    }
+    centers.add_row(*gg.get_pt(mindex));
+    center_dexes.add(mindex);
     recenter();
     
     set_where("nowhere");
