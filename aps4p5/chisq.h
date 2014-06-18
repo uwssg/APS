@@ -45,6 +45,9 @@ public:
     double get_real_center(int,int);
     double get_rr_max();
     void print_mins_maxs();
+    double get_min(int);
+    double get_max(int);
+    
     virtual void set_characteristic_error(double);   
     virtual void activate_small_m();
     

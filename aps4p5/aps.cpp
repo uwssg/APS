@@ -215,6 +215,21 @@ void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex){
     array_1d<double> ddneigh;
     
     dex[0]=-1;
+    
+    int i;
+    for(i=0;i<gg.get_dim();i++){
+        if(pt.get_data(i)>chisq->get_max(i) && chisq->get_max(i)>-1.0*chisq_exception){
+            chiout[0]=2.0*chisq_exception;
+            return;
+        }
+        
+        if(pt.get_data(i)<chisq->get_min(i) && chisq->get_min(i)<chisq_exception){
+            chiout[0]=2.0*chisq_exception;
+            return;
+        }
+    }
+    
+    
     gg.nn_srch(pt,1,neigh,ddneigh);
     if(ddneigh.get_data(0)<=1.0e-8){
         chiout[0]=gg.get_fn(neigh.get_data(0));

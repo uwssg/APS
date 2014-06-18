@@ -43,8 +43,8 @@ void chisquared::allot_arrays(){
     maxs.set_dim(dim);
 
     for(ix=0;ix<dim;ix++){
-        mins.set(ix,chisq_exception);
-	maxs.set(ix,-1.0*chisq_exception);
+        mins.set(ix,2.0*chisq_exception);
+	maxs.set(ix,-2.0*chisq_exception);
     } 
     
     bases.set_name("chisq_bases");
@@ -63,6 +63,14 @@ void chisquared::set_max(int dex, double nn){
 
 void chisquared::set_min(int dex, double nn){
     mins.set(dex,nn);
+}
+
+double chisquared::get_min(int dex){
+    return mins.get_data(dex);
+}
+
+double chisquared::get_max(int dex){
+    return maxs.get_data(dex);
 }
 
 double chisquared::get_time_spent(){
