@@ -205,6 +205,30 @@ void aps::initialize(int npts,array_1d<double> &min, array_1d<double> &max){
     initialize(npts,min,max,0,q);
 }
 
+void aps::evaluate(array_1d<double> &pt, double *chiout){
+    int i;
+    evaluate(pt,chiout,&i);
+}
+
+void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex){
+    array_1d<int> neigh;
+    array_1d<double> ddneigh;
+    
+    dex[0]=-1;
+    gg.nn_srch(pt,1,neigh,ddneigh);
+    if(ddneigh.get_data(0)<=1.0e-8){
+        chiout[0]=gg.get_fn(neigh.get_data(0));
+        return;
+    }
+    else{
+        chiout[0]=(*chisq)(pt);
+        if(chiout[0]<chisq_exception){
+            add_pt(pt,chiout[0]);
+            dex[0]=gg.get_pts()-1;
+        }
+    }
+}
+
 void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int nguesses, array_2d<double> &guesses){
     if(chisq==NULL){
         printf("WARNING chisq is null in APS initializer\n");
@@ -514,11 +538,9 @@ int aps::is_it_a_candidate(int dex){
         for(i=0;i<dim;i++){
             mid_pt.set(i,0.5*(minpt.get_data(i)+gg.get_pt(dex,i)));
         }
-        chitrial=(*chisq)(mid_pt);
-        if(chitrial<chisq_exception){
-            add_pt(mid_pt,chitrial);
-        }
         
+        evaluate(mid_pt,&chitrial);
+
         if(chitrial>gg.get_fn(dex)-0.25*(gg.get_fn(dex)-chimin)){
             return 1;
         }
@@ -575,10 +597,9 @@ void aps::find_global_minimum(array_1d<double> &vv){
             trial.set(j,vv.get_data(j));
         }
         trial.add_val(i,0.01*(gg.get_max(i)-gg.get_min(i)));
-        ftrial=(*chisq)(trial);
-        if(ftrial<chisq_exception){
-            add_pt(trial,ftrial);
-        }
+        
+        evaluate(trial,&ftrial);
+
     }
     
     
@@ -623,14 +644,13 @@ void aps::find_global_minimum(int ix){
         for(j=0;j<dim;j++){
             trial.set(j,gg.get_pt(ix,j)+(dice->doub()-0.5)*s_length.get_data(j));
         }
-        chitrial=(*chisq)(trial);
-        if(chitrial<chisq_exception){
-            actually_added=add_pt(trial,chitrial);
-            if(actually_added==1){
-                neigh.set(i,gg.get_pts()-1);
-                i++;
-            }
+        
+        evaluate(trial,&chitrial,&j);
+        if(j>=0){
+             neigh.set(i,j);
+             i++;
         }
+   
     }
     
     find_global_minimum(neigh);
@@ -760,16 +780,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             pstar.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
             true_var.set(i,min.get_data(i)+pstar.get_data(i));
         }
-        fstar=(*chisq)(true_var);
         
-        if(fstar<chisq_exception){
-            actually_added=add_pt(true_var,fstar);
-        }
+        evaluate(true_var,&fstar,&actually_added);
+        
         if(fstar<simplex_min){
             last_found=chisq->get_called();
             time_last_found=double(time(NULL));
             simplex_min=fstar;
-            if(actually_added==1)mindex=gg.get_pts()-1;
+            if(actually_added>=0)mindex=actually_added;
         }
         
         if(fstar<ff.get_data(ih) && fstar>ff.get_data(il)){
@@ -784,17 +802,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 true_var.set(i,min.get_data(i)+pstarstar.get_data(i));
             }
             
-            fstarstar=(*chisq)(true_var);
-            if(fstarstar<chisq_exception){
-                actually_added=add_pt(true_var,fstarstar);
-            }
-            
+            evaluate(true_var,&fstarstar,&actually_added);
+
             if(fstarstar<simplex_min){
                 last_found=chisq->get_called();
                 time_last_found=double(time(NULL));
                 simplex_min=fstarstar;
-                if(actually_added==1){
-                    mindex=gg.get_pts()-1;
+                if(actually_added>=0){
+                    mindex=actually_added;
                 }
             }
             
@@ -821,16 +836,15 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 pstarstar.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
                 true_var.set(i,min.get_data(i)+pstarstar.get_data(i));
             }
-            fstarstar=(*chisq)(true_var);
-            if(fstarstar<chisq_exception){
-                actually_added=add_pt(true_var,fstarstar);
-            }
+            
+            evaluate(true_var,&fstarstar,&actually_added);
+
             if(fstarstar<simplex_min){
                 last_found=chisq->get_called();
                 time_last_found=double(time(NULL));
                 simplex_min=fstarstar;
-                if(actually_added==1){
-                    mindex=gg.get_pts()-1;
+                if(actually_added>=0){
+                    mindex=actually_added;
                 }
             }
             
@@ -851,16 +865,17 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             pts.set(i,j,mu);
                             true_var.set(j,min.get_data(j)+pts.get_data(i,j));
                         }
-                        ff.set(i,(*chisq)(true_var));
-                        if(ff.get_data(i)<chisq_exception){
-                            actually_added=add_pt(true_var,ff.get_data(i));
-                        }
+                        
+                        evaluate(true_var,&mu,&actually_added);
+                        
+                        ff.set(i,mu);
+
                         if(ff.get_data(i)<simplex_min){
                             last_found=chisq->get_called();
                             time_last_found=double(time(NULL));
                             simplex_min=ff.get_data(i);
-                            if(actually_added==1){
-                                mindex=gg.get_pts()-1;
+                            if(actually_added>=0){
+                                mindex=actually_added;
                             }
                         }
                     }
@@ -979,15 +994,7 @@ void aps::recenter(){
             }
             
             gg.nn_srch(trial,1,neigh,ddneigh);
-            if(ddneigh.get_data(0)<1.0e-8){
-                mu=gg.get_fn(neigh.get_data(0));
-            }
-            else{
-                mu=(*chisq)(trial);
-                if(mu<chisq_exception){
-                    add_pt(trial,mu);
-                }
-            }
+            evaluate(trial,&mu);
             
             if(mu<strad.get_target()){
                 use_it=0;
@@ -1034,30 +1041,18 @@ void aps::calculate_good_rr(){
 
 int aps::add_pt(array_1d<double> &vv, double chitrue){
     
-    int i,use_it=0;
+    int i;
 
     
-    array_1d<int> neigh;
-    array_1d<double> dneigh;
-    
-    gg.nn_srch(vv,1,neigh,dneigh);
-    
-    if(dneigh.get_data(0)>1.0e-10){
-        gg.add_pt(vv,chitrue);
-        use_it=1;
+    gg.add_pt(vv,chitrue);
         
-        if(chitrue<chimin || chimin<0.0){
+        
+    if(chitrue<chimin || chimin<0.0){
             set_chimin(chitrue,vv,gg.get_pts()-1);
-        }
     }
-    else{
-        failed_to_add++;
-    }
-    
 
-    
     if(chitrue<strad.get_target()){
-        if(use_it==1)good_pts.add(gg.get_pts()-1);
+        good_pts.add(gg.get_pts()-1);
         if(ngood==0){
             for(i=0;i<gg.get_dim();i++){
                 good_max.set(i,vv.get_data(i));
@@ -1074,7 +1069,6 @@ int aps::add_pt(array_1d<double> &vv, double chitrue){
         ngood++; 
     }
 
-    return use_it;
 }
 
 int aps::get_ct_aps(){
@@ -1113,13 +1107,9 @@ void aps::guess(array_1d<double> &pt){
     double chitrue;
     int ibefore=chisq->get_called();
     int actually_added;
-    
-    chitrue=(*chisq)(pt);
-    
-    if(chitrue<chisq_exception){
-        actually_added=add_pt(pt,chitrue);        
-    }
-    
+
+    evaluate(pt,&chitrue);
+
     ct_aps+=chisq->get_called()-ibefore;
 }
 
@@ -1200,15 +1190,12 @@ void aps::aps_focus(int in_samples){
         }
     }
     
-    int actually_added=0;
+    int actually_added=-1;
     double chitrue;
-    chitrue=(*chisq)(best);
-    if(chitrue<chisq_exception){
-        actually_added=add_pt(best,chitrue);
-    }
-    
-    if(actually_added==1){
-        focus_pts.add(gg.get_pts()-1);
+    evaluate(best,&chitrue,&actually_added);
+
+    if(actually_added>=0){
+        focus_pts.add(actually_added);
         if(fabs(chitrue-strad.get_target())>0.1*delta_chisquared){
              if(do_bisection==1)bisection(best,chitrue);
         }
@@ -1300,50 +1287,45 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         
     }
     
-    double chitrue=(*chisq)(sambest);
+    double chitrue;
+    int actually_added;
+    
+    evaluate(sambest,&chitrue,&actually_added);
     
     array_1d<double> trial;
     int dex;
     double midchi;
-    
-    int actually_added;
-    
-    int o_mindex=global_mindex;
-    if(chitrue<chisq_exception){
-        actually_added=add_pt(sambest,chitrue);
 
-        if(actually_added==1){
-            if(which_aps==iWIDE){
-                wide_pts.add(gg.get_pts()-1);
-                mu_storage.add(mubest);
-                sig_storage.add(sigbest);
+    int o_mindex=global_mindex;
+    if(actually_added>=0){
+       
+        if(which_aps==iWIDE){
+            wide_pts.add(actually_added);
+            mu_storage.add(mubest);
+            sig_storage.add(sigbest);
                 
-                if(actually_added==1 && chitrue<strad.get_target()){
-                    dex=gg.get_pts()-1;
-                    for(i=0;i<gg.get_dim();i++){
-                        trial.set(i,0.5*(minpt.get_data(i)+sambest.get_data(i)));
-                    }
-                    midchi=(*chisq)(trial);
-                    
-                    if(midchi<chisq_exception){
-                        add_pt(trial,midchi);
-                    }
-                    
-                    if(midchi>strad.get_target()){
-                        centers.add_row(sambest);
-                        center_dexes.add(dex);
-                    }
+            if(actually_added>=0 && chitrue<strad.get_target()){
+                dex=actually_added;
+                for(i=0;i<gg.get_dim();i++){
+                    trial.set(i,0.5*(minpt.get_data(i)+sambest.get_data(i)));
                 }
-                
-                
+                    
+                evaluate(trial,&midchi);    
+  
+                if(midchi>strad.get_target()){
+                    centers.add_row(sambest);
+                    center_dexes.add(dex);
+                }
             }
-            else if(which_aps==iGIBBS){
-                gibbs_pts.add(gg.get_pts()-1);
-            }
-            else if(which_aps==iFOCUS){
-                 focus_pts.add(gg.get_pts()-1);
-            }
+   
         }
+        else if(which_aps==iGIBBS){
+            gibbs_pts.add(gg.get_pts()-1);
+        }
+        else if(which_aps==iFOCUS){
+             focus_pts.add(gg.get_pts()-1);
+        }
+        
         
         if(fabs(chitrue-strad.get_target())>0.1*delta_chisquared && chitrue<global_median){
              if(do_bisection==1)bisection(sambest,chitrue);
@@ -1427,10 +1409,9 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             for(i=0;i<gg.get_dim();i++){
                 highball.set(i,lowball.get_data(i)+rr*dir.get_data(i));
             }
-            fhigh=(*chisq)(highball);
-            if(fhigh<chisq_exception){
-                add_pt(highball,fhigh);
-            }
+            
+            evaluate(highball,&fhigh);
+
             rr*=2.0;
         }
     
@@ -1458,12 +1439,9 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         for(i=0;i<gg.get_dim();i++){
             trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
         }
-        mu=(*chisq)(trial);
-        
-        if(mu<chisq_exception){
-            add_pt(trial,mu);
-        }
-        
+
+        evaluate(trial,&mu);
+
         if(mu>strad.get_target()){
             for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
             fhigh=mu;
@@ -1502,26 +1480,14 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     }
     
     gg.nn_srch(trial,1,neigh,ddneigh);
-    
-    if(ddneigh.get_data(0)>1.0e-8){
-        mu=(*chisq)(trial);
-        if(mu<chisq_exception){
-            add_pt(trial,mu);
-        }
-    }
+    evaluate(trial,&mu);
     
     for(i=0;i<gg.get_dim();i++){
         trial.set(i,dir_origin.get_data(i)+0.5*dd*dir.get_data(i));
     }
     
-    gg.nn_srch(trial,1,neigh,ddneigh);
-    
-    if(ddneigh.get_data(0)>1.0e-8){
-        mu=(*chisq)(trial);
-        if(mu<chisq_exception){
-            add_pt(trial,mu);
-        }
-    }
+    gg.nn_srch(trial,1,neigh,ddneigh);    
+    evaluate(trial,&mu);
     
 }
 
