@@ -43,6 +43,8 @@ public:
 
     void plot_chimin(char*);
     
+    void plot_delta(char*,double);
+    
     array_2d<double>* get_samples();
     
 private:

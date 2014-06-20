@@ -15,7 +15,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(15000);
+//test.set_cutoff(5000);
 
 //test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
@@ -38,8 +38,10 @@ test.print_samples("test_wmap7_samples.sav");
 kde kde_test;
 kde_test.set_data(test.get_samples());
 
-kde_test.plot_density(0,0.0001,1,0.0005,0.95,"test_pixels60k.sav",3);
-kde_test.plot_boundary(0,0.0001,1,0.0005,0.95,"test_boundary60k.sav",3);
+kde_test.plot_density(0,0.0001,1,0.0005,0.95,"test_pixels.sav",3);
+kde_test.plot_boundary(0,0.0001,1,0.0005,0.95,"test_boundary.sav",3);
+
+test.plot_delta("mcmc_good_pts_test.sav",12.61);
 
 array_1d<double> RR,VV,WW,mean,var;
 

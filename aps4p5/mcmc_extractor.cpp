@@ -654,3 +654,41 @@ void mcmc_extractor::plot_chimin(char *outname){
     
     
 }
+
+void mcmc_extractor::plot_delta(char *filename, double delta_chi){
+    if(!(chi_min<chisq_exception)){
+        learn_thinby();
+    }
+    
+    FILE *input,*output;
+    array_1d<double> vv;
+    double nn,chi,tol;
+    
+    tol=1.0e-5;
+    
+    char inname[letters];
+    int cc,i;
+    output=fopen(filename,"w");
+    for(cc=0;cc<nchains;cc++){
+        sprintf(inname,"%s_%d.txt",chainname,cc+1);
+        input=fopen(inname,"r");
+        while(fscanf(input,"%le",&nn)>0){
+            fscanf(input,"%le",&chi);
+            chi*=2.0;
+            
+            for(i=0;i<nparams;i++){
+                fscanf(input,"%le",&nn);
+                vv.set(i,nn);
+            }
+            
+            if(chi<=chi_min+delta_chi+tol){
+                for(i=0;i<nparams;i++)fprintf(output,"%le ",vv.get_data(i));
+                fprintf(output," -- %e\n",chi);
+                
+            }
+        }
+        fclose(input);
+    }
+    fclose(output);
+    
+}

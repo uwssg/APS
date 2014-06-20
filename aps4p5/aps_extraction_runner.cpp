@@ -3,7 +3,7 @@
 main(){
 
 aps_extractor test;
-test.set_filename("aps_output/apsWMAP_smarterBisectionFocus3_guess_output.sav");
+test.set_filename("aps_output/apsWMAP_smarterBisectionFocus4_guess_output.sav");
 test.set_delta_chi(12.61);
 
 test.set_cutoff(30000);
