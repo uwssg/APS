@@ -233,7 +233,6 @@ void mcmc_extractor::learn_thinby(){
                     vv.set(i,nn);
                 }
                 
-                
                 if(chival<chi_min){
                     chi_min=chival;
                     for(i=0;i<nparams;i++){
@@ -657,7 +656,7 @@ void mcmc_extractor::plot_chimin(char *outname){
 
 void mcmc_extractor::plot_delta(char *filename, double delta_chi){
     if(!(chi_min<chisq_exception)){
-        learn_thinby();
+        plot_chimin("junk_chimin.sav");
     }
     
     FILE *input,*output;
@@ -665,6 +664,8 @@ void mcmc_extractor::plot_delta(char *filename, double delta_chi){
     double nn,chi,tol;
     
     tol=1.0e-5;
+    
+    printf("chi_min %e\n",chi_min);
     
     char inname[letters];
     int cc,i;
@@ -674,7 +675,6 @@ void mcmc_extractor::plot_delta(char *filename, double delta_chi){
         input=fopen(inname,"r");
         while(fscanf(input,"%le",&nn)>0){
             fscanf(input,"%le",&chi);
-            chi*=2.0;
             
             for(i=0;i<nparams;i++){
                 fscanf(input,"%le",&nn);
