@@ -661,7 +661,8 @@ void mcmc_extractor::plot_delta(char *filename, double delta_chi){
     
     FILE *input,*output;
     array_1d<double> vv;
-    double nn,chi,tol;
+    double nn,chi,tol,d_wgt;
+    int wgt,ct=0;
     
     tol=1.0e-5;
     
@@ -673,7 +674,10 @@ void mcmc_extractor::plot_delta(char *filename, double delta_chi){
     for(cc=0;cc<nchains;cc++){
         sprintf(inname,"%s_%d.txt",chainname,cc+1);
         input=fopen(inname,"r");
-        while(fscanf(input,"%le",&nn)>0){
+        ct=0;
+        while(fscanf(input,"%le",&d_wgt)>0 && (cutoff<0 || ct<cutoff)){
+            wgt=int(d_wgt);
+            ct+=wgt;
             fscanf(input,"%le",&chi);
             
             for(i=0;i<nparams;i++){

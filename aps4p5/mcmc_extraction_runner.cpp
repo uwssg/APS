@@ -59,7 +59,7 @@ for(i=0;i<nparams;i++){
 }
 
 test.plot_chimin("mcmc_chi_min.sav");
-test.show_minpt();
+//test.show_minpt();
 
 ///////////////////////////covariance matrix////////////
 
