@@ -1520,7 +1520,8 @@ void aps::aps_search(int in_samples){
         aps_gibbs(in_samples);
     }    
     else if(called_focus<called_wide){
-        aps_focus(in_samples);
+        //aps_focus(in_samples);
+        aps_focus(1000);
     }
     else{
         aps_wide(in_samples);
