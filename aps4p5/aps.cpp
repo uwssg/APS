@@ -1843,7 +1843,7 @@ void aps::write_pts(){
     }
     fprintf(output,"chisq mu sig ling\n");
     
-    
+    int focus_dex=0;
     aps_dex=0;
     for(i=0;i<gg.get_pts();i++){
         if(aps_dex<wide_pts.get_dim() && i==wide_pts.get_data(aps_dex)){
@@ -1851,6 +1851,11 @@ void aps::write_pts(){
             mu=mu_storage.get_data(aps_dex);
             sig=sig_storage.get_data(aps_dex);
             aps_dex++;
+        }
+        else if(focus_dex<focus_pts.get_dim() && i==focus_pts.get_data(focus_dex)){
+            lling=2;
+            mu=-2.0;
+            sig=-2.0;
         }
         else{
             lling=1;
