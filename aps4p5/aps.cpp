@@ -1367,7 +1367,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     double bisection_tolerance=0.1*delta_chisquared;
     
-    if(bisection_tolerance>0.1)bisection_tolerance=0.1;
+    //if(bisection_tolerance>0.1)bisection_tolerance=0.1;
     
     //need to allow for an inpt that is inside the bound...
     if(good_pts.get_dim()==0){
@@ -1985,7 +1985,7 @@ void aps::write_pts(){
     
     fprintf(output," -- %d %d ",known_minima.get_dim(),ngood);
 
-    fprintf(output,"\n");
+    fprintf(output," -- %d %d\n",called_wide,called_focus);
     
     fclose(output);
      
