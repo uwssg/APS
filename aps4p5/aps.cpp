@@ -1445,10 +1445,10 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
    
         }
         else if(which_aps==iGIBBS){
-            gibbs_pts.add(gg.get_pts()-1);
+            gibbs_pts.add(actually_added);
         }
         else if(which_aps==iFOCUS){
-             focus_pts.add(gg.get_pts()-1);
+             focus_pts.add(actually_added);
         }
         
         
