@@ -231,8 +231,12 @@ void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex){
     
     
     gg.nn_srch(pt,1,neigh,ddneigh);
+    //printf("evaluate found dd %e\n",ddneigh.get_data(0));
     if(ddneigh.get_data(0)<=1.0e-8){
+        
         chiout[0]=gg.get_fn(neigh.get_data(0));
+        //printf("aborting with chi %e\n",chiout[0]);
+        
         return;
     }
     else{
@@ -1028,7 +1032,7 @@ void aps::recenter(){
 
 void aps::calculate_good_rr(){
     int i,j,ct;
-    double dd,ddmin;
+    double dd,ddmin,wgt,total_wgt;
     
     if(good_pts.get_dim()<3){
         good_rr_avg=0.1;
@@ -1047,10 +1051,12 @@ void aps::calculate_good_rr(){
             }
         }
         ct++;
-        good_rr_avg+=ddmin;
+        wgt=exp(-0.5*fabs(gg.get_fn(good_pts.get_data(i))-strad.get_target()));
+        good_rr_avg+=ddmin*wgt;
+        total_wgt+=wgt;
     }
     
-    good_rr_avg=good_rr_avg/double(ct);
+    good_rr_avg=good_rr_avg/wgt;
     
 }
 
@@ -1161,7 +1167,7 @@ void aps::search(){
 }
 
 void aps::aps_wide(int in_samples){
-
+    
     array_2d<double> samples;
    
     int i,j;
@@ -1180,7 +1186,7 @@ void aps::aps_wide(int in_samples){
 
 void aps::aps_focus(int in_samples){
     
-    printf("focusing\n");
+    //printf("focusing\n");
     
     double nn,ddmax=-1.0;
     array_1d<int> neigh;
@@ -1199,7 +1205,8 @@ void aps::aps_focus(int in_samples){
         for(j=0;j<gg.get_dim();j++)rr.set(j,normal_deviate(dice,0.0,1.0/sqrt_d_dim));
         
         use_it=0;
-        if(last_rr.get_dim()>0 && use_it==0){
+        while(last_rr.get_dim()>0 && use_it==0){
+            //printf("looping in focus\n");
             set_dex=dice->int32()%gg.get_dim();
             
             if(set_dex>=gg.get_dim()){
@@ -1225,6 +1232,8 @@ void aps::aps_focus(int in_samples){
                 for(j=0;j<gg.get_dim();j++){
                     rr.set(j,normal_deviate(dice,0.0,1.0/sqrt_d_dim));
                 }
+                
+                //printf("    det %e aa %e\n",determinant,aa);
             }
             else{
                 xxp=(-1.0*bb+sqrt(determinant))/(2.0*aa);
@@ -1235,12 +1244,16 @@ void aps::aps_focus(int in_samples){
                 yym=adotb+last_rr.get_data(set_dex)*xxm;
                 normm=sqrt(asq+xxm*xxm);
                 
+                //printf("    %e %e\n",yym/normm,yyp/normp);
+                
                 if(fabs(cos_target*normp-yyp)<1.0e-2){
                     rr.set(set_dex,xxp);
+                    //printf("accepting %e %e\n",cos_target*normp,yyp);
                     use_it=1;
                 }
                 else if(fabs(cos_target*normm-yym)<1.0e-2){
                     rr.set(set_dex,xxm);
+                    //printf("accepting %e %e\n",cos_target*normm,yym);
                     use_it=1;
                 }
                 else{
@@ -1265,12 +1278,18 @@ void aps::aps_focus(int in_samples){
             }
         }
         
+        /*printf("ready to check against centers %d\n",centers.get_rows());
+        for(j=0;j<gg.get_dim();j++){
+            printf("    %e\n",rr.get_data(j));
+        }*/
+        
         for(j=0;j<centers.get_rows();j++){
             for(k=0;k<gg.get_dim();k++){
                 trial.set(k,centers.get_data(j,k)+good_rr_avg*rr.get_data(k)*characteristic_length.get_data(k));
             }
             
             gg.nn_srch(trial,1,neigh,ddneigh);
+            //printf("dd %e\n",ddneigh.get_data(0));
             if(ddneigh.get_data(0)>ddmax){
                 ddmax=ddneigh.get_data(0);
                 for(k=0;k<gg.get_dim();k++){
@@ -1286,18 +1305,27 @@ void aps::aps_focus(int in_samples){
         
     }
     
+   /* printf("time to evaluate %e %e\n",ddmax,good_rr_avg);
+    for(j=0;j<gg.get_dim();j++){
+        printf("    %e\n",best.get_data(j));
+    }*/
+    
     int actually_added=-1;
     double chitrue;
     evaluate(best,&chitrue,&actually_added);
-
+    //printf("out of evaluate in focus %d\n",actually_added);
+    
     if(actually_added>=0){
         focus_pts.add(actually_added);
-        if(fabs(chitrue-strad.get_target())>0.1*delta_chisquared){
-             if(do_bisection==1)bisection(best,chitrue);
+        if(actually_added>=0 && fabs(chitrue-strad.get_target())>0.1*delta_chisquared){
+             if(do_bisection==1){
+                 bisection(best,chitrue);
+             }
         }
     }
     
     called_focus++;
+    //printf("done focusing\n");
 
 }
 
@@ -1499,6 +1527,13 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         flow=chi_in;
         
         rr=2.0*dir.normalize();
+        while(rr<1.0e-20){
+            for(i=0;i<gg.get_dim();i++){
+                dir.set(i,dice->doub());
+            }
+            
+            rr=2.0*dir.normalize();
+        }
         
         fhigh=-1.0*chisq_exception;
         while(fhigh<strad.get_target()){
@@ -1506,8 +1541,10 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 highball.set(i,lowball.get_data(i)+rr*dir.get_data(i));
             }
             
+            //printf("rr %e\n",rr);
+            
             evaluate(highball,&fhigh);
-
+ 
             rr*=2.0;
         }
     
