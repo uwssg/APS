@@ -205,6 +205,23 @@ void aps::initialize(int npts,array_1d<double> &min, array_1d<double> &max){
     initialize(npts,min,max,0,q);
 }
 
+int aps::in_bounds(array_1d<double> &pt){
+    int i;
+    for(i=0;i<gg.get_dim();i++){
+        if(pt.get_data(i)>chisq->get_max(i) && chisq->get_max(i)>-1.0*chisq_exception){
+            return 0;
+        }
+        
+        if(pt.get_data(i)<chisq->get_min(i) && chisq->get_min(i)<chisq_exception){
+            return 0;
+        }
+    }
+    
+    return 1;
+    
+    
+}
+
 void aps::evaluate(array_1d<double> &pt, double *chiout){
     int i;
     evaluate(pt,chiout,&i);
@@ -216,19 +233,11 @@ void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex){
     
     dex[0]=-1;
     
-    int i;
-    for(i=0;i<gg.get_dim();i++){
-        if(pt.get_data(i)>chisq->get_max(i) && chisq->get_max(i)>-1.0*chisq_exception){
-            chiout[0]=2.0*chisq_exception;
-            return;
-        }
-        
-        if(pt.get_data(i)<chisq->get_min(i) && chisq->get_min(i)<chisq_exception){
-            chiout[0]=2.0*chisq_exception;
-            return;
-        }
+    if(in_bounds(pt)==0){
+        chiout[0]=2.0*chisq_exception;
+        return;
     }
-    
+
     
     gg.nn_srch(pt,1,neigh,ddneigh);
     //printf("evaluate found dd %e\n",ddneigh.get_data(0));
@@ -1198,6 +1207,8 @@ void aps::aps_focus(int in_samples){
     double aa,bb,cc,xxp,xxm,yyp,yym,determinant;
     double normp,normm;
     
+    double characteristic_rr;
+    
     cos_target=0.0;
     sqrt_d_dim=sqrt(double(gg.get_dim()));
     
@@ -1284,9 +1295,25 @@ void aps::aps_focus(int in_samples){
             printf("    %e\n",rr.get_data(j));
         }*/
         
+        
+        
         for(j=0;j<centers.get_rows();j++){
-            for(k=0;k<gg.get_dim();k++){
-                trial.set(k,centers.get_data(j,k)+good_rr_avg*rr.get_data(k)*characteristic_length.get_data(k));
+            for(k=0;k<gg.get_dim();k++)trial.set(k,-2.0*chisq_exception);
+            use_it=0;
+            
+            characteristic_rr=good_rr_avg;
+            
+            while(use_it==0){
+                use_it=1;
+                
+                for(k=0;k<gg.get_dim();k++){
+                    trial.set(k,centers.get_data(j,k)+characteristic_rr*rr.get_data(k)*characteristic_length.get_data(k));
+                }
+                
+                if(in_bounds(trial)==0){
+                    use_it=0;
+                    characteristic_rr*=0.5;
+                }
             }
             
             gg.nn_srch(trial,1,neigh,ddneigh);
@@ -1314,7 +1341,7 @@ void aps::aps_focus(int in_samples){
     int actually_added=-1;
     double chitrue;
     evaluate(best,&chitrue,&actually_added);
-    //printf("out of evaluate in focus %d\n",actually_added);
+    printf("out of evaluate in focus %d %e\n",actually_added,good_rr_avg);
     
     if(actually_added>=0){
         focus_pts.add(actually_added);
@@ -2124,7 +2151,7 @@ void aps::write_pts(){
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
     
-    if(focus_pts.get_dim()>0){
+    if(called_focus>0){
         printf("all done with test\n");
         exit(1);
     }

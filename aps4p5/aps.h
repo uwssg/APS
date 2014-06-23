@@ -155,6 +155,8 @@ private:
     
     double distance(int,int,array_1d<double>&);
     
+    int in_bounds(array_1d<double>&);
+    
     asymm_array_2d<int> gibbs_sets;
     int i_gibbs,called_gibbs,called_wide,called_focus;
     
