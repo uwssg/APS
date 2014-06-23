@@ -1198,7 +1198,7 @@ void aps::aps_focus(int in_samples){
     double aa,bb,cc,xxp,xxm,yyp,yym,determinant;
     double normp,normm;
     
-    cos_target=-0.5;
+    cos_target=0.0;
     sqrt_d_dim=sqrt(double(gg.get_dim()));
     
     for(i=0;i<in_samples;i++){
