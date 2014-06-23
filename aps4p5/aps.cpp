@@ -1856,6 +1856,7 @@ void aps::write_pts(){
             lling=2;
             mu=-2.0;
             sig=-2.0;
+            focus_dex++;
         }
         else{
             lling=1;
