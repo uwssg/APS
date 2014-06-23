@@ -1056,7 +1056,7 @@ void aps::calculate_good_rr(){
         total_wgt+=wgt;
     }
     
-    good_rr_avg=good_rr_avg/wgt;
+    good_rr_avg=good_rr_avg/total_wgt;
     
 }
 
