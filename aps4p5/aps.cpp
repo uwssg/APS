@@ -2112,6 +2112,10 @@ void aps::write_pts(){
 
     fprintf(output," -- %d %d\n",called_wide,called_focus);
     
+    for(i=0;i<focus_pts.get_dim();i++){
+        fprintf(output,"%d\n",focus_pts.get_data(i));
+    }
+    
     fclose(output);
      
     
@@ -2119,6 +2123,12 @@ void aps::write_pts(){
        
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
+    
+    if(focus_pts.get_dim()>0){
+        printf("all done with test\n");
+        exit(1);
+    }
+    
 }
 
 double aps::absurd_planet_test(double pp, double *sigout, double *stradout){
