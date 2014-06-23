@@ -1041,6 +1041,7 @@ void aps::calculate_good_rr(){
     
     good_rr_avg=0.0;
     ct=0;
+    total_wgt=0.0;
     
     for(i=0;i<good_pts.get_dim();i++){
         ddmin=2.0*chisq_exception;
