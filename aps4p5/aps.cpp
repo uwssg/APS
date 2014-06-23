@@ -1341,7 +1341,7 @@ void aps::aps_focus(int in_samples){
     int actually_added=-1;
     double chitrue;
     evaluate(best,&chitrue,&actually_added);
-    printf("out of evaluate in focus %d %e\n",actually_added,good_rr_avg);
+    //printf("out of evaluate in focus %d %e\n",actually_added,good_rr_avg);
     
     if(actually_added>=0){
         focus_pts.add(actually_added);
@@ -2137,11 +2137,11 @@ void aps::write_pts(){
     
     fprintf(output," -- %d %d ",known_minima.get_dim(),ngood);
 
-    fprintf(output," -- %d %d\n",called_wide,called_focus);
+    fprintf(output," -- %d %d %d\n",called_wide,called_focus,focus_pts.get_dim());
     
-    for(i=0;i<focus_pts.get_dim();i++){
+    /*for(i=0;i<focus_pts.get_dim();i++){
         fprintf(output,"%d\n",focus_pts.get_data(i));
-    }
+    }*/
     
     fclose(output);
      
@@ -2151,10 +2151,7 @@ void aps::write_pts(){
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
     
-    if(called_focus>0){
-        printf("all done with test\n");
-        exit(1);
-    }
+  
     
 }
 
