@@ -955,12 +955,12 @@ void mcmc::update_eigen(){
         }
         catch(int iex){
             
-            e_vectors.reset();
-            e_values.reset();
-            
             n_evecs-=2;
             try_again=1;
             while(n_evecs>0 && try_again==1){
+                e_vectors.set_dim(dim,n_evecs);
+                e_values.set_dim(n_evecs);
+            
                 try_again=0;
                 try{
                     eval_symm(covariance,e_vectors,e_values,n_evecs,dim,1);
@@ -1047,14 +1047,7 @@ void mcmc::update_eigen(){
                     p_vectors.set(j,i+n_evecs,random_bases.get_data(i,j));
                 }
             }
-            
-            
-            for(i=0;i<dim;i++){
-                p_values.set(i,2.38*sqrt(e_values.get_data(i)/double(dim)));
-            }
-            for(i=0;i<dim;i++){
-	        for(j=0;j<dim;j++)p_vectors.set(i,j,e_vectors.get_data(i,j));
-	    }
+
        }
        else{
            for(i=0;i<dim;i++){
