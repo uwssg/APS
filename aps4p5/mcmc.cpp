@@ -1016,6 +1016,7 @@ void mcmc::update_eigen(){
         }
         
         output=fopen(diagname,"a");
+        fprintf("nevecs %d\n",n_evecs);
         if(maxerr>1.0e-10)fprintf(output,"eigen maxerr %e -- n_evecs %d\n",maxerr,n_evecs);
         fclose(output);
 
