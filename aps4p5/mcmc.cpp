@@ -921,8 +921,8 @@ void mcmc::update_eigen(){
     
     FILE *output;
     
-    array_1d<double> e_values,v;
-    array_2d<double> e_vectors;
+    array_1d<double> e_values,v,random_variances;
+    array_2d<double> e_vectors,e_vec_transpose,random_bases;
     
     
     e_values.set_dim(dim);
@@ -954,6 +954,10 @@ void mcmc::update_eigen(){
             }
         }
         catch(int iex){
+            
+            e_vectors.reset();
+            e_values.reset();
+            
             n_evecs-=2;
             try_again=1;
             while(n_evecs>0 && try_again==1){
@@ -966,9 +970,8 @@ void mcmc::update_eigen(){
                     try_again=1;
                 }
             }
-        
         }
-        //spock
+        
 
         for(i=0;i<n_evecs;i++){
             nn=0.0;
@@ -987,8 +990,6 @@ void mcmc::update_eigen(){
 	      if(ii==0 && j==1 || fabs(nn)>maxerr){
 	          maxerr=fabs(nn);
 	      }
-	  
-	
           }
 
           for(i=0;i<dim;i++)v.set(i,e_vectors.get_data(i,ii));
@@ -1013,7 +1014,41 @@ void mcmc::update_eigen(){
         if(maxerr>1.0e-10)fprintf(output,"eigen maxerr %e\n",maxerr);
         fclose(output);
 
-        if(maxerr<=tolerance){
+        if(maxerr<=tolerance && n_evecs>0){
+            
+            e_vec_transpose.set_cols(dim);
+            for(i=0;i<n_evecs;i++){
+                for(j=0;j<dim;j++){
+                    e_vec_transpose.set(i,j,e_vectors.get_data(j,i));
+                }
+            }
+            
+            generate_random_vectors(e_vec_transpose,random_bases);
+            
+            if(independent_samples.get_rows()>5){
+                generate_random_variances(independent_samples,random_bases,random_variances);
+            }
+            else{
+                for(i=0;i<dim-n_evecs;i++){
+                    random_variances.set(i,0.1);
+                }
+            }
+            
+            for(i=0;i<n_evecs;i++){
+                p_values.set(i,2.38*sqrt(e_values.get_data(i)/double(dim)));
+                for(j=0;j<dim;j++){
+                    p_vectors.set(j,i,e_vectors.get_data(j,i));
+                }
+            }
+            
+            for(i=0;i<random_bases.get_rows();i++){
+                p_values.set(i+n_evecs,2.38*sqrt(random_variances.get_data(i)/double(dim)));
+                for(j=0;j<dim;j++){
+                    p_vectors.set(j,i+n_evecs,random_bases.get_data(i,j));
+                }
+            }
+            
+            
             for(i=0;i<dim;i++){
                 p_values.set(i,2.38*sqrt(e_values.get_data(i)/double(dim)));
             }
