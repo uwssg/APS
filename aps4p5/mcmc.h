@@ -68,6 +68,8 @@ class mcmc{
     void generate_random_basis();
     void generate_random_basis(array_2d<double>&);
     void generate_random_basis(array_1d<double>&,array_2d<double>&);
+    
+    void generate_random_vectors(array_2d<double>&,array_2d<double>&);
 };
 
 #endif

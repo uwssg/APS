@@ -702,83 +702,12 @@ void mcmc::generate_random_basis(array_2d<double> &samples){
 void mcmc::generate_random_basis(array_1d<double> &sigs, 
         array_2d<double> &input_independent_samples){
     
-    array_2d<double> random_basis;
-    array_1d<double> vv;
+    array_2d<double> random_basis,dummy;
     
     int i,j,k,l;
     double nn,mm;
     
-    random_basis.set_cols(dim);
-    
-    for(i=0;i<dim;i++){
-        nn=(chaos->doub()-0.5)*sigs.get_data(i);
-        vv.set(i,nn);
-    }
-    
-    vv.normalize();
-    random_basis.set_row(0,vv);
-    
-    int use_it,ct_abort=0;
-    
-    for(i=1;i<dim;i++){
-        use_it=0;
-        while(use_it==0){
-            for(j=0;j<dim;j++){
-                nn=(chaos->doub()-0.5)*sigs.get_data(j);
-                vv.set(j,nn);
-            }
-        
-            for(j=0;j<i;j++){
-                nn=0.0;
-                for(k=0;k<dim;k++)nn+=vv.get_data(k)*random_basis.get_data(j,k);
-                for(k=0;k<dim;k++){
-                    vv.subtract_val(k,nn*random_basis.get_data(j,k));
-                }
-            }
-        
-            nn=0.0;
-            for(j=0;j<dim;j++)nn+=vv.get_data(j)*vv.get_data(j);
-            
-            if(nn>1.0e-20){
-                vv.normalize();
-                random_basis.set_row(i,vv);
-                use_it=1;
-                ct_abort=0;
-            }
-            else{
-                ct_abort++;
-            }
-            
-            if(ct_abort>1000){
-                printf("WARNING aborted %d times in generate_random_basis\n");
-                throw -1;
-            }
-        }
-    }
-    
-    for(i=0;i<dim;i++){
-        nn=0.0;
-        for(j=0;j<dim;j++){
-            nn+=random_basis.get_data(i,j)*random_basis.get_data(i,j);
-        }
-        
-        if(fabs(1.0-nn)>1.0e-4){
-            printf("WARNING in generate_random_basis norm of %d is %e\n",i,nn);
-            throw -1;
-        }
-        
-        for(j=0;j<i;j++){
-            nn=0.0;
-            for(k=0;k<dim;k++){
-                nn+=random_basis.get_data(i,k)*random_basis.get_data(j,k);
-            }
-            if(fabs(nn)>1.0e-2){
-                printf("WARNING component of %d %d in generate_random_basis is %e\n",i,j,nn);
-                
-                throw -1;
-            }
-        }
-    }
+    generate_random_vectors(dummy,random_basis);
     
     for(i=0;i<dim;i++){
         for(j=0;j<dim;j++){
@@ -836,6 +765,132 @@ void mcmc::generate_random_basis(array_1d<double> &sigs,
     
 }
 
+void mcmc::generate_random_vectors(array_2d<double> &seed, array_2d<double> &output){
+    /*
+    Generate random vectors that are perpendicular to each other and to the rows of 
+    seed
+    
+    store them in the rows of output
+    */
+    
+    output.reset();
+    output.set_cols(dim);
+    int wanted;
+    
+    wanted=dim-seed.get_rows();
+    
+    array_1d<double> vv;
+    double nn;
+    
+    int i,j,k,ii,irow=0;
+    int aborted=0,abort_max=1000,use_it;
+    
+    if(wanted==dim){
+        for(i=0;i<dim;i++){
+            vv.set(i,normal_deviate(chaos,0.0,1.0));
+        }
+        vv.normalize();
+        for(i=0;i<dim;i++){
+            output.set(0,i,vv.get_data(i));
+        }
+        irow++;
+    }
+    
+    for(;irow<wanted;irow++){
+        use_it=0;
+        while(use_it==0 && aborted<abort_max){
+            for(i=0;i<dim;i++){
+                vv.set(i,normal_deviate(chaos,0.0,1.0));
+            }
+        
+            for(i=0;i<seed.get_rows();i++){
+                nn=0.0;
+                for(j=0;j<dim;j++){
+                    nn+=seed.get_data(i,j)*vv.get_data(j);
+                }
+                for(j=0;j<dim;j++){
+                    vv.subtract_val(j,nn*seed.get_data(i,j));
+                }
+            }
+        
+            for(i=0;i<irow;i++){
+                nn=0.0;
+                for(j=0;j<dim;j++){
+                    nn+=output.get_data(i,j)*vv.get_data(j);
+                }
+                for(j=0;j<dim;j++){
+                    vv.subtract_val(j,nn*output.get_data(i,j));
+                }
+            }
+        
+            nn=vv.normalize();
+            
+            if(nn>1.0e-20){
+                use_it=1;
+                aborted=0;
+                for(j=0;j<dim;j++)output.set(irow,j,vv.get_data(j));
+            }
+            else{
+                aborted++;
+            }
+            
+            if(aborted>=abort_max){
+                printf("WARNING aborted too many times in generate_random_vectors\n");
+                throw -1;
+            }
+            
+        }
+    }
+    
+    double err,maxerr=-1.0;
+    
+    for(i=0;i<output.get_rows();i++){
+        for(j=0;j<seed.get_rows();j++){
+            nn=0.0;
+            for(k=0;k<dim;k++){
+                nn+=output.get_data(i,k)*seed.get_data(j,k);
+            }
+            
+            err=fabs(nn);
+            if(err>maxerr){
+                maxerr=err;
+            }
+            
+        }
+        
+        for(j=i+1;j<output.get_rows();j++){
+            nn=0.0;
+            for(k=0;k<dim;k++){
+                nn+=output.get_data(i,k)*output.get_data(j,k);
+            }
+            
+            err=fabs(nn);
+            if(err>maxerr){
+                maxerr=err;
+            }
+        }
+        
+        nn=0.0;
+        for(k=0;k<dim;k++){
+            nn+=output.get_data(i,k)*output.get_data(i,k);
+        }
+        nn=sqrt(nn);
+        
+        err=fabs(1.0-nn);
+        if(err>maxerr){
+            maxerr=err;
+        }
+        
+    }
+    
+    if(maxerr>1.0e-2){
+        printf("WARNING at end of generate random vectors maxerr %e\n",maxerr);
+        throw -1;
+    }
+    
+    
+}
+
 void mcmc::update_eigen(){
     int i,j,k,l,ii,random_ct;
 
@@ -859,21 +914,40 @@ void mcmc::update_eigen(){
 
     
     double nn,maxerr,mm;
+    int try_again,n_evecs=dim;
     
     try{
- 
-        eval_symm(covariance,e_vectors,e_values,dim-2,dim,1);
-        eval_symm(covariance,vbuff,evbuff,2,dim,-1);
+        
+        try{
+            eval_symm(covariance,e_vectors,e_values,dim-2,dim,1);
+            eval_symm(covariance,vbuff,evbuff,2,dim,-1);
     
-        e_values.set(dim-2,evbuff.get_data(0));
-        e_values.set(dim-1,evbuff.get_data(1));
+            e_values.set(dim-2,evbuff.get_data(0));
+            e_values.set(dim-1,evbuff.get_data(1));
     
-        for(i=0;i<dim;i++){
-            e_vectors.set(i,dim-2,vbuff.get_data(i,0));
-            e_vectors.set(i,dim-1,vbuff.get_data(i,1));
+            for(i=0;i<dim;i++){
+                e_vectors.set(i,dim-2,vbuff.get_data(i,0));
+                e_vectors.set(i,dim-1,vbuff.get_data(i,1));
+            }
         }
- 
-        for(i=0;i<dim;i++){
+        catch(int iex){
+            n_evecs-=2;
+            try_again=1;
+            while(n_evecs>0 && try_again==1){
+                try_again=0;
+                try{
+                    eval_symm(covariance,e_vectors,e_values,n_evecs,dim,1);
+                }
+                catch(int iex){
+                    n_evecs--;
+                    try_again=1;
+                }
+            }
+        
+        }
+        //spock
+
+        for(i=0;i<n_evecs;i++){
             nn=0.0;
 	    for(j=0;j<dim;j++)nn+=e_vectors.get_data(j,i)*e_vectors.get_data(j,i);
 	    //printf("nn %e\n",nn);
@@ -883,8 +957,8 @@ void mcmc::update_eigen(){
 	    for(j=0;j<dim;j++)e_vectors.divide_val(j,i,nn);
         }
 
-        for(ii=0;ii<dim;ii++){
-          for(j=ii+1;j<dim;j++){
+        for(ii=0;ii<n_evecs;ii++){
+          for(j=ii+1;j<n_evecs;j++){
               nn=0.0;
 	      for(i=0;i<dim;i++)nn+=e_vectors.get_data(i,ii)*e_vectors.get_data(i,j);
 	      if(ii==0 && j==1 || fabs(nn)>maxerr){
