@@ -215,8 +215,10 @@ void kde::plot_boundary(int ix1_in, double dx1_in, int ix2_in, double dx2_in, do
     
     int i;
     double nn;
+    int reverse=0;
     
     if(ix1_in>ix2_in){
+        reverse=1;
         i=ix1_in;
         nn=dx1_in;
         
@@ -287,7 +289,12 @@ void kde::plot_boundary(int ix1_in, double dx1_in, int ix2_in, double dx2_in, do
     int lastdex=0;
     FILE *output=fopen(filename,"w");
     while(boundary_tree.get_pts()>1){
-        fprintf(output,"%e %e\n",lastpt.get_data(0),lastpt.get_data(1));
+        if(reverse==0){
+            fprintf(output,"%e %e\n",lastpt.get_data(0),lastpt.get_data(1));
+        }
+        else{
+            fprintf(output,"%e %e\n",lastpt.get_data(1),lastpt.get_data(0));
+        }
         boundary_tree.remove(lastdex);
         
         boundary_tree.nn_srch(lastpt,1,neigh,ddneigh);
@@ -295,9 +302,15 @@ void kde::plot_boundary(int ix1_in, double dx1_in, int ix2_in, double dx2_in, do
         lastpt.set(0,boundary_tree.get_pt(lastdex,0));
         lastpt.set(1,boundary_tree.get_pt(lastdex,1));
         
-    } 
-    fprintf(output,"%e %e\n",lastpt.get_data(0),lastpt.get_data(1));
-    fprintf(output,"%e %e\n",origin.get_data(0),origin.get_data(1));
+    }
+    if(reverse==0){ 
+        fprintf(output,"%e %e\n",lastpt.get_data(0),lastpt.get_data(1));
+        fprintf(output,"%e %e\n",origin.get_data(0),origin.get_data(1));
+    }
+    else{
+        fprintf(output,"%e %e\n",lastpt.get_data(1),lastpt.get_data(0));
+        fprintf(output,"%e %e\n",origin.get_data(1),origin.get_data(0));
+    }
     fclose(output);
      
 

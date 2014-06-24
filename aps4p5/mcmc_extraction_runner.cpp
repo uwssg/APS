@@ -15,7 +15,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(5000);
+//test.set_cutoff(7500);
 
 //test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
@@ -38,8 +38,36 @@ test.print_samples("test_wmap7_samples.sav");
 kde kde_test;
 kde_test.set_data(test.get_samples());
 
-kde_test.plot_density(0,0.0001,1,0.0005,0.95,"test_pixels20k.sav",3);
-kde_test.plot_boundary(0,0.0001,1,0.0005,0.95,"test_boundary20k.sav",3);
+//kde_test.plot_density(0,0.0001,1,0.0005,0.95,"test_pixels20k.sav",3);
+//kde_test.plot_boundary(0,0.0001,1,0.0005,0.95,"test_boundary20k.sav",3);
+
+array_1d<double> dx;
+dx.set(0,0.0001);
+dx.set(1,0.0005);
+dx.set(2,0.5);
+dx.set(3,0.01);
+dx.set(4,0.0005);
+dx.set(5,0.005);
+
+array_1d<int> ix;
+
+ix.set(0,0);
+ix.set(1,1);
+ix.set(2,80);
+ix.set(3,2);
+ix.set(4,17);
+ix.set(5,20);
+
+char outname[letters];
+int i,j;
+for(i=0;i<6;i++){
+    for(j=i+1;j<6;j++){
+        if(i!=3 && j!=3){
+            sprintf(outname,"mcmc_processed/wmap_%d_%d_control.sav",i,j);
+            kde_test.plot_boundary(ix.get_data(i),dx.get_data(i),ix.get_data(j),dx.get_data(j),0.95,outname,3);
+        }
+    }
+}
 
 test.plot_delta("mcmc_good_pts_test20k.sav",0.5*12.61);
 
@@ -51,7 +79,7 @@ WW.set_name("WW");
 
 test.calculate_r(RR,VV,WW);
 test.calculate_mean(mean,var);
-int i;
+
 for(i=0;i<nparams;i++){
     if(fabs(var.get_data(i)/mean.get_data(i))>1.0e-20){
         printf("%d %e -- %e %e\n",i,RR.get_data(i),mean.get_data(i),var.get_data(i));

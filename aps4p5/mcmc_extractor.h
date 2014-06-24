@@ -30,6 +30,7 @@ public:
     int get_total_used();
     int get_total_kept();
     int get_total_rows();
+    double get_best_covar();
     double get_sample(int,int);
     
     void set_cutoff(int);
@@ -49,7 +50,7 @@ public:
     
 private:
     int nchains,nparams,thinby,total_used,total_kept,total_rows;
-    double keep_frac,chi_min;
+    double keep_frac,chi_min,best_covar;
     int discard,shortest_kept,cutoff;
     char chainname[letters];
     

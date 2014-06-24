@@ -164,6 +164,9 @@ void mcmc_extractor::learn_discard(){
     //printf("keeping %d\n",ct);
 }
 
+double mcmc_extractor::get_best_covar(){
+    return best_covar;
+}
 
 void mcmc_extractor::learn_thinby(){
     check_validity();
@@ -194,7 +197,9 @@ void mcmc_extractor::learn_thinby(){
     int cc,wgt,ct,thin_best,thin_lim,kept_buffer=0,imax,total_independent;
     int used_buffer;
     array_1d<double> mean,var,covar,vv;
-    double max_covar,best_covar=10.0,nn,d_wgt,chival;
+    double max_covar,nn,d_wgt,chival;
+    
+    best_covar=10.0;
     
     thin_lim=shortest_kept/3;
     
