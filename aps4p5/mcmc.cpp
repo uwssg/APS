@@ -715,9 +715,8 @@ void mcmc::generate_random_basis(array_1d<double> &sigs,
         }
     }
     
-    array_2d<double> projected_independent_samples;
-    double pmean,pvar;
-    
+    array_1d<double> variances;
+     
     if(input_independent_samples.get_rows()<dim){
         for(i=0;i<dim;i++){
             nn=0.0;
@@ -729,40 +728,64 @@ void mcmc::generate_random_basis(array_1d<double> &sigs,
     }
     else{
         
-        projected_independent_samples.set_cols(dim);
-        
-        for(i=0;i<input_independent_samples.get_rows();i++){
-            for(j=0;j<dim;j++){
-                nn=0.0;
-                for(k=0;k<dim;k++){
-                    nn+=input_independent_samples.get_data(i,k)*random_basis.get_data(j,k);
-                }
-                projected_independent_samples.set(i,j,nn);
-            }
-        }
+        generate_random_variances(input_independent_samples,random_basis,variances);
         
         for(i=0;i<dim;i++){
-            pmean=0.0;
-            for(j=0;j<projected_independent_samples.get_rows();j++){
-                pmean+=projected_independent_samples.get_data(j,i);
-            }
-            pmean=pmean/double(projected_independent_samples.get_rows());
-            
-            pvar=0.0;
-            for(j=0;j<projected_independent_samples.get_rows();j++){
-                pvar+=power(pmean-projected_independent_samples.get_data(j,i),2);
-            }
-            pvar=pvar/double(projected_independent_samples.get_rows());
-            
-            p_values.set(i,2.38*sqrt(pvar/double(dim)));
-            
+            p_values.set(i,2.38*sqrt(variances.get_data(i)/double(dim)));
         }
-        
-        
+               
     }
     
     write_directions();
     
+}
+
+void mcmc::generate_random_variances(array_2d<double> &samples, array_2d<double> &vectors, 
+              array_1d<double> &output){
+
+    /*
+    project samples onto the basis vectors in &vectors
+    
+    return the variances of those projected variables
+    */
+
+    int i,j,k;
+    array_2d<double> projected_samples;
+    double pmean,pvar,nn;
+    
+    projected_samples.set_cols(vectors.get_rows());
+    
+    for(i=0;i<samples.get_rows();i++){
+        for(j=0;j<vectors.get_rows();j++){
+            nn=0.0;
+            for(k=0;k<dim;k++){
+                nn+=samples.get_data(i,k)*vectors.get_data(j,k);
+            }
+            
+            projected_samples.set(i,j,nn);
+            
+        }
+    }
+    
+    output.reset();
+    output.set_dim(vectors.get_rows());
+    
+    for(i=0;i<vectors.get_rows();i++){
+        pmean=0.0;
+        for(j=0;j<projected_samples.get_rows();j++){
+            pmean+=projected_samples.get_data(j,i);
+        }
+        pmean=pmean/double(projected_samples.get_rows());
+        
+        pvar=0.0;
+        for(j=0;j<projected_samples.get_rows();j++){
+            pvar+=power(pmean-projected_samples.get_data(j,i),2);
+        }
+        pvar=pvar/double(projected_samples.get_rows());
+        
+        output.set(i,pvar);
+    }
+
 }
 
 void mcmc::generate_random_vectors(array_2d<double> &seed, array_2d<double> &output){
