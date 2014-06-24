@@ -570,6 +570,11 @@ void mcmc::calculate_covariance(){
     
     int nmaster=independent_samples.get_rows();
     
+    FILE *output;
+    output=fopen(diagname,"a");
+    fprintf(output,"independent samples %d\n",nmaster);
+    fclose(output);
+    
     if(nmaster==0){
         throw -1;
     }
@@ -1011,7 +1016,7 @@ void mcmc::update_eigen(){
         }
         
         output=fopen(diagname,"a");
-        if(maxerr>1.0e-10)fprintf(output,"eigen maxerr %e\n",maxerr);
+        if(maxerr>1.0e-10)fprintf(output,"eigen maxerr %e -- n_evecs %d\n",maxerr,n_evecs);
         fclose(output);
 
         if(maxerr<=tolerance && n_evecs>0){
