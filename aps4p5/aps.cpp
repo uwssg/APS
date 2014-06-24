@@ -1216,86 +1216,7 @@ void aps::aps_focus(int in_samples){
         
         for(j=0;j<gg.get_dim();j++)rr.set(j,normal_deviate(dice,0.0,1.0/sqrt_d_dim));
         
-        use_it=0;
-        while(last_rr.get_dim()>0 && use_it==0){
-            //printf("looping in focus\n");
-            set_dex=dice->int32()%gg.get_dim();
-            
-            if(set_dex>=gg.get_dim()){
-                printf("WARNING got wrong set_dex %d\n",set_dex);
-                exit(1);
-            }
-            
-            adotb=0.0;
-            asq=0.0;
-            for(j=0;j<gg.get_dim();j++){
-                if(j!=set_dex){
-                    adotb+=last_rr.get_data(j)*rr.get_data(j);
-                    asq+=rr.get_data(j)*rr.get_data(j);
-                }
-            }
-            
-            aa=(last_rr.get_data(set_dex)*last_rr.get_data(set_dex)-cos_target*cos_target);
-            bb=2.0*adotb*last_rr.get_data(set_dex);
-            cc=adotb*adotb-cos_target*cos_target*asq;
-            
-            determinant=bb*bb-4.0*aa*cc;
-            if(determinant<0.0 || fabs(aa)<1.0e-20){
-                for(j=0;j<gg.get_dim();j++){
-                    rr.set(j,normal_deviate(dice,0.0,1.0/sqrt_d_dim));
-                }
-                
-                //printf("    det %e aa %e\n",determinant,aa);
-            }
-            else{
-                xxp=(-1.0*bb+sqrt(determinant))/(2.0*aa);
-                yyp=adotb+last_rr.get_data(set_dex)*xxp;
-                normp=sqrt(asq+xxp*xxp);
-                
-                xxm=(-1.0*bb-sqrt(determinant))/(2.0*aa);
-                yym=adotb+last_rr.get_data(set_dex)*xxm;
-                normm=sqrt(asq+xxm*xxm);
-                
-                //printf("    %e %e\n",yym/normm,yyp/normp);
-                
-                if(fabs(cos_target*normp-yyp)<1.0e-2){
-                    rr.set(set_dex,xxp);
-                    //printf("accepting %e %e\n",cos_target*normp,yyp);
-                    use_it=1;
-                }
-                else if(fabs(cos_target*normm-yym)<1.0e-2){
-                    rr.set(set_dex,xxm);
-                    //printf("accepting %e %e\n",cos_target*normm,yym);
-                    use_it=1;
-                }
-                else{
-                    for(j=0;j<gg.get_dim();j++){
-                        rr.set(j,normal_deviate(dice,0.0,1.0/sqrt_d_dim));
-                    }
-                }
-                
-                
-            }
-        }
-        
         rr.normalize();
-        if(last_rr.get_dim()>0){
-            adotb=0.0;
-            for(j=0;j<gg.get_dim();j++){
-                adotb+=rr.get_data(j)*last_rr.get_data(j);
-            }
-            if(fabs(cos_target-adotb)>1.0e-2){
-                printf("WARNING accepted cos_target %e wanted %e\n",adotb,cos_target);
-                exit(1);
-            }
-        }
-        
-        /*printf("ready to check against centers %d\n",centers.get_rows());
-        for(j=0;j<gg.get_dim();j++){
-            printf("    %e\n",rr.get_data(j));
-        }*/
-        
-        
         
         for(j=0;j<centers.get_rows();j++){
             for(k=0;k<gg.get_dim();k++)trial.set(k,-2.0*chisq_exception);
@@ -1317,7 +1238,7 @@ void aps::aps_focus(int in_samples){
             }
             
             gg.nn_srch(trial,1,neigh,ddneigh);
-            //printf("dd %e\n",ddneigh.get_data(0));
+
             if(ddneigh.get_data(0)>ddmax){
                 ddmax=ddneigh.get_data(0);
                 for(k=0;k<gg.get_dim();k++){
