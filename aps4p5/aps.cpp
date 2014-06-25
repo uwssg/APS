@@ -1474,6 +1474,31 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     //printf("leaving\n");
 }
 
+int aps::find_nearest_center(array_1d<double> &pt){
+    return find_nearest_center(pt,2.0*chisq_exception);
+}
+
+int aps::find_nearest_center(array_1d<double> &pt, double chi_in){
+    /*
+    Find the nearest center with chisq<chi_in
+    */
+    
+    int i,imin,ans;
+    double dd,ddmin;
+    ans=-1;
+    
+    for(i=0;i<centers.get_rows();i++){
+        dd=gg.distance(pt,*centers(i));
+        if((ans<0 || dd<ddmin) && gg.get_fn(center_dexes.get_data(i))<chi_in){
+            ddmin=dd;
+            ans=center_dexes.get_data(i);
+        }
+    }
+    
+    return ans;
+    
+}
+
 void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     if(chi_in<strad.get_target() && strad.get_target()-chi_in<0.1*delta_chisquared){
@@ -1499,15 +1524,8 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     }
     else{
         ddmin=chisq_exception;
-        j=-1;
         
-        for(i=0;i<centers.get_rows();i++){
-            dd=gg.distance(*centers(i),inpt);
-            if((j==-1 || dd<ddmin) && gg.get_fn(center_dexes.get_data(i))<chi_in){
-                ddmin=dd;
-                j=center_dexes.get_data(i);
-            }
-        }
+        j=find_nearest_center(inpt,chi_in);
         
         if(j>=0){
             for(i=0;i<gg.get_dim();i++){

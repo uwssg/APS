@@ -159,6 +159,9 @@ private:
     
     int in_bounds(array_1d<double>&);
     
+    int find_nearest_center(array_1d<double>&);
+    int find_nearest_center(array_1d<double>&, double);
+    
     asymm_array_2d<int> gibbs_sets;
     int i_gibbs,called_gibbs,called_wide,called_focus;
     
