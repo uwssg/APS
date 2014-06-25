@@ -1230,7 +1230,7 @@ void aps::initialize_focus(){
             use_it=0;
             while(use_it==0){
                 for(i=0;i<gg.get_dim();i++){
-                    trial.set(i,centers.get_data(ic,i)+dd*rr.get_data(i)*characteristic_length.get_data(i));
+                    trial.set(i,centers.get_data(ic,i)+dd*rr.get_data(i)*(gg.get_max(i)-gg.get_min(i)));
                 }
                 
                 use_it=1;
@@ -1312,7 +1312,7 @@ void aps::aps_focus(int in_samples){
         characteristic_rr=good_rr_avg;
         while(use_it==0){
             for(j=0;j<gg.get_dim();j++){
-                trial.set(j,centers.get_data(i,j)+characteristic_rr*best_rr.get_data(j)*characteristic_length.get_data(j));
+                trial.set(j,centers.get_data(i,j)+characteristic_rr*best_rr.get_data(j)*(gg.get_max(i)-gg.get_min(i)));
             }
             
             use_it=1;
