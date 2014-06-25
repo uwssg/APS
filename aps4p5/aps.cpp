@@ -1218,10 +1218,11 @@ void aps::initialize_focus(){
     
     seed.set_cols(gg.get_dim());
     
-    for(ii=0;ii<gg.get_dim();ii++){
+    for(ii=0;ii<2*gg.get_dim();ii++){
         
         for(i=0;i<gg.get_dim();i++)rr.set(i,0.0);
-        rr.set(ii,1.0);
+        if(ii%2==0)rr.set(ii/2,1.0);
+        else rr.set(ii/2,-1.0);
 
         ct_used=0;
         for(ic=0;ic<centers.get_rows();ic++){
