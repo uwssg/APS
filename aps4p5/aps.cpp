@@ -997,6 +997,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
 }
 
 void aps::recenter(){
+    if(focus_directions!=NULL){
+        delete focus_directions;
+        focus_directions=NULL;
+    }
+
     array_2d<double> buffer;
     array_1d<int> buffer_dex;
     int i,j;
@@ -1235,12 +1240,10 @@ void aps::initialize_focus(){
             }
             
             evaluate(trial,&chi_true,&actually_added);
-            called_focus++;
             
-            if(actually_added>=0 && do_bisection==1){
-                bisection(trial,chi_true);
-            }
             if(actually_added>=0){
+                if(do_bisection==1)bisection(trial,chi_true);
+                called_focus++;
                 focus_pts.add(actually_added);
                 ct_used++;
             }
