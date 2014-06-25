@@ -119,7 +119,7 @@ private:
     
     double global_median;
     
-    double chimin,delta_chisquared,grat;
+    double chimin,delta_chisquared,grat,dot_product_threshold;
     
     gp gg;
     straddle_parameter strad;

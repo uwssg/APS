@@ -1,6 +1,6 @@
 #include "aps.h"
 
-enum{iFOCUS,iGIBBS,iWIDE};
+enum{iGIBBS,iWIDE};
 
 straddle_parameter::straddle_parameter(){
     target=-1.0;
@@ -124,6 +124,8 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     global_median=200000.0;
     grat=1.0;
+    
+    dot_product_threshold=0.1;
     
     dim=dim_in;
     paramnames=new char*[dim];
@@ -1430,7 +1432,11 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     int dex;
     double midchi;
 
-    int o_mindex=global_mindex;
+    int i_center,o_mindex=global_mindex;
+    array_1d<double> rr,rrneigh;
+    array_1d<int> rr_i_neigh;
+    
+    
     if(actually_added>=0){
        
         if(which_aps==iWIDE){
@@ -1456,13 +1462,29 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         else if(which_aps==iGIBBS){
             gibbs_pts.add(actually_added);
         }
-        else if(which_aps==iFOCUS){
-             focus_pts.add(actually_added);
-        }
-        
-        
-        if(chitrue<global_median){
+
+        /*if(chitrue<global_median){
              if(do_bisection==1)bisection(sambest,chitrue);
+        }*/
+        
+        if(focus_directions!=NULL && do_bisection==1){
+            i_center=find_nearest_center(sambest);
+            for(i=0;i<gg.get_dim();i++){
+                rr.set(i,(sambest.get_data(i)-gg.get_pt(i_center,i))/(gg.get_max(i)-gg.get_min(i)));
+            }
+            rr.normalize();
+            
+            focus_directions->nn_srch(rr,1,rr_i_neigh,rrneigh);
+            dd=0.0;
+            for(i=0;i<gg.get_dim();i++){
+                dd+=rr.get_data(i)*gg.get_pt(rr_i_neigh.get_data(0),i);
+            }
+            
+            if(fabs(dd)<dot_product_threshold){
+                bisection(sambest,chitrue);
+            }
+            
+        
         }
         
     }
