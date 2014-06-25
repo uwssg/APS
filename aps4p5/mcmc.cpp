@@ -464,7 +464,7 @@ void mcmc::sample(int npts){
 void mcmc::update_directions(){
     
     double ratio=calculate_acceptance();
-
+    
     FILE *output=fopen(diagname,"a");
     fprintf(output,"\nfound ratio to be %e\n",ratio);
     fclose(output);

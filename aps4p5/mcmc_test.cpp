@@ -93,8 +93,8 @@ mcmc_test.step_update(300);
 
 mcmc_test.do_gibbs();
 mcmc_test.generate_random_basis();
-mcmc_test.disable_update();
-mcmc_test.sample(40000);
+//mcmc_test.disable_update();
+mcmc_test.sample(3000);
 
 
 }
