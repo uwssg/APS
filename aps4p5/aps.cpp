@@ -1258,9 +1258,11 @@ void aps::aps_focus(int in_samples){
     
     //printf("focusing\n");
     
+    initialize_focus();
+    
     double nn,ddmax=-1.0;
     array_1d<int> neigh;
-    array_1d<double> trial,best,ddneigh,rr,last_rr;
+    array_1d<double> trial,best,ddneigh,rr,last_rr,best_rr;
     int i,j,k,l,set_dex,use_it;
     
     double cos_target,adotb,asq,sqrt_d_dim;
@@ -1272,47 +1274,19 @@ void aps::aps_focus(int in_samples){
     cos_target=0.0;
     sqrt_d_dim=sqrt(double(gg.get_dim()));
     
-    
-    
-    
     for(i=0;i<in_samples;i++){
         
         for(j=0;j<gg.get_dim();j++)rr.set(j,normal_deviate(dice,0.0,1.0/sqrt_d_dim));
         
         rr.normalize();
-        
-        for(j=0;j<centers.get_rows();j++){
-            for(k=0;k<gg.get_dim();k++)trial.set(k,-2.0*chisq_exception);
-            use_it=0;
             
-            characteristic_rr=good_rr_avg;
+        focus_directions->nn_srch(rr,1,neigh,ddneigh);
             
-            while(use_it==0){
-                use_it=1;
-                
-                for(k=0;k<gg.get_dim();k++){
-                    trial.set(k,centers.get_data(j,k)+characteristic_rr*rr.get_data(k)*characteristic_length.get_data(k));
-                }
-                
-                if(in_bounds(trial)==0){
-                    use_it=0;
-                    characteristic_rr*=0.5;
-                }
+        if(ddneigh.get_data(0)>ddmax){
+            ddmax=ddneigh.get_data(0);
+            for(k=0;k<gg.get_dim();k++){
+                best_rr.set(k,rr.get_data(k));
             }
-            
-            gg.nn_srch(trial,1,neigh,ddneigh);
-
-            if(ddneigh.get_data(0)>ddmax){
-                ddmax=ddneigh.get_data(0);
-                for(k=0;k<gg.get_dim();k++){
-                    best.set(k,trial.get_data(k));
-                }
-            }
-            
-        }
-        
-        for(j=0;j<gg.get_dim();j++){
-            last_rr.set(j,rr.get_data(j));
         }
         
     }
@@ -1322,19 +1296,41 @@ void aps::aps_focus(int in_samples){
         printf("    %e\n",best.get_data(j));
     }*/
     
+    focus_directions->add(best_rr);
+    
     int actually_added=-1;
     double chitrue;
-    evaluate(best,&chitrue,&actually_added);
-    //printf("out of evaluate in focus %d %e\n",actually_added,good_rr_avg);
     
-    if(actually_added>=0){
-        focus_pts.add(actually_added);
-        if(actually_added>=0 && do_bisection==1){
-             bisection(best,chitrue);
+    for(i=0;i<centers.get_rows();i++){
+        use_it=0;
+        actually_added=-1;
+        
+        characteristic_rr=good_rr_avg;
+        while(use_it==0){
+            for(j=0;j<gg.get_dim();j++){
+                trial.set(j,centers.get_data(i,j)+characteristic_rr*best_rr.get_data(j));
+            }
+            
+            use_it=1;
+            if(in_bounds(trial)==0){
+                use_it=0;
+                characteristic_rr*=0.5;
+            }
+            
         }
-    }
+        
+        evaluate(trial,&chitrue,&actually_added);
+        //printf("out of evaluate in focus %d %e\n",actually_added,good_rr_avg);
     
-    called_focus++;
+        if(actually_added>=0){
+            focus_pts.add(actually_added);
+            if(do_bisection==1){
+                 bisection(trial,chitrue);
+            }
+        }
+    
+        called_focus++;
+    }
     //printf("done focusing\n");
 
 }
