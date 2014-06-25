@@ -1215,15 +1215,16 @@ void aps::initialize_focus(){
     
     for(ii=0;ii<gg.get_dim();ii++){
         
-        for(i=0;i<gg.get_dim();i++)rr.set(i,normal_deviate(dice,0.0,1.0));
-        rr.normalize();
+        for(i=0;i<gg.get_dim();i++)rr.set(i,0.0);
+        rr.set(ii,1.0);
+
         ct_used=0;
         for(ic=0;ic<centers.get_rows();ic++){
-            dd=good_rr_avg;
+            dd=0.1;
             use_it=0;
             while(use_it==0){
                 for(i=0;i<gg.get_dim();i++){
-                    trial.set(i,centers.get_data(ic,i)+dd*rr.get_data(i));
+                    trial.set(i,centers.get_data(ic,i)+dd*rr.get_data(i)*characteristic_length.get_data(i));
                 }
                 
                 use_it=1;
@@ -1245,9 +1246,8 @@ void aps::initialize_focus(){
             }
         }
         
-        if(ct_used==centers.get_rows()){
-            seed.add_row(rr);
-        }
+        seed.add_row(rr);
+        
     }
     
     focus_directions=new kd_tree(seed);
@@ -1308,7 +1308,7 @@ void aps::aps_focus(int in_samples){
         characteristic_rr=good_rr_avg;
         while(use_it==0){
             for(j=0;j<gg.get_dim();j++){
-                trial.set(j,centers.get_data(i,j)+characteristic_rr*best_rr.get_data(j));
+                trial.set(j,centers.get_data(i,j)+characteristic_rr*best_rr.get_data(j)*characteristic_length.get_data(j));
             }
             
             use_it=1;
