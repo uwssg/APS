@@ -88,6 +88,7 @@ public:
 private:
     Ran *dice;
     chisquared *chisq;
+    kd_tree *focus_directions;
     
     int write_every,n_printed,ngood,dim,last_optimized;
     int global_mindex,mindex_is_candidate,do_bisection;
@@ -149,6 +150,7 @@ private:
     void aps_wide(int);
     void aps_focus(int);
     void aps_gibbs(int);
+    void initialize_focus();
     
     void evaluate(array_1d<double>&,double*,int*);
     void evaluate(array_1d<double>&,double*);

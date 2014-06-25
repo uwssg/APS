@@ -36,6 +36,11 @@ aps::aps(){
 aps::~aps(){
      
     int i;
+    
+    if(focus_directions!=NULL){
+        delete focus_directions;
+    }
+    
     for(i=0;i<gg.get_dim();i++){
         delete [] paramnames[i];
     }
@@ -73,6 +78,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     write_every=1000;
     n_printed=0;
     do_bisection=1;
+    focus_directions=NULL;
     
     chimin=-1.0;
     
@@ -1194,6 +1200,60 @@ void aps::aps_wide(int in_samples){
    
 }
 
+void aps::initialize_focus(){
+    
+    if(focus_directions!=NULL){
+        return;
+    }
+    
+    array_1d<double> rr,trial;
+    array_2d<double> seed;
+    int use_it,i,ii,ic,actually_added,ct_used;
+    double dd,chi_true;
+    
+    seed.set_cols(gg.get_dim());
+    
+    for(ii=0;ii<gg.get_dim();ii++){
+        
+        for(i=0;i<gg.get_dim();i++)rr.set(i,normal_deviate(dice,0.0,1.0));
+        rr.normalize();
+        ct_used=0;
+        for(ic=0;ic<centers.get_rows();ic++){
+            dd=good_rr_avg;
+            use_it=0;
+            while(use_it==0){
+                for(i=0;i<gg.get_dim();i++){
+                    trial.set(i,centers.get_data(ic,i)+dd*rr.get_data(i));
+                }
+                
+                use_it=1;
+                if(in_bounds(trial)==0){
+                    use_it=0;
+                    dd*=0.5;
+                }
+            }
+            
+            evaluate(trial,&chi_true,&actually_added);
+            called_focus++;
+            
+            if(actually_added>=0 && do_bisection==1){
+                bisection(trial,chi_true);
+            }
+            if(actually_added>=0){
+                focus_pts.add(actually_added);
+                ct_used++;
+            }
+        }
+        
+        if(ct_used==centers.get_rows()){
+            seed.add_row(rr);
+        }
+    }
+    
+    focus_directions=new kd_tree(seed);
+    
+}
+
 void aps::aps_focus(int in_samples){
     
     //printf("focusing\n");
@@ -1211,6 +1271,9 @@ void aps::aps_focus(int in_samples){
     
     cos_target=0.0;
     sqrt_d_dim=sqrt(double(gg.get_dim()));
+    
+    
+    
     
     for(i=0;i<in_samples;i++){
         
@@ -1266,10 +1329,8 @@ void aps::aps_focus(int in_samples){
     
     if(actually_added>=0){
         focus_pts.add(actually_added);
-        if(actually_added>=0 && fabs(chitrue-strad.get_target())>0.1*delta_chisquared){
-             if(do_bisection==1){
-                 bisection(best,chitrue);
-             }
+        if(actually_added>=0 && do_bisection==1){
+             bisection(best,chitrue);
         }
     }
     
@@ -1400,7 +1461,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         }
         
         
-        if(fabs(chitrue-strad.get_target())>0.1*delta_chisquared && chitrue<global_median){
+        if(chitrue<global_median){
              if(do_bisection==1)bisection(sambest,chitrue);
         }
         
@@ -1414,6 +1475,10 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
 }
 
 void aps::bisection(array_1d<double> &inpt, double chi_in){
+    
+    if(chi_in<strad.get_target() && strad.get_target()-chi_in<0.1*delta_chisquared){
+        return;
+    }
     
     array_1d<double> dir_origin,trial,ddneigh;
     array_1d<int> neigh;
