@@ -1477,7 +1477,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             focus_directions->nn_srch(rr,1,rr_i_neigh,rrneigh);
             dd=0.0;
             for(i=0;i<gg.get_dim();i++){
-                dd+=rr.get_data(i)*gg.get_pt(rr_i_neigh.get_data(0),i);
+                dd+=rr.get_data(i)*focus_directions->get_pt(rr_i_neigh.get_data(0),i);
             }
             
             if(fabs(dd)<dot_product_threshold){
