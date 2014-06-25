@@ -125,7 +125,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     global_median=200000.0;
     grat=1.0;
     
-    dot_product_threshold=0.1;
+    dot_product_threshold=0.7;
     
     dim=dim_in;
     paramnames=new char*[dim];
