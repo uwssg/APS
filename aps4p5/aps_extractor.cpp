@@ -240,7 +240,7 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     box_min.set_cols(nparams);
 
     int j,k;
-    int n_neigh=2*nparams+1,found_it;
+    int n_neigh=3*nparams+1,found_it;
     array_1d<double> smallest_radius;
     array_1d<double> r_dim,r_dim_sorted;
     array_1d<int> r_dex;
@@ -322,7 +322,8 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     
         for(k=0;k<nparams;k++){
             if(box_max.get_data(i,k)>=chisq_exception && box_min.get_data(i,k)>=chisq_exception){
-                printf("WARNING failed to find a bound\n");
+                printf("WARNING failed to find a bound %d %d %e %e\n",i,k,box_min.get_data(i,k),box_max.get_data(i,k));
+                printf("chisq %e\n",chisq.get_data(i));
                 exit(1);
             }
             else if(box_max.get_data(i,k)>=chisq_exception && box_min.get_data(i,k)<chisq_exception){
