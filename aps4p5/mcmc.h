@@ -17,9 +17,8 @@ class mcmc{
     double p_factor;
     
     int chains,dim,called,n_samples;
-    char **names;
     Ran *chaos;
-    char statname[500],diagname[500];     
+    char statname[letters],diagname[letters],chainroot[letters];     
     
     array_1d<int> degen,i_gibbs;
     array_1d<double> sigs,max,min,p_values;

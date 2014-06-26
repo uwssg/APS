@@ -71,25 +71,8 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
   }
   
   
-  names=new char*[chains];
-  for(i=0;i<chains;i++){
-    names[i]=new char[100];
-    for(j=0;word[j]!=0;j++)names[i][j]=word[j];
-    names[i][j++]='_';
-    if(i<9)names[i][j++]='0'+i+1;
-    else{
-      k=(i+1)/10;
-      l=i+1-10*k;
-      names[i][j++]='0'+k;
-      names[i][j++]='0'+l;
-    }
-    names[i][j++]='.';
-    names[i][j++]='t';
-    names[i][j++]='x';
-    names[i][j++]='t';
-    names[i][j++]=0;
-    
-  }
+  for(i=0;i<letters-1 && word[i]!=0;i++)chainroot[i]=word[i];
+  chainroot[i]=0;
   
   for(i=0;i<dim;i++){
     max.set(i,mx.get_data(i));
@@ -117,19 +100,7 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
 
 }
 
-mcmc::~mcmc(){
-  int i;
-  
-  printf("deleting mcmc\n");
-  
-  for(i=0;i<chains;i++){
-    delete [] names[i];
-  }  
-  delete [] names;
-
-  printf("and we're done\n");
-  
-}
+mcmc::~mcmc(){}
 
 void mcmc::do_gibbs(){
     _do_gibbs=1;
@@ -172,11 +143,14 @@ void mcmc::resume(){
     array_1d<double> v;
     int cc,i,j;
     
+    char inname[2*letters];
+    
     v.set_dim(dim);
    
     printf("resuming\n");
     for(cc=0;cc<chains;cc++){
-        input=fopen(names[cc],"r");
+        sprintf(inname,"%s_%d.txt",chainroot,cc+1);
+        input=fopen(inname,"r");
 	while(fscanf(input,"%d",&j)>0){
 	    
             n_samples+=j;
@@ -256,7 +230,7 @@ void mcmc::sample(int npts){
   array_1d<double> oldchi,oldl,trial,proposed;
   double newchi,newl,rr,diff,nn;
 
-  char word[100];
+  char word[100],inname[2*letters];
   FILE *output;
   
   oldchi.set_dim(chains);
@@ -277,8 +251,8 @@ void mcmc::sample(int npts){
             throw -1;
         }
     
-    
-     sprintf(word,"rm %s",names[i]);
+      
+     sprintf(word,"rm %s_%d.txt",chainroot,i+1);
      system(word);
      
      if(start.get_rows()<=i){
@@ -400,7 +374,9 @@ void mcmc::sample(int npts){
       diff=newl-oldl.get_data(cc);
       if(newl>oldl.get_data(cc) || exp(diff)>rr || ii==npts-1){
         
-	output=fopen(names[cc],"a");
+        sprintf(inname,"%s_%d.txt",chainroot,cc+1);
+        
+	output=fopen(inname,"a");
 	
 	fprintf(output,"%d %e ",degen.get_data(cc),oldchi.get_data(cc));
 	for(i=0;i<dim;i++)fprintf(output,"%e ",start.get_data(cc,i));
@@ -540,23 +516,14 @@ void mcmc::calculate_covariance(){
     
     //printf("ready to try calculating covariance\n");
     
-    char root[500];
-    int i;
-    for(i=0;i<500 && names[0][i]!=0;i++);
-    i-=4;
-    while(names[0][i]!='_')i--;
-    
-    
-    int j;
-    for(j=0;j<500 && j<i;j++)root[j]=names[0][j];
-    root[j]=0;
+    int i,j;
     
     //printf("root %s\n",root);
     
     mcmc_extractor covar_extractor;
     covar_extractor.set_nparams(dim);
     covar_extractor.set_nchains(chains);
-    covar_extractor.set_chainname(root);
+    covar_extractor.set_chainname(chainroot);
     covar_extractor.set_keep_frac(0.5);
     covar_extractor.learn_thinby();
     
@@ -637,9 +604,11 @@ double mcmc::calculate_acceptance(){
     FILE *input;
     double nn;
     int tot=0,steps=0,ct=0;
+    char inname[2*letters];
     
     for(cc=0;cc<chains;cc++){
-        input=fopen(names[cc],"r");
+        sprintf(inname,"%s_%d.txt",chainroot,cc+1);
+        input=fopen(inname,"r");
         ct=0;
         while(fscanf(input,"%d",&ii)>0){
             for(i=0;i<dim+1;i++)fscanf(input,"%le",&nn);
