@@ -1451,7 +1451,7 @@ void aps::aps_walk(){
         length.set(i,(good_max.get_data(i)-good_min.get_data(i))/sqrt(double(gg.get_dim())));
         
         if(length.get_data(i)<1.0e-20){
-            length.set(i,(gg.get_max(i)-gg.get_min(i))/sqrt(double(gg.get_dim())));
+            length.set(i,0.1*(gg.get_max(i)-gg.get_min(i))/sqrt(double(gg.get_dim())));
         }
         
     }
