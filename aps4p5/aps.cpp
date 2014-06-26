@@ -1435,6 +1435,73 @@ void aps::aps_gibbs(int in_samples){
 
 }
 
+void aps::aps_walk(){
+    
+    if(walker.get_rows()==0){
+        return;
+    }
+    
+    int iw,i,j,k,ii,nsteps,naccepted,use_it,actually_accepted;
+    array_1d<double> length,trial;
+    double nn,oldchi,newchi,roll;
+    
+    nsteps=100;
+    
+    for(i=0;i<gg.get_dim();i++){
+        length.set(i,(good_max.get_data(i)-good_min.get_data(i))/sqrt(double(gg.get_dim())));
+        
+        if(length.get_data(i)<1.0e-20){
+            length.set(i,(gg.get_max(i)-gg.get_min(i))/sqrt(double(gg.get_dim())));
+        }
+        
+    }
+    
+    for(iw=0;iw<walker.get_rows();iw++){
+        naccepted=0;
+        oldchi=walker_chi.get_data(iw);
+        for(ii=0;ii<nsteps;ii++){
+            use_it=0;
+            while(use_it==0){
+                for(i=0;i<gg.get_dim();i++){
+                    nn=normal_deviate(dice,0.0,length.get_data(i));
+                    trial.set(i,walker.get_data(iw,i)+nn);
+                 }
+                 
+                 use_it=in_bounds(trial);
+            }
+            
+            newchi=gg.user_predict(trial,0);
+            nn=0.5*(oldchi-newchi);
+            roll=dice->doub();
+            
+            if(newchi<oldchi || roll<exp(nn)){
+                for(i=0;i<gg.get_dim();i++){
+                    walker.set(iw,i,trial.get_data(i));
+                }
+                
+                naccepted++;
+            }
+            
+        }
+        
+        if(naccepted>0){
+            printf("accepted some steps\n");
+            evaluate(trial,&nn,&actually_accepted);
+            walker_chi.set(iw,nn);
+            focus_pts.add(actually_accepted);
+            called_focus++;
+            if(actually_accepted>=0 && do_bisection==1){
+                bisection(trial,nn);
+            }
+        }
+        else{
+            printf("did not accept any steps\n");
+        }
+         
+    }
+    
+}
+
 void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     
     int in_samples=samples.get_rows();
@@ -1750,7 +1817,8 @@ void aps::aps_search(int in_samples){
     }    
     else if(called_focus<called_wide){
         //aps_focus(in_samples);
-        aps_focus(in_samples);
+        //aps_focus(in_samples);
+        aps_walk();
     }
     else{
         aps_wide(in_samples);

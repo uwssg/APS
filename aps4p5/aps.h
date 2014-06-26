@@ -151,6 +151,7 @@ private:
     void aps_wide(int);
     void aps_focus(int);
     void aps_gibbs(int);
+    void aps_walk();
     void initialize_focus();
     
     void evaluate(array_1d<double>&,double*,int*);
