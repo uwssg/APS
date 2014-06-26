@@ -1485,8 +1485,8 @@ void aps::aps_walk(){
         }
         
         if(naccepted>0){
-            printf("accepted some steps\n");
-            evaluate(trial,&nn,&actually_accepted);
+            evaluate(*walker(iw),&nn,&actually_accepted);
+            printf("accepted some steps %d %e\n",naccepted,nn);
             walker_chi.set(iw,nn);
             focus_pts.add(actually_accepted);
             called_focus++;
