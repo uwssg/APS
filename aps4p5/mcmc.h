@@ -7,7 +7,7 @@
 
 class mcmc{
   private:
-    chisquared **chisqfn;
+    chisquared *chisqfn;
     int seed,do_update,stop_update,start_update,update_interval;
     int resumed,last_updated,_do_gibbs,n_calc_covar;
     

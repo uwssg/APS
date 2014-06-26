@@ -16,13 +16,13 @@ mcmc::mcmc(){
 
 void mcmc::set_statname(char *word){
     int i;
-    for(i=0;i<499 && word[i]!=0;i++)statname[i]=word[i];
+    for(i=0;i<letters-1 && word[i]!=0;i++)statname[i]=word[i];
     statname[i]=0;
 }
 
 void mcmc::set_diagname(char *word){
     int i;
-    for(i=0;i<499 && word[i]!=0;i++)diagname[i]=word[i];
+    for(i=0;i<letters-1 && word[i]!=0;i++)diagname[i]=word[i];
     diagname[i]=0;
     FILE *output;
     output=fopen(diagname,"w");
@@ -64,12 +64,7 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
   degen.set_dim(chains);
   called=0;
   
-  chisqfn=new chisquared*[chains];
-  
-  for(i=0;i<chains;i++){
-      chisqfn[i]=NULL;
-  }
-  
+  chisqfn=NULL;
   
   for(i=0;i<letters-1 && word[i]!=0;i++)chainroot[i]=word[i];
   chainroot[i]=0;
@@ -120,19 +115,7 @@ void mcmc::disable_update(){
 
 void mcmc::set_chisq(chisquared *afn, int nchi){
     
-    int i;
-    
-    if(nchi==1){
-        for(i=0;i<chains;i++)chisqfn[i]=afn;
-    }
-    else if(nchi==chains){
-        for(i=0;i<chains;i++)chisqfn[i]=&afn[i];
-    }
-    else{
-       printf("I can't do anything with this\n");
-       printf("nchi %d nchains %d\n",nchi,chains);
-       exit(1);
-    }
+    chisqfn=afn;
     
 }
 
@@ -230,7 +213,7 @@ void mcmc::sample(int npts){
   array_1d<double> oldchi,oldl,trial,proposed;
   double newchi,newl,rr,diff,nn;
 
-  char word[100],inname[2*letters];
+  char word[letters],inname[2*letters];
   FILE *output;
   
   oldchi.set_dim(chains);
@@ -246,7 +229,7 @@ void mcmc::sample(int npts){
   if(called==0 && resumed==0){
     for(i=0;i<chains;i++){
              
-        if(chisqfn[i]==NULL){
+        if(chisqfn==NULL){
             printf("CANNOT sample, chisqfn %d is null\n",i);
             throw -1;
         }
@@ -259,7 +242,7 @@ void mcmc::sample(int npts){
          nn=2.0*chisq_exception;
      }
      else{
-         nn=(*chisqfn[i])(*start(i));
+         nn=(*chisqfn)(*start(i));
      }
      
      //printf("nn %e\n",nn);
@@ -271,7 +254,7 @@ void mcmc::sample(int npts){
              //printf("starting %e \n",start.get_data(i,j));
          }
 
-         nn=(*chisqfn[i])(*start(i));  
+         nn=(*chisqfn)(*start(i));  
      }
      oldchi.set(i,nn);
      oldl.set(i,-0.5*nn);
@@ -282,7 +265,7 @@ void mcmc::sample(int npts){
   else{
       //printf("calling old start pts\n");
       for(i=0;i<chains;i++){
-          nn=(*chisqfn[i])(*start(i));
+          nn=(*chisqfn)(*start(i));
           oldchi.set(i,nn);
           oldl.set(i,-0.5*nn);
           //printf("chi %e\n",nn);
@@ -307,13 +290,6 @@ void mcmc::sample(int npts){
       
   for(cc=0;cc<chains;cc++){
     n_samples++;
-    
-    if(dofastslow==1){
-        chisqfn[cc]->set_i_chain(cc);
-    }
-    
-    
-   // printf("oldl %e oldchi %e\n",oldl,oldchi);
     
       inbounds=0;  
      // printf("   ii %d\n",ii);    
@@ -355,7 +331,7 @@ void mcmc::sample(int npts){
             }
 	}
         
-        newchi=(*chisqfn[cc])(trial);
+        newchi=(*chisqfn)(trial);
         
         inbounds=1;
 
@@ -412,25 +388,13 @@ void mcmc::sample(int npts){
       
       
      }//loop over chains 
-     
-     /*if(ii%update_interval==0 && 
-        ii>=start_update && 
-	(stop_update<0 || ii<=stop_update) &&
-	do_update==1){*/
-	
-            //printf("ii %d npts %d start %d\n",ii,npts,start_update);
-            
+             
     if((n_samples/chains)>=start_update && do_update==1 && (n_samples/chains)%update_interval==0){        
             update_directions();    
     }
     
    
   }//loop over npts
-  
-  /*printf("ending with chi\n");
-  for(i=0;i<chains;i++){
-      printf("%e\n",oldchi.get_data(i));
-  }*/
   
   output=fopen(statname,"a");
   fprintf(output,"total samples %d\n",n_samples);
@@ -991,21 +955,23 @@ void mcmc::update_eigen(){
 
         if(maxerr<=tolerance && n_evecs>0){
             
-            e_vec_transpose.set_cols(dim);
-            for(i=0;i<n_evecs;i++){
-                for(j=0;j<dim;j++){
-                    e_vec_transpose.set(i,j,e_vectors.get_data(j,i));
+            if(n_evecs<dim){
+                e_vec_transpose.set_cols(dim);
+                for(i=0;i<n_evecs;i++){
+                    for(j=0;j<dim;j++){
+                        e_vec_transpose.set(i,j,e_vectors.get_data(j,i));
+                    }
                 }
-            }
             
-            generate_random_vectors(e_vec_transpose,random_bases);
+                generate_random_vectors(e_vec_transpose,random_bases);
             
-            if(independent_samples.get_rows()>5){
-                generate_random_variances(independent_samples,random_bases,random_variances);
-            }
-            else{
-                for(i=0;i<dim-n_evecs;i++){
-                    random_variances.set(i,0.1);
+                if(independent_samples.get_rows()>5){
+                    generate_random_variances(independent_samples,random_bases,random_variances);
+                }
+                else{
+                    for(i=0;i<dim-n_evecs;i++){
+                        random_variances.set(i,0.1);
+                    }
                 }
             }
             
@@ -1016,20 +982,24 @@ void mcmc::update_eigen(){
                 }
             }
             
-            for(i=0;i<random_bases.get_rows();i++){
-                p_values.set(i+n_evecs,2.38*sqrt(random_variances.get_data(i)/double(dim)));
-                for(j=0;j<dim;j++){
-                    p_vectors.set(j,i+n_evecs,random_bases.get_data(i,j));
+            if(n_evecs<dim){
+                for(i=0;i<random_bases.get_rows();i++){
+                    p_values.set(i+n_evecs,2.38*sqrt(random_variances.get_data(i)/double(dim)));
+                    for(j=0;j<dim;j++){
+                        p_vectors.set(j,i+n_evecs,random_bases.get_data(i,j));
+                    }
                 }
             }
 
        }
        else{
-           for(i=0;i<dim;i++){
-               if(covariance.get_data(i,i)>0.0){
-                   p_values.set(i,2.38*sqrt(covariance.get_data(i,i)/double(dim)));
-               }
-           }   
+           if(independent_samples.get_rows()==0) throw -1;
+           output=fopen(diagname,"a");
+           fprintf(output,"eigen err %e n_evecs %d\n",maxerr,n_evecs);
+           fprintf(output,"attempting random basis\n");
+           fclose(output);
+           
+           generate_random_basis(independent_samples);   
        }
        
        
@@ -1047,17 +1017,7 @@ void mcmc::update_eigen(){
        generate_random_basis(independent_samples);
        
    }
-   
-   /*
-   i=accept_degen/accept_total;
-   if(i>4)p_factor=p_factor*0.5;
-   else if(i<4){
-       p_factor=p_factor*1.25;
-   }
-   
-   printf("\n\np_factor %e\n\n",p_factor);
-   */
-   
+      
 }
 
 void mcmc::write_directions(){
@@ -1094,6 +1054,7 @@ void mcmc::update_fastslow(){
     
     int info;
     dpotrf_(uplo,&dim,arr,&dim,&info);
+    
     
     if(info==0){
     //only change directions if the decomposition was successful
