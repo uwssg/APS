@@ -1491,7 +1491,7 @@ void aps::aps_walk(){
             focus_pts.add(actually_accepted);
             called_focus++;
             if(actually_accepted>=0 && do_bisection==1){
-                bisection(trial,nn);
+                bisection(*walker(iw),nn);
             }
         }
         else{
