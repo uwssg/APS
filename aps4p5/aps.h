@@ -110,8 +110,9 @@ private:
     array_1d<double> old_hyper_1,old_hyper_2,minpt;
     array_1d<double> range_max,range_min;
     
-    array_2d<double> centers;
-    array_1d<int> center_dexes;
+    array_2d<double> centers,walker;
+    array_1d<double> walker_chi;
+    array_1d<int> center_dexes,walker_origin;
     
     double time_node,time_aps,time_gradient,time_total,start_time;
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
@@ -155,6 +156,7 @@ private:
     void evaluate(array_1d<double>&,double*,int*);
     void evaluate(array_1d<double>&,double*);
     
+    void add_center(int);
     double distance(int,int,array_1d<double>&);
     
     int in_bounds(array_1d<double>&);

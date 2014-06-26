@@ -142,8 +142,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     if(seed<-1)seed=int(time(NULL));
     dice=new Ran(seed);
     
-    centers.set_cols(dim);
-    
     start_timingfile();
     printf("dim is %d dd %d\n",dim,dim_in);
     
@@ -509,6 +507,7 @@ void aps::set_chimin(double cc,array_1d<double> &pt, int dex){
     chimin=cc;
     
     int i;
+    
     for(i=0;i<pt.get_dim();i++){
         minpt.set(i,pt.get_data(i));
     }
@@ -991,11 +990,29 @@ void aps::find_global_minimum(array_1d<int> &neigh){
    
     known_minima.add(mindex);
     j=centers.get_rows();
-    centers.add_row(*gg.get_pt(mindex));
-    center_dexes.add(mindex);
+    
+    add_center(mindex);
+    
     recenter();
     
     set_where("nowhere");
+}
+
+void aps::add_center(int dex){
+    
+    if(centers.get_rows()==0){
+        centers.set_cols(gg.get_dim());
+        walker.set_cols(gg.get_dim());
+    }
+    
+    center_dexes.add(dex);
+    centers.add_row(*gg.get_pt(dex));
+    
+    walker_origin.add(dex);
+    walker_chi.add(gg.get_fn(dex));
+    walker.add_row(*gg.get_pt(dex));
+    
+    
 }
 
 void aps::recenter(){
@@ -1004,24 +1021,58 @@ void aps::recenter(){
         focus_directions=NULL;
     }
 
-    array_2d<double> buffer;
-    array_1d<int> buffer_dex;
+    array_2d<double> buffer,w_buffer;
+    array_1d<int> buffer_dex,w_buffer_origin;
+    array_1d<double> w_buffer_chi;
     int i,j;
+    
     buffer.set_cols(gg.get_dim());
+    w_buffer.set_cols(gg.get_dim());
+    
+    
     for(i=0;i<centers.get_rows();i++){
         buffer_dex.set(i,center_dexes.get_data(i));
+        w_buffer_chi.set(i,walker_chi.get_data(i));
+        w_buffer_origin.set(i,walker_origin.get_data(i));
+        
         for(j=0;j<gg.get_dim();j++){
             buffer.set(i,j,centers.get_data(i,j));
+            w_buffer.set(i,j,walker.get_data(i,j));
         }
     }
     
     centers.reset();
+    walker.reset();
+    walker_chi.reset();
+    walker_origin.reset();
     center_dexes.reset();
     centers.set_cols(gg.get_dim());
+    walker.set_cols(gg.get_dim());
+    
+    
     for(i=0;i<gg.get_dim();i++){
         centers.set(0,i,minpt.get_data(i));
     }
     center_dexes.set(0,global_mindex);
+    
+    for(i=0;i<w_buffer_origin.get_dim() && walker_origin.get_dim()==0;i++){
+        if(w_buffer_origin.get_data(i)==global_mindex){
+            walker_origin.add(global_mindex);
+            walker_chi.add(w_buffer_chi.get_data(i));
+            for(j=0;j<gg.get_dim();j++){
+                walker.set(0,j,w_buffer.get_data(i,j));
+            }
+        }
+    }
+    
+    if(walker_origin.get_dim()==0){
+        walker_origin.add(global_mindex);
+        walker_chi.add(chimin);
+        for(j=0;j<gg.get_dim();j++){
+            walker.set(0,j,minpt.get_data(j));
+        }
+    }
+    
     
     int k,use_it;
     double mu;
@@ -1046,6 +1097,11 @@ void aps::recenter(){
         if(use_it==1){
             centers.add_row(*buffer(i));
             center_dexes.add(buffer_dex.get_data(i));
+            
+            walker.add_row(*w_buffer(i));
+            walker_chi.add(w_buffer_chi.get_data(i));
+            walker_origin.add(w_buffer_origin.get_data(i));
+            
         }
     }
     
@@ -1453,8 +1509,9 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
                 evaluate(trial,&midchi);    
   
                 if(midchi>strad.get_target()){
-                    centers.add_row(sambest);
-                    center_dexes.add(dex);
+                    
+                    add_center(dex);
+                    
                 }
             }
    
