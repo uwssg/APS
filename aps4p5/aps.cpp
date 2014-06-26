@@ -1478,7 +1478,7 @@ void aps::aps_walk(){
                 for(i=0;i<gg.get_dim();i++){
                     walker.set(iw,i,trial.get_data(i));
                 }
-                
+                oldchi=newchi;
                 naccepted++;
             }
             
