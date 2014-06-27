@@ -1264,7 +1264,9 @@ void aps::aps_focus(int in_samples){
     
    array_1d<double> f_min,f_max;
    int i;
-   double nn;
+   double nn,thinfactor;
+   
+   thinfactor=0.5/sqrt(double(gg.get_dim()));
    
    f_min.set_name("f_min");
    f_max.set_name("f_max");
@@ -1276,6 +1278,8 @@ void aps::aps_focus(int in_samples){
        while(nn<1.0e-20){
            nn+=1.0e-3*(gg.get_max(i)-gg.get_min(i));
        }
+       
+       nn*=thinfactor;
        
        f_min.subtract_val(i,nn);
        f_max.add_val(i,nn);
