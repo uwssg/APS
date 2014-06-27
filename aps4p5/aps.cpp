@@ -1277,18 +1277,23 @@ void aps::aps_focus(int in_samples){
            nn+=1.0e-3*(gg.get_max(i)-gg.get_min(i));
        }
        
-       f_min.subtract_val(i,0.1*nn);
-       f_max.add_val(i,0.1*nn);
+       f_min.subtract_val(i,nn);
+       f_max.add_val(i,nn);
    
    }
    
    array_2d<double> samples;
    samples.set_cols(gg.get_dim());
-   int ii;
+   int ii,use_it;
    
    for(ii=0;ii<in_samples;ii++){
-       for(i=0;i<gg.get_dim();i++){
-           samples.set(ii,i,f_min.get_data(i)+dice->doub()*(f_max.get_data(i)-f_min.get_data(i)));
+       use_it=0;
+       while(use_it==0){
+           for(i=0;i<gg.get_dim();i++){
+               samples.set(ii,i,f_min.get_data(i)+dice->doub()*(f_max.get_data(i)-f_min.get_data(i)));
+           }
+           
+           use_it=in_bounds(*samples(ii));
        }
    }
    
