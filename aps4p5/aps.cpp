@@ -1274,8 +1274,8 @@ void aps::aps_focus(int in_samples){
            nn+=1.0e-3*(gg.get_max(i)-gg.get_min(i));
        }
        
-       f_min.subtract_val(i,0.01*nn);
-       f_max.add_val(i,0.01*nn);
+       f_min.subtract_val(i,0.1*nn);
+       f_max.add_val(i,0.1*nn);
    
    }
    
