@@ -1266,6 +1266,9 @@ void aps::aps_focus(int in_samples){
    int i;
    double nn;
    
+   f_min.set_name("f_min");
+   f_max.set_name("f_max");
+   
    for(i=0;i<gg.get_dim();i++){
        f_min.set(i,good_min.get_data(i));
        f_max.set(i,good_max.get_data(i));
@@ -1358,10 +1361,10 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             }
         }
         
-        //for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
+        for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
         
         
-        mu=gg.user_predict(*samples(i_sample),&sig,0);
+        mu=gg.user_predict(samv,&sig,0);
         
         if(mu<0.0)mu=0.0;
         
@@ -1371,7 +1374,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             mubest=mu;
             sigbest=sig;
             stradmax=stradval;
-            for(i=0;i<gg.get_dim();i++)sambest.set(i,samples.get_data(i_sample,i));
+            for(i=0;i<gg.get_dim();i++)sambest.set(i,samv.get_data(i));
         }
         
         samples.remove_row(i_sample);
