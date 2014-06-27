@@ -1302,13 +1302,13 @@ void aps::initialize_focus(){
             
             if(actually_added>=0){
                 if(do_bisection==1)bisection(trial,chi_true);
-                called_focus++;
                 focus_pts.add(actually_added);
                 ct_used++;
             }
         }
         
         seed.add_row(rr);
+        called_focus++;
         
     }
     
@@ -1489,7 +1489,7 @@ void aps::aps_walk(){
             printf("accepted some steps %d %e\n",naccepted,nn);
             walker_chi.set(iw,nn);
             focus_pts.add(actually_accepted);
-            called_focus++;
+            
             if(actually_accepted>=0 && do_bisection==1){
                 bisection(*walker(iw),nn);
             }
@@ -1497,6 +1497,7 @@ void aps::aps_walk(){
         else{
             printf("did not accept any steps\n");
         }
+        called_focus++;
          
     }
     
