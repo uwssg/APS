@@ -1,6 +1,6 @@
 #include "aps.h"
 
-enum{iGIBBS,iWIDE};
+enum{iGIBBS,iWIDE,iFOCUS};
 
 straddle_parameter::straddle_parameter(){
     target=-1.0;
@@ -1262,81 +1262,36 @@ void aps::initialize_focus(){
 
 void aps::aps_focus(int in_samples){
     
-    //printf("focusing\n");
-    
-    initialize_focus();
-    
-    double nn,ddmax=-1.0;
-    array_1d<int> neigh;
-    array_1d<double> trial,best,ddneigh,rr,last_rr,best_rr;
-    int i,j,k,l,set_dex,use_it;
-    
-    double cos_target,adotb,asq,sqrt_d_dim;
-    double aa,bb,cc,xxp,xxm,yyp,yym,determinant;
-    double normp,normm;
-    
-    double characteristic_rr;
-    
-    cos_target=0.0;
-    sqrt_d_dim=sqrt(double(gg.get_dim()));
-    
-    for(i=0;i<in_samples;i++){
-        
-        for(j=0;j<gg.get_dim();j++)rr.set(j,normal_deviate(dice,0.0,1.0/sqrt_d_dim));
-        
-        rr.normalize();
-            
-        focus_directions->nn_srch(rr,1,neigh,ddneigh);
-            
-        if(ddneigh.get_data(0)>ddmax){
-            ddmax=ddneigh.get_data(0);
-            for(k=0;k<gg.get_dim();k++){
-                best_rr.set(k,rr.get_data(k));
-            }
-        }
-        
-    }
-    
-   /* printf("time to evaluate %e %e\n",ddmax,good_rr_avg);
-    for(j=0;j<gg.get_dim();j++){
-        printf("    %e\n",best.get_data(j));
-    }*/
-    
-    focus_directions->add(best_rr);
-    
-    int actually_added=-1;
-    double chitrue;
-    
-    for(i=0;i<centers.get_rows();i++){
-        use_it=0;
-        actually_added=-1;
-        
-        characteristic_rr=good_rr_avg;
-        while(use_it==0){
-            for(j=0;j<gg.get_dim();j++){
-                trial.set(j,centers.get_data(i,j)+characteristic_rr*best_rr.get_data(j)*(gg.get_max(j)-gg.get_min(j)));
-            }
-            
-            use_it=1;
-            if(in_bounds(trial)==0){
-                use_it=0;
-                characteristic_rr*=0.5;
-            }
-            
-        }
-        
-        evaluate(trial,&chitrue,&actually_added);
-        //printf("out of evaluate in focus %d %e\n",actually_added,good_rr_avg);
-    
-        if(actually_added>=0){
-            focus_pts.add(actually_added);
-            if(do_bisection==1){
-                 bisection(trial,chitrue);
-            }
-        }
-    
-        called_focus++;
-    }
+   array_1d<double> f_min,f_max;
+   int i;
+   double nn;
+   
+   for(i=0;i<gg.get_dim();i++){
+       f_min.set(i,good_min.get_data(i));
+       f_max.set(i,good_max.get_data(i));
+       nn=f_max.get_data(i)-f_min.get_data(i);
+       while(nn<1.0e-20){
+           nn+=1.0e-3*(gg.get_max(i)-gg.get_min(i));
+       }
+       
+       f_min.subtract_val(i,0.01*nn);
+       f_max.add_val(i,0.01*nn);
+   
+   }
+   
+   array_2d<double> samples;
+   samples.set_cols(gg.get_dim());
+   int ii;
+   
+   for(ii=0;ii<in_samples;ii++){
+       for(i=0;i<gg.get_dim();i++){
+           samples.set(ii,i,f_min.get_data(i)+dice->doub()*(f_max.get_data(i)-f_min.get_data(i)));
+       }
+   }
+   
+   aps_choose_best(samples,iFOCUS);
+   called_focus++;
+   
     //printf("done focusing\n");
 
 }
@@ -1403,10 +1358,10 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             }
         }
         
-        for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
+        //for(i=0;i<gg.get_dim();i++)samv.set(i,samples.get_data(i_sample,i));
         
         
-        mu=gg.user_predict(samv,&sig,0);
+        mu=gg.user_predict(*samples(i_sample),&sig,0);
         
         if(mu<0.0)mu=0.0;
         
@@ -1416,7 +1371,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             mubest=mu;
             sigbest=sig;
             stradmax=stradval;
-            for(i=0;i<gg.get_dim();i++)sambest.set(i,samv.get_data(i));
+            for(i=0;i<gg.get_dim();i++)sambest.set(i,samples.get_data(i_sample,i));
         }
         
         samples.remove_row(i_sample);
@@ -1462,12 +1417,16 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         else if(which_aps==iGIBBS){
             gibbs_pts.add(actually_added);
         }
+        else if(which_aps==iFOCUS){
+            focus_pts.add(actually_added);
+            if(do_bisection==1)bisection(sambest,chitrue);
+        }
 
         /*if(chitrue<global_median){
              if(do_bisection==1)bisection(sambest,chitrue);
         }*/
         
-        if(focus_directions!=NULL && do_bisection==1){
+        /*if(focus_directions!=NULL && do_bisection==1){
             i_center=find_nearest_center(sambest);
             for(i=0;i<gg.get_dim();i++){
                 rr.set(i,(sambest.get_data(i)-gg.get_pt(i_center,i))/(gg.get_max(i)-gg.get_min(i)));
@@ -1485,7 +1444,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             }
             
         
-        }
+        }*/
         
     }
     
