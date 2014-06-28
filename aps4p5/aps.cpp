@@ -1260,29 +1260,67 @@ void aps::initialize_focus(){
     
 }
 
+double aps::focus_metric(array_1d<double> &pt){
+    
+    
+    if(focus_max.get_dim()!=gg.get_dim() || focus_min.get_dim()!=gg.get_dim()){
+        printf("cannot evaluate focus_metric; have not set min and max yet\n");
+        throw -1;
+    
+    }
+    
+    int i;
+    
+    for(i=0;i<gg.get_dim();i++){
+        if(pt.get_data(i)>focus_max.get_data(i) || 
+            pt.get_data(i)<focus_min.get_data(i)){
+            
+            return 2.0*chisq_exception;
+        
+        }
+    }
+   
+    double mu,sig,stradval;
+    mu=gg.user_predict(pt,&sig,0);
+    
+    stradval=strad(mu,sig);
+    
+    focus_ct++;
+    
+    if(stradval>focus_strad_best){
+        focus_strad_best=stradval;
+        for(i=0;i<gg.get_dim();i++){
+            focus_best.set(i,pt.get_data(i));
+        }
+    }
+    
+    return -1.0*stradval;
+    
+}
+
 void aps::aps_focus(int in_samples){
     
-   array_1d<double> f_min,f_max;
    int i;
    double nn,thinfactor;
    
+   focus_strad_best=-2.0*chisq_exception;
+   focus_ct=0;
+   called_focus++;
    thinfactor=0.5/sqrt(double(gg.get_dim()));
    
-   f_min.set_name("f_min");
-   f_max.set_name("f_max");
    
    for(i=0;i<gg.get_dim();i++){
-       f_min.set(i,good_min.get_data(i));
-       f_max.set(i,good_max.get_data(i));
-       nn=f_max.get_data(i)-f_min.get_data(i);
+       focus_min.set(i,good_min.get_data(i));
+       focus_max.set(i,good_max.get_data(i));
+       nn=focus_max.get_data(i)-focus_min.get_data(i);
        while(nn<1.0e-20){
            nn+=1.0e-3*(gg.get_max(i)-gg.get_min(i));
        }
        
        nn*=thinfactor;
        
-       f_min.subtract_val(i,nn);
-       f_max.add_val(i,nn);
+       focus_min.subtract_val(i,nn);
+       focus_max.add_val(i,nn);
    
    }
    
@@ -1294,7 +1332,9 @@ void aps::aps_focus(int in_samples){
        use_it=0;
        while(use_it==0){
            for(i=0;i<gg.get_dim();i++){
-               samples.set(ii,i,f_min.get_data(i)+dice->doub()*(f_max.get_data(i)-f_min.get_data(i)));
+              
+               samples.set(ii,i,focus_min.get_data(i)+dice->doub()*
+                    (focus_max.get_data(i)-focus_min.get_data(i)));
            }
            
            use_it=in_bounds(*samples(ii));
@@ -1302,7 +1342,6 @@ void aps::aps_focus(int in_samples){
    }
    
    aps_choose_best(samples,iFOCUS);
-   called_focus++;
    
     //printf("done focusing\n");
 

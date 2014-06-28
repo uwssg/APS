@@ -92,6 +92,7 @@ private:
     
     int write_every,n_printed,ngood,dim,last_optimized;
     int global_mindex,mindex_is_candidate,do_bisection;
+    int focus_ct;
     
     int failed_to_add,n_samples;
     int aps_failed,minuit_failed,assess_failed;
@@ -112,6 +113,9 @@ private:
     
     array_2d<double> centers;
     array_1d<int> center_dexes;
+    
+    double focus_strad_best;
+    array_1d<double> focus_best,focus_min,focus_max;
     
     double time_node,time_aps,time_gradient,time_total,start_time;
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
@@ -151,6 +155,7 @@ private:
     void aps_focus(int);
     void aps_gibbs(int);
     void initialize_focus();
+    double focus_metric(array_1d<double>&);
     
     void evaluate(array_1d<double>&,double*,int*);
     void evaluate(array_1d<double>&,double*);
