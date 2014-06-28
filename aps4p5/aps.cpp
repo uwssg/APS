@@ -1289,6 +1289,10 @@ double aps::focus_metric(array_1d<double> &pt){
     
     if(stradval>focus_strad_best){
         focus_strad_best=stradval;
+        
+        focus_mu_best=mu;
+        focus_sig_best=sig;
+        
         for(i=0;i<gg.get_dim();i++){
             focus_best.set(i,pt.get_data(i));
         }
@@ -1440,6 +1444,8 @@ void aps::aps_focus(int in_samples){
    
    if(focus_best.get_dim()==gg.get_dim()){
        evaluate(focus_best,&mu,&il);
+       printf("focus found %e -- %e %e %e\n",
+       mu,focus_strad_best,focus_mu_best,focus_sig_best);
        if(il>=0){
            focus_pts.add(il);
            if(do_bisection==1){

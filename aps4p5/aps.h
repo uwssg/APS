@@ -114,7 +114,7 @@ private:
     array_2d<double> centers;
     array_1d<int> center_dexes;
     
-    double focus_strad_best;
+    double focus_strad_best,focus_mu_best,focus_sig_best;
     array_1d<double> focus_best,focus_min,focus_max;
     
     double time_node,time_aps,time_gradient,time_total,start_time;
