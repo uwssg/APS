@@ -1271,6 +1271,10 @@ double aps::focus_metric(array_1d<double> &pt){
     
     int i;
     
+    if(in_bounds(pt)==0){
+        return 2.0*chisq_exception;
+    }
+    
     for(i=0;i<gg.get_dim();i++){
         if(pt.get_data(i)>focus_max.get_data(i) || 
             pt.get_data(i)<focus_min.get_data(i)){
@@ -1279,6 +1283,7 @@ double aps::focus_metric(array_1d<double> &pt){
         
         }
     }
+    
    
     double mu,sig,stradval;
     mu=gg.user_predict(pt,&sig,0);
@@ -1329,6 +1334,16 @@ void aps::aps_focus(int in_samples){
        focus_min.subtract_val(i,nn);
        focus_max.add_val(i,nn);
    
+   }
+   
+   for(i=0;i<gg.get_dim();i++){
+       if(focus_min.get_data(i)<range_min.get_data(i)){
+           focus_min.set(i,range_min.get_data(i));
+       }
+       
+       if(focus_max.get_data(i)>range_max.get_data(i)){
+           focus_max.set(i,range_max.get_data(i));
+       }
    }
    
    ////now do simplex search using focus_metric
