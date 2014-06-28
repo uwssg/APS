@@ -1286,23 +1286,25 @@ double aps::focus_metric(array_1d<double> &pt){
     
    
     double mu,sig,stradval;
-    //mu=gg.user_predict(pt,&sig,0);
+    mu=gg.user_predict(pt,&sig,0);
     
-    //stradval=strad(mu,sig);
+    stradval=strad(mu,sig);
     
+    /*
     array_1d<int> neigh;
     array_1d<double> dd;
     
     gg.nn_srch(pt,1,neigh,dd);
     stradval=dd.get_data(0);
+    */
     
     focus_ct++;
     
     if(stradval>focus_strad_best){
         focus_strad_best=stradval;
         
-        //focus_mu_best=mu;
-        //focus_sig_best=sig;
+        focus_mu_best=mu;
+        focus_sig_best=sig;
         
         for(i=0;i<gg.get_dim();i++){
             focus_best.set(i,pt.get_data(i));
@@ -1375,7 +1377,9 @@ void aps::aps_focus(int in_samples){
        if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
    }
    
-   while(focus_ct<in_samples){
+   sig=10.0;
+   
+   while(sig>0.1 && focus_ct<5000){
        for(i=0;i<gg.get_dim();i++){
            pbar.set(i,0.0);
            for(j=0;j<gg.get_dim()+1;j++){
@@ -1459,14 +1463,27 @@ void aps::aps_focus(int in_samples){
            if(i==0 || ff.get_data(i)>ff.get_data(ih)){
                ih=i;
            }
+       }
+       
+       mu=0.0;
+       for(i=0;i<gg.get_dim()+1;i++){
+           mu+=ff.get_data(i);
        }  
+       mu=mu/double(gg.get_dim()+1);
+       
+       sig=0.0;
+       for(i=0;i<gg.get_dim()+1;i++){
+           sig+=power(ff.get_data(i)-mu,2);
+       }
+       sig=sig/double(gg.get_dim()+1);
+       sig=sqrt(sig);
    
    }
    
    if(focus_best.get_dim()==gg.get_dim()){
        evaluate(focus_best,&mu,&il);
-       printf("focus found %e -- %e\n",
-       mu,focus_strad_best);
+       printf("focus found %e -- %e -- %e %e\n",
+       mu,focus_strad_best,focus_mu_best,focus_sig_best);
        if(il>=0){
            focus_pts.add(il);
            if(do_bisection==1){
