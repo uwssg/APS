@@ -1300,8 +1300,11 @@ double aps::focus_metric(array_1d<double> &pt){
 
 void aps::aps_focus(int in_samples){
     
-   int i;
+   int i,j;
    double nn,thinfactor;
+   
+   
+   focus_best.reset();
    
    focus_strad_best=-2.0*chisq_exception;
    focus_ct=0;
@@ -1324,26 +1327,126 @@ void aps::aps_focus(int in_samples){
    
    }
    
-   array_2d<double> samples;
-   samples.set_cols(gg.get_dim());
-   int ii,use_it;
+   ////now do simplex search using focus_metric
+   array_2d<double> pts;
+   array_1d<double> pbar,ff,pstar,pstarstar;
+   double fstar,fstarstar;
+   int ih,il;
+   double alpha=1.0,beta=0.9,gamma=1.1;
+   double mu,sig;
    
-   for(ii=0;ii<in_samples;ii++){
-       use_it=0;
-       while(use_it==0){
-           for(i=0;i<gg.get_dim();i++){
-              
-               samples.set(ii,i,focus_min.get_data(i)+dice->doub()*
-                    (focus_max.get_data(i)-focus_min.get_data(i)));
-           }
-           
-           use_it=in_bounds(*samples(ii));
+   pstar.set_dim(gg.get_dim());
+   pstarstar.set_dim(gg.get_dim());
+   pts.set_dim(gg.get_dim()+1,gg.get_dim());
+   pbar.set_dim(gg.get_dim());
+   ff.set_dim(gg.get_dim()+1);
+   
+   for(i=0;i<gg.get_dim()+1;i++){
+       for(j=0;j<gg.get_dim();j++){
+           pts.set(i,j,focus_min.get_data(j)+dice->doub()*(focus_max.get_data(j)-focus_min.get_data(j)));
        }
+       ff.set(i,focus_metric(*pts(i)));
+       if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
+       if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
    }
    
-   aps_choose_best(samples,iFOCUS);
+   while(focus_ct<in_samples){
+       for(i=0;i<gg.get_dim();i++){
+           pbar.set(i,0.0);
+           for(j=0;j<gg.get_dim()+1;j++){
+               if(j!=ih){
+                   pbar.add_val(i,pts.get_data(j,i));
+               }
+           }
+           pbar.divide_val(i,double(gg.get_dim()));
+       }
+       
+       for(i=0;i<gg.get_dim();i++){
+           pstar.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
+       }
+       fstar=focus_metric(pstar);
+       
+       if(fstar<ff.get_data(ih) && fstar>ff.get_data(il)){
+           ff.set(ih,fstar);
+           for(i=0;i<gg.get_dim();i++){
+               pts.set(ih,i,pstar.get_data(i));
+           }
+       }
+       else if(fstar<ff.get_data(il)){
+           for(i=0;i<gg.get_dim();i++){
+               pstarstar.set(i,gamma*pstar.get_data(i)+(1.0-gamma)*pbar.get_data(i));
+           }
+           fstarstar=focus_metric(pstarstar);
+           
+           if(fstarstar<ff.get_data(il)){
+               for(i=0;i<gg.get_dim();i++)pts.set(ih,i,pstarstar.get_data(i));
+               ff.set(ih,fstarstar);
+           }
+           else{
+               for(i=0;i<gg.get_dim();i++)pts.set(ih,i,pstar.get_data(i));
+               ff.set(ih,fstar);
+           }
+       }
+       
+       j=1;
+       for(i=0;i<gg.get_dim()+1;i++){
+           if(fstar<ff.get_data(i) && i!=ih){
+               j=0;
+           }
+       }
+       
+       if(j==1){
+           for(i=0;i<gg.get_dim();i++){
+               pstarstar.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
+               
+           }
+           fstarstar=focus_metric(pstarstar);
+           
+           if(fstarstar<ff.get_data(ih)){
+               for(i=0;i<gg.get_dim();i++){
+                   pts.set(ih,i,pstarstar.get_data(i));
+               }
+               ff.set(ih,fstarstar);
+           }
+           else{
+               for(i=0;i<gg.get_dim()+1;i++){
+                   if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                       il=i;
+                   }
+               }
+               for(i=0;i<gg.get_dim()+1;i++){
+                   if(i!=il){
+                       for(j=0;j<gg.get_dim();j++){
+                           mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
+                           pts.set(i,j,mu);
+                       }
+                       ff.set(i,focus_metric(*pts(i)));
+                   }
+               }
+           }
+       }
+       
+       for(i=0;i<gg.get_dim()+1;i++){
+           if(i==0 || ff.get_data(i)<ff.get_data(il)){
+               il=i;
+           }
+           
+           if(i==0 || ff.get_data(i)>ff.get_data(ih)){
+               ih=i;
+           }
+       }  
    
-    //printf("done focusing\n");
+   }
+   
+   if(focus_best.get_dim()==gg.get_dim()){
+       evaluate(focus_best,&mu,&il);
+       if(il>=0){
+           focus_pts.add(il);
+           if(do_bisection==1){
+               bisection(focus_best,mu);
+           }
+       }
+   }
 
 }
 
