@@ -1480,10 +1480,11 @@ void aps::aps_focus(int in_samples){
    
    }
    
+   
    if(focus_best.get_dim()==gg.get_dim()){
        evaluate(focus_best,&mu,&il);
-       printf("focus found %e -- %e -- %e %e\n",
-       mu,focus_strad_best,focus_mu_best,focus_sig_best);
+       printf("focus found %e -- %e -- %e %e -- %d\n",
+       mu,focus_strad_best,focus_mu_best,focus_sig_best,focus_ct);
        if(il>=0){
            focus_pts.add(il);
            if(do_bisection==1){
