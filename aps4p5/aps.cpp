@@ -1306,6 +1306,8 @@ double aps::focus_metric(array_1d<double> &pt){
         focus_mu_best=mu;
         focus_sig_best=sig;
         
+        focus_ct=0;
+        
         for(i=0;i<gg.get_dim();i++){
             focus_best.set(i,pt.get_data(i));
         }
@@ -1377,9 +1379,9 @@ void aps::aps_focus(int in_samples){
        if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
    }
    
-   sig=10.0;
+   sig=100.0;
    
-   while(sig>0.1 && focus_ct<5000){
+   while(sig>delta_chisquared && focus_ct<1000){
        for(i=0;i<gg.get_dim();i++){
            pbar.set(i,0.0);
            for(j=0;j<gg.get_dim()+1;j++){
@@ -1483,8 +1485,8 @@ void aps::aps_focus(int in_samples){
    
    if(focus_best.get_dim()==gg.get_dim()){
        evaluate(focus_best,&mu,&il);
-       printf("focus found %e -- %e -- %e %e -- %d\n",
-       mu,focus_strad_best,focus_mu_best,focus_sig_best,focus_ct);
+       printf("focus found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
+       mu,focus_strad_best,focus_mu_best,focus_sig_best,focus_ct,sig);
        if(il>=0){
            focus_pts.add(il);
            if(do_bisection==1){
