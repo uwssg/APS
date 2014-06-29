@@ -1623,9 +1623,9 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
             if(do_bisection==1)bisection(sambest,chitrue);
         }
 
-        /*if(chitrue<global_median){
+        if(chitrue<global_median){
              if(do_bisection==1)bisection(sambest,chitrue);
-        }*/
+        }
         
         /*if(focus_directions!=NULL && do_bisection==1){
             i_center=find_nearest_center(sambest);
