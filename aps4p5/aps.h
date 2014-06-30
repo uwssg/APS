@@ -149,7 +149,6 @@ private:
     
     void bisection(array_1d<double>&,double);
     
-    void recenter();
     void calculate_good_rr();
     
     void aps_wide(int);

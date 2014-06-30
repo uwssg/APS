@@ -991,65 +991,40 @@ void aps::find_global_minimum(array_1d<int> &neigh){
    
     known_minima.add(mindex);
     j=centers.get_rows();
-    centers.add_row(*gg.get_pt(mindex));
-    center_dexes.add(mindex);
-    recenter();
+    
+    int ic,acutally_added,use_it;
+    array_1d<double> midpt;
+    double chimin;
+    
+    use_it=1;
+    if(gg.get_fn(mindex)>strad.get_target())use_it=0;
+    
+    for(ic=0;ic<centers.get_rows() && use_it==1;ic++){
+        for(i=0;i<gg.get_dim();i++){
+            midpt.set(i,0.5*(centers.get_data(ic,i)+gg.get_pt(mindex,i)));
+        }
+        
+        evaluate(midpt,&chimin,&actually_added);
+        
+        if(chimin<strad.get_target()){
+            use_it=0;
+            
+            if(gg.get_fn(mindex)<gg.get_fn(center_dexes.get_data(ic))){
+                center_dexes.set(ic,mindex);
+                for(i=0;i<gg.get_dim();i++){
+                    centers.set(ic,i,gg.get_pt(mindex,i));
+                }
+            }
+            
+        }
+    }
+    
+    if(use_it==1){
+        centers.add_row(*gg.get_pt(mindex));
+        center_dexes.add(mindex);
+    }
     
     set_where("nowhere");
-}
-
-void aps::recenter(){
-    if(focus_directions!=NULL){
-        delete focus_directions;
-        focus_directions=NULL;
-    }
-
-    array_2d<double> buffer;
-    array_1d<int> buffer_dex;
-    int i,j;
-    buffer.set_cols(gg.get_dim());
-    for(i=0;i<centers.get_rows();i++){
-        buffer_dex.set(i,center_dexes.get_data(i));
-        for(j=0;j<gg.get_dim();j++){
-            buffer.set(i,j,centers.get_data(i,j));
-        }
-    }
-    
-    centers.reset();
-    center_dexes.reset();
-    centers.set_cols(gg.get_dim());
-    for(i=0;i<gg.get_dim();i++){
-        centers.set(0,i,minpt.get_data(i));
-    }
-    center_dexes.set(0,global_mindex);
-    
-    int k,use_it;
-    double mu;
-    array_1d<double> trial,ddneigh;
-    array_1d<int> neigh;
-    for(i=0;i<buffer.get_rows();i++){
-        use_it=1;
-        for(j=0;j<centers.get_rows() && use_it==1;j++){
-            for(k=0;k<gg.get_dim();k++){
-                trial.set(k,0.5*(centers.get_data(j,k)+buffer.get_data(i,j)));
-            }
-            
-            gg.nn_srch(trial,1,neigh,ddneigh);
-            evaluate(trial,&mu);
-            
-            if(mu<strad.get_target()){
-                use_it=0;
-            }
-        
-        }
-        
-        if(use_it==1){
-            centers.add_row(*buffer(i));
-            center_dexes.add(buffer_dex.get_data(i));
-        }
-    }
-    
-    calculate_good_rr();
 }
 
 void aps::calculate_good_rr(){
