@@ -1188,6 +1188,8 @@ void aps::aps_wide(int in_samples){
         
         if(actually_added>=0){
             wide_pts.add(actually_added);
+            mu_storage.add(simplex_mu_best);
+            sig_storage.add(simplex_sig_best);
          
             if(do_bisection==1){
                 ic=find_nearest_center(simplex_best,chitrue);
