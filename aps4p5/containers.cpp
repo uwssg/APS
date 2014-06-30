@@ -1397,6 +1397,10 @@ void asymm_array_2d<T>::set(int ir, int ic, T val){
 	for(i=0;i<ic+1;i++)vector.set(i,val);
 	while(rows<=ir){
             add_row(vector);
+            if(rows-1!=ir){
+                data[rows-1].reset();
+            }
+            
         }
     }
 
