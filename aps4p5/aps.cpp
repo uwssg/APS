@@ -1207,6 +1207,8 @@ void aps::aps_wide(int in_samples){
        chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
         
         if(actually_added>=0){
+            wide_pts.add(actually_added);
+         
             if(do_bisection==1){
                 if(chitrue<global_median){
                     bisection(simplex_best,chitrue);
