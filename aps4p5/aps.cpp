@@ -1250,7 +1250,9 @@ void aps::aps_wide(int in_samples){
                         printf("    bisecting because dot %e\n",dot_max);
                         bisection(simplex_best,chitrue);
                     }
-                    
+                    else{
+                        printf("    not bisecting because dot %e\n",dot_max);
+                    }
                 
                 }
                 
