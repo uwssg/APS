@@ -1742,7 +1742,7 @@ int aps::find_nearest_center(array_1d<double> &pt, double chi_in){
         dd=gg.distance(pt,*centers(i));
         if((ans<0 || dd<ddmin) && gg.get_fn(center_dexes.get_data(i))<chi_in){
             ddmin=dd;
-            ans=center_dexes.get_data(i);
+            ans=i;
         }
     }
     
@@ -1762,7 +1762,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     double mu,fdir_origin;
     
     double dd,ddmin;
-    int i,j,k;
+    int i,j,k,i_center=-1;
     
     double bisection_tolerance=0.1*delta_chisquared;
     
@@ -1776,9 +1776,14 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     else{
         ddmin=chisq_exception;
         
-        j=find_nearest_center(inpt,chi_in);
+        i_center=find_nearest_center(inpt,chi_in);
         
-        if(j>=0){
+        if(i_center>=0){
+            j=center_dexes.get_data(i_center);
+        }
+        
+        
+        if(i_center>=0){
             for(i=0;i<gg.get_dim();i++){
                 dir_origin.set(i,gg.get_pt(j,i));
             }
@@ -1793,6 +1798,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     array_1d<double> lowball,highball,dir;
     double flow,fhigh,fnearest,rr,new_rr;
+    int i_test,i_high=-1,i_low=-1,i_nearest=-1;
     
     if(chi_in>strad.get_target()){
         for(i=0;i<gg.get_dim();i++){
@@ -1856,14 +1862,17 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             trial.set(i,0.5*(lowball.get_data(i)+highball.get_data(i)));
         }
 
-        evaluate(trial,&mu);
+        evaluate(trial,&mu,&i_test);
 
         if(mu>strad.get_target()){
             for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
             fhigh=mu;
+            i_high=i_test;
             
             if(fhigh-strad.get_target() < fabs(fnearest-strad.get_target())){
                 fnearest=fhigh;
+                i_nearest=i_high; 
+                
                 for(i=0;i<gg.get_dim();i++){
                     nearest_pt.set(i,highball.get_data(i));
                 }
@@ -1873,9 +1882,12 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         else{
             for(i=0;i<gg.get_dim();i++)lowball.set(i,trial.get_data(i));
             flow=mu;  
+            i_low=i_test;
             
             if(strad.get_target()-flow < fabs(fnearest-strad.get_target())){
                 fnearest=flow;
+                i_nearest=i_low;
+                
                 for(i=0;i<gg.get_dim();i++){
                     nearest_pt.set(i,lowball.get_data(i));
                 }
@@ -1904,6 +1916,15 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     gg.nn_srch(trial,1,neigh,ddneigh);    
     evaluate(trial,&mu);
+    
+    if(i_center>=0 && i_nearest>=0){
+        if(i_center>=boundary_pts.get_rows()){
+            boundary_pts.set(i_center,0,i_nearest);
+        }
+        else{
+            boundary_pts.add(i_center,i_nearest);
+        }
+    }
     
 }
 
