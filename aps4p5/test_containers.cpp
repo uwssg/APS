@@ -940,6 +940,121 @@ for(i=0;i<100;i++){
     
 }
 
+//////now do some tests on asymm_array_2d
+
+printf("\ntesting asymm array\n");
+
+asymm_array_2d<int> asymmTest;
+
+int *i1,*i2,*i3,n1,n2,n3;
+
+for(ii=0;ii<10;ii++){
+    n1=chaos.int32()%10+2;
+    n2=chaos.int32()%10+4;
+    n3=chaos.int32()%10+7;
+    
+    i1=new int[n1];
+    i2=new int[n2];
+    i3=new int[n3];
+    
+    for(i=0;i<n1;i++){
+        i1[i]=chaos.int32()%100;
+    }
+    
+    for(i=0;i<n2;i++){
+        i2[i]=chaos.int32()%100;
+    }
+    
+    for(i=0;i<n3;i++){
+        i3[i]=chaos.int32()%100;
+    }
+    
+    for(i=0;i<n2;i++){
+        asymmTest.set(1,i,i2[i]);
+    }
+    
+    if(asymmTest.get_rows()!=2){
+        printf("WARNING should have two rows in asymmTest %d\n",
+        asymmTest.get_rows());
+        
+        exit(1);
+    }
+    
+    if(asymmTest.get_cols(0)!=0){
+        printf("WARNING asymmTest.get_cols(0) should be zero %d\n",
+        asymmTest.get_cols(0));
+        exit(1);
+    } 
+    
+    if(asymmTest.get_cols(1)!=n2){
+        printf("WARNING asymmTest.get_cols(1) shld %d is %d\n",
+        n2,asymmTest.get_cols(1));
+    }
+    
+    for(i=0;i<n2;i++){
+        if(asymmTest.get_data(1,i)!=i2[i]){
+            printf("WARNING asymmTest data wrong\n");
+            exit(1);
+        }
+    }
+    
+    for(i=0;i<n3;i++){
+        asymmTest.set(2,i,i3[i]);
+    }
+    
+    if(asymmTest.get_cols(0)!=0){ 
+        printf("WARNING after assigning third row, have first row cols\n");
+        exit(1);
+    }  
+    
+    for(i=0;i<n1;i++){
+        asymmTest.set(0,i,i1[i]);
+    }
+    
+    if(asymmTest.get_rows()!=3){
+        printf("WARNING wrong number of asymm rows\n");
+        exit(1);
+    }
+    
+    if(asymmTest.get_cols(0)!=n1 ||
+       asymmTest.get_cols(1)!=n2 ||
+       asymmTest.get_cols(2)!=n3){
+   
+       printf("WARNING wrong number of asymm cols %d %d %d, %d %d %d\n",
+       n1,n2,n3,asymmTest.get_cols(0),asymmTest.get_cols(1),
+       asymmTest.get_cols(2));
+    }
+   
+    for(i=0;i<n1;i++){
+       if(asymmTest.get_data(0,i)!=i1[i]){
+           printf("WARNING data fail in first asymm row\n");
+           exit(1);
+       }
+    }
+    
+    for(i=0;i<n2;i++){
+       if(asymmTest.get_data(1,i)!=i2[i]){
+           printf("WARNING data fail in second asymm row\n");
+           exit(1);
+       }
+    }
+   
+    for(i=0;i<n3;i++){
+       if(asymmTest.get_data(2,i)!=i3[i]){
+           printf("WARNING data fail in third asymm row %d %d\n",
+           asymmTest.get_data(2,i),i3[i]);
+           exit(1);
+       }
+    }
+    delete [] i1;
+    delete [] i2;
+    delete [] i3;
+    asymmTest.reset();
+
+}
+
+
+
 
 printf("\n\nall tests passed -- maxerr %e\n",maxerr);
 printf("have not tested self add, subtract, divide, or multiply\n");
