@@ -1395,7 +1395,9 @@ void asymm_array_2d<T>::set(int ir, int ic, T val){
     else{
         vector.set_dim(ic+1);
 	for(i=0;i<ic+1;i++)vector.set(i,val);
-	add_row(vector);
+	while(rows<=ir){
+            add_row(vector);
+        }
     }
 
 }
