@@ -1260,11 +1260,11 @@ void aps::initialize_focus(){
     
 }
 
-double aps::focus_metric(array_1d<double> &pt){
+double aps::simplex_metric(array_1d<double> &pt, array_1d<double> &min_bound, array_1d<double> &max_bound){
     
     
-    if(focus_max.get_dim()!=gg.get_dim() || focus_min.get_dim()!=gg.get_dim()){
-        printf("cannot evaluate focus_metric; have not set min and max yet\n");
+    if(max_bound.get_dim()!=gg.get_dim() || min_bound.get_dim()!=gg.get_dim()){
+        printf("cannot evaluate simplex_metric; have not set min and max yet\n");
         throw -1;
     
     }
@@ -1276,8 +1276,8 @@ double aps::focus_metric(array_1d<double> &pt){
     }
     
     for(i=0;i<gg.get_dim();i++){
-        if(pt.get_data(i)>focus_max.get_data(i) || 
-            pt.get_data(i)<focus_min.get_data(i)){
+        if(pt.get_data(i)>max_bound.get_data(i) || 
+            pt.get_data(i)<min_bound.get_data(i)){
             
             return 2.0*chisq_exception;
         
@@ -1298,18 +1298,18 @@ double aps::focus_metric(array_1d<double> &pt){
     stradval=dd.get_data(0);
     */
     
-    focus_ct++;
+    simplex_ct++;
     
-    if(stradval>focus_strad_best){
-        focus_strad_best=stradval;
+    if(stradval>simplex_strad_best){
+        simplex_strad_best=stradval;
         
-        focus_mu_best=mu;
-        focus_sig_best=sig;
+        simplex_mu_best=mu;
+        simplex_sig_best=sig;
         
-        focus_ct=0;
+        simplex_ct=0;
         
         for(i=0;i<gg.get_dim();i++){
-            focus_best.set(i,pt.get_data(i));
+            simplex_best.set(i,pt.get_data(i));
         }
     }
     
@@ -1317,46 +1317,33 @@ double aps::focus_metric(array_1d<double> &pt){
     
 }
 
-void aps::aps_focus(int in_samples){
+double aps::simplex_strad(array_1d<double> &min_bound, array_1d<double> &max_bound){
     
    int i,j;
-   double nn,thinfactor;
+   double nn;
    
-   
-   focus_best.reset();
-   
-   focus_strad_best=-2.0*chisq_exception;
-   focus_ct=0;
-   called_focus++;
-   thinfactor=0.5/sqrt(double(gg.get_dim()));
-   
-   
-   for(i=0;i<gg.get_dim();i++){
-       focus_min.set(i,good_min.get_data(i));
-       focus_max.set(i,good_max.get_data(i));
-       nn=focus_max.get_data(i)-focus_min.get_data(i);
-       while(nn<1.0e-20){
-           nn+=1.0e-3*(gg.get_max(i)-gg.get_min(i));
-       }
+   if(min_bound.get_dim()!=gg.get_dim() || max_bound.get_dim()!=gg.get_dim()){
+       printf("WARNING in simplex_strad gg.get_dim() %d min %d max %d\n",
+       gg.get_dim(),min_bound.get_dim(),max_bound.get_dim());
        
-       nn*=thinfactor;
-       
-       focus_min.subtract_val(i,nn);
-       focus_max.add_val(i,nn);
-   
+       throw -1;
    }
    
    for(i=0;i<gg.get_dim();i++){
-       if(focus_min.get_data(i)<range_min.get_data(i)){
-           focus_min.set(i,range_min.get_data(i));
-       }
-       
-       if(focus_max.get_data(i)>range_max.get_data(i)){
-           focus_max.set(i,range_max.get_data(i));
+       if(max_bound.get_data(i)<min_bound.get_data(i)){
+           nn=max_bound.get_data(i);
+           max_bound.set(i,min_bound.get_data(i));
+           min_bound.set(i,nn);
        }
    }
    
-   ////now do simplex search using focus_metric
+   simplex_best.reset();
+   
+   simplex_strad_best=-2.0*chisq_exception;
+   simplex_ct=0;
+
+   
+   ////now do simplex search using simplex_metric
    array_2d<double> pts;
    array_1d<double> pbar,ff,pstar,pstarstar;
    double fstar,fstarstar;
@@ -1371,17 +1358,22 @@ void aps::aps_focus(int in_samples){
    ff.set_dim(gg.get_dim()+1);
    
    for(i=0;i<gg.get_dim()+1;i++){
-       for(j=0;j<gg.get_dim();j++){
-           pts.set(i,j,focus_min.get_data(j)+dice->doub()*(focus_max.get_data(j)-focus_min.get_data(j)));
+       nn=2.0*chisq_exception;
+       while(!(nn<chisq_exception)){
+           for(j=0;j<gg.get_dim();j++){
+               pts.set(i,j,min_bound.get_data(j)+dice->doub()*(max_bound.get_data(j)-min_bound.get_data(j)));
+           }
+           nn=simplex_metric(*pts(i),min_bound,max_bound);
        }
-       ff.set(i,focus_metric(*pts(i)));
+       
+       ff.set(i,nn);
        if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
        if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
    }
    
-   sig=100.0;
+   sig=2.0*chisq_exception;
    
-   while(sig>delta_chisquared && focus_ct<1000){
+   while(sig>delta_chisquared && simplex_ct<1000){
        for(i=0;i<gg.get_dim();i++){
            pbar.set(i,0.0);
            for(j=0;j<gg.get_dim()+1;j++){
@@ -1395,7 +1387,7 @@ void aps::aps_focus(int in_samples){
        for(i=0;i<gg.get_dim();i++){
            pstar.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
        }
-       fstar=focus_metric(pstar);
+       fstar=simplex_metric(pstar,min_bound,max_bound);
        
        if(fstar<ff.get_data(ih) && fstar>ff.get_data(il)){
            ff.set(ih,fstar);
@@ -1407,7 +1399,7 @@ void aps::aps_focus(int in_samples){
            for(i=0;i<gg.get_dim();i++){
                pstarstar.set(i,gamma*pstar.get_data(i)+(1.0-gamma)*pbar.get_data(i));
            }
-           fstarstar=focus_metric(pstarstar);
+           fstarstar=simplex_metric(pstarstar,min_bound,max_bound);
            
            if(fstarstar<ff.get_data(il)){
                for(i=0;i<gg.get_dim();i++)pts.set(ih,i,pstarstar.get_data(i));
@@ -1431,7 +1423,7 @@ void aps::aps_focus(int in_samples){
                pstarstar.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
                
            }
-           fstarstar=focus_metric(pstarstar);
+           fstarstar=simplex_metric(pstarstar,min_bound,max_bound);
            
            if(fstarstar<ff.get_data(ih)){
                for(i=0;i<gg.get_dim();i++){
@@ -1451,7 +1443,7 @@ void aps::aps_focus(int in_samples){
                            mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
                            pts.set(i,j,mu);
                        }
-                       ff.set(i,focus_metric(*pts(i)));
+                       ff.set(i,simplex_metric(*pts(i),min_bound,max_bound));
                    }
                }
            }
@@ -1482,20 +1474,65 @@ void aps::aps_focus(int in_samples){
    
    }
    
+   return sig;
+}
+
+
+void aps::aps_focus(int in_samples){
    
-   if(focus_best.get_dim()==gg.get_dim()){
-       evaluate(focus_best,&mu,&il);
+   double thinfactor,nn;
+   int i;
+   
+   array_1d<double> focus_min_bound,focus_max_bound;
+   
+   called_focus++;
+   thinfactor=0.5/sqrt(double(gg.get_dim()));
+   
+   for(i=0;i<gg.get_dim();i++){
+       focus_min_bound.set(i,good_min.get_data(i));
+       focus_max_bound.set(i,good_max.get_data(i));
+       nn=focus_max_bound.get_data(i)-focus_min_bound.get_data(i);
+       while(nn<1.0e-20){
+           nn+=1.0e-3*(gg.get_max(i)-gg.get_min(i));
+       }
+       
+       nn*=thinfactor;
+       
+       focus_min_bound.subtract_val(i,nn);
+       focus_max_bound.add_val(i,nn);
+   
+   }
+   
+   for(i=0;i<gg.get_dim();i++){
+       if(focus_min_bound.get_data(i)<range_min.get_data(i)){
+           focus_min_bound.set(i,range_min.get_data(i));
+       }
+       
+       if(focus_max_bound.get_data(i)>range_max.get_data(i)){
+           focus_max_bound.set(i,range_max.get_data(i));
+       }
+   }
+   
+   double sig;
+   sig=simplex_strad(focus_min_bound,focus_max_bound);
+   
+   double chitrue;
+   int actually_added;
+   
+   if(simplex_best.get_dim()==gg.get_dim()){
+       evaluate(simplex_best,&chitrue,&actually_added);
        printf("focus found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
-       mu,focus_strad_best,focus_mu_best,focus_sig_best,focus_ct,sig);
-       if(il>=0){
-           focus_pts.add(il);
+       chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
+       if(actually_added>=0){
+           focus_pts.add(actually_added);
            if(do_bisection==1){
-               bisection(focus_best,mu);
+               bisection(simplex_best,chitrue);
            }
        }
    }
 
 }
+
 
 void aps::aps_gibbs(int in_samples){
     //printf("gibbs\n");
