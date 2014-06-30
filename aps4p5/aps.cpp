@@ -1191,19 +1191,47 @@ void aps::search(){
 
 void aps::aps_wide(int in_samples){
     
-    array_2d<double> samples;
-   
-    int i,j;
-    samples.set_cols(dim);
-    for(i=0;i<in_samples;i++){
-        for(j=0;j<dim;j++){
-            samples.set(i,j,range_min.get_data(j)+dice->doub()*(range_max.get_data(j)-range_min.get_data(j)));
+    called_wide++;
+    double sig;
+    sig=simplex_strad(range_min,range_max);
+    
+    array_1d<double> midpt;
+    
+    double chitrue,chimid;
+    int actually_added,ic,i,use_it;
+    
+    if(simplex_best.get_dim()==gg.get_dim()){
+        evaluate(simplex_best,&chitrue,&actually_added);
+        
+       printf("wide found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
+       chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
+        
+        if(actually_added>=0){
+            if(do_bisection==1){
+                if(chitrue<global_median){
+                    bisection(simplex_best,chitrue);
+                }
+            }
+            
+            if(chitrue<strad.get_target()){
+                use_it=1;
+                for(ic=0;ic<centers.get_rows() && use_it==1;ic++){
+                    for(i=0;i<gg.get_dim();i++){
+                        midpt.set(i,0.5*(simplex_best.get_data(i)+centers.get_data(ic,i)));
+                    }
+                    
+                    evaluate(midpt,&chimid,&i);
+                    
+                    if(chimid<strad.get_target())use_it=0;
+                }
+                
+                if(use_it==1){
+                    centers.add_row(simplex_best);
+                    center_dexes.add(actually_added);
+                }
+            }
         }
     }
-    
-    i=gg.get_pts();
-    aps_choose_best(samples,iWIDE);
-    called_wide++;
    
 }
 
@@ -1521,8 +1549,10 @@ void aps::aps_focus(int in_samples){
    
    if(simplex_best.get_dim()==gg.get_dim()){
        evaluate(simplex_best,&chitrue,&actually_added);
-       printf("focus found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
-       chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
+       
+       //printf("focus found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
+       //chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
+       
        if(actually_added>=0){
            focus_pts.add(actually_added);
            if(do_bisection==1){
