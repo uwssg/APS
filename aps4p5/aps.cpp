@@ -1181,7 +1181,7 @@ void aps::aps_wide(int in_samples){
     array_1d<double> dir,test_dir;
     double dot,dot_max,dot_threshold;
     
-    dot_threshold=0.6;
+    dot_threshold=0.8;
     
     if(simplex_best.get_dim()==gg.get_dim()){
         evaluate(simplex_best,&chitrue,&actually_added);
