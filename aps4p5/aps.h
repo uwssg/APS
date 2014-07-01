@@ -94,6 +94,8 @@ private:
     int global_mindex,mindex_is_candidate,do_bisection;
     int simplex_ct;
     
+    int n_bisected,n_not_bisected;
+    
     int failed_to_add,n_samples;
     int aps_failed,minuit_failed,assess_failed;
     

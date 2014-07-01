@@ -80,6 +80,9 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     do_bisection=1;
     focus_directions=NULL;
     
+    n_bisected=0;
+    n_not_bisected=0;
+    
     chimin=-1.0;
     
     i_gibbs=0;
@@ -1178,7 +1181,7 @@ void aps::aps_wide(int in_samples){
     array_1d<double> dir,test_dir;
     double dot,dot_max,dot_threshold;
     
-    dot_threshold=0.5;
+    dot_threshold=0.6;
     
     if(simplex_best.get_dim()==gg.get_dim()){
         evaluate(simplex_best,&chitrue,&actually_added);
@@ -1223,13 +1226,18 @@ void aps::aps_wide(int in_samples){
                         }
                     }
                     
+                    n_bisected++;
                     if(dot_max<dot_threshold){
                         printf("    bisecting because dot %e\n",dot_max);
                         bisection(simplex_best,chitrue);
                     }
                     else{
+                        n_not_bisected++;
                         printf("    not bisecting because dot %e\n",dot_max);
                     }
+                    
+                    printf("    bdry %d bisected %d not %d global_med %.3e\n\n",
+                    boundary_pts.get_cols(0),n_bisected,n_not_bisected,global_median);
                 
                 }
                 
