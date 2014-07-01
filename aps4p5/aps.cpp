@@ -128,7 +128,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     global_median=200000.0;
     grat=1.0;
     
-    dot_product_threshold=0.7;
+    dot_product_threshold=0.8;
     
     dim=dim_in;
     paramnames=new char*[dim];
@@ -1226,8 +1226,8 @@ void aps::aps_wide(int in_samples){
                         }
                     }
                     
-                    n_bisected++;
                     if(dot_max<dot_threshold){
+                        n_bisected++;
                         printf("    bisecting because dot %e\n",dot_max);
                         bisection(simplex_best,chitrue);
                     }
