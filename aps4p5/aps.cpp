@@ -1178,7 +1178,7 @@ void aps::aps_wide(int in_samples){
     array_1d<double> dir,test_dir;
     double dot,dot_max,dot_threshold;
     
-    dot_threshold=0.2;
+    dot_threshold=0.5;
     
     if(simplex_best.get_dim()==gg.get_dim()){
         evaluate(simplex_best,&chitrue,&actually_added);
@@ -1223,7 +1223,7 @@ void aps::aps_wide(int in_samples){
                         }
                     }
                     
-                    if(dot_max,dot_threshold){
+                    if(dot_max<dot_threshold){
                         printf("    bisecting because dot %e\n",dot_max);
                         bisection(simplex_best,chitrue);
                     }
