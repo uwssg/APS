@@ -1186,8 +1186,8 @@ void aps::aps_wide(int in_samples){
     if(simplex_best.get_dim()==gg.get_dim()){
         evaluate(simplex_best,&chitrue,&actually_added);
         
-       printf("wide found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
-       chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
+       //printf("wide found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
+       //chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
         
         if(actually_added>=0){
             wide_pts.add(actually_added);
@@ -1198,7 +1198,7 @@ void aps::aps_wide(int in_samples){
                 ic=find_nearest_center(simplex_best,chitrue);
                 
                 if(ic>=boundary_pts.get_rows() || boundary_pts.get_cols(ic)<=0){
-                    printf("    bisecting because there weren't any boundary points\n");
+                    //printf("    bisecting because there weren't any boundary points\n");
                     bisection(simplex_best,chitrue);
                 }
                 else{
@@ -1228,16 +1228,16 @@ void aps::aps_wide(int in_samples){
                     
                     if(dot_max<dot_threshold){
                         n_bisected++;
-                        printf("    bisecting because dot %e\n",dot_max);
+                        //printf("    bisecting because dot %e\n",dot_max);
                         bisection(simplex_best,chitrue);
                     }
                     else{
                         n_not_bisected++;
-                        printf("    not bisecting because dot %e\n",dot_max);
+                        //printf("    not bisecting because dot %e\n",dot_max);
                     }
                     
-                    printf("    bdry %d bisected %d not %d global_med %.3e\n\n",
-                    boundary_pts.get_cols(0),n_bisected,n_not_bisected,global_median);
+                    //printf("    bdry %d bisected %d not %d global_med %.3e\n\n",
+                    //boundary_pts.get_cols(0),n_bisected,n_not_bisected,global_median);
                 
                 }
                 
@@ -1580,11 +1580,42 @@ void aps::aps_focus(int in_samples){
    double chitrue;
    int actually_added;
    
+   array_1d<double> pt_1,pt_2;
+   double mu_1,mu_2,sig_1,sig_2,strad_1,strad_2,chi_1,chi_2;
+   
+   pt_1.set(0,0.02357535);
+   pt_1.set(1,0.09769284);
+   pt_1.set(2,0.7866272);
+   pt_1.set(3,0.1451201);
+   pt_1.set(4,1.012143);
+   pt_1.set(5,3.134884);
+   
+   pt_2.set(0,0.02326539);
+   pt_2.set(1,0.1132865);
+   pt_2.set(2,0.7160583);
+   pt_2.set(3,0.1480378);
+   pt_2.set(4,0.9947237);
+   pt_2.set(5,3.248447);
+   
    if(simplex_best.get_dim()==gg.get_dim()){
        evaluate(simplex_best,&chitrue,&actually_added);
        
-       //printf("focus found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
-       //chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
+       printf("focus found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
+       chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
+       
+       mu_1=gg.user_predict(pt_1,&sig_1,0);
+       mu_2=gg.user_predict(pt_2,&sig_2,0);
+       
+       strad_1=strad(mu_1,sig_1);
+       strad_2=strad(mu_2,sig_2);
+       
+       chi_1=(*chisq)(pt_1);
+       chi_2=(*chisq)(pt_2);
+       
+       printf("pt_1 chi %.3e mu %.3e strad %.3e\n",chi_1,mu_1,strad_1);
+       printf("pt_2 chi %.3e mu %.3e strad %.3e\n\n",chi_2,mu_2,strad_2);
+       
+       
        
        if(actually_added>=0){
            focus_pts.add(actually_added);
