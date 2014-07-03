@@ -1540,46 +1540,8 @@ double aps::simplex_strad(array_1d<double> &min_bound, array_1d<double> &max_bou
 
 
 void aps::aps_focus(int in_samples){
-   
-   double thinfactor,nn;
-   int i;
-   
-   array_1d<double> focus_min_bound,focus_max_bound;
-   
-   called_focus++;
-   thinfactor=0.5/sqrt(double(gg.get_dim()));
-   
-   for(i=0;i<gg.get_dim();i++){
-       focus_min_bound.set(i,good_min.get_data(i));
-       focus_max_bound.set(i,good_max.get_data(i));
-       nn=focus_max_bound.get_data(i)-focus_min_bound.get_data(i);
-       while(nn<1.0e-20){
-           nn+=1.0e-3*(gg.get_max(i)-gg.get_min(i));
-       }
-       
-       nn*=thinfactor;
-       
-       focus_min_bound.subtract_val(i,nn);
-       focus_max_bound.add_val(i,nn);
-   
-   }
-   
-   for(i=0;i<gg.get_dim();i++){
-       if(focus_min_bound.get_data(i)<range_min.get_data(i)){
-           focus_min_bound.set(i,range_min.get_data(i));
-       }
-       
-       if(focus_max_bound.get_data(i)>range_max.get_data(i)){
-           focus_max_bound.set(i,range_max.get_data(i));
-       }
-   }
-   
-   double sig;
-   sig=simplex_strad(focus_min_bound,focus_max_bound);
-   
-   double chitrue;
-   int actually_added;
-   
+  
+ 
    array_1d<double> pt_1,pt_2;
    double mu_1,mu_2,sig_1,sig_2,strad_1,strad_2,chi_1,chi_2;
    
@@ -1597,33 +1559,105 @@ void aps::aps_focus(int in_samples){
    pt_2.set(4,0.9947237);
    pt_2.set(5,3.248447);
    
-   if(simplex_best.get_dim()==gg.get_dim()){
-       evaluate(simplex_best,&chitrue,&actually_added);
+   array_1d<int> neigh;
+   array_1d<double> ddneigh;
+
+ 
+   array_1d<double> trial,min,max,sambest;
+   int ic,i,j,k,idx,idy,actually_added;
+   double stradval,stradbest,chitrue,nn;
+   double mu,sig;
+   
+   min.set_name("focus_min");
+   max.set_name("focus_max");
+   trial.set_name("focus_trial");
+   sambest.set_name("focus_sambest");
+   
+   for(ic=0;ic<centers.get_rows();ic++){
+       if(boundary_pts.get_cols(ic)<gg.get_dim()){
+           printf("randomly focusing\n");
+           
+           for(i=0;i<gg.get_dim();i++){
+               trial.set(i,normal_deviate(dice,0.0,1.0));
+           }
+           trial.normalize();
+           for(i=0;i<gg.get_dim();i++){
+               sambest.set(i,centers.get_data(ic,i)+0.5*trial.get_data(i)*(gg.get_max(i)-gg.get_min(i)));
+           }
        
-       printf("focus found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
-       chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
+       }//if don't have enough boundary points
+       else{
+           printf("focusing on corners\n");
+           for(i=0;i<boundary_pts.get_cols(ic);i++){
+               for(j=0;j<gg.get_dim();j++){
+                   nn=gg.get_pt(boundary_pts.get_data(ic,i),j);
+                   if(i==0 || nn<min.get_data(j)){
+                       min.set(j,nn);
+                   }
+                   
+                   if(i==0 || nn>max.get_data(j)){
+                       max.set(j,nn);
+                   }
+               }
+           }
+           
+           stradbest=-2.0*chisq_exception;
+           for(i=0;i<gg.get_dim();i++){
+               for(j=i+1;j<gg.get_dim();j++){
+                   for(k=0;k<gg.get_dim();k++)trial.set(k,centers.get_data(ic,k));
+                   
+                    for(idx=0;idx<2;idx++){
+                       for(idy=0;idy<2;idy++){
+                           
+                           if(idx%2==0)trial.set(i,min.get_data(i));
+                           else trial.set(i,max.get_data(i));
+                           
+                           if(idy%2==0)trial.set(j,min.get_data(j));
+                           else trial.set(j,max.get_data(j));
+                           
+                           
+                           mu=gg.user_predict(trial,&sig,0);
+                           stradval=strad(mu,sig);
+                           
+                           if(stradval>stradbest){
+                               stradbest=stradval;
+                               for(k=0;k<gg.get_dim();k++){
+                                   sambest.set(k,trial.get_data(k));
+                               }
+                           }
+                              
+                       }
+                   }
+               }
+           }
        
-       mu_1=gg.user_predict(pt_1,&sig_1,0);
-       mu_2=gg.user_predict(pt_2,&sig_2,0);
+       }
        
-       strad_1=strad(mu_1,sig_1);
-       strad_2=strad(mu_2,sig_2);
-       
-       chi_1=(*chisq)(pt_1);
-       chi_2=(*chisq)(pt_2);
-       
-       printf("pt_1 chi %.3e mu %.3e strad %.3e\n",chi_1,mu_1,strad_1);
-       printf("pt_2 chi %.3e mu %.3e strad %.3e\n\n",chi_2,mu_2,strad_2);
-       
-       
-       
+       evaluate(sambest,&chitrue,&actually_added);
        if(actually_added>=0){
            focus_pts.add(actually_added);
            if(do_bisection==1){
-               bisection(simplex_best,chitrue);
+               bisection(sambest,chitrue);
            }
        }
+       
    }
+   
+   gg.nn_srch(pt_1,1,neigh,ddneigh);
+   printf("nearest to pt 1\n");
+   printf("%e %e\n%e %e\n%e\n\n",
+   pt_1.get_data(0),gg.get_pt(neigh.get_data(0),0),
+   pt_1.get_data(2),gg.get_pt(neigh.get_data(0),2),
+   gg.get_fn(neigh.get_data(0)));
+   
+   gg.nn_srch(pt_2,1,neigh,ddneigh);
+   printf("nearest to pt 2\n");
+   printf("%e %e\n%e %e\n%e\n\n",
+   pt_2.get_data(4),gg.get_pt(neigh.get_data(0),4),
+   pt_2.get_data(5),gg.get_pt(neigh.get_data(0),5),
+   gg.get_fn(neigh.get_data(0)));
+   
+     
 
 }
 
