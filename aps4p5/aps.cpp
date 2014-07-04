@@ -1542,6 +1542,7 @@ void aps::random_focus(int ic){
     array_1d<double> trial,rr;
     double chitrue;
     int actually_added,i;
+   
     
     actually_added=-1;
     while(actually_added<0){
@@ -1570,6 +1571,12 @@ void aps::corner_focus(int ic){
     double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen;
     int i,j,k,l,actually_added;
     int ix,iy,idx,idy,ix_chosen,iy_chosen,dx_chosen,dy_chosen;
+    
+    int had_to_expand=0;
+    
+    double deltaX,deltaY,norm;
+    
+    
     
     for(i=0;i<boundary_pts.get_cols(ic);i++){
         for(j=0;j<gg.get_dim();j++){
@@ -1624,15 +1631,30 @@ void aps::corner_focus(int ic){
     actually_added=-1;
     
     for(i=0;i<gg.get_dim();i++)origin.set(i,sambest.get_data(i));
+    deltaX=(sambest.get_data(ix_chosen)-centers.get_data(ic,ix_chosen))/(max.get_data(ix_chosen)-min.get_data(ix_chosen));
+    deltaY=sambest.get_data(iy_chosen)-centers.get_data(ic,iy_chosen)/(max.get_data(iy_chosen)-min.get_data(iy_chosen));
+    
+    if(fabs(deltaX)<1.0e-20)deltaX=0.1;
+    if(fabs(deltaY)<1.0e-20)deltaY=0.1;
     
     while(actually_added<0){
         evaluate(sambest,&chitrue,&actually_added);
         
         if(actually_added<0){
+            had_to_expand++;
             for(i=0;i<gg.get_dim();i++)rr.set(i,normal_deviate(dice,0.0,1.0));
+            mu=-1.0*rr.get_data(ix_chosen)*deltaX/deltaY;
+            rr.set(iy_chosen,mu);
+            
             rr.normalize();
-            for(i=0;i<gg.get_dim();i++){
-                sambest.set(i,origin.get_data(i)+0.1*rr.get_data(i)*(max.get_data(i)-min.get_data(i)));
+            norm=1.0;
+            j=0;
+            while(j==0){
+                for(i=0;i<gg.get_dim();i++){
+                    sambest.set(i,origin.get_data(i)+norm*rr.get_data(i)*(max.get_data(i)-min.get_data(i)));
+                }
+                j=in_bounds(sambest);
+                norm*=0.5;
             }
         }
     }
@@ -1641,7 +1663,7 @@ void aps::corner_focus(int ic){
     if(do_bisection==1){
         bisection(sambest,chitrue);
     }
-    printf("found %e\n",chitrue);
+    printf("found %e -- expanded %d\n",chitrue,had_to_expand);
     printf("ix %d %d\n",ix_chosen,dx_chosen);
     printf("iy %d %d\n",iy_chosen,dy_chosen);
     printf("strad %e mu %e sig %e\n\n",stradmax,mu_chosen,sig_chosen);
@@ -1685,6 +1707,7 @@ void aps::aps_focus(int in_samples){
            
        }//if don't have enough boundary points
        else{
+           printf("focusing on corners\n");
            corner_focus(ic);
        }    
        
