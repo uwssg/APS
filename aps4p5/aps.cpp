@@ -1985,6 +1985,13 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             nearest_pt.set(i,highball.get_data(i));
         }
     }
+    
+    if(flow>strad.get_target() || fhigh<strad.get_target()){
+        printf("WAIT in bisection target %e flow %e fhigh %e\n",
+        strad.get_target(),flow,fhigh);
+        
+        exit(1);
+    }
         
     dd=gg.distance(lowball,highball);
     while(dd>1.0e-10 && strad.get_target()-flow>bisection_tolerance){
