@@ -155,6 +155,9 @@ private:
     
     void aps_wide(int);
     void aps_focus(int);
+    void random_focus(int);
+    void corner_focus(int);
+    
     void aps_gibbs(int);
     void initialize_focus();
     
