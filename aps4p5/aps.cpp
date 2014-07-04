@@ -1659,7 +1659,7 @@ void aps::aps_focus(int in_samples){
                }
                trial.normalize();
                for(i=0;i<gg.get_dim();i++){
-                   sambest.set(i,centers.get-data(ic,i)+0.5*trial.get_data(i)*(gg.get_max(i)-gg.get_min(i)));
+                   sambest.set(i,centers.get_data(ic,i)+0.5*trial.get_data(i)*(gg.get_max(i)-gg.get_min(i)));
                }
            }
            
