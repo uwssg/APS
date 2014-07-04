@@ -1571,10 +1571,17 @@ void aps::aps_focus(int in_samples){
    int x_chosen,dx_chosen,y_chosen,dy_chosen,expanded=0;
    double mu_chosen,sig_chosen;
    
+   x_chosen=dice->int32()%gg.get_dim();
+   y_chosen=dice->int32()%gg.get_dim();
+   dx_chosen=dice->int32()%2;
+   dy_chosen=dice->int32()%2;
+   
    min.set_name("focus_min");
    max.set_name("focus_max");
    trial.set_name("focus_trial");
    sambest.set_name("focus_sambest");
+   
+   printf("in focus\n");
    
    for(ic=0;ic<centers.get_rows();ic++){
        if(boundary_pts.get_cols(ic)<gg.get_dim()){
@@ -1582,11 +1589,16 @@ void aps::aps_focus(int in_samples){
            
            for(i=0;i<gg.get_dim();i++){
                trial.set(i,normal_deviate(dice,0.0,1.0));
+               
+               min.set(i,gg.get_min(i));
+               max.set(i,gg.get_max(i));
+               
            }
            trial.normalize();
            for(i=0;i<gg.get_dim();i++){
                sambest.set(i,centers.get_data(ic,i)+0.5*trial.get_data(i)*(gg.get_max(i)-gg.get_min(i)));
            }
+           
        
        }//if don't have enough boundary points
        else{
