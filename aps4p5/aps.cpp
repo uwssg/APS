@@ -1642,33 +1642,74 @@ void aps::corner_focus(int ic){
         
         if(actually_added<0){
             had_to_expand++;
-            for(i=0;i<gg.get_dim();i++)rr.set(i,normal_deviate(dice,0.0,1.0));
-            //mu=-1.0*rr.get_data(ix_chosen)*deltaX/deltaY;
-            //rr.set(iy_chosen,mu);
-            
-            if(dx_chosen==0){
-                rr.set(ix_chosen,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
-            }
-            else{
-                rr.set(ix_chosen,fabs(normal_deviate(dice,0.0,1.0)));
-            }
-            
-            if(dy_chosen==0){
-               rr.set(iy_chosen,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
-            }
-            else{
-                rr.set(iy_chosen,fabs(normal_deviate(dice,0.0,1.0)));
-            }
-            
-            rr.normalize();
-            norm=1.0;
-            j=0;
-            while(j==0){
-                for(i=0;i<gg.get_dim();i++){
-                    sambest.set(i,origin.get_data(i)+norm*rr.get_data(i)*(max.get_data(i)-min.get_data(i)));
+            stradmax=-2.0*chisq_exception;
+            for(ix=0;ix<gg.get_dim();ix++){
+                for(iy=0;iy<gg.get_dim();iy++){
+                    for(i=0;i<gg.get_dim();i++){
+                        if(i!=ix && i!=iy){
+                            origin.set(i,centers.get_data(ic,i));
+                        }
+                    }
+                    
+                    for(idx=0;idx<2;idx++){
+                        for(idy=0;idy<2;idy++){
+                            for(i=0;i<gg.get_dim();i++){
+                                if(i!=ix && i!=iy){
+                                    rr.set(i,-1.0+2.0*dice->doub());
+                                    //rr.set(i,normal_deviate(dice,0.0,1.0));
+                                }
+                            }
+                            
+                            if(idx==0){
+                                origin.set(ix,min.get_data(ix));
+                                rr.set(ix,-1.0+dice->doub());
+                                //rr.set(ix,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
+                                
+                            }
+                            else{
+                                origin.set(ix,max.get_data(ix));
+                                rr.set(ix,dice->doub());
+                                //rr.set(ix,fabs(normal_deviate(dice,0.0,1.0)));
+                            }
+                            
+                            if(idy==0){
+                                origin.set(iy,min.get_data(iy));
+                                rr.set(iy,-1.0+2.0*dice->doub());
+                                //rr.set(iy,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
+                            }
+                            else{
+                                origin.set(ix,max.get_data(iy));
+                                rr.set(iy,dice->doub());
+                                //rr.set(iy,fabs(normal_deviate(dice,0.0,1.0)));
+                            }
+                            
+                            rr.normalize();
+                            
+                            for(i=0;i<gg.get_dim();i++){
+                                trial.set(i,origin.get_data(i)+0.5*rr.get_data(i)*(max.get_data(i)-min.get_data(i)));
+                            }
+                            
+                            mu=gg.user_predict(trial,&sig,0);
+                            stradval=strad(mu,sig);
+                            if(stradval>stradmax){
+                                stradmax=stradval;
+                                for(i=0;i<gg.get_dim();i++){
+                                    sambest.set(i,trial.get_data(i));
+                                }
+                                
+                                ix_chosen=ix;
+                                dx_chosen=idx;
+                                iy_chosen=iy;
+                                dy_chosen=idy;
+                                
+                                mu_chosen=mu;
+                                sig_chosen=sig;
+                            }
+                            
+                        } 
+                    }
+                    
                 }
-                j=in_bounds(sambest);
-                norm*=0.5;
             }
         }
     }
