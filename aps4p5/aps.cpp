@@ -1731,6 +1731,7 @@ void aps::aps_focus(int in_samples){
            }
            
            printf("got %e\n",chitrue);
+           focus_pts.add(actually_added);
            if(do_bisection==1){
                bisection(sambest,chitrue);
            }
