@@ -1563,12 +1563,12 @@ void aps::aps_focus(int in_samples){
    array_1d<double> ddneigh;
 
  
-   array_1d<double> trial,min,max,sambest;
+   array_1d<double> trial,min,max,sambest,origin;
    int ic,i,j,k,idx,idy,actually_added;
    double stradval,stradbest,chitrue,nn;
    double mu,sig;
    
-   int x_chosen,dx_chosen,y_chosen,dy_chosen;
+   int x_chosen,dx_chosen,y_chosen,dy_chosen,expanded=0;
    double mu_chosen,sig_chosen;
    
    min.set_name("focus_min");
@@ -1649,31 +1649,82 @@ void aps::aps_focus(int in_samples){
        
        }
        
-       actually_added=-1;
-       while(actually_added<0){
+       evaluate(sambest,&chitrue,&actually_added);
+       if(actually_added>=0){
+           focus_pts.add(actually_added);
+           if(do_bisection==1)bisection(sambest,chitrue);
+       }
+       
+       expanded=0;
+       if(actually_added<0){
+           for(i=0;i<gg.get_dim();i++)trial.set(i,sambest.get_data(i));
+           
+           if(dx_chosen==0){
+               sambest.subtract_val(x_chosen,0.1*(max.get_data(x_chosen)-min.get_data(x_chosen)));
+           }
+           else{
+               sambest.add_val(x_chosen,0.1*(max.get_data(x_chosen)-min.get_data(x_chosen)));
+           }
+           
            evaluate(sambest,&chitrue,&actually_added);
            
-           if(actually_added<0){
+           if(actually_added>=0){
+               printf("got %e\n",chitrue);
+               focus_pts.add(actually_added);
+               if(do_bisection==1)bisection(sambest,chitrue);
+               expanded=1;
+           }
+           
+           
+           sambest.set(x_chosen,trial.get_data(x_chosen));
+           if(dy_chosen==0){
+               sambest.subtract_val(y_chosen,0.1*(max.get_data(y_chosen)-min.get_data(y_chosen)));
+           }
+           else{
+               sambest.add_val(y_chosen,0.1*(max.get_data(y_chosen)-min.get_data(y_chosen)));
+           }
+           
+           evaluate(sambest,&chitrue,&actually_added);
+           if(actually_added>=0){
+               printf("got %e\n",chitrue);
+               focus_pts.add(actually_added);
+               if(do_bisection==1)bisection(sambest,chitrue);
+               expanded=1;
+           }
+           
+           if(expanded==0){
+               sambest.set(y_chosen,trial.get_data(y_chosen));
+           }
+       
+       }
+       
+       if(actually_added<0 && expanded==0){
+           for(i=0;i<gg.get_dim();i++)origin.set(i,sambest.get_data(i));
+           while(actually_added<0){
                for(i=0;i<gg.get_dim();i++){
                    trial.set(i,normal_deviate(dice,0.0,1.0));
                }
                trial.normalize();
+           
                for(i=0;i<gg.get_dim();i++){
-                   sambest.set(i,centers.get_data(ic,i)+0.5*trial.get_data(i)*(gg.get_max(i)-gg.get_min(i)));
+                   sambest.add_val(i,0.5*trial.get_data(i)*(gg.get_max(i)-gg.get_min(i)));
                }
+           
+               evaluate(sambest,&chitrue,&actually_added);
+               
+               if(actually_added<0){
+                   for(i=0;i<gg.get_dim();i++)sambest.add_val(i,origin.get_data(i));
+               }
+               
+           }
+           
+           printf("got %e\n",chitrue);
+           if(do_bisection==1){
+               bisection(sambest,chitrue);
            }
            
        }
-       
-       called_focus++;
-       printf("got %e -- %d\n",chitrue,actually_added);
-       if(actually_added>=0){
-           focus_pts.add(actually_added);
-       }
-       
-       if(do_bisection==1){
-           bisection(sambest,chitrue);
-       }
+
        
    }
    
