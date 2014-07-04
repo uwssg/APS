@@ -1643,8 +1643,22 @@ void aps::corner_focus(int ic){
         if(actually_added<0){
             had_to_expand++;
             for(i=0;i<gg.get_dim();i++)rr.set(i,normal_deviate(dice,0.0,1.0));
-            mu=-1.0*rr.get_data(ix_chosen)*deltaX/deltaY;
-            rr.set(iy_chosen,mu);
+            //mu=-1.0*rr.get_data(ix_chosen)*deltaX/deltaY;
+            //rr.set(iy_chosen,mu);
+            
+            if(dx_chosen==0){
+                rr.set(ix_chosen,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
+            }
+            else{
+                rr.set(ix_chosen,fabs(normal_deviate(dice,0.0,1.0)));
+            }
+            
+            if(dy_chosen==0){
+               rr.set(iy_chosen,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
+            }
+            else{
+                rr.set(iy_chosen,fabs(normal_deviate(dice,0.0,1.0)));
+            }
             
             rr.normalize();
             norm=1.0;
