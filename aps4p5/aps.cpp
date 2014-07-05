@@ -1638,13 +1638,18 @@ void aps::corner_focus(int ic){
     if(fabs(deltaY)<1.0e-20)deltaY=0.1;
     
     while(actually_added<0){
+        printf("inbounds? %d\n",in_bounds(sambest));
+        for(i=0;i<gg.get_dim();i++)printf("%.3e ",sambest.get_data(i));
+        printf("\n");
+        
         evaluate(sambest,&chitrue,&actually_added);
         
         if(actually_added<0){
             had_to_expand++;
+            printf("expanding %d\n",had_to_expand);
             stradmax=-2.0*chisq_exception;
             for(ix=0;ix<gg.get_dim();ix++){
-                for(iy=0;iy<gg.get_dim();iy++){
+                for(iy=ix+1;iy<gg.get_dim();iy++){
                     for(i=0;i<gg.get_dim();i++){
                         if(i!=ix && i!=iy){
                             origin.set(i,centers.get_data(ic,i));
@@ -1655,38 +1660,38 @@ void aps::corner_focus(int ic){
                         for(idy=0;idy<2;idy++){
                             for(i=0;i<gg.get_dim();i++){
                                 if(i!=ix && i!=iy){
-                                    rr.set(i,-1.0+2.0*dice->doub());
-                                    //rr.set(i,normal_deviate(dice,0.0,1.0));
+                                    //rr.set(i,-1.0+2.0*dice->doub());
+                                    rr.set(i,normal_deviate(dice,0.0,1.0));
                                 }
                             }
                             
                             if(idx==0){
                                 origin.set(ix,min.get_data(ix));
-                                rr.set(ix,-1.0+dice->doub());
-                                //rr.set(ix,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
+                                //rr.set(ix,-1.0+dice->doub());
+                                rr.set(ix,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
                                 
                             }
                             else{
                                 origin.set(ix,max.get_data(ix));
-                                rr.set(ix,dice->doub());
-                                //rr.set(ix,fabs(normal_deviate(dice,0.0,1.0)));
+                                //rr.set(ix,dice->doub());
+                                rr.set(ix,fabs(normal_deviate(dice,0.0,1.0)));
                             }
                             
                             if(idy==0){
                                 origin.set(iy,min.get_data(iy));
-                                rr.set(iy,-1.0+2.0*dice->doub());
-                                //rr.set(iy,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
+                                //rr.set(iy,-1.0+2.0*dice->doub());
+                                rr.set(iy,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
                             }
                             else{
-                                origin.set(ix,max.get_data(iy));
-                                rr.set(iy,dice->doub());
-                                //rr.set(iy,fabs(normal_deviate(dice,0.0,1.0)));
+                                origin.set(iy,max.get_data(iy));
+                                //rr.set(iy,dice->doub());
+                                rr.set(iy,fabs(normal_deviate(dice,0.0,1.0)));
                             }
                             
                             rr.normalize();
                             
                             for(i=0;i<gg.get_dim();i++){
-                                trial.set(i,origin.get_data(i)+0.5*rr.get_data(i)*(max.get_data(i)-min.get_data(i)));
+                                trial.set(i,origin.get_data(i)+0.2*rr.get_data(i)*(max.get_data(i)-min.get_data(i)));
                             }
                             
                             mu=gg.user_predict(trial,&sig,0);
