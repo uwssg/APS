@@ -233,6 +233,11 @@ int aps::in_bounds(array_1d<double> &pt){
     
 }
 
+int aps::is_valid(array_1d<double> &pt){
+    double xx;
+    return is_valid(pt,&xx);
+}
+
 int aps::is_valid(array_1d<double> &pt, double *chiout){
     
     chiout[0]=-1.0;
