@@ -164,13 +164,15 @@ private:
     double simplex_strad(array_1d<double>&, array_1d<double>&);
     double simplex_metric(array_1d<double>&,array_1d<double>&, array_1d<double>&);
     
+    void evaluate(array_1d<double>&,double*,int*,int);
     void evaluate(array_1d<double>&,double*,int*);
     void evaluate(array_1d<double>&,double*);
     
     double distance(int,int,array_1d<double>&);
     
     int in_bounds(array_1d<double>&);
-    
+    int is_valid(array_1d<double>&);
+    int is_valid(array_1d<double>&, double*);
     int find_nearest_center(array_1d<double>&);
     int find_nearest_center(array_1d<double>&, double);
     

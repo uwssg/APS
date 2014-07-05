@@ -233,30 +233,45 @@ int aps::in_bounds(array_1d<double> &pt){
     
 }
 
-void aps::evaluate(array_1d<double> &pt, double *chiout){
-    int i;
-    evaluate(pt,chiout,&i);
-}
-
-void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex){
-    array_1d<int> neigh;
-    array_1d<double> ddneigh;
+int aps::is_valid(array_1d<double> &pt, double *chiout){
     
-    dex[0]=-1;
+    chiout[0]=-1.0;
     
     if(in_bounds(pt)==0){
         chiout[0]=2.0*chisq_exception;
-        return;
+        return 0;
     }
-
+    
+    array_1d<int> neigh;
+    array_1d<double> ddneigh;
     
     gg.nn_srch(pt,1,neigh,ddneigh);
-    //printf("evaluate found dd %e\n",ddneigh.get_data(0));
     if(ddneigh.get_data(0)<=1.0e-8){
-        
         chiout[0]=gg.get_fn(neigh.get_data(0));
-        //printf("aborting with chi %e\n",chiout[0]);
-        
+        return 0;
+    }
+    
+    return 1;
+}
+
+void aps::evaluate(array_1d<double> &pt, double *chiout){
+    int i;
+    evaluate(pt,chiout,&i,-1);
+}
+
+void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex){
+    evaluate(pt,chiout,dex,-1);
+}
+
+void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex, int validity){
+    
+    dex[0]=-1;
+    
+    if(validity==-1){
+        validity=is_valid(pt,chiout);
+    }
+    
+    if(validity==0){
         return;
     }
     else{
