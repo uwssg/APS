@@ -1587,10 +1587,12 @@ void aps::random_focus(int ic){
 }
 
 void aps::corner_focus(int ic){
-    array_1d<double> min,max,trial,sambest,origin,rr;
+    array_1d<double> min,max,trial,sambest,rr_perp,rr;
+    array_1d<int> min_dex,max_dex,*extremity;
     double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen;
     int i,j,k,l,actually_added;
     int ix,iy,idx,idy,ix_chosen,iy_chosen,dx_chosen,dy_chosen;
+    int ict;
     
     int had_to_expand=0;
     
@@ -1603,141 +1605,36 @@ void aps::corner_focus(int ic){
             nn=gg.get_pt(boundary_pts.get_data(ic,i),j);
             if(i==0 || nn<min.get_data(j)){
                 min.set(j,nn);
+                min_dex.set(j,boundary_pts.get_data(ic,i));
             }
             
             if(i==0 || nn>max.get_data(j)){
                 max.set(j,nn);
+                max_dex.set(j,boundary_pts.get_data(ic,i));
             } 
         }
     }
     
     stradmax=-2.0*chisq_exception;
-    for(ix=0;ix<gg.get_dim();ix++){
-        for(iy=0;iy<gg.get_dim();iy++){
-            for(i=0;i<gg.get_dim();i++)trial.set(i,centers.get_data(ic,i));
-            
-            for(idx=0;idx<2;idx++){
-                if(idx==0)trial.set(ix,min.get_data(ix));
-                else trial.set(ix,max.get_data(ix));
-                
-                for(idy=0;idy<2;idy++){
-                    if(idy==0)trial.set(iy,min.get_data(iy));
-                    else trial.set(iy,max.get_data(iy));
-                    
-                    mu=gg.user_predict(trial,&sig,0);
-                    stradval=strad(mu,sig);
-                    
-                    if(stradval>stradmax){
-                        stradmax=stradval;
-                        for(i=0;i<gg.get_dim();i++){
-                            sambest.set(i,trial.get_data(i));
-                        }
-                        ix_chosen=ix;
-                        dx_chosen=idx;
-                        iy_chosen=iy;
-                        dy_chosen=idy;
-                        mu_chosen=mu;
-                        sig_chosen=sig;
-                        
-                    }
-                    
-                }
+    for(idx=0;idx<2;idx++){
+        if(idx==0)extremity=&min_dex;
+        else extremity=&max_dex;
+        
+        for(ix=0;ix<gg.get_dim();ix++){
+            for(i=0;i<gg.get_dim();i++){
+                rr.set(i,gg.get_pt(extremity->get_data(ix),i)-center.get_data(ic,i));
             }
             
-            
-        }
-    }
-    
-    actually_added=-1;
-    
-    for(i=0;i<gg.get_dim();i++)origin.set(i,sambest.get_data(i));
-    deltaX=(sambest.get_data(ix_chosen)-centers.get_data(ic,ix_chosen))/(max.get_data(ix_chosen)-min.get_data(ix_chosen));
-    deltaY=sambest.get_data(iy_chosen)-centers.get_data(ic,iy_chosen)/(max.get_data(iy_chosen)-min.get_data(iy_chosen));
-    
-    if(fabs(deltaX)<1.0e-20)deltaX=0.1;
-    if(fabs(deltaY)<1.0e-20)deltaY=0.1;
-    
-    while(actually_added<0){
-        printf("inbounds? %d\n",in_bounds(sambest));
-        for(i=0;i<gg.get_dim();i++)printf("%.3e ",sambest.get_data(i));
-        printf("\n");
+            //after this, you need to propose some number of perpendicular directions
+            //set up trial points along these directions
+            //then add a dx that is along the direction of extremity
         
-        evaluate(sambest,&chitrue,&actually_added);
+        }//loop over ix (which is the dimension)
+       
         
-        if(actually_added<0){
-            had_to_expand++;
-            printf("expanding %d\n",had_to_expand);
-            stradmax=-2.0*chisq_exception;
-            for(ix=0;ix<gg.get_dim();ix++){
-                for(iy=ix+1;iy<gg.get_dim();iy++){
-                    for(i=0;i<gg.get_dim();i++){
-                        if(i!=ix && i!=iy){
-                            origin.set(i,centers.get_data(ic,i));
-                        }
-                    }
-                    
-                    for(idx=0;idx<2;idx++){
-                        for(idy=0;idy<2;idy++){
-                            for(i=0;i<gg.get_dim();i++){
-                                if(i!=ix && i!=iy){
-                                    //rr.set(i,-1.0+2.0*dice->doub());
-                                    rr.set(i,normal_deviate(dice,0.0,1.0));
-                                }
-                            }
-                            
-                            if(idx==0){
-                                origin.set(ix,min.get_data(ix));
-                                //rr.set(ix,-1.0+dice->doub());
-                                rr.set(ix,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
-                                
-                            }
-                            else{
-                                origin.set(ix,max.get_data(ix));
-                                //rr.set(ix,dice->doub());
-                                rr.set(ix,fabs(normal_deviate(dice,0.0,1.0)));
-                            }
-                            
-                            if(idy==0){
-                                origin.set(iy,min.get_data(iy));
-                                //rr.set(iy,-1.0+2.0*dice->doub());
-                                rr.set(iy,-1.0*fabs(normal_deviate(dice,0.0,1.0)));
-                            }
-                            else{
-                                origin.set(iy,max.get_data(iy));
-                                //rr.set(iy,dice->doub());
-                                rr.set(iy,fabs(normal_deviate(dice,0.0,1.0)));
-                            }
-                            
-                            rr.normalize();
-                            
-                            for(i=0;i<gg.get_dim();i++){
-                                trial.set(i,origin.get_data(i)+0.2*rr.get_data(i)*(max.get_data(i)-min.get_data(i)));
-                            }
-                            
-                            mu=gg.user_predict(trial,&sig,0);
-                            stradval=strad(mu,sig);
-                            if(stradval>stradmax){
-                                stradmax=stradval;
-                                for(i=0;i<gg.get_dim();i++){
-                                    sambest.set(i,trial.get_data(i));
-                                }
-                                
-                                ix_chosen=ix;
-                                dx_chosen=idx;
-                                iy_chosen=iy;
-                                dy_chosen=idy;
-                                
-                                mu_chosen=mu;
-                                sig_chosen=sig;
-                            }
-                            
-                        } 
-                    }
-                    
-                }
-            }
-        }
-    }
+        
+    }//loop over idx which controls whether this is max or min
+    
     
     focus_pts.add(actually_added);
     if(do_bisection==1){
