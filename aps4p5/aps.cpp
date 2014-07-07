@@ -1629,12 +1629,14 @@ void aps::corner_focus(int ic){
         
         norm=-1.0;
         while(norm<1.0e-3){
+            norm=0.0;
             for(i=0;i<gg.get_dim();i++){
                 norm+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
             }
+            
             norm=sqrt(norm);
             
-            if(norm<1.0e-3){
+            if(norm<1.0e-6){
                 for(i=0;i<gg.get_dim();i++){
                     rr.add_val(i,1.0e-4*(max.get_data(i)-min.get_data(i)));
                 }
@@ -1643,6 +1645,11 @@ void aps::corner_focus(int ic){
         
         for(i=0;i<gg.get_dim();i++){
             rr.divide_val(i,norm);
+            
+            if(isnan(rr.get_data(i))){
+                printf("WARNING mid_rr %d is nan\n",i);
+                exit(1);
+            }
         }
         
         mid_pt_bases.add_row(rr);
@@ -1683,6 +1690,14 @@ void aps::corner_focus(int ic){
             for(i=0;i<gg.get_dim();i++){
                 nn+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
             }
+            
+            if(nn<1.0e-20){
+                printf("WARNNING norm of rr %e\n",nn);
+                printf("in corner_focus; before ict loop\n");
+                printf("ix %d idx %d\n",ix,idx);
+                exit(1);
+            }
+            
             nn=sqrt(nn);
             for(i=0;i<gg.get_dim();i++){
                 rr.divide_val(i,nn);
@@ -1714,6 +1729,14 @@ void aps::corner_focus(int ic){
                 for(i=0;i<gg.get_dim();i++){
                     nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
                 }
+                
+                if(nn<1.0e-10){
+                    printf("WARNING norm of rr_perp is %e\n",nn);
+                    printf("in corner focus; inside ict loop; outside jct loop\n");
+                    printf("ix %d idx %d\n",ix,idx);
+                    exit(1);
+                }
+                
                 nn=sqrt(nn);
                 for(i=0;i<gg.get_dim();i++){
                     rr_perp.divide_val(i,nn);
