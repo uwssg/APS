@@ -1589,10 +1589,10 @@ void aps::random_focus(int ic){
 void aps::corner_focus(int ic){
     array_1d<double> min,max,trial,sambest,rr_perp,rr;
     array_1d<int> min_dex,max_dex,*extremity;
-    double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen;
+    double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen,norm;
     int i,j,actually_added;
     int ix,idx,ix_chosen,dx_chosen;
-    int ict;
+    int ict,jct;
     
     
     for(i=0;i<boundary_pts.get_cols(ic);i++){
@@ -1638,8 +1638,8 @@ void aps::corner_focus(int ic){
             //after this, you need to propose some number of perpendicular directions
             //set up trial points along these directions
             //then add a dx that is along the direction of extremity
-            
-            for(ict=0;ict<100;ict++){
+        
+            for(ict=0;ict<20;ict++){
                 
                 for(i=0;i<gg.get_dim();i++){
                     rr_perp.set(i,normal_deviate(dice,0.0,1.0));
@@ -1659,45 +1659,45 @@ void aps::corner_focus(int ic){
                 for(i=0;i<gg.get_dim();i++){
                     rr_perp.divide_val(i,nn);
                 }
-                
-                nn=5.0*dice->doub();
-                for(i=0;i<gg.get_dim();i++){
-                    trial.set(i,centers.get_data(ic,i)+nn*rr_perp.get_data(i));
-                }
-                
-                if(idx==0){
-                    trial.subtract_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
-                }
-                else{
-                    trial.add_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
-                }
-                
-                /*if(in_bounds(trial)==1){
-                    printf("    found a trial that is in bounds %d\n",is_valid(trial));
-                }*/
-                
-                if(is_valid(trial)==0){
-                    stradval=-2.0*chisq_exception;
-                }
-                else{
-                    mu=gg.user_predict(trial,&sig,0);
-                    stradval=strad(mu,sig);
-                }
-                
-                
-                if(stradval>stradmax){
-                    stradmax=stradval;
+             
+                norm=1.0;
+                for(jct=0;jct<5;jct++){
                 
                     for(i=0;i<gg.get_dim();i++){
-                        sambest.set(i,trial.get_data(i));
+                        trial.set(i,centers.get_data(ic,i)+norm*rr_perp.get_data(i));
+                    }
+                
+                    if(idx==0){
+                        trial.subtract_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                    }
+                    else{
+                        trial.add_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                    }
+
+                    if(is_valid(trial)==0){
+                        stradval=-2.0*chisq_exception;
+                    }
+                    else{
+                        mu=gg.user_predict(trial,&sig,0);
+                        stradval=strad(mu,sig);
+                    }
+                
+                
+                    if(stradval>stradmax){
+                        stradmax=stradval;
+                
+                        for(i=0;i<gg.get_dim();i++){
+                            sambest.set(i,trial.get_data(i));
+                        }
+                    
+                        ix_chosen=ix;
+                        dx_chosen=idx;
+                        mu_chosen=mu;
+                        sig_chosen=sig;
                     }
                     
-                    ix_chosen=ix;
-                    dx_chosen=idx;
-                    mu_chosen=mu;
-                    sig_chosen=sig;
-                }
-                
+                    norm+=1.0;
+                }//loop over jct
             }//loop over ict (the number of trials proposed from each boundary point)
         
         }//loop over ix (which is the dimension)
