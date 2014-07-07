@@ -1590,14 +1590,9 @@ void aps::corner_focus(int ic){
     array_1d<double> min,max,trial,sambest,rr_perp,rr;
     array_1d<int> min_dex,max_dex,*extremity;
     double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen;
-    int i,j,k,l,actually_added;
-    int ix,iy,idx,idy,ix_chosen,iy_chosen,dx_chosen,dy_chosen;
+    int i,j,actually_added;
+    int ix,idx,ix_chosen,dx_chosen;
     int ict;
-    
-    int had_to_expand=0;
-    
-    double deltaX,deltaY,norm;
-    
     
     
     for(i=0;i<boundary_pts.get_cols(ic);i++){
@@ -1622,12 +1617,74 @@ void aps::corner_focus(int ic){
         
         for(ix=0;ix<gg.get_dim();ix++){
             for(i=0;i<gg.get_dim();i++){
-                rr.set(i,gg.get_pt(extremity->get_data(ix),i)-center.get_data(ic,i));
+                rr.set(i,gg.get_pt(extremity->get_data(ix),i)-centers.get_data(ic,i));
+            }
+            
+            nn=0.0;
+            for(i=0;i<gg.get_dim();i++){
+                nn+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+            }
+            for(i=0;i<gg.get_dim();i++){
+                rr.divide_val(i,nn);
             }
             
             //after this, you need to propose some number of perpendicular directions
             //set up trial points along these directions
             //then add a dx that is along the direction of extremity
+            
+            for(ict=0;ict<100;ict++){
+                
+                for(i=0;i<gg.get_dim();i++){
+                    rr_perp.set(i,normal_deviate(dice,0.0,1.0));
+                }
+                nn=0.0;
+                for(i=0;i<gg.get_dim();i++){
+                    nn+=rr_perp.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+                }
+                for(i=0;i<gg.get_dim();i++){
+                    rr_perp.subtract_val(i,nn*rr.get_data(i));
+                }
+                
+                nn=0.0;
+                for(i=0;i<gg.get_dim();i++){
+                    nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+                }
+                for(i=0;i<gg.get_dim();i++){
+                    rr_perp.divide_val(i,nn);
+                }
+                
+                for(i=0;i<gg.get_dim();i++){
+                    trial.set(i,centers.get_data(ic,i)+rr_perp.get_data(i));
+                }
+                
+                if(idx==0){
+                    trial.subtract_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                }
+                else{
+                    trial.add_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                }
+                
+                if(is_valid(trial)==0){
+                    stradval=-2.0*chisq_exception;
+                }
+                else{
+                    mu=gg.user_predict(trial,&sig,0);
+                    stradval=strad(mu,sig);
+                }
+                
+                
+                if(stradval>stradmax){
+                    for(i=0;i<gg.get_dim();i++){
+                        sambest.set(i,trial.get_data(i));
+                    }
+                    
+                    ix_chosen=ix;
+                    dx_chosen=idx;
+                    mu_chosen=mu;
+                    sig_chosen=sig;
+                }
+                
+            }//loop over ict (the number of trials proposed from each boundary point)
         
         }//loop over ix (which is the dimension)
        
@@ -1635,16 +1692,22 @@ void aps::corner_focus(int ic){
         
     }//loop over idx which controls whether this is max or min
     
-    
-    focus_pts.add(actually_added);
-    if(do_bisection==1){
-        bisection(sambest,chitrue);
+    if(stradmax>-1.0*chisq_exception){
+        evaluate(sambest,&chitrue,&actually_added,1);
+        if(actually_added>=0){
+            focus_pts.add(actually_added);
+            if(do_bisection==1){
+                bisection(sambest,chitrue);
+            }
+        }
+        printf("found %e\n",chitrue);
+        printf("ix %d dx %d\n",ix_chosen,dx_chosen);
+        printf("strad %e mu %e sig %e\n\n",stradmax,mu_chosen,sig_chosen);
     }
-    printf("found %e -- expanded %d\n",chitrue,had_to_expand);
-    printf("ix %d %d\n",ix_chosen,dx_chosen);
-    printf("iy %d %d\n",iy_chosen,dy_chosen);
-    printf("strad %e mu %e sig %e\n\n",stradmax,mu_chosen,sig_chosen);
-    
+    else{
+        printf("going to have to randomly focus instead\n");
+        random_focus(ic);
+    }
 }
 
 void aps::aps_focus(int in_samples){
