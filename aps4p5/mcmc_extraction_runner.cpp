@@ -15,7 +15,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(5000);
+test.set_cutoff(2500);
 
 //test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
@@ -63,13 +63,13 @@ int i,j;
 for(i=0;i<6;i++){
     for(j=i+1;j<6;j++){
         if(i!=3 && j!=3){
-            sprintf(outname,"mcmc_processed/wmap_%d_%d_20k.sav",i,j);
+            sprintf(outname,"mcmc_processed/wmap_%d_%d_10k.sav",i,j);
             kde_test.plot_boundary(ix.get_data(i),dx.get_data(i),ix.get_data(j),dx.get_data(j),0.95,outname,3);
         }
     }
 }
 
-test.plot_delta("mcmc_good_pts_test20k.sav",0.5*12.61);
+test.plot_delta("mcmc_good_pts_test10k.sav",0.5*12.61);
 
 array_1d<double> RR,VV,WW,mean,var;
 
