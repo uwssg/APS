@@ -1667,7 +1667,7 @@ void aps::corner_focus(int ic){
                 for(jct=0;jct<5;jct++){
                 
                     for(i=0;i<gg.get_dim();i++){
-                        trial.set(i,centers.get_data(ic,i)+norm*rr_perp.get_data(i));
+                        trial.set(i,gg.get_pt(extremity->get_data(ix),i)+norm*rr_perp.get_data(i));
                     }
                 
                     if(idx==0){
@@ -1720,8 +1720,8 @@ void aps::corner_focus(int ic){
         }
         printf("found %e\n",chitrue);
         printf("ix %d dx %d\n",ix_chosen,dx_chosen);
-        printf("strad %e mu %e sig %e\n\n",stradmax,mu_chosen,sig_chosen);
-        printf("norm %e\n",norm_chosen);
+        printf("strad %e mu %e sig %e\n",stradmax,mu_chosen,sig_chosen);
+        printf("norm %e\n\n",norm_chosen);
     }
     else{
         printf("going to have to randomly focus instead\n");
