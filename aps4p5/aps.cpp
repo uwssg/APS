@@ -1587,13 +1587,18 @@ void aps::random_focus(int ic){
 }
 
 void aps::corner_focus(int ic){
-    array_1d<double> min,max,trial,sambest,rr_perp,rr;
-    array_1d<int> min_dex,max_dex,*extremity;
+    array_1d<double> min,max,trial,sambest,rr_perp,rr,max_mid_val,min_mid_val;
+    array_2d<double> mid_pt_bases;
+    array_1d<int> min_dex,max_dex,min_mid_dex,max_mid_dex,*extremity;
     double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen,norm,norm_chosen;
     int i,j,actually_added;
     int ix,idx,ix_chosen,dx_chosen;
     int ict,jct;
     
+    min_dex.set_name("corner_focus_min_dex");
+    max_dex.set_name("corner_focus_max_dex");
+    min_mid_dex.set_name("corner_focus_min_mid_dex");
+    max_mid_dex.set_name("corner_focus_max_mid_dex");
     
     for(i=0;i<boundary_pts.get_cols(ic);i++){
         for(j=0;j<gg.get_dim();j++){
@@ -1617,10 +1622,57 @@ void aps::corner_focus(int ic){
         }
     }
     
+    for(ix=0;ix<gg.get_dim();ix++){
+        for(i=0;i<gg.get_dim();i++){
+            rr.set(i,0.5*(gg.get_pt(max_dex.get_data(ix),i)+gg.get_pt(min_dex.get_data(ix),i)-2.0*centers.get_data(ic,i)));
+        }
+        
+        norm=-1.0;
+        while(norm<1.0e-3){
+            for(i=0;i<gg.get_dim();i++){
+                norm+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+            }
+            norm=sqrt(norm);
+            
+            if(norm<1.0e-3){
+                for(i=0;i<gg.get_dim();i++){
+                    rr.add_val(i,1.0e-4*(max.get_data(i)-min.get_data(i)));
+                }
+            }
+        }
+        
+        for(i=0;i<gg.get_dim();i++){
+            rr.divide_val(i,norm);
+        }
+        
+        mid_pt_bases.add_row(rr);
+        
+        for(i=0;i<boundary_pts.get_cols(ic);i++){
+            nn=0.0;
+            for(j=0;j<gg.get_dim();j++){
+                nn+=(gg.get_pt(boundary_pts.get_data(ic,i),j)-centers.get_data(ic,j))*rr.get_data(j)/power(max.get_data(j)-min.get_data(j),2);
+            }
+            
+            if(i==0 || nn>max_mid_val.get_data(ix)){
+                max_mid_val.set(ix,nn);
+                max_mid_dex.set(ix,boundary_pts.get_data(ic,i));
+            }
+            
+            if(i==0 || nn<min_mid_val.get_data(ix)){
+                min_mid_val.set(ix,nn);
+                min_mid_dex.set(ix,boundary_pts.get_data(ic,i));
+            }
+        }
+        
+    }
+    
+    
     stradmax=-2.0*chisq_exception;
-    for(idx=0;idx<2;idx++){
+    for(idx=0;idx<4;idx++){
         if(idx==0)extremity=&min_dex;
-        else extremity=&max_dex;
+        else if(idx==1) extremity=&max_dex;
+        else if(idx==2) extremity=&min_mid_dex;
+        else if(idx==3) extremity=&max_mid_dex;
         
         for(ix=0;ix<gg.get_dim();ix++){
             for(i=0;i<gg.get_dim();i++){
@@ -1631,6 +1683,7 @@ void aps::corner_focus(int ic){
             for(i=0;i<gg.get_dim();i++){
                 nn+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
             }
+            nn=sqrt(nn);
             for(i=0;i<gg.get_dim();i++){
                 rr.divide_val(i,nn);
             }
@@ -1645,7 +1698,9 @@ void aps::corner_focus(int ic){
                     rr_perp.set(i,normal_deviate(dice,0.0,1.0));
                 }
                 
-                rr_perp.set(ix,0.0);
+                if(idx<2){
+                    rr_perp.set(ix,0.0);
+                }
                 
                 nn=0.0;
                 for(i=0;i<gg.get_dim();i++){
@@ -1659,6 +1714,7 @@ void aps::corner_focus(int ic){
                 for(i=0;i<gg.get_dim();i++){
                     nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
                 }
+                nn=sqrt(nn);
                 for(i=0;i<gg.get_dim();i++){
                     rr_perp.divide_val(i,nn);
                 }
@@ -1673,8 +1729,24 @@ void aps::corner_focus(int ic){
                     if(idx==0){
                         trial.subtract_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
                     }
-                    else{
+                    else if(idx==1){
                         trial.add_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                    }
+                    else if(idx==2){
+                        
+                        nn=0.1*(max_mid_val.get_data(ix)-min_mid_val.get_data(ix));
+                        for(i=0;i<gg.get_dim();i++){
+                            trial.subtract_val(i,nn*mid_pt_bases.get_data(ix,i));
+                        }
+                        
+                    }
+                    else if(idx==3){
+                    
+                        nn=0.1*(max_mid_val.get_data(ix)-min_mid_val.get_data(ix));
+                        for(i=0;i<gg.get_dim();i++){
+                            trial.add_val(i,nn*mid_pt_bases.get_data(ix,i));
+                        }
+                    
                     }
 
                     if(is_valid(trial)==0){
