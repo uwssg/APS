@@ -1589,7 +1589,7 @@ void aps::random_focus(int ic){
 void aps::corner_focus(int ic){
     array_1d<double> min,max,trial,sambest,rr_perp,rr;
     array_1d<int> min_dex,max_dex,*extremity;
-    double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen,norm;
+    double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen,norm,norm_chosen;
     int i,j,actually_added;
     int ix,idx,ix_chosen,dx_chosen;
     int ict,jct;
@@ -1694,6 +1694,7 @@ void aps::corner_focus(int ic){
                         dx_chosen=idx;
                         mu_chosen=mu;
                         sig_chosen=sig;
+                        norm_chosen=norm;
                     }
                     
                     norm+=1.0;
@@ -1717,6 +1718,7 @@ void aps::corner_focus(int ic){
         printf("found %e\n",chitrue);
         printf("ix %d dx %d\n",ix_chosen,dx_chosen);
         printf("strad %e mu %e sig %e\n\n",stradmax,mu_chosen,sig_chosen);
+        printf("norm %e\n",norm_chosen);
     }
     else{
         printf("going to have to randomly focus instead\n");
