@@ -1654,7 +1654,7 @@ void aps::corner_focus(int ic){
                 }
                 
                 for(i=0;i<gg.get_dim();i++){
-                    trial.set(i,centers.get_data(ic,i)+rr_perp.get_data(i));
+                    trial.set(i,centers.get_data(ic,i)+dice->doub()*rr_perp.get_data(i));
                 }
                 
                 if(idx==0){
