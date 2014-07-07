@@ -1644,6 +1644,9 @@ void aps::corner_focus(int ic){
                 for(i=0;i<gg.get_dim();i++){
                     rr_perp.set(i,normal_deviate(dice,0.0,1.0));
                 }
+                
+                rr_perp.set(ix,0.0);
+                
                 nn=0.0;
                 for(i=0;i<gg.get_dim();i++){
                     nn+=rr_perp.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
