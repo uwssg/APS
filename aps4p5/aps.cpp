@@ -1610,6 +1610,13 @@ void aps::corner_focus(int ic){
         }
     }
     
+    for(i=0;i<gg.get_dim();i++){
+        while(fabs(max.get_data(i)-min.get_data(i))<1.0e-10){
+            max.add_val(i,1.0e-4*(gg.get_max(i)-gg.get_min(i)));
+            min.subtract_val(i,1.0e-4*(gg.get_max(i)-gg.get_min(i)));
+        }
+    }
+    
     stradmax=-2.0*chisq_exception;
     for(idx=0;idx<2;idx++){
         if(idx==0)extremity=&min_dex;
@@ -1653,8 +1660,9 @@ void aps::corner_focus(int ic){
                     rr_perp.divide_val(i,nn);
                 }
                 
+                nn=5.0*dice->doub();
                 for(i=0;i<gg.get_dim();i++){
-                    trial.set(i,centers.get_data(ic,i)+dice->doub()*rr_perp.get_data(i));
+                    trial.set(i,centers.get_data(ic,i)+nn*rr_perp.get_data(i));
                 }
                 
                 if(idx==0){
@@ -1663,6 +1671,10 @@ void aps::corner_focus(int ic){
                 else{
                     trial.add_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
                 }
+                
+                /*if(in_bounds(trial)==1){
+                    printf("    found a trial that is in bounds %d\n",is_valid(trial));
+                }*/
                 
                 if(is_valid(trial)==0){
                     stradval=-2.0*chisq_exception;
@@ -1674,6 +1686,8 @@ void aps::corner_focus(int ic){
                 
                 
                 if(stradval>stradmax){
+                    stradmax=stradval;
+                
                     for(i=0;i<gg.get_dim();i++){
                         sambest.set(i,trial.get_data(i));
                     }
