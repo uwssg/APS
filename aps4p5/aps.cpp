@@ -1757,7 +1757,7 @@ void aps::corner_focus(int ic){
                         rr_perp.divide_val(i,nn);
                     }
              
-                    norm=1.0;
+                    norm=0.1;
                     for(jct=0;jct<5;jct++){
                 
                         for(i=0;i<gg.get_dim();i++){
@@ -1810,7 +1810,7 @@ void aps::corner_focus(int ic){
                             norm_chosen=norm;
                         }
                     
-                        norm+=1.0;
+                        norm+=0.1;
                     }//loop over jct
                 }//loop over ict (the number of trials proposed from each boundary point)
             }
