@@ -1587,7 +1587,7 @@ void aps::random_focus(int ic){
 }
 
 void aps::corner_focus(int ic){
-    array_1d<double> min,max,trial,sambest,rr_perp,rr,max_mid_val,min_mid_val;
+    array_1d<double> min,max,trial,sambest,rr_perp,rr,max_mid_val,min_mid_val,origin;
     array_2d<double> mid_pt_bases;
     array_1d<int> min_dex,max_dex,min_mid_dex,max_mid_dex,*extremity;
     double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen,norm,norm_chosen;
@@ -1614,6 +1614,10 @@ void aps::corner_focus(int ic){
                 max_dex.set(j,boundary_pts.get_data(ic,i));
             } 
         }
+    }
+    
+    for(i=0;i<gg.get_dim();i++){
+        origin.set(i,0.5*(max.get_data(i)+min.get_data(i)));
     }
     
     for(i=0;i<gg.get_dim();i++){
@@ -1650,7 +1654,7 @@ void aps::corner_focus(int ic){
             for(i=0;i<boundary_pts.get_cols(ic);i++){
                 nn=0.0;
                 for(j=0;j<gg.get_dim();j++){
-                    nn+=(gg.get_pt(boundary_pts.get_data(ic,i),j)-centers.get_data(ic,j))*rr.get_data(j)/power(max.get_data(j)-min.get_data(j),2);
+                    nn+=(gg.get_pt(boundary_pts.get_data(ic,i),j)-origin.get_data(j))*rr.get_data(j)/power(max.get_data(j)-min.get_data(j),2);
                 }
             
                 if(i==0 || nn>max_mid_val.get_data(ix)){
@@ -1686,7 +1690,7 @@ void aps::corner_focus(int ic){
             (idx==3 && max_mid_val.get_data(ix)<chisq_exception)){
         
                 for(i=0;i<gg.get_dim();i++){
-                    rr.set(i,gg.get_pt(extremity->get_data(ix),i)-centers.get_data(ic,i));
+                    rr.set(i,gg.get_pt(extremity->get_data(ix),i)-origin.get_data(i));
                 }
             
                 nn=0.0;
@@ -1822,7 +1826,7 @@ void aps::corner_focus(int ic){
     for(ix=0;ix<gg.get_dim();ix++){
         for(iy=ix+1;iy<gg.get_dim();iy++){
             for(i=0;i<gg.get_dim();i++){
-                trial.set(i,centers.get_data(ic,i));
+                trial.set(i,origin.get_data(i));
             }
             
             for(idx=0;idx<2;idx++){
