@@ -1617,7 +1617,7 @@ void aps::corner_focus(int ic){
     }
     
     for(i=0;i<gg.get_dim();i++){
-        origin.set(i,0.5*(max.get_data(i)+min.get_data(i)));
+        origin.set(i,centers.get_data(ic,i));
     }
     
     for(i=0;i<gg.get_dim();i++){
@@ -1825,10 +1825,7 @@ void aps::corner_focus(int ic){
     
     for(ix=0;ix<gg.get_dim();ix++){
         for(iy=ix+1;iy<gg.get_dim();iy++){
-            for(i=0;i<gg.get_dim();i++){
-                trial.set(i,origin.get_data(i));
-            }
-            
+
             for(idx=0;idx<2;idx++){
                 if(idx==0)trial.set(ix,min.get_data(ix));
                 else trial.set(ix,max.get_data(ix));
@@ -1837,21 +1834,31 @@ void aps::corner_focus(int ic){
                     if(idy==0)trial.set(iy,min.get_data(iy));
                     else trial.set(iy,max.get_data(iy));
                     
-                    if(is_valid(trial)==1){
-                        mu=gg.user_predict(trial,&sig,0);
-                        stradval=strad(mu,sig);
-                        if(stradval>stradmax){
-                            stradmax=stradval;
-                            for(i=0;i<gg.get_dim();i++){
-                                sambest.set(i,trial.get_data(i));
+                    for(ict=0;ict<20;ict++){
+                        
+                        for(i=0;i<gg.get_dim();i++){
+                            if(i!=ix && i!=iy){
+                                trial.set(i,min.get_data(i)+dice->doub()*(max.get_data(i)-min.get_data(i)));
                             }
-                            
-                            ix_chosen=iy+1000*ix;
-                            dx_chosen=1000*idx+idy;
-                            mu_chosen=mu;
-                            sig_chosen=sig;
                         }
-                    }
+                        
+                        if(is_valid(trial)==1){
+                            mu=gg.user_predict(trial,&sig,0);
+                            stradval=strad(mu,sig);
+                            if(stradval>stradmax){
+                                stradmax=stradval;
+                                for(i=0;i<gg.get_dim();i++){
+                                    sambest.set(i,trial.get_data(i));
+                                }
+                            
+                                ix_chosen=iy+1000*ix;
+                                dx_chosen=1000*idx+idy;
+                                mu_chosen=mu;
+                                sig_chosen=sig;
+                            }
+                        }
+                        
+                    }//loop over ict
                     
                 }//loop over idy for the corners
             }//loop over idx for the corners
