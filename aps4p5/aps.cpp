@@ -1624,51 +1624,49 @@ void aps::corner_focus(int ic){
     
     for(ix=0;ix<gg.get_dim();ix++){
         for(i=0;i<gg.get_dim();i++){
-            rr.set(i,0.5*(gg.get_pt(max_dex.get_data(ix),i)+gg.get_pt(min_dex.get_data(ix),i)-2.0*centers.get_data(ic,i)));
+            rr.set(i,(gg.get_pt(max_dex.get_data(ix),i)-gg.get_pt(min_dex.get_data(ix),i)));
         }
+        rr.set(ix,0.0);
         
-        norm=-1.0;
-        while(norm<1.0e-3){
-            norm=0.0;
+        norm=0.0;
+        for(i=0;i<gg.get_dim();i++){
+            norm+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+        }
+        norm=sqrt(norm);
+        
+        if(norm>0.0){        
             for(i=0;i<gg.get_dim();i++){
-                norm+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+                rr.divide_val(i,norm);
+            
+                if(isnan(rr.get_data(i))){
+                    printf("WARNING mid_rr %d is nan\n",i);
+                    exit(1);
+                }
             }
+        
+            mid_pt_bases.add_row(rr);
+        
+            for(i=0;i<boundary_pts.get_cols(ic);i++){
+                nn=0.0;
+                for(j=0;j<gg.get_dim();j++){
+                    nn+=(gg.get_pt(boundary_pts.get_data(ic,i),j)-centers.get_data(ic,j))*rr.get_data(j)/power(max.get_data(j)-min.get_data(j),2);
+                }
             
-            norm=sqrt(norm);
+                if(i==0 || nn>max_mid_val.get_data(ix)){
+                    max_mid_val.set(ix,nn);
+                    max_mid_dex.set(ix,boundary_pts.get_data(ic,i));
+                }
             
-            if(norm<1.0e-6){
-                for(i=0;i<gg.get_dim();i++){
-                    rr.add_val(i,1.0e-4*(max.get_data(i)-min.get_data(i)));
+                if(i==0 || nn<min_mid_val.get_data(ix)){
+                    min_mid_val.set(ix,nn);
+                    min_mid_dex.set(ix,boundary_pts.get_data(ic,i));
                 }
             }
         }
-        
-        for(i=0;i<gg.get_dim();i++){
-            rr.divide_val(i,norm);
-            
-            if(isnan(rr.get_data(i))){
-                printf("WARNING mid_rr %d is nan\n",i);
-                exit(1);
-            }
-        }
-        
-        mid_pt_bases.add_row(rr);
-        
-        for(i=0;i<boundary_pts.get_cols(ic);i++){
-            nn=0.0;
-            for(j=0;j<gg.get_dim();j++){
-                nn+=(gg.get_pt(boundary_pts.get_data(ic,i),j)-centers.get_data(ic,j))*rr.get_data(j)/power(max.get_data(j)-min.get_data(j),2);
-            }
-            
-            if(i==0 || nn>max_mid_val.get_data(ix)){
-                max_mid_val.set(ix,nn);
-                max_mid_dex.set(ix,boundary_pts.get_data(ic,i));
-            }
-            
-            if(i==0 || nn<min_mid_val.get_data(ix)){
-                min_mid_val.set(ix,nn);
-                min_mid_dex.set(ix,boundary_pts.get_data(ic,i));
-            }
+        else{
+            mid_pt_bases.add_row(rr);
+            max_mid_val.set(ix,2.0*chisq_exception);
+            min_mid_val.set(ix,-2.0*chisq_exception);
         }
         
     }
@@ -1682,123 +1680,127 @@ void aps::corner_focus(int ic){
         else if(idx==3) extremity=&max_mid_dex;
         
         for(ix=0;ix<gg.get_dim();ix++){
-            for(i=0;i<gg.get_dim();i++){
-                rr.set(i,gg.get_pt(extremity->get_data(ix),i)-centers.get_data(ic,i));
-            }
+            if(idx<2 ||
+            (idx==2 && max_mid_val.get_data(ix)<chisq_exception) ||
+            (idx==3 && min_mid_val.get_data(ix)>-1.0*chisq_exception)){
+        
+                for(i=0;i<gg.get_dim();i++){
+                    rr.set(i,gg.get_pt(extremity->get_data(ix),i)-centers.get_data(ic,i));
+                }
             
-            nn=0.0;
-            for(i=0;i<gg.get_dim();i++){
-                nn+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
-            }
+                nn=0.0;
+                for(i=0;i<gg.get_dim();i++){
+                    nn+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+                }
             
-            if(nn<1.0e-20){
-                printf("WARNNING norm of rr %e\n",nn);
-                printf("in corner_focus; before ict loop\n");
-                printf("ix %d idx %d\n",ix,idx);
-                exit(1);
-            }
+                if(nn<1.0e-20){
+                    printf("WARNNING norm of rr %e\n",nn);
+                    printf("in corner_focus; before ict loop\n");
+                    printf("ix %d idx %d\n",ix,idx);
+                    exit(1);
+                }
             
-            nn=sqrt(nn);
-            for(i=0;i<gg.get_dim();i++){
-                rr.divide_val(i,nn);
-            }
+                nn=sqrt(nn);
+                for(i=0;i<gg.get_dim();i++){
+                    rr.divide_val(i,nn);
+                }
             
             //after this, you need to propose some number of perpendicular directions
             //set up trial points along these directions
             //then add a dx that is along the direction of extremity
         
-            for(ict=0;ict<20;ict++){
-                
-                for(i=0;i<gg.get_dim();i++){
-                    rr_perp.set(i,normal_deviate(dice,0.0,1.0));
-                }
-                
-                if(idx<2){
-                    rr_perp.set(ix,0.0);
-                }
-                
-                nn=0.0;
-                for(i=0;i<gg.get_dim();i++){
-                    nn+=rr_perp.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
-                }
-                for(i=0;i<gg.get_dim();i++){
-                    rr_perp.subtract_val(i,nn*rr.get_data(i));
-                }
-                
-                nn=0.0;
-                for(i=0;i<gg.get_dim();i++){
-                    nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
-                }
-                
-                if(nn<1.0e-10){
-                    printf("WARNING norm of rr_perp is %e\n",nn);
-                    printf("in corner focus; inside ict loop; outside jct loop\n");
-                    printf("ix %d idx %d\n",ix,idx);
-                    exit(1);
-                }
-                
-                nn=sqrt(nn);
-                for(i=0;i<gg.get_dim();i++){
-                    rr_perp.divide_val(i,nn);
-                }
-             
-                norm=1.0;
-                for(jct=0;jct<5;jct++){
+                for(ict=0;ict<20;ict++){
                 
                     for(i=0;i<gg.get_dim();i++){
-                        trial.set(i,gg.get_pt(extremity->get_data(ix),i)+norm*rr_perp.get_data(i));
+                        rr_perp.set(i,normal_deviate(dice,0.0,1.0));
                     }
                 
-                    if(idx==0){
-                        trial.subtract_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                    if(idx<2){
+                        rr_perp.set(ix,0.0);
                     }
-                    else if(idx==1){
-                        trial.add_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                
+                    nn=0.0;
+                    for(i=0;i<gg.get_dim();i++){
+                        nn+=rr_perp.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
                     }
-                    else if(idx==2){
-                        
-                        nn=0.1*(max_mid_val.get_data(ix)-min_mid_val.get_data(ix));
+                    for(i=0;i<gg.get_dim();i++){
+                        rr_perp.subtract_val(i,nn*rr.get_data(i));
+                    }
+                
+                    nn=0.0;
+                    for(i=0;i<gg.get_dim();i++){
+                        nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+                    }
+                
+                    if(nn<1.0e-10){
+                        printf("WARNING norm of rr_perp is %e\n",nn);
+                        printf("in corner focus; inside ict loop; outside jct loop\n");
+                        printf("ix %d idx %d\n",ix,idx);
+                        exit(1);
+                    }
+                
+                    nn=sqrt(nn);
+                    for(i=0;i<gg.get_dim();i++){
+                        rr_perp.divide_val(i,nn);
+                    }
+             
+                    norm=1.0;
+                    for(jct=0;jct<5;jct++){
+                
                         for(i=0;i<gg.get_dim();i++){
-                            trial.subtract_val(i,nn*mid_pt_bases.get_data(ix,i));
+                            trial.set(i,gg.get_pt(extremity->get_data(ix),i)+norm*rr_perp.get_data(i));
                         }
+                
+                        if(idx==0){
+                            trial.subtract_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                        }
+                        else if(idx==1){
+                            trial.add_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                        }
+                        else if(idx==2){
                         
-                    }
-                    else if(idx==3){
-                    
-                        nn=0.1*(max_mid_val.get_data(ix)-min_mid_val.get_data(ix));
-                        for(i=0;i<gg.get_dim();i++){
-                            trial.add_val(i,nn*mid_pt_bases.get_data(ix,i));
+                            nn=0.1*(max_mid_val.get_data(ix)-min_mid_val.get_data(ix));
+                            for(i=0;i<gg.get_dim();i++){
+                                trial.subtract_val(i,nn*mid_pt_bases.get_data(ix,i));
+                            }
+                        
                         }
+                        else if(idx==3){
                     
-                    }
+                            nn=0.1*(max_mid_val.get_data(ix)-min_mid_val.get_data(ix));
+                            for(i=0;i<gg.get_dim();i++){
+                                trial.add_val(i,nn*mid_pt_bases.get_data(ix,i));
+                            }
+                    
+                        }
 
-                    if(is_valid(trial)==0){
-                        stradval=-2.0*chisq_exception;
-                    }
-                    else{
-                        mu=gg.user_predict(trial,&sig,0);
-                        stradval=strad(mu,sig);
-                    }
+                        if(is_valid(trial)==0){
+                            stradval=-2.0*chisq_exception;
+                        }
+                        else{
+                            mu=gg.user_predict(trial,&sig,0);
+                            stradval=strad(mu,sig);
+                        }
                 
                 
-                    if(stradval>stradmax){
-                        stradmax=stradval;
+                        if(stradval>stradmax){
+                            stradmax=stradval;
                 
-                        for(i=0;i<gg.get_dim();i++){
-                            sambest.set(i,trial.get_data(i));
+                            for(i=0;i<gg.get_dim();i++){
+                                sambest.set(i,trial.get_data(i));
+                            }
+                    
+                            ix_chosen=ix;
+                            dx_chosen=idx;
+                            mu_chosen=mu;
+                            sig_chosen=sig;
+                            norm_chosen=norm;
                         }
                     
-                        ix_chosen=ix;
-                        dx_chosen=idx;
-                        mu_chosen=mu;
-                        sig_chosen=sig;
-                        norm_chosen=norm;
-                    }
-                    
-                    norm+=1.0;
-                }//loop over jct
-            }//loop over ict (the number of trials proposed from each boundary point)
-        
+                        norm+=1.0;
+                    }//loop over jct
+                }//loop over ict (the number of trials proposed from each boundary point)
+            }
         }//loop over ix (which is the dimension)
        
         
