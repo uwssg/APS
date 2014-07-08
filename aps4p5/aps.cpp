@@ -1673,7 +1673,7 @@ void aps::corner_focus(int ic){
     
     
     stradmax=-2.0*chisq_exception;
-    for(idx=0;idx<4;idx++){
+    for(idx=0;idx<2;idx++){
         if(idx==0)extremity=&min_dex;
         else if(idx==1) extremity=&max_dex;
         else if(idx==2) extremity=&min_mid_dex;
