@@ -1823,47 +1823,50 @@ void aps::corner_focus(int ic){
         
     }//loop over idx which controls whether this is max or min
     
-    for(ix=0;ix<gg.get_dim();ix++){
-        for(iy=ix+1;iy<gg.get_dim();iy++){
-
-            for(idx=0;idx<2;idx++){
-                if(idx==0)trial.set(ix,min.get_data(ix));
-                else trial.set(ix,max.get_data(ix));
+    array_1d<double> lengthSq;
+    for(i=0;i<gg.get_dim();i++){
+        origin.set(i,0.5*(max.get_data(i)+min.get_data(i)));
+        lengthSq.set(i,0.25*power(max.get_data(i)-min.get_data(i),2));
+    }
+    
+    for(ict=0;ict<200;ict++){
+        for(i=0;i<gg.get_dim();i++){
+            rr.set(i,normal_deviate(dice,0.0,1.0));    
+        }
+        norm=0.0;
+        for(i=0;i<gg.get_dim();i++){
+            norm+=rr.get_data(i)*rr.get_data(i)/lengthSq.get_data(i);
+        }
+        norm=sqrt(norm);
+        for(i=0;i<gg.get_dim();i++){
+            rr.divide_val(i,norm);
+        }
+        
+        norm=1.0+0.5*dice->doub();
+        
+        for(i=0;i<gg.get_dim();i++){
+            trial.set(i,origin.get_data(i)+norm*rr.get_data(i));
+        }
+        
+        if(is_valid(trial)==1){
+            mu=gg.user_predict(trial,&sig,0);
+            stradval=strad(mu,sig);
+            if(stradval>stradmax){
+                stradmax=stradval;
                 
-                for(idy=0;idy<2;idy++){
-                    if(idy==0)trial.set(iy,min.get_data(iy));
-                    else trial.set(iy,max.get_data(iy));
-                    
-                    for(ict=0;ict<20;ict++){
-                        
-                        for(i=0;i<gg.get_dim();i++){
-                            if(i!=ix && i!=iy){
-                                trial.set(i,min.get_data(i)+dice->doub()*(max.get_data(i)-min.get_data(i)));
-                            }
-                        }
-                        
-                        if(is_valid(trial)==1){
-                            mu=gg.user_predict(trial,&sig,0);
-                            stradval=strad(mu,sig);
-                            if(stradval>stradmax){
-                                stradmax=stradval;
-                                for(i=0;i<gg.get_dim();i++){
-                                    sambest.set(i,trial.get_data(i));
-                                }
-                            
-                                ix_chosen=-iy-1000*ix;
-                                dx_chosen=-1000*idx-idy;
-                                mu_chosen=mu;
-                                sig_chosen=sig;
-                            }
-                        }
-                        
-                    }//loop over ict
-                    
-                }//loop over idy for the corners
-            }//loop over idx for the corners
-        }//loop over iy for the corners
-    }//loop over ix for the corners
+                for(i=0;i<gg.get_dim();i++){
+                    sambest.set(i,trial.get_data(i));
+                }
+                
+                mu_chosen=mu;
+                sig_chosen=sig;
+                ix_chosen=-1;
+                dx_chosen=-1;
+            }
+        }
+        
+    
+    }
     
     if(stradmax>-1.0*chisq_exception){
         evaluate(sambest,&chitrue,&actually_added,1);
