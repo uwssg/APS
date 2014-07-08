@@ -1851,8 +1851,8 @@ void aps::corner_focus(int ic){
                                     sambest.set(i,trial.get_data(i));
                                 }
                             
-                                ix_chosen=iy+1000*ix;
-                                dx_chosen=1000*idx+idy;
+                                ix_chosen=-iy-1000*ix;
+                                dx_chosen=-1000*idx-idy;
                                 mu_chosen=mu;
                                 sig_chosen=sig;
                             }
