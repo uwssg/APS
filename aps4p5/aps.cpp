@@ -1681,8 +1681,8 @@ void aps::corner_focus(int ic){
         
         for(ix=0;ix<gg.get_dim();ix++){
             if(idx<2 ||
-            (idx==2 && max_mid_val.get_data(ix)<chisq_exception) ||
-            (idx==3 && min_mid_val.get_data(ix)>-1.0*chisq_exception)){
+            (idx==2 && min_mid_val.get_data(ix)>-1.0*chisq_exception) ||
+            (idx==3 && max_mid_val.get_data(ix)<chisq_exception)){
         
                 for(i=0;i<gg.get_dim();i++){
                     rr.set(i,gg.get_pt(extremity->get_data(ix),i)-centers.get_data(ic,i));
@@ -1693,7 +1693,7 @@ void aps::corner_focus(int ic){
                     nn+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
                 }
             
-                if(nn<1.0e-20){
+                if(nn<1.0e-30 || isnan(nn)){
                     printf("WARNNING norm of rr %e\n",nn);
                     printf("in corner_focus; before ict loop\n");
                     printf("ix %d idx %d\n",ix,idx);
@@ -1715,9 +1715,6 @@ void aps::corner_focus(int ic){
                         rr_perp.set(i,normal_deviate(dice,0.0,1.0));
                     }
                 
-                    if(idx<2){
-                        rr_perp.set(ix,0.0);
-                    }
                 
                     nn=0.0;
                     for(i=0;i<gg.get_dim();i++){
@@ -1726,13 +1723,27 @@ void aps::corner_focus(int ic){
                     for(i=0;i<gg.get_dim();i++){
                         rr_perp.subtract_val(i,nn*rr.get_data(i));
                     }
+  
+                    if(idx<2){
+                        rr_perp.set(ix,0.0);
+                    }
+                    else{
+                        nn=0.0;
+                        for(i=0;i<gg.get_dim();i++){
+                            nn+=rr_perp.get_data(i)*mid_pt_bases.get_data(ix,i)/power(max.get_data(i)-min.get_data(i),2);
+                        }
+                        for(i=0;i<gg.get_dim();i++){
+                            rr_perp.subtract_val(i,nn*mid_pt_bases.get_data(ix,i));
+                        }
+                        
+                    }
                 
                     nn=0.0;
                     for(i=0;i<gg.get_dim();i++){
                         nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
                     }
                 
-                    if(nn<1.0e-10){
+                    if(nn<1.0e-10 || isnan(nn)){
                         printf("WARNING norm of rr_perp is %e\n",nn);
                         printf("in corner focus; inside ict loop; outside jct loop\n");
                         printf("ix %d idx %d\n",ix,idx);
