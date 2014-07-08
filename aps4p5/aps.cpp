@@ -1626,7 +1626,7 @@ void aps::corner_focus(int ic){
         for(i=0;i<gg.get_dim();i++){
             rr.set(i,(gg.get_pt(max_dex.get_data(ix),i)-gg.get_pt(min_dex.get_data(ix),i)));
         }
-        rr.set(ix,0.0);
+        rr.multiply_val(ix,-1.0);
         
         norm=0.0;
         for(i=0;i<gg.get_dim();i++){
