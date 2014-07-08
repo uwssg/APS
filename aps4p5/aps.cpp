@@ -1823,19 +1823,19 @@ void aps::corner_focus(int ic){
         
     }//loop over idx which controls whether this is max or min
     
-    array_1d<double> lengthSq;
+    array_1d<double> length;
     for(i=0;i<gg.get_dim();i++){
         origin.set(i,0.5*(max.get_data(i)+min.get_data(i)));
-        lengthSq.set(i,0.25*power(max.get_data(i)-min.get_data(i),2));
+        length.set(i,0.5*(max.get_data(i)-min.get_data(i)));
     }
     
     for(ict=0;ict<200;ict++){
         for(i=0;i<gg.get_dim();i++){
-            rr.set(i,normal_deviate(dice,0.0,1.0));    
+            rr.set(i,normal_deviate(dice,0.0,length.get_data(i)));    
         }
         norm=0.0;
         for(i=0;i<gg.get_dim();i++){
-            norm+=rr.get_data(i)*rr.get_data(i)/lengthSq.get_data(i);
+            norm+=rr.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
         }
         norm=sqrt(norm);
         for(i=0;i<gg.get_dim();i++){
