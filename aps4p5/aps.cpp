@@ -1593,6 +1593,7 @@ void aps::corner_focus(int ic){
     double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen,norm,norm_chosen;
     int i,j,actually_added;
     int ix,idx,ix_chosen,dx_chosen;
+    int iy,idy;
     int ict,jct;
     
     min_dex.set_name("corner_focus_min_dex");
@@ -1815,10 +1816,43 @@ void aps::corner_focus(int ic){
                 }//loop over ict (the number of trials proposed from each boundary point)
             }
         }//loop over ix (which is the dimension)
-       
-        
         
     }//loop over idx which controls whether this is max or min
+    
+    for(ix=0;ix<gg.get_dim();ix++){
+        for(iy=ix+1;iy<gg.get_dim();iy++){
+            for(i=0;i<gg.get_dim();i++){
+                trial.set(i,centers.get_data(ic,i));
+            }
+            
+            for(idx=0;idx<2;idx++){
+                if(idx==0)trial.set(ix,min.get_data(ix));
+                else trial.set(ix,max.get_data(ix));
+                
+                for(idy=0;idy<2;idy++){
+                    if(idy==0)trial.set(iy,min.get_data(iy));
+                    else trial.set(iy,max.get_data(iy));
+                    
+                    if(is_valid(trial)==1){
+                        mu=gg.user_predict(trial,&sig,0);
+                        stradval=strad(mu,sig);
+                        if(stradval>stradmax){
+                            stradmax=stradval;
+                            for(i=0;i<gg.get_dim();i++){
+                                sambest.set(i,trial.get_data(i));
+                            }
+                            
+                            ix_chosen=iy+1000*ix;
+                            dx_chosen=1000*idx+idy;
+                            mu_chosen=mu;
+                            sig_chosen=sig;
+                        }
+                    }
+                    
+                }//loop over idy for the corners
+            }//loop over idx for the corners
+        }//loop over iy for the corners
+    }//loop over ix for the corners
     
     if(stradmax>-1.0*chisq_exception){
         evaluate(sambest,&chitrue,&actually_added,1);
