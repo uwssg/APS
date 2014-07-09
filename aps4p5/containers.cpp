@@ -1307,8 +1307,10 @@ template <typename T>
 int asymm_array_2d<T>::get_cols(int dex){
     
     if(data==NULL){
-        printf("WARNING asking for cols in asymm array 2d\n");
-	die(dex);
+        return 0;
+        
+        //printf("WARNING asking for cols in asymm array 2d\n");
+	//die(dex);
     }
     
     if(dex<0){
