@@ -1698,7 +1698,7 @@ void aps::corner_focus(int ic){
             
                 nn=0.0;
                 for(i=0;i<gg.get_dim();i++){
-                    nn+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+                    nn+=rr.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
                 }
             
                 if(nn<1.0e-30 || isnan(nn)){
@@ -1726,7 +1726,7 @@ void aps::corner_focus(int ic){
                 
                     nn=0.0;
                     for(i=0;i<gg.get_dim();i++){
-                        nn+=rr_perp.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+                        nn+=rr_perp.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
                     }
                     for(i=0;i<gg.get_dim();i++){
                         rr_perp.subtract_val(i,nn*rr.get_data(i));
@@ -1750,7 +1750,7 @@ void aps::corner_focus(int ic){
                     
                     nn=0.0;
                     for(i=0;i<gg.get_dim();i++){
-                        nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
+                        nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(length.get_data(i),2);
                     }
                 
                     if(nn<1.0e-10 || isnan(nn)){
@@ -1773,10 +1773,10 @@ void aps::corner_focus(int ic){
                         }
                 
                         if(idx==0){
-                            trial.subtract_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                            trial.subtract_val(ix,0.1*length.get_data(ix));
                         }
                         else if(idx==1){
-                            trial.add_val(ix,0.1*(max.get_data(ix)-min.get_data(ix)));
+                            trial.add_val(ix,0.1*length.get_data(ix));
                         }
                         else if(idx==2){
                         
