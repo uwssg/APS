@@ -1311,9 +1311,13 @@ int asymm_array_2d<T>::get_cols(int dex){
 	die(dex);
     }
     
-    if(dex<0 || dex>=rows){
+    if(dex<0){
         printf("WARNING asking for cols in asymm array 2d\n");
 	die(dex);
+    }
+    
+    if(dex>=rows){
+        return 0;
     }
     
     return data[dex].get_dim();
