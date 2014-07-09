@@ -125,7 +125,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     chisq=NULL;
     
-    global_median=200000.0;
+    global_median=-2.0*chisq_exception;
     grat=1.0;
     
     dot_product_threshold=0.8;
@@ -1215,55 +1215,9 @@ void aps::aps_wide(int in_samples){
             sig_storage.add(simplex_sig_best);
          
             if(do_bisection==1){
-                ic=find_nearest_center(simplex_best,chitrue);
-                
-                if(ic>=boundary_pts.get_rows() || boundary_pts.get_cols(ic)<=0){
-                    //printf("    bisecting because there weren't any boundary points\n");
+                if(chitrue<global_median){
                     bisection(simplex_best,chitrue);
                 }
-                else{
-                    dot_max=-2.0*chisq_exception;
-                    for(i=0;i<gg.get_dim();i++){
-                        dir.set(i,(simplex_best.get_data(i)-centers.get_data(ic,i))/(gg.get_max(i)-gg.get_min(i)));
-                    }
-                    dir.normalize();
-                    
-                    for(i=0;i<boundary_pts.get_cols(ic) && dot_max<dot_threshold;i++){
-                        
-                        for(j=0;j<gg.get_dim();j++){
-                            test_dir.set(j,(gg.get_pt(boundary_pts.get_data(ic,i),j)-centers.get_data(ic,j))/(gg.get_max(j)-gg.get_min(j)));;
-                        }
-                        
-                        test_dir.normalize();
-                        
-                        dot=0.0;
-                        for(j=0;j<gg.get_dim();j++){
-                            dot+=dir.get_data(j)*test_dir.get_data(j);
-                        }
-                        
-                        if(dot>dot_max){
-                            dot_max=dot;
-                        }
-                    }
-                    
-                    if(dot_max<dot_threshold){
-                        n_bisected++;
-                        //printf("    bisecting because dot %e\n",dot_max);
-                        bisection(simplex_best,chitrue);
-                    }
-                    else{
-                        n_not_bisected++;
-                        //printf("    not bisecting because dot %e\n",dot_max);
-                    }
-                    
-                    //printf("    bdry %d bisected %d not %d global_med %.3e\n\n",
-                    //boundary_pts.get_cols(0),n_bisected,n_not_bisected,global_median);
-                
-                }
-                
-                /*if(chitrue<global_median){
-                    bisection(simplex_best,chitrue);
-                }*/
             }
             
             if(chitrue<strad.get_target()){
