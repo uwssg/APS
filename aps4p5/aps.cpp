@@ -1676,6 +1676,9 @@ void aps::corner_focus(int ic){
         
     }
     
+    array_1d<double> length;
+    
+    for(i=0;i<gg.get_dim();i++)length.set(i,max.get_data(i)-min.get_data(i));
     
     stradmax=-2.0*chisq_exception;
     for(idx=0;idx<2;idx++){
@@ -1717,7 +1720,7 @@ void aps::corner_focus(int ic){
                 for(ict=0;ict<20;ict++){
                 
                     for(i=0;i<gg.get_dim();i++){
-                        rr_perp.set(i,normal_deviate(dice,0.0,1.0));
+                        rr_perp.set(i,normal_deviate(dice,0.0,length.get_data(i)));
                     }
                 
                 
@@ -1823,7 +1826,7 @@ void aps::corner_focus(int ic){
         
     }//loop over idx which controls whether this is max or min
     
-    array_1d<double> length;
+
     for(i=0;i<gg.get_dim();i++){
         origin.set(i,0.5*(max.get_data(i)+min.get_data(i)));
         length.set(i,0.5*(max.get_data(i)-min.get_data(i)));
