@@ -1722,7 +1722,8 @@ void aps::corner_focus(int ic){
                     for(i=0;i<gg.get_dim();i++){
                         rr_perp.set(i,normal_deviate(dice,0.0,length.get_data(i)));
                     }
-                
+                    
+                    rr_perp.set(ix,0.0);
                 
                     nn=0.0;
                     for(i=0;i<gg.get_dim();i++){
@@ -1832,6 +1833,7 @@ void aps::corner_focus(int ic){
         length.set(i,0.5*(max.get_data(i)-min.get_data(i)));
     }
     
+    /*
     for(ict=0;ict<200;ict++){
         for(i=0;i<gg.get_dim();i++){
             rr.set(i,normal_deviate(dice,0.0,length.get_data(i)));    
@@ -1870,6 +1872,7 @@ void aps::corner_focus(int ic){
         
     
     }
+    */
     
     if(stradmax>-1.0*chisq_exception){
         evaluate(sambest,&chitrue,&actually_added,1);
