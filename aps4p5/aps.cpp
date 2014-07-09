@@ -1836,13 +1836,13 @@ void aps::corner_focus(int ic){
                 bisection(sambest,chitrue);
             }
         }
-        printf("found %e\n",chitrue);
+        /*printf("found %e\n",chitrue);
         printf("ix %d dx %d\n",ix_chosen,dx_chosen);
         printf("strad %e mu %e sig %e\n",stradmax,mu_chosen,sig_chosen);
-        printf("norm %e\n\n",norm_chosen);
+        printf("norm %e\n\n",norm_chosen);*/
     }
     else{
-        printf("going to have to randomly focus instead\n");
+        //printf("going to have to randomly focus instead\n");
         random_focus(ic);
     }
 }
@@ -1874,24 +1874,25 @@ void aps::aps_focus(int in_samples){
 
   
    
-   printf("in focus\n");
+   //printf("in focus\n");
    
    for(ic=0;ic<centers.get_rows();ic++){
        called_focus++;
        if(boundary_pts.get_cols(ic)<gg.get_dim()){
-           printf("randomly focusing\n");
+           //printf("randomly focusing\n");
            random_focus(ic);
            
        }//if don't have enough boundary points
        else{
-           printf("focusing on corners\n");
+           //printf("focusing on corners\n");
            corner_focus(ic);
        }    
        
    }
    
    gg.nn_srch(pt_1,1,neigh,ddneigh);
-   printf("nearest to pt 1\n");
+   
+   /*printf("nearest to pt 1\n");
    printf("%e %e\n%e %e\n%e\n\n",
    pt_1.get_data(0),gg.get_pt(neigh.get_data(0),0),
    pt_1.get_data(2),gg.get_pt(neigh.get_data(0),2),
@@ -1902,7 +1903,7 @@ void aps::aps_focus(int in_samples){
    printf("%e %e\n%e %e\n%e\n\n",
    pt_2.get_data(4),gg.get_pt(neigh.get_data(0),4),
    pt_2.get_data(5),gg.get_pt(neigh.get_data(0),5),
-   gg.get_fn(neigh.get_data(0)));
+   gg.get_fn(neigh.get_data(0)));*/
    
      
 
