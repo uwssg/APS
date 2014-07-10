@@ -15,7 +15,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-//test.set_cutoff(7500);
+test.set_cutoff(7500);
 
 //test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
 
@@ -33,7 +33,7 @@ printf("independent samples %d\n",test.get_nsamples());
 printf("thinby %d\nused %d\nkept %d\n",test.get_thinby(),test.get_total_used(),test.get_total_kept());
 printf("rows %d\n",test.get_total_rows());
 
-test.print_samples("test_wmap7_samples.sav");
+test.print_samples("test_wmap7_samples30k.sav");
 
 kde kde_test;
 kde_test.set_data(test.get_samples());
@@ -63,13 +63,13 @@ int i,j;
 for(i=0;i<6;i++){
     for(j=i+1;j<6;j++){
         if(i!=3 && j!=3){
-            sprintf(outname,"mcmc_processed/wmap_%d_%d_control.sav",i,j);
+            sprintf(outname,"mcmc_processed/wmap_%d_%d_30k.sav",i,j);
             kde_test.plot_boundary(ix.get_data(i),dx.get_data(i),ix.get_data(j),dx.get_data(j),0.95,outname,3);
         }
     }
 }
 
-test.plot_delta("mcmc_good_pts_test_control.sav",0.5*12.61);
+test.plot_delta("mcmc_good_pts_test_30k.sav",0.5*12.61);
 
 array_1d<double> RR,VV,WW,mean,var;
 
