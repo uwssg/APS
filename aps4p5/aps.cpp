@@ -764,7 +764,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     double fstar,fstarstar;
     int ih,il,i,j,k,mindex=-1,actually_added;
-    double alpha=1.0,beta=0.9,gamma=1.1;
+    //double alpha=1.0,beta=0.9,gamma=1.1;
+    double alpha=1.0,beta=0.5,gamma=2.1;
     
     //gg.nn_srch(vv_in,dim+1,neigh,ddneigh);
     
@@ -964,7 +965,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
         }
         
-        //printf("chimin %e sig %e mu %e\n",chimin,sig,mu);
+        sig=ff.get_data(ih)-ff.get_data(il);
+        
+        printf("chimin %e sig %e mu %e\n",chimin,sig,mu);
         
         //printf("    sig %e\n",sig);
         //if(chisq->get_called()-last_found%100==0 && chisq->get_called()-last_found>0){
@@ -974,48 +977,50 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     }
     printf("chimin %e mu %e sig %e time %e\n",
     chimin,mu,sig,double(time(NULL))-time_last_found);
+   
+    
+    array_1d<double> true_min,gradient,to_bottom;
+    true_min.set(0,2.191591e-02); 
+    true_min.set(1,1.134235e-01);
+    true_min.set(3,1.023216e-02);
+    true_min.set(4,9.550505e-01);
+    true_min.set(5,3.077629e+00); 
+    true_min.set(2,6.889954e-01);
+    
+    array_1d<int> new_neigh;
+    gg.nn_srch(minpt,1,new_neigh,gradient);
+    mu=gradient.get_data(0)/sqrt(double(dim));;
+    
+    for(i=0;i<dim;i++){
+        for(j=0;j<dim;j++){
+            to_bottom.set(j,minpt.get_data(j)+(dice->doub()-0.5)*mu*length.get_data(j));
+        }
+        evaluate(to_bottom,&gamma);
+    }
+    
+    
+    gg.actual_gradient(minpt,gradient);
+    gradient.normalize();
+    
+    
+    for(i=0;i<dim;i++){
+        true_var.set(i,0.5*(minpt.get_data(i)+true_min.get_data(i)));
+    }
+    
+    for(i=0;i<dim;i++){
+        to_bottom.set(i,minpt.get_data(i)-true_min.get_data(i));
+    }
+    to_bottom.normalize();
+    
+    mu=0.0;
+    for(i=0;i<dim;i++){
+        mu+=gradient.get_data(i)*to_bottom.get_data(i);
+    }
+    printf("dot between gradient and to_bottom %e\n",mu);
+    
+    evaluate(true_var,&mu,&i);
+    printf("point between %e %d\n",mu,i);
     exit(1);
-    
-       /* printf("    iteration %d chimin %e\n",iteration,chimin);
-        
-        k=0;
-        for(i=0;i<dim+1;i++){
-            if(i!=il){
-                for(j=0;j<dim;j++){
-                    pts.set(i,j,pts.get_data(il,j));
-                }
-                
-                pts.add_val(i,k,0.01*(max.get_data(k)-min.get_data(k)));
-                k++;
-                
-                for(j=0;j<dim;j++){
-                    true_var.set(j,min.get_data(j)+pts.get_data(i,j));
-                }
-                mu=(*chisq)(true_var);
-                if(mu<chisq_exception){
-                    add_pt(true_var,mu);
-                }
-                if(mu<simplex_min){
-                    simplex_min=mu;
-                    mindex=gg.get_pts()-1;
-                }
-                ff.set(i,mu);
-            }
-        }
-        
-        for(i=0;i<dim+1;i++){
-            if(i==0 || ff.get_data(i)<ff.get_data(il)){
-                il=i;
-            }
-            if(i==0 || ff.get_data(i)>ff.get_data(ih)){
-                ih=i;
-            }
-        }
-        
-        sig=1.0;
-    }//loop over iteration
-    */
-    
    
     known_minima.add(mindex);
     j=centers.get_rows();
