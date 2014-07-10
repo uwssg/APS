@@ -2327,7 +2327,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 neigh.set(gg.get_dim()-1,i_test);
             }
             
-            
+            printf("chimin before gradient %e\n",chimin);
             calculate_gradient(origin_dex,neigh,gradient);
             if(gradient.get_dim()==gg.get_dim()){
                 gradient.normalize();
@@ -2336,7 +2336,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 }
                 
                 evaluate(trial,&mu,&i_test);
-                printf("gradient found %e %d\n",mu,i_test);
+                printf("gradient found %e %d\n\n",mu,i_test);
                 
             }
              
