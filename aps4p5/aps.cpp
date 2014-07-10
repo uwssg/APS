@@ -73,6 +73,8 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     good_pts.set_name("aps_good_pts");
     centers.set_name("aps_centers");
     center_dexes.set_name("aps_center_dexes");
+    boundary_pts.set_name("aps_boundary_pts");
+    gradient_seed_pts.set_name("aps_gradient_seed_pts");
     
     good_rr_avg=0.1;
     write_every=1000;
@@ -2123,13 +2125,6 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     double dd,ddmin;
     int origin_dex,i,j,k,use_it_parabola,i_center=-1;
     
-    array_1d<int> dex_buffer,parabola_dex; //for trying to find true minimum using a parabola
-    array_1d<double> tosort,sorted;
-    parabola_dex.set_name("bisection_parabola_dex");
-    parabola_dex.set(0,-1);
-    parabola_dex.set(1,-1);
-    parabola_dex.set(2,-1);
-    
     double bisection_tolerance=0.1*delta_chisquared;
     
     //if(bisection_tolerance>0.1)bisection_tolerance=0.1;
@@ -2243,25 +2238,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         }
         
         evaluate(trial,&mu,&i_test);
-        if(i_test>=0){
-            use_it_parabola=1;
-            for(i=0;i<mu_dex.get_dim();i++){
-                if(i_test==mu_dex.get_data(i))use_it_parabola=0;
-            }
-            
-            if(use_it_parabola==1){
-                mu_to_sort.add(mu);
-                mu_dex.add(i_test);
-            }
-        }
         
-        /*if(i_test>=0)use_it_parabola=1;
-        else use_it_parabola=0;
-        
-        for(i=0;i<3 && use_it_parabola==1;i++){
-            if(i_test==parabola_dex.get_data(i))use_it_parabola=0;
-        }*/
-     
         if(mu>strad.get_target()){
             for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
             fhigh=mu;
@@ -2275,8 +2252,6 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                     nearest_pt.set(i,highball.get_data(i));
                 }
             }
-            
-            
                 
         }
         else{
@@ -2294,25 +2269,6 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             }
 
         }
-        
-        /*if(use_it_parabola==1){
-            if(i_test==i_nearest){
-                if(parabola_dex.get_data(1)==old_low){
-                    parabola_dex.set(0,parabola_dex.get_data(1));
-                }
-                else if(parabola_dex.get_data(1)==old_high){
-                    parabola_dex.set(2,parabola_dex.get_data(1));
-                }
-                
-                parabola_dex.set(1,i_test);
-            }
-            else if(i_test==i_high && i_test!=i_nearest){
-                parabola_dex.set(2,i_test);
-            }           
-            else if(i_test==i_low){
-                parabola_dex.set(0,i_test);
-            }
-        }*/
                         
         dd*=0.5;
         
@@ -2332,107 +2288,62 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     evaluate(trial,&mu,&i_test);
     
-    if(i_test>=0){
-        use_it_parabola=1;
-        for(i=0;i<mu_dex.get_dim();i++){
-            if(i_test==mu_dex.get_data(i))use_it_parabola=0;
-        }
-        
-        if(use_it_parabola==1){
-            mu_to_sort.add(mu);
-            mu_dex.add(i_test);
-        }
-    }
-   
-     
-    
     for(i=0;i<gg.get_dim();i++){
-        trial.set(i,dir_origin.get_data(i)+0.5*dd*dir.get_data(i));
+        trial.set(i,dir_origin.get_data(i)+0.1*dd*dir.get_data(i));
     }
       
     evaluate(trial,&mu,&i_test);
     
+    array_1d<int> dexes;
+    array_1d<double> tosort,sorted,gradient;
+    int used;
+
     if(i_test>=0){
-        use_it_parabola=1;
-        for(i=0;i<mu_dex.get_dim();i++){
-            if(i_test=mu_dex.get_data(i))use_it_parabola=0;
+        if(i_center>=gradient_seed_pts.get_rows()){
+            gradient_seed_pts.set(i_center,0,i_test);
+        }
+        else{
+            gradient_seed_pts.add(i_center,i_test);
         }
         
-        if(use_it_parabola==1){
-           mu_to_sort.add(mu);
-           mu_dex.add(i_test);
-        }
-    }
-    
-    if(mu_to_sort.get_dim()>=3){
-        sort_and_check(mu_to_sort,sorted,mu_dex);
-        parabola_dex.set(0,mu_dex.get_data(0));
-        parabola_dex.set(1,mu_dex.get_data(1));
-        parabola_dex.set(2,origin_dex);
-    }
-    
-    array_1d<double> aa,bb,xx;
-    
-    use_it_parabola=1;
-    for(i=0;i<3 && use_it_parabola==1;i++){
-        if(parabola_dex.get_data(i)<0){
-            use_it_parabola=0;
-            printf("CANNOT parabolize because %d %d\n",i,parabola_dex.get_data(i));
-        }
-        
-        for(j=i+1;j<3;j++){
-            if(parabola_dex.get_data(i)==parabola_dex.get_data(j)){
-                use_it_parabola=0;
-                printf("CANNOT parabolize because %d %d are both %d %d\n",
-                i,j,parabola_dex.get_data(i),parabola_dex.get_data(j));
+        if(gradient_seed_pts.get_cols(i_center)>=gg.get_dim()){
+          
+            for(i=0;i<gradient_seed_pts.get_cols(i_center);i++){
+                tosort.set(i,gg.get_fn(gradient_seed_pts.get_data(i_center,i)));
+                dexes.set(i,gradient_seed_pts.get_data(i_center,i));
             }
-        }
-    }
-    
-    if(use_it_parabola==1){
-        for(i=0;i<3;i++){
-            bb.set(i,gg.get_fn(parabola_dex.get_data(i)));
             
-            dd=0.0;
-            for(j=0;j<gg.get_dim();j++){
-                dd+=power(dir_origin.get_data(j)-gg.get_pt(parabola_dex.get_data(i),j),2);
-            }
-            dd=sqrt(dd);
+            sort_and_check(tosort,sorted,dexes);
             
-            for(j=0;j<3;j++){
-                aa.set(i*3+j,power(dd,j));
-            }
-        }
-        
-        try{
-            naive_gaussian_solver(aa,bb,xx,3);
-        
-            dd=-1.0*xx.get_data(1)/(2.0*xx.get_data(2));
-        
+            used=0;
             for(i=0;i<gg.get_dim();i++){
-                trial.set(i,dir_origin.get_data(i)+dd*dir.get_data(i));
-            }
-            printf("parabolizing: chimin was %e\n",chimin);
-            printf("%e %e %e\n",gg.get_fn(parabola_dex.get_data(0)),
-                                gg.get_fn(parabola_dex.get_data(1)),
-                                gg.get_fn(parabola_dex.get_data(2)));
-            
-            evaluate(trial,&mu,&i_test);
-            printf("found %e %d\n\n",mu,i_test);
-            
-            if(i_test>=0 && mu<gg.get_fn(center_dexes.get_data(i_center))){
-                center_dexes.set(i_center,i_test);
-                for(i=0;i<gg.get_dim();i++){
-                    centers.set(i_center,i,trial.get_data(i));
+                if(dexes.get_data(i)==i_test){
+                    used=1;
                 }
+                neigh.set(i,dexes.get_data(i));
+            } 
+            
+            if(used==0){
+                neigh.set(gg.get_dim()-1,i_test);
             }
             
+            
+            calculate_gradient(origin_dex,neigh,gradient);
+            if(gradient.get_dim()==gg.get_dim()){
+                gradient.normalize();
+                for(i=0;i<gg.get_dim();i++){
+                    trial.set(i,dir_origin.get_data(i)-0.01*gradient.get_data(i));
+                }
+                
+                evaluate(trial,&mu,&i_test);
+                printf("gradient found %e %d\n",mu,i_test);
+                
+            }
+             
         }
-        catch(int iex){
-            printf("naive gaussian solve threw an exception\n\n");
-        }
+        
+        
     }
-    
     
     if(i_center>=0 && i_nearest>=0){
         if(i_center>=boundary_pts.get_rows()){
