@@ -2152,6 +2152,9 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     int i_test,i_high=-1,i_low=-1,i_nearest=-1;
     int old_high=-1,old_low=-1,old_nearest=-1;
     
+    array_1d<double> mu_to_sort;
+    array_1d<int> mu_dex;
+    
     if(chi_in>strad.get_target()){
         for(i=0;i<gg.get_dim();i++){
             lowball.set(i,dir_origin.get_data(i));
@@ -2222,12 +2225,24 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         }
         
         evaluate(trial,&mu,&i_test);
-        if(i_test>=0)use_it_parabola=1;
+        if(i_test>=0){
+            use_it_parabola=1;
+            for(i=0;i<mu_dex.get_dim();i++){
+                if(i_test==mu_dex.get_data(i))use_it_parabola=0;
+            }
+            
+            if(use_it_parabola==1){
+                mu_to_sort.add(mu);
+                mu_dex.add(i_test);
+            }
+        }
+        
+        /*if(i_test>=0)use_it_parabola=1;
         else use_it_parabola=0;
         
         for(i=0;i<3 && use_it_parabola==1;i++){
             if(i_test==parabola_dex.get_data(i))use_it_parabola=0;
-        }
+        }*/
      
         if(mu>strad.get_target()){
             for(i=0;i<gg.get_dim();i++)highball.set(i,trial.get_data(i));
@@ -2262,7 +2277,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
 
         }
         
-        if(use_it_parabola==1){
+        /*if(use_it_parabola==1){
             if(i_test==i_nearest){
                 if(parabola_dex.get_data(1)==old_low){
                     parabola_dex.set(0,parabola_dex.get_data(1));
@@ -2279,7 +2294,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             else if(i_test==i_low){
                 parabola_dex.set(0,i_test);
             }
-        }
+        }*/
                         
         dd*=0.5;
         
@@ -2300,18 +2315,14 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     evaluate(trial,&mu,&i_test);
     
     if(i_test>=0){
-        j=-1;
-        for(i=0;i<3;i++){
-            if(parabola_dex.get_data(i)<0)j=i;
+        use_it_parabola=1;
+        for(i=0;i<mu_dex.get_dim();i++){
+            if(i_test==mu_dex.get_data(i))use_it_parabola=0;
         }
         
-        if(j>=0){
-            parabola_dex.set(j,i_test);
-        }
-        else{
-            if(mu<gg.get_fn(parabola_dex.get_data(2))){
-                parabola_dex.set(2,i_test);
-            }
+        if(use_it_parabola==1){
+            mu_to_sort.add(mu);
+            mu_dex.add(i_test);
         }
     }
    
@@ -2324,17 +2335,22 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     evaluate(trial,&mu,&i_test);
     
     if(i_test>=0){
-        j=-1;
-        for(i=0;i<3;i++){
-            if(parabola_dex.get_data(i)<0)j=i;
+        use_it_parabola=1;
+        for(i=0;i<mu_dex.get_dim();i++){
+            if(i_test=mu_dex.get_data(i))use_it_parabola=0;
         }
         
-        if(j>=0){
-            parabola_dex.set(j,i_test);
+        if(use_it_parabola==1){
+           mu_to_sort.add(mu);
+           mu_dex.add(i_test);
         }
-        else{
-            parabola_dex.set(0,i_test);
-        }
+    }
+    
+    if(mu_to_sort.get_dim()>=3){
+        sort_and_check(mu_to_sort,sorted,mu_dex);
+        parabola_dex.set(0,mu_dex.get_data(0));
+        parabola_dex.set(1,mu_dex.get_data(1));
+        parabola_dex.set(2,mu_dex.get_data(2));
     }
     
     array_1d<double> aa,bb,xx;
