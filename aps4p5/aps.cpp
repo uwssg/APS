@@ -751,7 +751,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     array_2d<double> pts;
     array_1d<double> pbar,ff,pstar,pstarstar;
-    array_1d<double> min,max,true_var;
+    array_1d<double> min,max,true_var,length;
     
     pts.set_name("find_global_min_pts");
     pbar.set_name("find_global_min_pbar");
@@ -781,13 +781,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     for(i=0;i<dim;i++){
         max.set(i,range_max.get_data(i));
         min.set(i,range_min.get_data(i));
+        length.set(i,gg.get_max(i)-gg.get_min(i));
     }
     
     double nn;
     for(i=0;i<dim+1;i++){
         for(j=0;j<dim;j++)vv.set(j,gg.get_pt(neigh.get_data(i),j));
         for(j=0;j<dim;j++){
-            nn=(vv.get_data(j)-min.get_data(j));
+            nn=(vv.get_data(j)-min.get_data(j))/length.get_data(j);
             pts.set(i,j,nn);
         }
         ff.set(i,gg.get_fn(neigh.get_data(i)));
@@ -837,7 +838,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         for(i=0;i<dim;i++){
             pstar.set(i,(1.0+alpha)*pbar.get_data(i)-alpha*pts.get_data(ih,i));
-            true_var.set(i,min.get_data(i)+pstar.get_data(i));
+            true_var.set(i,min.get_data(i)+pstar.get_data(i)*length.get_data(i));
         }
         
         evaluate(true_var,&fstar,&actually_added);
@@ -858,7 +859,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         else if(fstar<ff.get_data(il)){
             for(i=0;i<dim;i++){
                 pstarstar.set(i,gamma*pstar.get_data(i)+(1.0-gamma)*pbar.get_data(i));
-                true_var.set(i,min.get_data(i)+pstarstar.get_data(i));
+                true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*length.get_data(i));
             }
             
             evaluate(true_var,&fstarstar,&actually_added);
@@ -893,7 +894,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         if(j==1){
             for(i=0;i<dim;i++){
                 pstarstar.set(i,beta*pts.get_data(ih,i)+(1.0-beta)*pbar.get_data(i));
-                true_var.set(i,min.get_data(i)+pstarstar.get_data(i));
+                true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*length.get_data(i));
             }
             
             evaluate(true_var,&fstarstar,&actually_added);
@@ -922,7 +923,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         for(j=0;j<dim;j++){
                             mu=0.5*(pts.get_data(i,j)+pts.get_data(il,j));
                             pts.set(i,j,mu);
-                            true_var.set(j,min.get_data(j)+pts.get_data(i,j));
+                            true_var.set(j,min.get_data(j)+pts.get_data(i,j)*length.get_data(j));
                         }
                         
                         evaluate(true_var,&mu,&actually_added);
@@ -971,6 +972,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             //sig,mu,ff.get_data(ih),ff.get_data(il),pts.get_data(il,4)+min.get_data(4));
         //}
     }
+    printf("chimin %e mu %e sig %e time %e\n",
+    chimin,mu,sig,double(time(NULL))-time_last_found);
+    exit(1);
+    
        /* printf("    iteration %d chimin %e\n",iteration,chimin);
         
         k=0;
