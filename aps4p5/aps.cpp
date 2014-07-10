@@ -979,7 +979,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     chimin,mu,sig,double(time(NULL))-time_last_found);
    
     
-    array_1d<double> true_min,gradient,to_bottom;
+    /*array_1d<double> true_min,gradient,to_bottom;
     true_min.set(0,2.191591e-02); 
     true_min.set(1,1.134235e-01);
     true_min.set(3,1.023216e-02);
@@ -989,17 +989,22 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     array_1d<int> new_neigh;
     gg.nn_srch(minpt,1,new_neigh,gradient);
-    mu=gradient.get_data(0)/sqrt(double(dim));;
+    mu=gradient.get_data(0)/sqrt(double(dim));
     
-    for(i=0;i<dim;i++){
+    new_neigh.reset();
+    k=global_mindex;
+    while(new_neigh.get_dim()<gg.get_dim()){
         for(j=0;j<dim;j++){
-            to_bottom.set(j,minpt.get_data(j)+(dice->doub()-0.5)*mu*length.get_data(j));
+            to_bottom.set(j,minpt.get_data(j)+(dice->doub()-0.5)*0.01*length.get_data(j));
         }
-        evaluate(to_bottom,&gamma);
+        evaluate(to_bottom,&gamma,&j);
+        if(j>=0){
+            printf("added to new_neigh\n");
+            new_neigh.add(j);
+        }
     }
     
-    
-    gg.actual_gradient(minpt,gradient);
+    calculate_gradient(k,new_neigh,gradient);
     gradient.normalize();
     
     
@@ -1020,7 +1025,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     evaluate(true_var,&mu,&i);
     printf("point between %e %d\n",mu,i);
-    exit(1);
+    exit(1);*/
    
     known_minima.add(mindex);
     j=centers.get_rows();
@@ -2623,6 +2628,39 @@ void aps::gradient_search(){
     
     set_where("nowhere");
     //printf("done gradient searching\n");
+}
+
+void aps::calculate_gradient(int center, array_1d<int> &neigh, 
+         array_1d<double> &vout){
+
+    array_1d<double> aa,bb,xx;
+    
+    int i,j;
+    
+    if(neigh.get_dim()!=dim){
+        printf("CANNOT calculate gradient; only %d neighbors\n",
+        neigh.get_dim());
+        return;
+    }
+    
+    for(i=0;i<gg.get_dim();i++){
+        bb.set(i,gg.get_fn(neigh.get_data(i))-gg.get_fn(center));
+        for(j=0;j<gg.get_dim();j++){
+            aa.set(i*gg.get_dim()+j,(gg.get_pt(i,j)-gg.get_pt(center,j))/(gg.get_max(j)-gg.get_min(j)));
+        }
+    }
+    
+    try{
+        naive_gaussian_solver(aa,bb,xx,gg.get_dim());
+        
+        for(i=0;i<gg.get_dim();i++){
+            vout.set(i,xx.get_data(i)/(gg.get_max(i)-gg.get_min(i)));
+        }
+        
+    }
+    catch(int iex){
+        printf("could not get gradient this time\n");
+    }
 }
 
 void aps::optimize(){

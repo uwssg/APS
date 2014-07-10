@@ -85,6 +85,8 @@ public:
     
     double absurd_planet_test(double,double*,double*);
     
+    void calculate_gradient(int,array_1d<int>&,array_1d<double>&);
+    
 private:
     Ran *dice;
     chisquared *chisq;
