@@ -2404,6 +2404,14 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             
             evaluate(trial,&mu,&i_test);
             printf("found %e %d\n\n",mu,i_test);
+            
+            if(i_test>=0 && mu<gg.get_fn(center_dexes.get_data(i_center))){
+                center_dexes.set(i_center,i_test);
+                for(i=0;i<gg.get_dim();i++){
+                    centers.set(i_center,i,trial.get_data(i));
+                }
+            }
+            
         }
         catch(int iex){
             printf("naive gaussian solve threw an exception\n\n");
