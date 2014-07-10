@@ -1536,7 +1536,7 @@ void aps::random_focus(int ic){
         bisection(trial,chitrue);
     }
     
-    printf("found %e\n",chitrue);
+    //printf("found %e\n",chitrue);
     
 }
 
@@ -2106,7 +2106,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     double mu,fdir_origin;
     
     double dd,ddmin;
-    int i,j,k,use_it_parabola,i_center=-1;
+    int origin_dex,i,j,k,use_it_parabola,i_center=-1;
     
     array_1d<int> dex_buffer,parabola_dex; //for trying to find true minimum using a parabola
     array_1d<double> tosort,sorted;
@@ -2123,6 +2123,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     if(good_pts.get_dim()==0){
         for(i=0;i<gg.get_dim();i++)dir_origin.set(i,minpt.get_data(i));
         fdir_origin=chimin;
+        origin_dex=global_mindex;
     }
     else{
         ddmin=chisq_exception;
@@ -2139,10 +2140,12 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 dir_origin.set(i,gg.get_pt(j,i));
             }
             fdir_origin=gg.get_fn(j);
+            origin_dex=j;
             
         }
         else{
             fdir_origin=chimin;
+            origin_dex=global_mindex;
             for(i=0;i<gg.get_dim();i++)dir_origin.set(i,minpt.get_data(i));
         }
     }
@@ -2350,7 +2353,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         sort_and_check(mu_to_sort,sorted,mu_dex);
         parabola_dex.set(0,mu_dex.get_data(0));
         parabola_dex.set(1,mu_dex.get_data(1));
-        parabola_dex.set(2,mu_dex.get_data(2));
+        parabola_dex.set(2,origin_dex);
     }
     
     array_1d<double> aa,bb,xx;
