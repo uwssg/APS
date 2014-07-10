@@ -2373,7 +2373,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         try{
             naive_gaussian_solver(aa,bb,xx,3);
         
-            dd=-1.0*xx.get_data(1)/(2.0*xx.get_data(0));
+            dd=-1.0*xx.get_data(1)/(2.0*xx.get_data(2));
         
             for(i=0;i<gg.get_dim();i++){
                 trial.set(i,dir_origin.get_data(i)+dd*dir.get_data(i));
