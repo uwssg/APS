@@ -75,6 +75,9 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     center_dexes.set_name("aps_center_dexes");
     boundary_pts.set_name("aps_boundary_pts");
     gradient_seed_pts.set_name("aps_gradient_seed_pts");
+    characteristic_length.set_name("characteristic_length");
+    range_max.set_name("range_max");
+    range_min.set_name("range_min");
     
     good_rr_avg=0.1;
     write_every=1000;
@@ -524,8 +527,12 @@ void aps::resume(char *filename){
     }
     
     gg.initialize(data,ff,ggmax,ggmin);
+    printf("initialized gg\n");
     set_chimin(local_min,(*gg.get_pt(i_min)),i_min);
     mindex_is_candidate=1;
+    
+    centers.add_row(minpt);
+    center_dexes.add(global_mindex);
     
     write_pts();
 }
@@ -1190,6 +1197,7 @@ void aps::search(){
     
     aps_score=ct_aps;
     grad_score=ct_gradient;
+    grad_score=2*ct_aps;//spock you need to remove this line
     
     if(grad_score<aps_score){
         gradient_search();
@@ -2289,16 +2297,29 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     evaluate(trial,&mu,&i_test);
     
     for(i=0;i<gg.get_dim();i++){
-        trial.set(i,dir_origin.get_data(i)+0.1*dd*dir.get_data(i));
+        trial.set(i,dir_origin.get_data(i)+0.005*dd*dir.get_data(i));
     }
       
     evaluate(trial,&mu,&i_test);
     
     array_1d<int> dexes;
-    array_1d<double> tosort,sorted,gradient;
+    array_1d<double> tosort,sorted,gradient,true_dir,guess;
     int used;
 
     if(i_test>=0){
+        guess.set(0,2.191591e-02); 
+        guess.set(1,1.134235e-01);
+        guess.set(3,1.023216e-02);
+        guess.set(4,9.550505e-01);
+        guess.set(5,3.077629e+00); 
+        guess.set(2,6.889954e-01); 
+        
+        for(i=0;i<gg.get_dim();i++){
+            true_dir.set(i,dir_origin.get_data(i)-guess.get_data(i));
+        }
+        true_dir.normalize();
+    
+    
         if(i_center>=gradient_seed_pts.get_rows()){
             gradient_seed_pts.set(i_center,0,i_test);
         }
@@ -2330,19 +2351,22 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
             printf("chimin before gradient %e\n",chimin);
             calculate_gradient(origin_dex,neigh,gradient);
             if(gradient.get_dim()==gg.get_dim()){
-                //gradient.normalize();
+                gradient.normalize();
                 for(i=0;i<gg.get_dim();i++){
                     trial.set(i,dir_origin.get_data(i)-0.01*gradient.get_data(i));
                 }
                 
                 evaluate(trial,&mu,&i_test);
+                if(i_test>=0){
+                    gradient_seed_pts.add(i_center,i_test);
+                }
                 printf("gradient found %e %d\n",mu,i_test);
                 
-                if(i_test<0){
+                //if(i_test<0){
                     for(i=0;i<gg.get_dim();i++){
-                        printf("%e %e\n",gradient.get_data(i),trial.get_data(i));
+                        printf("%e %e -- %e\n",gradient.get_data(i),true_dir.get_data(i),trial.get_data(i));
                     }
-                }
+                //}
                 printf("\n");
                 
             }
