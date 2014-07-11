@@ -74,7 +74,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     centers.set_name("aps_centers");
     center_dexes.set_name("aps_center_dexes");
     boundary_pts.set_name("aps_boundary_pts");
-    gradient_seed_pts.set_name("aps_gradient_seed_pts");
     characteristic_length.set_name("characteristic_length");
     range_max.set_name("range_max");
     range_min.set_name("range_min");
@@ -2297,84 +2296,11 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     evaluate(trial,&mu,&i_test);
     
     for(i=0;i<gg.get_dim();i++){
-        trial.set(i,dir_origin.get_data(i)+0.005*dd*dir.get_data(i));
+        trial.set(i,dir_origin.get_data(i)+0.5*dd*dir.get_data(i));
     }
       
     evaluate(trial,&mu,&i_test);
     
-    array_1d<int> dexes;
-    array_1d<double> tosort,sorted,gradient,true_dir,guess;
-    int used;
-
-    if(i_test>=0){
-        guess.set(0,2.191591e-02); 
-        guess.set(1,1.134235e-01);
-        guess.set(3,1.023216e-02);
-        guess.set(4,9.550505e-01);
-        guess.set(5,3.077629e+00); 
-        guess.set(2,6.889954e-01); 
-        
-        for(i=0;i<gg.get_dim();i++){
-            true_dir.set(i,dir_origin.get_data(i)-guess.get_data(i));
-        }
-        true_dir.normalize();
-    
-    
-        if(i_center>=gradient_seed_pts.get_rows()){
-            gradient_seed_pts.set(i_center,0,i_test);
-        }
-        else{
-            gradient_seed_pts.add(i_center,i_test);
-        }
-        
-        if(gradient_seed_pts.get_cols(i_center)>=gg.get_dim()){
-          
-            for(i=0;i<gradient_seed_pts.get_cols(i_center);i++){
-                tosort.set(i,gg.get_fn(gradient_seed_pts.get_data(i_center,i)));
-                dexes.set(i,gradient_seed_pts.get_data(i_center,i));
-            }
-            
-            sort_and_check(tosort,sorted,dexes);
-            
-            used=0;
-            for(i=0;i<gg.get_dim();i++){
-                if(dexes.get_data(i)==i_test){
-                    used=1;
-                }
-                neigh.set(i,dexes.get_data(i));
-            } 
-            
-            if(used==0){
-                neigh.set(gg.get_dim()-1,i_test);
-            }
-            
-            printf("chimin before gradient %e\n",chimin);
-            calculate_gradient(origin_dex,neigh,gradient);
-            if(gradient.get_dim()==gg.get_dim()){
-                gradient.normalize();
-                for(i=0;i<gg.get_dim();i++){
-                    trial.set(i,dir_origin.get_data(i)-0.01*gradient.get_data(i));
-                }
-                
-                evaluate(trial,&mu,&i_test);
-                if(i_test>=0){
-                    gradient_seed_pts.add(i_center,i_test);
-                }
-                printf("gradient found %e %d\n",mu,i_test);
-                
-                //if(i_test<0){
-                    for(i=0;i<gg.get_dim();i++){
-                        printf("%e %e -- %e\n",gradient.get_data(i),true_dir.get_data(i),trial.get_data(i));
-                    }
-                //}
-                printf("\n");
-                
-            }
-             
-        }
-        
-        
-    }
     
     if(i_center>=0 && i_nearest>=0){
         if(i_center>=boundary_pts.get_rows()){

@@ -117,7 +117,7 @@ private:
     
     array_2d<double> centers;
     array_1d<int> center_dexes;
-    asymm_array_2d<int> boundary_pts,gradient_seed_pts;
+    asymm_array_2d<int> boundary_pts;
     
     double simplex_strad_best,simplex_mu_best,simplex_sig_best;
     array_1d<double> simplex_best;
