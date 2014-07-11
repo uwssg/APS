@@ -977,63 +977,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         printf("chimin %e sig %e mu %e\n",chimin,sig,mu);
         
-        //printf("    sig %e\n",sig);
-        //if(chisq->get_called()-last_found%100==0 && chisq->get_called()-last_found>0){
-            //printf("sig %e mu %e ih %e il %e -- %e\n",
-            //sig,mu,ff.get_data(ih),ff.get_data(il),pts.get_data(il,4)+min.get_data(4));
-        //}
+
     }
     printf("chimin %e mu %e sig %e time %e\n",
     chimin,mu,sig,double(time(NULL))-time_last_found);
    
-    
-    /*array_1d<double> true_min,gradient,to_bottom;
-    true_min.set(0,2.191591e-02); 
-    true_min.set(1,1.134235e-01);
-    true_min.set(3,1.023216e-02);
-    true_min.set(4,9.550505e-01);
-    true_min.set(5,3.077629e+00); 
-    true_min.set(2,6.889954e-01);
-    
-    array_1d<int> new_neigh;
-    gg.nn_srch(minpt,1,new_neigh,gradient);
-    mu=gradient.get_data(0)/sqrt(double(dim));
-    
-    new_neigh.reset();
-    k=global_mindex;
-    while(new_neigh.get_dim()<gg.get_dim()){
-        for(j=0;j<dim;j++){
-            to_bottom.set(j,minpt.get_data(j)+(dice->doub()-0.5)*0.01*length.get_data(j));
-        }
-        evaluate(to_bottom,&gamma,&j);
-        if(j>=0){
-            printf("added to new_neigh\n");
-            new_neigh.add(j);
-        }
-    }
-    
-    calculate_gradient(k,new_neigh,gradient);
-    gradient.normalize();
-    
-    
-    for(i=0;i<dim;i++){
-        true_var.set(i,0.5*(minpt.get_data(i)+true_min.get_data(i)));
-    }
-    
-    for(i=0;i<dim;i++){
-        to_bottom.set(i,minpt.get_data(i)-true_min.get_data(i));
-    }
-    to_bottom.normalize();
-    
-    mu=0.0;
-    for(i=0;i<dim;i++){
-        mu+=gradient.get_data(i)*to_bottom.get_data(i);
-    }
-    printf("dot between gradient and to_bottom %e\n",mu);
-    
-    evaluate(true_var,&mu,&i);
-    printf("point between %e %d\n",mu,i);
-    exit(1);*/
    
     known_minima.add(mindex);
     j=centers.get_rows();
