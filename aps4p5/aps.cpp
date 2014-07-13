@@ -790,7 +790,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     for(i=0;i<dim;i++){
         max.set(i,range_max.get_data(i));
         min.set(i,range_min.get_data(i));
-        length.set(i,gg.get_max(i)-gg.get_min(i));
+        length.set(i,0.1*(gg.get_max(i)-gg.get_min(i)));
     }
     
     double nn;
