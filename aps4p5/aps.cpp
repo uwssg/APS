@@ -830,8 +830,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     last_found=chisq->get_called();
     
-    while(sig>0.01 && simplex_min<chisq_exception && 
-    double(time(NULL))-time_last_found < 600.0){
+    array_1d<double> rotation_center,rotated,displacement;
+    array_1d<double> p_min,p_max;
+    int ix,iy;
+    double theta;
+    
+    while(chisq->get_called()-last_found<200){
         ct_min++;
         
         //printf("    simplex min %e\n",simplex_min);
@@ -975,13 +979,92 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         sig=ff.get_data(ih)-ff.get_data(il);
         
+        if(sig<0.1){
+            for(i=0;i<dim;i++){
+                rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
+            }
+            
+            for(i=0;i<dim;i++){
+                p_min.set(i,2.0*chisq_exception);
+                p_max.set(i,-2.0*chisq_exception);
+            }
+            
+            for(i=0;i<dim+1;i++){
+                if(i!=il){
+                    for(j=0;j<dim;j++){
+                        if(pts.get_data(i,j)<p_min.get_data(j)){
+                            p_min.set(j,pts.get_data(i,j));
+                        }
+                        if(pts.get_data(i,j)>p_max.get_data(j)){
+                            p_max.set(j,pts.get_data(i,j));
+                        }
+                    } 
+                }
+            }
+            
+            for(i=0;i<dim+1;i++){
+                if(i!=il){
+                    theta=dice->doub()*2.0*pi;
+                    ix=dice->int32()%dim;
+                    iy=ix;
+                    while(iy==ix){
+                        iy=dice->int32()%dim;
+                    }
+                    
+                    for(j=0;j<dim;j++){
+                        displacement.set(j,pts.get_data(i,j)-rotation_center.get_data(j));
+                        rotated.set(j,displacement.get_data(j));
+                    }
+                    
+                    rotated.set(ix,cos(theta)*displacement.get_data(ix)-sin(theta)*displacement.get_data(iy));
+                    rotated.set(iy,sin(theta)*displacement.get_data(ix)+cos(theta)*displacement.get_data(iy));
+                    
+                    for(j=0;j<dim;j++){
+                        pts.set(i,j,rotation_center.get_data(j)+rotated.get_data(j));
+                        true_var.set(j,min.get_data(j)+pts.get_data(i,j)*length.get_data(j));
+                    }
+                    
+                    evaluate(true_var,&mu,&actually_added);
+                    ff.set(i,mu);
+                    if(mu<simplex_min){
+                        last_found=chisq->get_called();
+                        simplex_min=mu;
+                        if(actually_added>=0){
+                            mindex=actually_added;
+                        }
+                    }
+                
+                }//if i!=il
+            }//loop over pts
+            
+            for(i=0;i<dim;i++){
+                pts.set(il,i,p_min.get_data(i)+dice->doub()*(p_max.get_data(i)-p_min.get_data(i)));
+                true_var.set(i,min.get_data(i)+pts.get_data(il,i)*length.get_data(i));
+            }
+            evaluate(true_var,&mu,&actually_added);
+            ff.set(il,mu);
+            if(mu<simplex_min){
+                last_found=chisq->get_called();
+                simplex_min=mu;
+                if(actually_added>=0){
+                    mindex=actually_added;
+                }
+            }
+            
+            for(i=0;i<dim+1;i++){
+                if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
+                if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
+            }
+            
+        }//if sig<0.1
+        
+        
         printf("chimin %e sig %e mu %e\n",chimin,sig,mu);
         
-
     }
     printf("chimin %e mu %e sig %e time %e\n",
     chimin,mu,sig,double(time(NULL))-time_last_found);
-   
+    exit(1);
    
     known_minima.add(mindex);
     j=centers.get_rows();
