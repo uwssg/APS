@@ -1227,7 +1227,6 @@ void aps::search(){
     
     aps_score=ct_aps;
     grad_score=ct_gradient;
-    grad_score=2*ct_aps;//spock you need to remove this line
     
     if(grad_score<aps_score){
         gradient_search();
