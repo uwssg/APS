@@ -1083,7 +1083,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 mu=sqrt(mu);
                 
                 for(j=0;j<dim;j++){
-                    trial.multiply_val(j,0.1*rrmin/mu);
+                    trial.multiply_val(j,0.5*rrmin/mu);
                     trial.add_val(j,rotation_center.get_data(j));
                 }
                 
