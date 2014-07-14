@@ -1121,7 +1121,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             dchi_want=0.1*gg.get_fn(mindex);
             j=-1;
             mu=2.0*chisq_exception;
-            while(dchi_want>1.0e-6 && mu>ff.get_data(il)){
+            while(dchi_want>1.0e-6 && mu>gg.get_fn(mindex)){
             
                 for(i=0;i<dim;i++){
                     trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
