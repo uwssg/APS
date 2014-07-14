@@ -1149,31 +1149,40 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     }
             
                     gnorm=gradient.normalize();
-            
-                    printf("    GRADIENT NORM %e\n",gnorm);
-
-      
-                    for(i=0;i<dim;i++){
-                        trial.set(i,rotation_center.get_data(i)-0.001*gradient.get_data(i));
-                    }
-            
-                    for(i=0;i<dim;i++){
-                        true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                    }
-  
-                    evaluate(true_var,&mu,&actually_added);
-                    printf("    GRADIENT FOUND %e -- %e\n",mu,dchi_want);
-                    if(mu<simplex_min and !(isnan(mu))){
-                        simplex_min=mu;
-                        last_found=chisq->get_called();
-                        if(actually_added>=0){
-                            mindex=actually_added;  
+                    dchi_want=0.02;
+                    
+                    while(dchi_want>0.0005 && dchi_want<0.2){
+                        for(i=0;i<dim;i++){
+                            trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
                         }
-                    }
-                
-                    if(mu<mu_min && actually_added>=0){
-                        mu_min=mu;
-                        i_best=actually_added;
+            
+                        for(i=0;i<dim;i++){
+                            true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                        }
+  
+                        evaluate(true_var,&mu,&actually_added);
+                        
+                        if(mu>simplex_min){
+                            dchi_want*=0.5;
+                        }
+                        else{
+                            dchi_want*=2.0;
+                        }
+                        
+                        printf("    GRADIENT FOUND %e -- %e -- %d\n",mu,chimin,chisq->get_called()-i_before);
+                        if(mu<simplex_min and !(isnan(mu))){
+                            simplex_min=mu;
+                            last_found=chisq->get_called();
+                            if(actually_added>=0){
+                                mindex=actually_added;  
+                            }
+                        }
+                 
+                        if(mu<mu_min && actually_added>=0){
+                            mu_min=mu;
+                            i_best=actually_added;
+                        }
+                        
                     }
                 }
                         
