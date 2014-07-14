@@ -1007,12 +1007,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     
-                    /*theta=0.0;
+                    theta=0.0;
                     while(fabs(theta)<pi/3.0 || fabs(theta)>2.0*pi/3.0){
                         theta=2.0*pi*dice->doub()-pi;
-                    }*/
+                    }
                     
-                    theta=dice->doub()*2.0*pi;
+                    //theta=dice->doub()*2.0*pi;
                     
                     j=dice->int32()%ix_candidates.get_dim();
                     ix=ix_candidates.get_data(j);
