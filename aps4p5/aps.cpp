@@ -845,6 +845,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     array_1d<double> trial,trial_best,gradient;
     double mu_min,crit,crit_best; 
     double mu1,mu2,x1,x2,gnorm,dchi_want;
+    double mu1_use,mu2_use,x1_use,x2_use;
     int i_best;
     
     
@@ -1106,45 +1107,81 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 
                         x1=trial.get_data(ix)-0.01;
                         x2=trial.get_data(ix)+0.01;
-                
+                        x1_use=x1;
+                        x2_use=x2;
+                        
                         trial.set(ix,x1);
                         for(i=0;i<dim;i++){
                             true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                         }
                         evaluate(true_var,&mu1,&actually_added);
-                        if(mu1<simplex_min){
+                        mu1_use=mu1;
+                        
+                        if(mu1<mu_min && actually_added>=0){
+                            mu_min=mu1;
+                            i_best=actually_added;
+                        }
+                        
+                        while(mu1<simplex_min){
                             simplex_min=mu1;
                             last_found=chisq->get_called();
                             if(actually_added>=0){
                                 mindex=actually_added;
                             }
+                            
+                            x1-=0.01;
+                            trial.set(ix,x1);
+                            for(i=0;i<dim;i++){
+                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                            }
+                            evaluate(true_var,&mu1,&actually_added);
+                            
+                            if(mu1<mu_min && actually_added>=0){
+                                mu_min=mu1;
+                                i_best=actually_added;
+                            }
+                            
+                            if(actually_added<0){
+                                mu1=2.0*chisq_exception;
+                            }
                         }
-                    
-                        if(mu1<mu_min && actually_added>=0){
-                            mu_min=mu1;
-                            i_best=actually_added;
-                        }
-                    
-                
+
                         trial.set(ix,x2);
                         for(i=0;i<dim;i++){
                             true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                         }
                         evaluate(true_var,&mu2,&actually_added);
-                        if(mu2<simplex_min){
+                        mu2_use=mu2;
+                        
+                        if(mu2<mu_min && actually_added>=0){
+                            mu_min=mu2;
+                            i_best=actually_added;
+                        }
+                        
+                        while(mu2<simplex_min){
                             simplex_min=mu2;
                             last_found=chisq->get_called();
                             if(actually_added>=0){
                                 mindex=actually_added;
                             }
+                            
+                            x2+=0.01;
+                            trial.set(ix,x2);
+                            for(i=0;i<dim;i++){
+                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                            }
+                            evaluate(true_var,&mu2,&actually_added);
+                            if(mu2<mu_min && actually_added>=0){
+                                mu_min=mu2;
+                                i_best=actually_added;
+                            }
+                            
+                            if(actually_added<0){
+                                mu2=2.0*chisq_exception;
+                            }
                         }
-                    
-                        if(mu2<mu_min && actually_added>=0){
-                            mu_min=mu2;
-                            i_best=actually_added;
-                        }
-                
-                        gradient.set(ix,(mu1-mu2)/(x1-x2));
+
+                        gradient.set(ix,(mu1_use-mu2_use)/(x1_use-x2_use));
                    
                     }
             
