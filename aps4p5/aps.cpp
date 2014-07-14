@@ -1150,8 +1150,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
                     gnorm=gradient.normalize();
                     dchi_want=0.02;
-                    
-                    while(dchi_want>0.0005 && dchi_want<0.2){
+                    k=0;
+                    while(dchi_want>0.0005 && dchi_want<0.2 && k<5){
+                        k++;
                         for(i=0;i<dim;i++){
                             trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
                         }
@@ -1163,7 +1164,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         evaluate(true_var,&mu,&actually_added);
                         
                         if(mu>simplex_min){
-                            dchi_want*=0.5;
+                            dchi_want*=0.6;
                         }
                         else{
                             dchi_want*=2.0;
