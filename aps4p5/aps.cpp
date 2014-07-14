@@ -1032,7 +1032,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     
-                    for(j=0;j<dim;j++){
+                    //spherical sampling
+                    /*for(j=0;j<dim;j++){
                         step.set(j,normal_deviate(dice,0.0,length.get_data(j)));
                     }
                     step.normalize();
@@ -1040,7 +1041,28 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     for(j=0;j<dim;j++){
                         pts.set(i,j,rotation_center.get_data(j)+2.0*rrmax*step.get_data(j));
                         true_var.set(j,min.get_data(j)+pts.get_data(i,j)*length.get_data(j));
+                    }*/
+                    
+                    
+                    theta=dice->doub()*2.0*pi;
+                    ix=dice->int32()%dim;
+                    iy=ix;
+                    while(iy==ix){
+                         iy=dice->int32()%dim;
                     }
+                    
+                    for(j=0;j<dim;j++){
+                        displacement.set(j,pts.get_data(i,j)-rotation_center.get_data(j));
+                        rotated.set(j,displacement.set(j));
+                    }
+                    
+                    rotated.set(ix,cos(theta)*displacement.get_data(ix)-sin(theta)*displacement.get_data(iy));
+                    rotated.set(iy,sin(theta)*displacement.get_data(ix)+cos(theta)*displacement.get_data(iy));
+                    
+                    for(j=0;j<dim;j++){
+                        pts.set(i,j,rotation_center.get_data(j)+2.0*rotated.get_data(j));
+                        true_var.set(j,pts.get_data(i,j)*length.get_data(j)+rotation_center.get_data(j));
+                    } 
                     
                     evaluate(true_var,&mu,&actually_added);
                     ff.set(i,mu);
