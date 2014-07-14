@@ -995,7 +995,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        if(sig<0.1 && chisq->get_called()-last_found>2){
+        if(sig<0.1){
             printf("    STARTING ROTATION chimin %e\n",chimin);
             for(i=0;i<dim;i++){
                 rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
@@ -1234,6 +1234,37 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     }
                     ff.set(il,mu_min);
                 }
+                
+                //since gradient descent has probably taken a lot of steps,
+                //generate a new simplex randomly sampled on a unit sphere
+                //surrounding the new found minimum
+                for(i=0;i<dim+1;i++){
+                    if(i!=il){
+                        actually_added=-1;
+                        while(actually_added<0){
+                            for(j=0;j<dim;j++){
+                                step.set(j,normal_deviate(dice,0.0,1.0));
+                            }
+                            step.normalize();
+                            for(j=0;j<dim;j++){
+                                pts.set(i,j,pts.get_data(il,j)+step.get_data(j));
+                                true_var.set(j,pts.get_data(i,j)*length.get_data(j)+min.get_data(j));
+                            }
+                            
+                            evaluate(true_var,&mu,&actually_added);
+                            if(mu<simplex_min){
+                                simplex_min=mu;
+                                last_found=chisq->get_called();
+                                if(actually_added>=0){
+                                    mindex=actually_added;
+                                }
+                            }
+                        
+                        }
+                    }
+                }
+                
+                
             }
             
             for(i=0;i<dim+1;i++){
