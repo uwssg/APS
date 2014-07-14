@@ -1100,7 +1100,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
                     }
 
-                    for(ix=0;ix<dim;ix++){
+                    for(ix=0;ix<dim && mindex==old_mindex;ix++){
                         for(i=0;i<dim;i++){
                             trial.set(i,rotation_center.get_data(i));
                         }
@@ -1184,43 +1184,47 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         gradient.set(ix,(mu1_use-mu2_use)/(x1_use-x2_use));
                    
                     }
-            
-                    gnorm=gradient.normalize();
-                    dchi_want=0.02;
-                    k=0;
-                    while(dchi_want>0.0005 && dchi_want<0.2 && k<5){
-                        k++;
-                        for(i=0;i<dim;i++){
-                            trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
-                        }
-            
-                        for(i=0;i<dim;i++){
-                            true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                        }
-  
-                        evaluate(true_var,&mu,&actually_added);
-                        
-                        if(mu>simplex_min){
-                            dchi_want*=0.6;
-                        }
-                        else{
-                            dchi_want*=2.0;
-                        }
-                        
-                        printf("    GRADIENT FOUND %e -- %e -- %d\n",mu,chimin,chisq->get_called()-i_before);
-                        if(mu<simplex_min and !(isnan(mu))){
-                            simplex_min=mu;
-                            last_found=chisq->get_called();
-                            if(actually_added>=0){
-                                mindex=actually_added;  
+                    
+                    printf("    CALCULATED GRADIENT %e -- %d\n",chimin,chisq->get_called()-i_before);
+                    
+                    if(mindex==old_mindex){
+                        gnorm=gradient.normalize();
+                        dchi_want=0.02;
+                        k=0;
+                        while(dchi_want>0.0005 && dchi_want<0.2 && k<5){
+                            k++;
+                            for(i=0;i<dim;i++){
+                                trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
                             }
-                        }
-                 
-                        if(mu<mu_min && actually_added>=0){
-                            mu_min=mu;
-                            i_best=actually_added;
-                        }
+            
+                            for(i=0;i<dim;i++){
+                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                            }
+  
+                            evaluate(true_var,&mu,&actually_added);
                         
+                            if(mu>simplex_min){
+                                dchi_want*=0.6;
+                            }
+                            else{
+                                dchi_want*=2.0;
+                            }
+                        
+                            printf("    GRADIENT CHIMIN %e -- %e -- %d\n",chimin,mu,chisq->get_called()-i_before);
+                            if(mu<simplex_min and !(isnan(mu))){
+                                simplex_min=mu;
+                                last_found=chisq->get_called();
+                                if(actually_added>=0){
+                                    mindex=actually_added;  
+                                }
+                            }
+                 
+                            if(mu<mu_min && actually_added>=0){
+                                mu_min=mu;
+                                i_best=actually_added;
+                            }
+                        
+                        }
                     }
                 }
                         
