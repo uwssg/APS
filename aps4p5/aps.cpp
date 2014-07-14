@@ -1028,30 +1028,34 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     
-                    /*theta=0.0;
-                    while(fabs(theta)<pi/3.0 || fabs(theta)>2.0*pi/3.0){
-                        theta=2.0*pi*dice->doub()-pi;
-                    }*/
+                    ix_candidates.reset();
+                    for(j=0;j<dim;j++)ix_candidates.set(j,j);
                     
-                    theta=dice->doub()*2.0*pi;
+                    while(ix_candidates.get_dim()>=2){
                     
-                    //j=dice->int32()%ix_candidates.get_dim();
-                    //ix=ix_candidates.get_data(j);
-                    //ix_candidates.remove(j);
-                    ix=dice->int32()%dim;
+                        theta=dice->doub()*2.0*pi;
                     
-                    iy=ix;
-                    while(iy==ix){
-                        iy=dice->int32()%dim;
+                        j=dice->int32()%ix_candidates.get_dim();
+                        ix=ix_candidates.get_data(j);
+                        ix_candidates.remove(j);
+                    
+                        j=dice->int32()%ix_candidates.get_dim();
+                        iy=ix_candidates.get_data(j);
+                        ix_candidates.remove(j);
+                        
+                        for(j=0;j<dim;j++){
+                            displacement.set(j,pts.get_data(i,j)-rotation_center.get_data(j));
+                            rotated.set(j,displacement.get_data(j));
+                        }
+                    
+                        rotated.set(ix,cos(theta)*displacement.get_data(ix)-sin(theta)*displacement.get_data(iy));
+                        rotated.set(iy,sin(theta)*displacement.get_data(ix)+cos(theta)*displacement.get_data(iy));
+                        
+                        for(j=0;j<dim;j++){
+                            pts.set(i,j,rotation_center.get_data(j)+rotated.get_data(j));
+                        }
+                    
                     }
-              
-                    for(j=0;j<dim;j++){
-                        displacement.set(j,pts.get_data(i,j)-rotation_center.get_data(j));
-                        rotated.set(j,displacement.get_data(j));
-                    }
-                    
-                    rotated.set(ix,cos(theta)*displacement.get_data(ix)-sin(theta)*displacement.get_data(iy));
-                    rotated.set(iy,sin(theta)*displacement.get_data(ix)+cos(theta)*displacement.get_data(iy));
                     
                     for(j=0;j<dim;j++){
                         pts.set(i,j,rotation_center.get_data(j)+2.0*rotated.get_data(j));
