@@ -791,6 +791,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     for(i=0;i<dim;i++){
         max.set(i,range_max.get_data(i));
         min.set(i,range_min.get_data(i));
+        
+        //you must keep the 0.1 factor below
+        //in order for the dx steps in the
+        //gradient search to mean what they meant
+        //during testing
         length.set(i,0.1*(gg.get_max(i)-gg.get_min(i)));
     }
     
@@ -1080,19 +1085,20 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }//loop over pts
             
             if(mindex==old_mindex){
-               /* for(i=0;i<dim;i++){
-                    rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
-                }*/
+              
                 printf("    STARTING GRADIENT chimin %e\n",chimin);
                 mu_min=2.0*chisq_exception;
                 i_best=-1;
                 old_mindex=-1;
-                for(i=0;i<dim;i++){
-                    rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
-                }
-                
+
                 while(mindex!=old_mindex){
+
                     old_mindex=mindex;
+                    
+                    for(i=0;i<dim;i++){
+                        rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
+                    }
+
                     for(ix=0;ix<dim;ix++){
                         for(i=0;i<dim;i++){
                             trial.set(i,rotation_center.get_data(i));
