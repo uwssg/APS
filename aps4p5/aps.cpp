@@ -752,6 +752,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     }
     
     //write some code to do simplex search here
+    int i_before=chisq->get_called();
 
     array_1d<double> vv;
     
@@ -985,7 +986,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        if(sig<0.1){
+        if(sig<0.1 && chisq->get_called()-last_found>20){
             for(i=0;i<dim;i++){
                 rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
             }
@@ -1132,7 +1133,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }//if sig<0.1
         
         
-        printf("chimin %e sig %e mu %e\n",chimin,sig,mu);
+        printf("chimin %e sig %e mu %e -- %d\n",chimin,sig,mu,chisq->get_called()-i_before);
         
     }
     printf("chimin %e mu %e sig %e time %e\n",
