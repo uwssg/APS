@@ -834,7 +834,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     array_1d<double> rotation_center,rotated,displacement;
     array_1d<double> p_min,p_max,step;
     array_1d<int> ix_candidates;
-    int ix,iy;
+    int ix,iy,old_mindex;
     double theta;
     
     array_1d<double> trial,trial_best,gradient;
@@ -1029,6 +1029,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             rrmax=sqrt(rrmax);
             
+            old_mindex=mindex;
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     
@@ -1077,75 +1078,77 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }//if i!=il
             }//loop over pts
             
-            for(i=0;i<dim;i++){
-                rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
-            }
+            if(mindex==old_mindex){
+                for(i=0;i<dim;i++){
+                    rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
+                }
             
-            for(ix=0;ix<dim;ix++){
-                for(i=0;i<dim;i++){
-                    trial.set(i,rotation_center.get_data(i));
-                }
-                
-                x1=trial.get_data(ix)-0.01;
-                x2=trial.get_data(ix)+0.01;
-                
-                trial.set(ix,x1);
-                for(i=0;i<dim;i++){
-                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                }
-                evaluate(true_var,&mu1,&actually_added);
-                if(mu1<simplex_min){
-                    simplex_min=mu1;
-                    last_found=chisq->get_called();
-                    if(actually_added>=0){
-                        mindex=actually_added;
+                for(ix=0;ix<dim;ix++){
+                    for(i=0;i<dim;i++){
+                        trial.set(i,rotation_center.get_data(i));
                     }
-                }
                 
-                trial.set(ix,x2);
-                for(i=0;i<dim;i++){
-                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                }
-                evaluate(true_var,&mu2,&actually_added);
-                if(mu2<simplex_min){
-                    simplex_min=mu2;
-                    last_found=chisq->get_called();
-                    if(actually_added>=0){
-                        mindex=actually_added;
+                    x1=trial.get_data(ix)-0.01;
+                    x2=trial.get_data(ix)+0.01;
+                
+                    trial.set(ix,x1);
+                    for(i=0;i<dim;i++){
+                        true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                     }
+                    evaluate(true_var,&mu1,&actually_added);
+                    if(mu1<simplex_min){
+                        simplex_min=mu1;
+                        last_found=chisq->get_called();
+                        if(actually_added>=0){
+                            mindex=actually_added;
+                        }
+                    }
+                
+                    trial.set(ix,x2);
+                    for(i=0;i<dim;i++){
+                        true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                    }
+                    evaluate(true_var,&mu2,&actually_added);
+                    if(mu2<simplex_min){
+                        simplex_min=mu2;
+                        last_found=chisq->get_called();
+                        if(actually_added>=0){
+                            mindex=actually_added;
+                        }
+                    }
+                
+                    gradient.set(ix,(mu1-mu2)/(x1-x2));
+                 
                 }
-                
-                gradient.set(ix,(mu1-mu2)/(x1-x2));
-                
-            }
             
-            gnorm=gradient.normalize();
+                gnorm=gradient.normalize();
             
-            printf("    GRADIENT NORM %e\n",gnorm);
+                printf("    GRADIENT NORM %e\n",gnorm);
 
       
-            for(i=0;i<dim;i++){
-                trial.set(i,rotation_center.get_data(i)-0.001*gradient.get_data(i));
-            }
-            
-            for(i=0;i<dim;i++){
-                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-            }
-  
-            evaluate(true_var,&mu,&actually_added);
-            printf("    GRADIENT FOUND %e -- %e\n",mu,dchi_want);
-            if(mu<simplex_min and !(isnan(mu))){
-                simplex_min=mu;
-                last_found=chisq->get_called();
-                if(actually_added>=0){
-                    mindex=actually_added;  
+                for(i=0;i<dim;i++){
+                    trial.set(i,rotation_center.get_data(i)-0.001*gradient.get_data(i));
                 }
-            }
+            
+                for(i=0;i<dim;i++){
+                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                }
+  
+                evaluate(true_var,&mu,&actually_added);
+                printf("    GRADIENT FOUND %e -- %e\n",mu,dchi_want);
+                if(mu<simplex_min and !(isnan(mu))){
+                    simplex_min=mu;
+                    last_found=chisq->get_called();
+                    if(actually_added>=0){
+                        mindex=actually_added;  
+                    }
+                }
             
                         
-            if(mu<chisq_exception){
-                for(i=0;i<dim;i++)pts.set(il,i,trial.get_data(i));
-                ff.set(il,mu);
+                if(mu<chisq_exception){
+                    for(i=0;i<dim;i++)pts.set(il,i,trial.get_data(i));
+                    ff.set(il,mu);
+                }
             }
             
             for(i=0;i<dim+1;i++){
