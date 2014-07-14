@@ -832,7 +832,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     last_found=chisq->get_called();
     
     array_1d<double> rotation_center,rotated,displacement;
-    array_1d<double> p_min,p_max;
+    array_1d<double> p_min,p_max,step;
     array_1d<int> ix_candidates;
     int ix,iy;
     double theta;
@@ -840,7 +840,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     array_1d<double> trial,trial_best;
     double mu_min,crit,crit_best; 
     
-    double rrmin;  
+    double rrmax;  
     
     while(chisq->get_called()-last_found<200){
         ct_min++;
@@ -1012,7 +1012,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             
-            rrmin=2.0*chisq_exception;
+            rrmax=-2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     mu=0.0;
@@ -1020,46 +1020,22 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         mu+=power((pts.get_data(i,j)-rotation_center.get_data(j)),2);
                     }
                     
-                    if(mu<rrmin)rrmin=mu;
+                    if(mu>rrmax)rrmax=mu;
                 }
             }
             
-            rrmin=sqrt(rrmin);
+            rrmax=sqrt(rrmax);
             
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     
-                    ix_candidates.reset();
-                    for(j=0;j<dim;j++)ix_candidates.set(j,j);
-                    
-                    while(ix_candidates.get_dim()>=2){
-                    
-                        theta=dice->doub()*2.0*pi;
-                    
-                        j=dice->int32()%ix_candidates.get_dim();
-                        ix=ix_candidates.get_data(j);
-                        ix_candidates.remove(j);
-                    
-                        j=dice->int32()%ix_candidates.get_dim();
-                        iy=ix_candidates.get_data(j);
-                        ix_candidates.remove(j);
-                        
-                        for(j=0;j<dim;j++){
-                            displacement.set(j,pts.get_data(i,j)-rotation_center.get_data(j));
-                            rotated.set(j,displacement.get_data(j));
-                        }
-                    
-                        rotated.set(ix,cos(theta)*displacement.get_data(ix)-sin(theta)*displacement.get_data(iy));
-                        rotated.set(iy,sin(theta)*displacement.get_data(ix)+cos(theta)*displacement.get_data(iy));
-                        
-                        for(j=0;j<dim;j++){
-                            pts.set(i,j,rotation_center.get_data(j)+rotated.get_data(j));
-                        }
-                    
-                    }
-                    
                     for(j=0;j<dim;j++){
-                        pts.set(i,j,rotation_center.get_data(j)+2.0*rotated.get_data(j));
+                        step.set(j,normal_deviate(dice,0.0,length.get_data(j)));
+                    }
+                    step.normalize();
+
+                    for(j=0;j<dim;j++){
+                        pts.set(i,j,rotation_center.get_data(j)+rrmax*step.get_data(j));
                         true_var.set(j,min.get_data(j)+pts.get_data(i,j)*length.get_data(j));
                     }
                     
