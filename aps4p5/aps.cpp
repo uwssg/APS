@@ -1082,8 +1082,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     trial.set(i,rotation_center.get_data(i));
                 }
                 
-                x1=trial.get_data(ix)-0.001;
-                x2=trial.get_data(ix)+0.001;
+                x1=trial.get_data(ix)-0.01;
+                x2=trial.get_data(ix)+0.01;
                 
                 trial.set(ix,x1);
                 for(i=0;i<dim;i++){
