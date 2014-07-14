@@ -1006,7 +1006,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 if(i!=il){
                     
                     theta=0.0;
-                    while(fabs(theta)<pi/3.0 && fabs(theta)>2.0*pi/3.0){
+                    while(fabs(theta)<pi/3.0 || fabs(theta)>2.0*pi/3.0){
                         theta=2.0*pi*dice->doub()-pi;
                     }
                     
