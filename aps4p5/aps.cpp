@@ -1097,26 +1097,35 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             printf("    GRADIENT NORM %e\n",gnorm);
             dchi_want=0.1*gg.get_fn(mindex);
+            j=-1;
+            mu=2.0*chisq_exception;
+            while(dchi_want>1.0e-6 && mu>ff.get_data(il)){
             
-            for(i=0;i<dim;i++){
-                trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
-            }
-            
-            for(i=0;i<dim;i++){
-                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-            }
-            evaluate(true_var,&mu,&actually_added);
-            printf("    GRADIENT FOUND %e\n",mu);
-            if(mu<simplex_min and !(isnan(mu))){
-                simplex_min=mu;
-                last_found=chisq->get_called();
-                if(actually_added>=0){
-                    mindex=actually_added;  
+                for(i=0;i<dim;i++){
+                    trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
                 }
+            
+                for(i=0;i<dim;i++){
+                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                }
+                
+                dchi_want*=0.7;
+                
+                evaluate(true_var,&mu,&actually_added);
+                printf("    GRADIENT FOUND %e -- %e\n",mu,dchi_want);
+                if(mu<simplex_min and !(isnan(mu))){
+                    simplex_min=mu;
+                    last_found=chisq->get_called();
+                    if(actually_added>=0){
+                        mindex=actually_added;  
+                    }
+                }
+            
             }
             
             if(mu<chisq_exception){
                 for(i=0;i<dim;i++)pts.set(il,i,trial.get_data(i));
+                ff.set(il,mu);
             }
             
             for(i=0;i<dim+1;i++){
