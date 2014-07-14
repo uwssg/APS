@@ -836,6 +836,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int ix,iy;
     double theta;
     
+    array_1d<double> trial,trial_best;
+    double mu_min;   
+    
     while(chisq->get_called()-last_found<200){
         ct_min++;
         
@@ -1049,11 +1052,25 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }//if i!=il
             }//loop over pts
             
+            for(i=0;i<1000;i++){
+                for(j=0;j<dim;j++){
+                    trial.set(j,p_min.get_data(j)+dice->doub()*(p_max.get_data(j)-p_min.get_data(j)));
+                    true_var.set(j,trial.get_data(j)*length.get_data(j)+min.get_data(j));
+                }
+                
+                mu=gg.user_predict(true_var,0);
+                if(i==0 || mu<mu_min){
+                    mu_min=mu;
+                    for(j=0;j<dim;j++)trial_best.set(j,trial.get_data(j));
+                }
+            }
+            
             for(i=0;i<dim;i++){
-                pts.set(il,i,p_min.get_data(i)+dice->doub()*(p_max.get_data(i)-p_min.get_data(i)));
+                pts.set(il,i,trial_best.get_data(i));
                 true_var.set(i,min.get_data(i)+pts.get_data(il,i)*length.get_data(i));
             }
             evaluate(true_var,&mu,&actually_added);
+            printf("    KICK FOUND %e -- %e\n",mu,mu_min);
             ff.set(il,mu);
             if(mu<simplex_min){
                 last_found=chisq->get_called();
