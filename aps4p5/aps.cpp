@@ -832,6 +832,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     array_1d<double> rotation_center,rotated,displacement;
     array_1d<double> p_min,p_max;
+    array_1d<int> ix_candidates;
     int ix,iy;
     double theta;
     
@@ -985,6 +986,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             for(i=0;i<dim;i++){
+                for(i=0;i<dim;i++)ix_candidates.set(i,i);
                 p_min.set(i,2.0*chisq_exception);
                 p_max.set(i,-2.0*chisq_exception);
             }
@@ -1005,12 +1007,17 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     
-                    theta=0.0;
+                    /*theta=0.0;
                     while(fabs(theta)<pi/3.0 || fabs(theta)>2.0*pi/3.0){
                         theta=2.0*pi*dice->doub()-pi;
-                    }
+                    }*/
                     
-                    ix=dice->int32()%dim;
+                    theta=dice->doub()*2.0*pi;
+                    
+                    j=dice->int32()%ix_candidates.get_dim();
+                    ix=ix_candidates.get_data(j);
+                    ix_candidates.remove(j);
+                    
                     iy=ix;
                     while(iy==ix){
                         iy=dice->int32()%dim;
