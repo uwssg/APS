@@ -988,8 +988,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        if(sig<0.1){
-   
+        if(sig<0.1 && chisq->get_called()-last_found>2){
+            printf("    STARTING ROTATION chimin %e\n",chimin);
             for(i=0;i<dim;i++){
                 rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
             }
@@ -1079,10 +1079,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }//loop over pts
             
             if(mindex==old_mindex){
-                for(i=0;i<dim;i++){
+               /* for(i=0;i<dim;i++){
                     rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
-                }
-            
+                }*/
+                
+                
                 for(ix=0;ix<dim;ix++){
                     for(i=0;i<dim;i++){
                         trial.set(i,rotation_center.get_data(i));
