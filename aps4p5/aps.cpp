@@ -837,8 +837,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int ix,iy;
     double theta;
     
-    array_1d<double> trial,trial_best;
+    array_1d<double> trial,trial_best,gradient;
     double mu_min,crit,crit_best; 
+    double mu1,mu2,x1,x2,gnorm,dchi_want;
+    
     
     double rrmax;  
     
@@ -1012,7 +1014,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }
             }
             
-            
+    
             rrmax=-2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
                 if(i!=il){
@@ -1053,40 +1055,69 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }//if i!=il
             }//loop over pts
             
-            /*for(i=0;i<1000;i++){
-                
-                for(j=0;j<dim;j++){
-                    trial.set(j,rotation_center.get_data(j)+0.2*(dice->doub()-0.5)*(p_max.get_data(j)-p_min.get_data(j)));
+            for(ix=0;ix<dim;ix++){
+                for(i=0;i<dim;i++){
+                    trial.set(i,rotation_center.get_data(i));
                 }
                 
-                for(j=0;j<dim;j++){
-                    true_var.set(j,min.get_data(j)+trial.get_data(j)*length.get_data(j));
+                x1=trial.get_data(ix)-0.001;
+                x2=trial.get_data(ix)+0.001;
+                
+                trial.set(ix,x1);
+                for(i=0;i<dim;i++){
+                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                }
+                evaluate(true_var,&mu1,&actually_added);
+                if(mu1<simplex_min){
+                    simplex_min=mu1;
+                    last_found=chisq->get_called();
+                    if(actually_added>=0){
+                        mindex=actually_added;
+                    }
                 }
                 
-                mu=gg.user_predict(true_var,0);
-                if(mu<0.0)mu=0.0;
-                crit=mu;
-                if(i==0 || crit<crit_best){
-                    mu_min=mu;
-                    crit_best=crit;
-                    for(j=0;j<dim;j++)trial_best.set(j,trial.get_data(j));
+                trial.set(ix,x2);
+                for(i=0;i<dim;i++){
+                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                 }
+                evaluate(true_var,&mu2,&actually_added);
+                if(mu2<simplex_min){
+                    simplex_min=mu2;
+                    last_found=chisq->get_called();
+                    if(actually_added>=0){
+                        mindex=actually_added;
+                    }
+                }
+                
+                gradient.set(ix,(mu1-mu2)/(x1-x2));
+                
+            }
+            
+            gnorm=gradient.normalize();
+            
+            printf("    GRADIENT NORM %e\n",gnorm);
+            dchi_want=0.1*gg.get_fn(mindex);
+            
+            for(i=0;i<dim;i++){
+                trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
             }
             
             for(i=0;i<dim;i++){
-                pts.set(il,i,trial_best.get_data(i));
-                true_var.set(i,min.get_data(i)+pts.get_data(il,i)*length.get_data(i));
+                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
             }
             evaluate(true_var,&mu,&actually_added);
-            printf("    KICK FOUND %e -- %e\n",mu,mu_min);
-            ff.set(il,mu);
-            if(mu<simplex_min){
-                last_found=chisq->get_called();
+            printf("    GRADIENT FOUND %e\n",mu);
+            if(mu<simplex_min and !(isnan(mu))){
                 simplex_min=mu;
+                last_found=chisq->get_called();
                 if(actually_added>=0){
-                    mindex=actually_added;
+                    mindex=actually_added;  
                 }
-            }*/
+            }
+            
+            if(mu<chisq_exception){
+                for(i=0;i<dim;i++)pts.set(il,i,trial.get_data(i));
+            }
             
             for(i=0;i<dim+1;i++){
                 if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
