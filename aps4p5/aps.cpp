@@ -1053,7 +1053,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     
                     for(j=0;j<dim;j++){
                         displacement.set(j,pts.get_data(i,j)-rotation_center.get_data(j));
-                        rotated.set(j,displacement.set(j));
+                        rotated.set(j,displacement.get_data(j));
                     }
                     
                     rotated.set(ix,cos(theta)*displacement.get_data(ix)-sin(theta)*displacement.get_data(iy));
