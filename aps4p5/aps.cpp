@@ -837,7 +837,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     double theta;
     
     array_1d<double> trial,trial_best;
-    double mu_min;   
+    double mu_min,crit,crit_best;   
     
     while(chisq->get_called()-last_found<200){
         ct_min++;
@@ -1010,16 +1010,17 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     
-                    theta=0.0;
+                    /*theta=0.0;
                     while(fabs(theta)<pi/3.0 || fabs(theta)>2.0*pi/3.0){
                         theta=2.0*pi*dice->doub()-pi;
-                    }
+                    }*/
                     
-                    //theta=dice->doub()*2.0*pi;
+                    theta=dice->doub()*2.0*pi;
                     
-                    j=dice->int32()%ix_candidates.get_dim();
-                    ix=ix_candidates.get_data(j);
-                    ix_candidates.remove(j);
+                    //j=dice->int32()%ix_candidates.get_dim();
+                    //ix=ix_candidates.get_data(j);
+                    //ix_candidates.remove(j);
+                    ix=dice->int32()%dim;
                     
                     iy=ix;
                     while(iy==ix){
@@ -1054,13 +1055,15 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             for(i=0;i<1000;i++){
                 for(j=0;j<dim;j++){
-                    trial.set(j,p_min.get_data(j)+dice->doub()*(p_max.get_data(j)-p_min.get_data(j)));
+                    trial.set(j,pts.get_data(il,j)+0.2*(dice->doub()-0.5)*(p_max.get_data(j)-p_min.get_data(j)));
                     true_var.set(j,trial.get_data(j)*length.get_data(j)+min.get_data(j));
                 }
                 
                 mu=gg.user_predict(true_var,0);
-                if(i==0 || mu<mu_min){
+                crit=fabs(mu-gg.get_fn(mindex)+10.0);
+                if(i==0 || crit<crit_best){
                     mu_min=mu;
+                    crit_best=crit;
                     for(j=0;j<dim;j++)trial_best.set(j,trial.get_data(j));
                 }
             }
