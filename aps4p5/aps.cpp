@@ -990,9 +990,6 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
             }
             
-           
-            
-            rrmin=sqrt(rrmin);
             
             for(i=0;i<dim;i++){
                 for(i=0;i<dim;i++)ix_candidates.set(i,i);
@@ -1025,6 +1022,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     if(mu<rrmin)rrmin=mu;
                 }
             }
+            
+            rrmin=sqrt(rrmin);
             
             for(i=0;i<dim+1;i++){
                 if(i!=il){
