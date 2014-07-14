@@ -1037,7 +1037,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     step.normalize();
 
                     for(j=0;j<dim;j++){
-                        pts.set(i,j,rotation_center.get_data(j)+rrmax*step.get_data(j));
+                        pts.set(i,j,rotation_center.get_data(j)+2.0*rrmax*step.get_data(j));
                         true_var.set(j,min.get_data(j)+pts.get_data(i,j)*length.get_data(j));
                     }
                     
