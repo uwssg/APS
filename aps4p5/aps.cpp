@@ -831,7 +831,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     last_found=chisq->get_called();
     
     array_1d<double> rotation_center,rotated,displacement;
-    array_1d<double> p_min,p_max,p_length;
+    array_1d<double> p_min,p_max;
     array_1d<int> ix_candidates;
     int ix,iy;
     double theta;
@@ -1013,16 +1013,13 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }
             }
             
-            for(i=0;i<dim;i++){
-                p_length.set(i,p_max.get_data(i)-p_min.get_data(i));
-            }
             
             rrmin=2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     mu=0.0;
                     for(j=0;j<dim;j++){
-                        mu+=power((pts.get_data(i,j)-rotation_center.get_data(j))/p_length.get_data(j),2);
+                        mu+=power((pts.get_data(i,j)-rotation_center.get_data(j))/length.get_data(j),2);
                     }
                     
                     if(mu<rrmin)rrmin=mu;
@@ -1078,9 +1075,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             for(i=0;i<1000;i++){
                 mu=0.0;
                 for(j=0;j<dim;j++){
-                    if(p_length.get_data(j)>1.0e-20){
-                        trial.set(j,normal_deviate(dice,0.0,p_length.get_data(j)));
-                        mu+=power(trial.get_data(j)/p_length.get_data(j),2);
+                    if(length.get_data(j)>1.0e-20){
+                        trial.set(j,normal_deviate(dice,0.0,length.get_data(j)));
+                        mu+=power(trial.get_data(j)/length.get_data(j),2);
                     }
                     else trial.set(j,0.0);
                 }
