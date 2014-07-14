@@ -1037,6 +1037,19 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }//if i!=il
             }//loop over pts
             
+            for(i=0;i<dim+1;i++){
+                if(i!=il){
+                    for(j=0;j<dim;j++){
+                        if(pts.get_data(i,j)<p_min.get_data(j)){
+                            p_min.set(j,pts.get_data(i,j));
+                        }
+                        if(pts.get_data(i,j)>p_max.get_data(j)){
+                            p_max.set(j,pts.get_data(i,j));
+                        }
+                    }
+                }
+            }
+            
             for(i=0;i<dim;i++){
                 pts.set(il,i,p_min.get_data(i)+dice->doub()*(p_max.get_data(i)-p_min.get_data(i)));
                 true_var.set(i,min.get_data(i)+pts.get_data(il,i)*length.get_data(i));
