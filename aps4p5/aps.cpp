@@ -840,6 +840,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     array_1d<double> trial,trial_best,gradient;
     double mu_min,crit,crit_best; 
     double mu1,mu2,x1,x2,gnorm,dchi_want;
+    int i_best;
     
     
     double rrmax;  
@@ -1082,7 +1083,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                /* for(i=0;i<dim;i++){
                     rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
                 }*/
-                
+                printf("    STARTING GRADIENT chimin %e\n",chimin);
+                mu_min=2.0*chisq_exception;
+                i_best=-1;
                 
                 for(ix=0;ix<dim;ix++){
                     for(i=0;i<dim;i++){
@@ -1104,6 +1107,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             mindex=actually_added;
                         }
                     }
+                    
+                    if(mu1<mu_min && actually_added>=0){
+                        mu_min=mu1;
+                        i_best=actually_added;
+                    }
+                    
                 
                     trial.set(ix,x2);
                     for(i=0;i<dim;i++){
@@ -1116,6 +1125,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         if(actually_added>=0){
                             mindex=actually_added;
                         }
+                    }
+                    
+                    if(mu2<mu_min && actually_added>=0){
+                        mu_min=mu2;
+                        i_best=actually_added;
                     }
                 
                     gradient.set(ix,(mu1-mu2)/(x1-x2));
@@ -1144,11 +1158,17 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         mindex=actually_added;  
                     }
                 }
-            
+                
+                if(mu<mu_min && actually_added>=0){
+                    mu_min=mu;
+                    i_best=actually_added;
+                }
                         
                 if(mu<chisq_exception){
-                    for(i=0;i<dim;i++)pts.set(il,i,trial.get_data(i));
-                    ff.set(il,mu);
+                    for(i=0;i<dim;i++){
+                        pts.set(il,i,(gg.get_pt(i_best,i)-min.get_data(i))/length.get_data(i));
+                    }
+                    ff.set(il,mu_min);
                 }
             }
             
