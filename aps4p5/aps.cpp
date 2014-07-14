@@ -831,13 +831,15 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     last_found=chisq->get_called();
     
     array_1d<double> rotation_center,rotated,displacement;
-    array_1d<double> p_min,p_max;
+    array_1d<double> p_min,p_max,p_length;
     array_1d<int> ix_candidates;
     int ix,iy;
     double theta;
     
     array_1d<double> trial,trial_best;
-    double mu_min,crit,crit_best;   
+    double mu_min,crit,crit_best; 
+    
+    double rrmin;  
     
     while(chisq->get_called()-last_found<200){
         ct_min++;
@@ -988,6 +990,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
             }
             
+           
+            
+            rrmin=sqrt(rrmin);
+            
             for(i=0;i<dim;i++){
                 for(i=0;i<dim;i++)ix_candidates.set(i,i);
                 p_min.set(i,2.0*chisq_exception);
@@ -1004,6 +1010,22 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             p_max.set(j,pts.get_data(i,j));
                         }
                     } 
+                }
+            }
+            
+            for(i=0;i<dim;i++){
+                p_length.set(i,p_max.get_data(i)-p_min.get_data(i));
+            }
+            
+            rrmin=2.0*chisq_exception;
+            for(i=0;i<dim+1;i++){
+                if(i!=il){
+                    mu=0.0;
+                    for(j=0;j<dim;j++){
+                        mu+=power((pts.get_data(i,j)-rotation_center.get_data(j))/p_length.get_data(j),2);
+                    }
+                    
+                    if(mu<rrmin)rrmin=mu;
                 }
             }
             
@@ -1054,13 +1076,28 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }//loop over pts
             
             for(i=0;i<1000;i++){
+                mu=0.0;
                 for(j=0;j<dim;j++){
-                    trial.set(j,pts.get_data(il,j)+0.2*(dice->doub()-0.5)*(p_max.get_data(j)-p_min.get_data(j)));
-                    true_var.set(j,trial.get_data(j)*length.get_data(j)+min.get_data(j));
+                    if(p_length.get_data(j)>1.0e-20){
+                        trial.set(j,normal_deviate(dice,0.0,p_length.get_data(j)));
+                        mu+=power(trial.get_data(j)/p_length.get_data(j),2);
+                    }
+                    else trial.set(j,0.0);
+                }
+                mu=sqrt(mu);
+                
+                for(j=0;j<dim;j++){
+                    trial.multiply_val(j,0.5*rrmin/mu);
+                    trial.add_val(j,rotation_center.get_data(j));
+                }
+                
+                for(j=0;j<dim;j++){
+                    true_var.set(j,min.get_data(j)+trial.get_data(j)*length.get_data(j));
                 }
                 
                 mu=gg.user_predict(true_var,0);
-                crit=fabs(mu-gg.get_fn(mindex)+10.0);
+                if(mu<0.0)mu=0.0;
+                crit=mu;
                 if(i==0 || crit<crit_best){
                     mu_min=mu;
                     crit_best=crit;
