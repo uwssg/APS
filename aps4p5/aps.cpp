@@ -1016,7 +1016,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 if(i!=il){
                     mu=0.0;
                     for(j=0;j<dim;j++){
-                        mu+=power((pts.get_data(i,j)-rotation_center.get_data(j))/length.get_data(j),2);
+                        mu+=power((pts.get_data(i,j)-rotation_center.get_data(j)),2);
                     }
                     
                     if(mu<rrmin)rrmin=mu;
@@ -1075,15 +1075,15 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 mu=0.0;
                 for(j=0;j<dim;j++){
                     if(length.get_data(j)>1.0e-20){
-                        trial.set(j,normal_deviate(dice,0.0,length.get_data(j)));
-                        mu+=power(trial.get_data(j)/length.get_data(j),2);
+                        trial.set(j,normal_deviate(dice,0.0,1.0));
+                        mu+=power(trial.get_data(j),2);
                     }
                     else trial.set(j,0.0);
                 }
                 mu=sqrt(mu);
                 
                 for(j=0;j<dim;j++){
-                    trial.multiply_val(j,0.5*rrmin/mu);
+                    trial.multiply_val(j,0.1*rrmin/mu);
                     trial.add_val(j,rotation_center.get_data(j));
                 }
                 
