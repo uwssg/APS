@@ -1014,7 +1014,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        if(sig<0.01){
+        if(mindex_ct-last_found>50){
         
             printf("    STARTING ROTATION chimin %e\n",chimin);
             for(i=0;i<dim;i++){
