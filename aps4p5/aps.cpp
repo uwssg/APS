@@ -1252,9 +1252,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     
                     if(mindex==old_mindex){
                         gradient.normalize();
-                        dchi_want=gstepmin;
+                        dchi_want=0.1;
                         k=0;
-                        while(k<10){
+                        while(k<1){
                             k++;
                             for(i=0;i<dim;i++){
                                 trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
@@ -1276,18 +1276,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         
                             printf("    GRADIENT CHIMIN %e -- %e dd %e -- %d\n",chimin,mu,gg.distance(global_mindex,true_min),
                             chisq->get_called()-i_before);
-                            if(mu<simplex_min and !(isnan(mu))){
-                                simplex_min=mu;
-                                last_found=chisq->get_called();
-                                if(actually_added>=0){
-                                    mindex=actually_added;  
-                                }
-                            }
+                           
                  
-                            if(mu<mu_min && actually_added>=0){
+                            //if(mu<mu_min && actually_added>=0){
                                 mu_min=mu;
                                 i_best=actually_added;
-                            }
+                            //}
                         
                         }
                     }
