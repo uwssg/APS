@@ -1031,7 +1031,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         sig=ff.get_data(ih)-ff.get_data(il);
         printf("chimin %e sig %e dd %e -- %d\n",chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
         
-        if(simplex_ct-found_by_simplex>20){
+        if(mindex_ct-last_found>50){
             for(i=0;i<dim+1;i++){
                 actually_added=-1;
                 while(actually_added<0){
