@@ -882,7 +882,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     sig=sig/double(dim+1);
     sig=sqrt(sig);
     
-    int ct_min=0,last_found;
+    int last_found,simplex_ct,found_by_simplex;
     int iteration,last_good;
     double time_last_found=double(time(NULL));
     
@@ -902,12 +902,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     
     double rrmax;
-      
+    
     mindex_ct=0;
     last_found=mindex_ct;
+    simplex_ct=0;
+    found_by_simplex=0;
     while(mindex_ct-last_found<200){
-        ct_min++;
-        
+        simplex_ct++;
+ 
         //printf("    simplex min %e\n",simplex_min);
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
@@ -925,6 +927,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }
         
         fstar=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+        if(actually_added==mindex){
+           found_by_simplex=simplex_ct;
+        }
         
         if(fstar<ff.get_data(ih) && fstar>ff.get_data(il)){
             ff.set(ih,fstar);
@@ -939,6 +944,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             fstarstar=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+            if(actually_added==mindex){
+                found_by_simplex=simplex_ct;
+            }
             
             if(fstarstar<ff.get_data(il)){
                 for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
@@ -965,6 +973,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             fstarstar=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+            if(actually_added==mindex){
+                found_by_simplex=simplex_ct;
+            }
             
             if(fstarstar<ff.get_data(ih)){
                 for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
@@ -985,6 +996,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         }
                         
                         mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                        if(actually_added==mindex){
+                            found_by_simplex=simplex_ct;
+                        }
                         
                     }
                 }
@@ -1014,7 +1028,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        if(mindex_ct-last_found>50){
+        if(simplex_ct-found_by_simplex>20){
         
             printf("    STARTING ROTATION chimin %e\n",chimin);
             for(i=0;i<dim;i++){
@@ -1328,6 +1342,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
                 if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
             }
+            
+            found_by_simplex=simplex_ct;
             
         }//if sig<0.1
         
