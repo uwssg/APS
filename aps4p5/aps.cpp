@@ -724,6 +724,26 @@ void aps::find_global_minimum(int ix){
     
 }
 
+double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
+          double *simplex_min, int *mindex, int *mindex_ct, int *last_found){
+          
+    double mu;
+    
+    mindex_ct[0]++;
+    evaluate(pt,&mu,actually_added);
+    
+    if(mu<simplex_min[0]){
+        simplex_min[0]=mu;
+        last_found[0]=mindex_ct[0];
+        if(actually_added[0]>=0){
+            mindex[0]=actually_added[0];
+        }
+    }
+    
+    
+    return mu;
+}
+
 void aps::find_global_minimum(array_1d<int> &neigh){
     
     /*
@@ -753,6 +773,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     //write some code to do simplex search here
     int i_before=chisq->get_called();
+    int mindex_ct=0;
 
     array_1d<double> vv,true_min;
     
@@ -858,7 +879,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     double rrmax;  
     
-    while(chisq->get_called()-last_found<200){
+    while(mindex_ct-last_found<200){
         ct_min++;
         
         //printf("    simplex min %e\n",simplex_min);
@@ -877,14 +898,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             true_var.set(i,min.get_data(i)+pstar.get_data(i)*length.get_data(i));
         }
         
-        evaluate(true_var,&fstar,&actually_added);
-        
-        if(fstar<simplex_min){
-            last_found=chisq->get_called();
-            time_last_found=double(time(NULL));
-            simplex_min=fstar;
-            if(actually_added>=0)mindex=actually_added;
-        }
+        fstar=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
         
         if(fstar<ff.get_data(ih) && fstar>ff.get_data(il)){
             ff.set(ih,fstar);
@@ -898,16 +912,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*length.get_data(i));
             }
             
-            evaluate(true_var,&fstarstar,&actually_added);
-
-            if(fstarstar<simplex_min){
-                last_found=chisq->get_called();
-                time_last_found=double(time(NULL));
-                simplex_min=fstarstar;
-                if(actually_added>=0){
-                    mindex=actually_added;
-                }
-            }
+            fstarstar=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
             
             if(fstarstar<ff.get_data(il)){
                 for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
@@ -933,16 +938,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*length.get_data(i));
             }
             
-            evaluate(true_var,&fstarstar,&actually_added);
-
-            if(fstarstar<simplex_min){
-                last_found=chisq->get_called();
-                time_last_found=double(time(NULL));
-                simplex_min=fstarstar;
-                if(actually_added>=0){
-                    mindex=actually_added;
-                }
-            }
+            fstarstar=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
             
             if(fstarstar<ff.get_data(ih)){
                 for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
@@ -962,18 +958,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             true_var.set(j,min.get_data(j)+pts.get_data(i,j)*length.get_data(j));
                         }
                         
-                        evaluate(true_var,&mu,&actually_added);
+                        mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
                         
-                        ff.set(i,mu);
-
-                        if(ff.get_data(i)<simplex_min){
-                            last_found=chisq->get_called();
-                            time_last_found=double(time(NULL));
-                            simplex_min=ff.get_data(i);
-                            if(actually_added>=0){
-                                mindex=actually_added;
-                            }
-                        }
                     }
                 }
             }
@@ -1079,15 +1065,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         true_var.set(j,pts.get_data(i,j)*length.get_data(j)+rotation_center.get_data(j));
                     } 
                     
-                    evaluate(true_var,&mu,&actually_added);
-                    ff.set(i,mu);
-                    if(mu<simplex_min){
-                        last_found=chisq->get_called();
-                        simplex_min=mu;
-                        if(actually_added>=0){
-                            mindex=actually_added;
-                        }
-                    }
+                    mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                   
                 
                 }//if i!=il
             }//loop over pts
@@ -1124,7 +1103,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             for(i=0;i<dim;i++){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
-                            evaluate(true_var,&mu1,&actually_added);
+                            
+                            mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
                             mu1_use=mu1;
                             x1_use=x1;
                         
@@ -1151,7 +1131,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             for(i=0;i<dim;i++){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
-                            evaluate(true_var,&mu1,&actually_added);
+                            mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
                             
                             if(mu1<mu_min && actually_added>=0){
                                 mu_min=mu1;
@@ -1173,7 +1153,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             for(i=0;i<dim;i++){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
-                            evaluate(true_var,&mu2,&actually_added);
+                            
+                            mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                            
                             mu2_use=mu2;
                             x2_use=x2;
                         
@@ -1201,7 +1183,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             for(i=0;i<dim;i++){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
-                            evaluate(true_var,&mu2,&actually_added);
+                            
+                            mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                            
                             if(mu2<mu_min && actually_added>=0){
                                 mu_min=mu2;
                                 i_best=actually_added;
@@ -1231,8 +1215,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             for(i=0;i<dim;i++){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
-  
-                            evaluate(true_var,&mu,&actually_added);
+                            
+                            mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
                         
                             if(mu>simplex_min){
                                 dchi_want*=0.6;
@@ -1283,7 +1267,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 true_var.set(j,pts.get_data(i,j)*length.get_data(j)+min.get_data(j));
                             }
                           
-                            evaluate(true_var,&mu,&actually_added);
+                            mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+
                             ff.set(i,mu);
                             if(mu<simplex_min){
                                 simplex_min=mu;

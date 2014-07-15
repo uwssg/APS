@@ -170,6 +170,8 @@ private:
     void evaluate(array_1d<double>&,double*,int*);
     void evaluate(array_1d<double>&,double*);
     
+    double simplex_evaluate(array_1d<double>&,int*,double*,int*,int*,int*);
+    
     double distance(int,int,array_1d<double>&);
     
     int in_bounds(array_1d<double>&);
