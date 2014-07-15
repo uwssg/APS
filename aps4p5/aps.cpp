@@ -724,20 +724,39 @@ void aps::find_global_minimum(int ix){
     
 }
 
+double aps::simplex_evaluate(array_1d<double> &pt, int *aa,
+     double *sm, int *md, int *mdc, int *lf){
+     
+     array_1d<int> ii;
+     return simplex_evaluate(pt,aa,sm,md,mdc,lf,ii,0);    
+}
+
 double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
-          double *simplex_min, int *mindex, int *mindex_ct, int *last_found){
+          double *simplex_min, int *mindex, int *mindex_ct, int *last_found,
+          array_1d<int> &simplex_candidates, int do_candidates){
           
     double mu;
+    int i;
     
     mindex_ct[0]++;
     evaluate(pt,&mu,actually_added);
     
     if(mu<simplex_min[0]){
+        
+        if(do_candidates==1 && actually_added[0]>=0){
+            for(i=1;i<simplex_candidates.get_dim();i++){
+                simplex_candidates.set(i,simplex_candidates.get_data(i-1));
+            }
+            simplex_candidates.set(0,actually_added[0]);
+        }
+        
+        
         simplex_min[0]=mu;
         last_found[0]=mindex_ct[0];
         if(actually_added[0]>=0){
             mindex[0]=actually_added[0];
         }
+        
     }
     
     
@@ -862,8 +881,6 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     //for(iteration=0;iteration<4;iteration++){
     
-    last_found=chisq->get_called();
-    
     array_1d<double> rotation_center,rotated,displacement;
     array_1d<double> p_min,p_max,step;
     array_1d<int> ix_candidates;
@@ -877,8 +894,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int i_best;
     
     
-    double rrmax;  
-    
+    double rrmax;
+      
+    mindex_ct=0;
+    last_found=mindex_ct;
     while(mindex_ct-last_found<200){
         ct_min++;
         
