@@ -1289,6 +1289,13 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     }
     printf("chimin %e dd %e sig %e time %e\n",
     chimin,gg.distance(global_mindex,true_min),sig,double(time(NULL))-time_last_found);
+    
+    for(i=0;i<dim;i++){
+        trial.set(i,0.5*(true_min.get_data(i)+gg.get_pt(global_mindex,i)));
+    }
+    mu=(*chisq)(trial);
+    printf("minpt %e\n",mu);
+    
     exit(1);
    
     known_minima.add(mindex);
