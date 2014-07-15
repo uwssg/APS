@@ -903,11 +903,13 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     double rrmax;
     
+    int iterated=0;
+    
     mindex_ct=0;
     last_found=mindex_ct;
     simplex_ct=0;
     found_by_simplex=0;
-    while(mindex_ct-last_found<200){
+    while(mindex_ct-last_found<200 && iterated<5){
         simplex_ct++;
  
         //printf("    simplex min %e\n",simplex_min);
@@ -1027,322 +1029,30 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }
         
         sig=ff.get_data(ih)-ff.get_data(il);
+        printf("chimin %e sig %e dd %e -- %d\n",chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
         
         if(simplex_ct-found_by_simplex>20){
-        
-            printf("    STARTING ROTATION chimin %e\n",chimin);
-            for(i=0;i<dim;i++){
-                rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
-                simplex_candidates.set(i,-1);
-            }
-            
-            
-            for(i=0;i<dim;i++){
-                for(i=0;i<dim;i++)ix_candidates.set(i,i);
-                p_min.set(i,2.0*chisq_exception);
-                p_max.set(i,-2.0*chisq_exception);
-            }
-            
             for(i=0;i<dim+1;i++){
-                if(i!=il){
+                actually_added=-1;
+                while(actually_added<0){
                     for(j=0;j<dim;j++){
-                        if(pts.get_data(i,j)<p_min.get_data(j)){
-                            p_min.set(j,pts.get_data(i,j));
-                        }
-                        if(pts.get_data(i,j)>p_max.get_data(j)){
-                            p_max.set(j,pts.get_data(i,j));
-                        }
-                    } 
+                        true_var.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
+                        pts.set(i,j,(true_var.get_data(j)-min.get_data(j))/length.get_data(j));
+                    }
+                    
+                    mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                    ff.set(i,mu);
+                    
                 }
-            }
-            
-    
-            rrmax=-2.0*chisq_exception;
-            for(i=0;i<dim+1;i++){
-                if(i!=il){
-                    mu=0.0;
-                    for(j=0;j<dim;j++){
-                        mu+=power((pts.get_data(i,j)-rotation_center.get_data(j)),2);
-                    }
-                    
-                    if(mu>rrmax)rrmax=mu;
-                }
-            }
-            
-            rrmax=sqrt(rrmax);
-            
-            old_mindex=mindex;
-            for(i=0;i<dim+1;i++){
-                if(i!=il){
-                    
-                    //spherical sampling
-                    /*for(j=0;j<dim;j++){
-                        step.set(j,normal_deviate(dice,0.0,length.get_data(j)));
-                    }
-                    step.normalize();
-
-                    for(j=0;j<dim;j++){
-                        pts.set(i,j,rotation_center.get_data(j)+2.0*rrmax*step.get_data(j));
-                        true_var.set(j,min.get_data(j)+pts.get_data(i,j)*length.get_data(j));
-                    }*/
-                    
-                    
-                    theta=dice->doub()*2.0*pi;
-                    ix=dice->int32()%dim;
-                    iy=ix;
-                    while(iy==ix){
-                         iy=dice->int32()%dim;
-                    }
-                    
-                    for(j=0;j<dim;j++){
-                        displacement.set(j,pts.get_data(i,j)-rotation_center.get_data(j));
-                        rotated.set(j,displacement.get_data(j));
-                    }
-                    
-                    rotated.set(ix,cos(theta)*displacement.get_data(ix)-sin(theta)*displacement.get_data(iy));
-                    rotated.set(iy,sin(theta)*displacement.get_data(ix)+cos(theta)*displacement.get_data(iy));
-                    
-                    for(j=0;j<dim;j++){
-                        pts.set(i,j,rotation_center.get_data(j)+2.0*rotated.get_data(j));
-                        true_var.set(j,pts.get_data(i,j)*length.get_data(j)+rotation_center.get_data(j));
-                    } 
-                    
-                    mu=simplex_evaluate(true_var,&actually_added,
-                                    &simplex_min,&mindex,&mindex_ct,&last_found,simplex_candidates);
-                   
-                
-                }//if i!=il
-            }//loop over pts
-            
-            if(mindex==old_mindex){
-              
-                printf("    STARTING GRADIENT chimin %e -- dd %e\n",chimin,gg.distance(global_mindex,true_min));
-                mu_min=2.0*chisq_exception;
-                i_best=-1;
-                old_mindex=-1;
-
-                while(mindex!=old_mindex){
-
-                    old_mindex=mindex;
-                    
-                    for(i=0;i<dim;i++){
-                        rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
-                    }
-                    
-                    gstepmin=2.0*chisq_exception;
-                    
-                    for(ix=0;ix<dim && mindex==old_mindex;ix++){
-                        for(i=0;i<dim;i++){
-                            trial.set(i,rotation_center.get_data(i));
-                        }
-                
-                        gstep=0.01;
-                        
-                        mu1=2.0*chisq_exception;
-                        
-                        while(!(mu1<chisq_exception) && gstep>1.0e-6){
-                            x1=rotation_center.get_data(ix)-gstep;
-                            trial.set(ix,x1);
-                            for(i=0;i<dim;i++){
-                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                            }
-                            
-                            mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,
-                                       &mindex,&mindex_ct,&last_found,simplex_candidates);
-                                       
-                            mu1_use=mu1;
-                            x1_use=x1;
-                        
-                            if(mu1<mu_min && actually_added>=0){
-                                mu_min=mu1;
-                                i_best=actually_added;
-                            }
-                            
-                            if(!(mu1<chisq_exception)){
-                                gstep*=0.5;
-                            }
-                        }
-                        if(gstep<gstepmin)gstepmin=gstep;
-                        
-                        while(mu1<simplex_min){
-                            simplex_min=mu1;
-                            last_found=chisq->get_called();
-                            if(actually_added>=0){
-                                mindex=actually_added;
-                            }
-                            
-                            x1-=gstep;
-                            trial.set(ix,x1);
-                            for(i=0;i<dim;i++){
-                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                            }
-                            mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,
-                                     &mindex,&mindex_ct,&last_found,simplex_candidates);
-                            
-                            if(mu1<mu_min && actually_added>=0){
-                                mu_min=mu1;
-                                i_best=actually_added;
-                            }
-                            
-                            if(actually_added<0){
-                                mu1=2.0*chisq_exception;
-                            }
-                        }
-                        
-                        gstep=0.01;
-                        mu2=2.0*chisq_exception;
-                        
-                        while(!(mu2<chisq_exception) && gstep>1.0e-6){
-                            x2=rotation_center.get_data(ix)+gstep;
-                            
-                            trial.set(ix,x2);
-                            for(i=0;i<dim;i++){
-                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                            }
-                            
-                            mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,
-                                    &mindex,&mindex_ct,&last_found,simplex_candidates);
-                            
-                            mu2_use=mu2;
-                            x2_use=x2;
-                        
-                            if(mu2<mu_min && actually_added>=0){
-                                mu_min=mu2;
-                                i_best=actually_added;
-                            }
-                            
-                            if(!(mu2<chisq_exception)){
-                                gstep*=0.5;
-                            }
-                        
-                        }
-                        if(gstep<gstepmin)gstepmin=gstep;
-                        
-                        while(mu2<simplex_min){
-                            simplex_min=mu2;
-                            last_found=chisq->get_called();
-                            if(actually_added>=0){
-                                mindex=actually_added;
-                            }
-                            
-                            x2+=gstep;
-                            trial.set(ix,x2);
-                            for(i=0;i<dim;i++){
-                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                            }
-                            
-                            mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,
-                                         &mindex,&mindex_ct,&last_found,simplex_candidates);
-                            
-                            if(mu2<mu_min && actually_added>=0){
-                                mu_min=mu2;
-                                i_best=actually_added;
-                            }
-                            
-                            if(actually_added<0){
-                                mu2=2.0*chisq_exception;
-                            }
-                        }
-
-                        gradient.set(ix,(mu1_use-mu2_use)/(x1_use-x2_use));
-                   
-                    }
-                    
-                    printf("    CALCULATED GRADIENT %e -- dd %e %d\n",chimin,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
-                    
-                    if(mindex==old_mindex){
-                        gradient.normalize();
-                        dchi_want=0.1;
-                        k=0;
-                        while(k<1){
-                            k++;
-                            for(i=0;i<dim;i++){
-                                trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
-                            }
-            
-                            for(i=0;i<dim;i++){
-                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                            }
-                            
-                            mu=simplex_evaluate(true_var,&actually_added,&simplex_min,
-                                             &mindex,&mindex_ct,&last_found,simplex_candidates);
-                        
-                            if(mu>simplex_min){
-                                dchi_want*=0.6;
-                            }
-                            else{
-                                dchi_want*=2.0;
-                            }
-                        
-                            printf("    GRADIENT CHIMIN %e -- %e dd %e -- %d\n",chimin,mu,gg.distance(global_mindex,true_min),
-                            chisq->get_called()-i_before);
-                           
-                 
-                            //if(mu<mu_min && actually_added>=0){
-                                mu_min=mu;
-                                i_best=actually_added;
-                            //}
-                        
-                        }
-                    }
-                }
-                        
-                if(i_best>=0){
-                    for(i=0;i<dim;i++){
-                        pts.set(il,i,(gg.get_pt(i_best,i)-min.get_data(i))/length.get_data(i));
-                    }
-                    ff.set(il,mu_min);
-                }
-                
-                //since gradient descent has probably taken a lot of steps,
-                //generate a new simplex randomly sampled on a unit sphere
-                //surrounding the new found minimum
-                j=0;
-                for(i=0;i<dim+1;i++){
-                    if(i!=il){
-                        if(simplex_candidates.get_data(j)>=0){
-                            for(k=0;k<dim;k++){
-                                pts.set(i,k,(gg.get_pt(simplex_candidates.get_data(j),k)-min.get_data(k))/length.get_data(k));
-                            }
-                            ff.set(i,gg.get_fn(simplex_candidates.get_data(j)));
-                            j++;
-                        }
-                        else{
-                            actually_added=-1;
-                            while(actually_added<0){
-                                for(k=0;k<dim;k++){
-                                    step.set(k,normal_deviate(dice,0.0,1.0));
-                                }
-                                step.normalize();
-                                for(k=0;k<dim;k++){
-                                    pts.set(i,k,rotation_center.get_data(k)+0.001*step.get_data(k));
-                                    true_var.set(k,pts.get_data(i,k)*length.get_data(k)+min.get_data(k));
-                                }
-                                
-                                mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
-                                ff.set(i,mu);
-                                
-                            }
-                        }    
-                    }
-                }
-                
-                if(j>0)printf("    USED SOME SIMPLEX_CANDIDATES %d\n",j);
-                
-                
             }
             
             for(i=0;i<dim+1;i++){
                 if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
                 if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
             }
-            
-            found_by_simplex=simplex_ct;
-            
-        }//if sig<0.1
-        
-        
-        printf("chimin %e sig %e dd %e -- %d\n",chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
+            iterated++;
+            last_found=mindex_ct;
+        }
         
     }
     printf("chimin %e dd %e sig %e time %e\n",
