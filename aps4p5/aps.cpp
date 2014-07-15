@@ -731,6 +731,12 @@ double aps::simplex_evaluate(array_1d<double> &pt, int *aa,
      return simplex_evaluate(pt,aa,sm,md,mdc,lf,ii,0);    
 }
 
+double aps::simplex_evaluate(array_1d<double> &p, int *a, double *sm,
+    int *md, int *mdc, int *lf, array_1d<int> &sc){
+
+    return simplex_evaluate(p,a,sm,md,mdc,lf,sc,1);
+}
+
 double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
           double *simplex_min, int *mindex, int *mindex_ct, int *last_found,
           array_1d<int> &simplex_candidates, int do_candidates){
@@ -795,6 +801,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int mindex_ct=0;
 
     array_1d<double> vv,true_min;
+    array_1d<int> simplex_candidates;
     
     true_min.set(0,0.02191591);
     true_min.set(1,0.1134235);
@@ -1008,9 +1015,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         sig=ff.get_data(ih)-ff.get_data(il);
         
         if(sig<0.01){
+        
             printf("    STARTING ROTATION chimin %e\n",chimin);
             for(i=0;i<dim;i++){
                 rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
+                simplex_candidates.set(i,-1);
             }
             
             
@@ -1084,7 +1093,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         true_var.set(j,pts.get_data(i,j)*length.get_data(j)+rotation_center.get_data(j));
                     } 
                     
-                    mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                    mu=simplex_evaluate(true_var,&actually_added,
+                                    &simplex_min,&mindex,&mindex_ct,&last_found,simplex_candidates);
                    
                 
                 }//if i!=il
@@ -1123,7 +1133,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
                             
-                            mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                            mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,
+                                       &mindex,&mindex_ct,&last_found,simplex_candidates);
+                                       
                             mu1_use=mu1;
                             x1_use=x1;
                         
@@ -1150,7 +1162,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             for(i=0;i<dim;i++){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
-                            mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                            mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,
+                                     &mindex,&mindex_ct,&last_found,simplex_candidates);
                             
                             if(mu1<mu_min && actually_added>=0){
                                 mu_min=mu1;
@@ -1173,7 +1186,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
                             
-                            mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                            mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,
+                                    &mindex,&mindex_ct,&last_found,simplex_candidates);
                             
                             mu2_use=mu2;
                             x2_use=x2;
@@ -1203,7 +1217,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
                             
-                            mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                            mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,
+                                         &mindex,&mindex_ct,&last_found,simplex_candidates);
                             
                             if(mu2<mu_min && actually_added>=0){
                                 mu_min=mu2;
@@ -1235,7 +1250,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
                             }
                             
-                            mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                            mu=simplex_evaluate(true_var,&actually_added,&simplex_min,
+                                             &mindex,&mindex_ct,&last_found,simplex_candidates);
                         
                             if(mu>simplex_min){
                                 dchi_want*=0.6;
@@ -1273,33 +1289,37 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 //since gradient descent has probably taken a lot of steps,
                 //generate a new simplex randomly sampled on a unit sphere
                 //surrounding the new found minimum
+                j=0;
                 for(i=0;i<dim+1;i++){
                     if(i!=il){
-                        actually_added=-1;
-                        while(actually_added<0){
-                            for(j=0;j<dim;j++){
-                                step.set(j,normal_deviate(dice,0.0,1.0));
+                        if(simplex_candidates.get_data(j)>=0){
+                            for(k=0;k<dim;k++){
+                                pts.set(i,k,(gg.get_pt(simplex_candidates.get_data(j),k)-min.get_data(k))/length.get_data(k));
                             }
-                            step.normalize();
-                            for(j=0;j<dim;j++){
-                                pts.set(i,j,pts.get_data(il,j)+0.1*step.get_data(j));
-                                true_var.set(j,pts.get_data(i,j)*length.get_data(j)+min.get_data(j));
-                            }
-                          
-                            mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
-
-                            ff.set(i,mu);
-                            if(mu<simplex_min){
-                                simplex_min=mu;
-                                last_found=chisq->get_called();
-                                if(actually_added>=0){
-                                    mindex=actually_added;
-                                }
-                            }
-                        
+                            ff.set(i,gg.get_fn(simplex_candidates.get_data(j)));
+                            j++;
                         }
+                        else{
+                            actually_added=-1;
+                            while(actually_added<0){
+                                for(k=0;k<dim;k++){
+                                    step.set(k,normal_deviate(dice,0.0,1.0));
+                                }
+                                step.normalize();
+                                for(k=0;k<dim;k++){
+                                    pts.set(i,k,rotation_center.get_data(k)+0.001*step.get_data(k));
+                                    true_var.set(k,pts.get_data(i,k)*length.get_data(k)+min.get_data(k));
+                                }
+                                
+                                mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                                ff.set(i,mu);
+                                
+                            }
+                        }    
                     }
                 }
+                
+                if(j>0)printf("    USED SOME SIMPLEX_CANDIDATES %d\n",j);
                 
                 
             }

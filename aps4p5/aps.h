@@ -172,7 +172,9 @@ private:
     
     double simplex_evaluate(array_1d<double>&,int*,double*,int*,int*,int*,
          array_1d<int>&,int);
-         
+    
+    double simplex_evaluate(array_1d<double>&,int*,double*,int*,int*,int*,
+         array_1d<int>&);     
     double simplex_evaluate(array_1d<double>&,int*,double*,int*,int*,int*);
     
     double distance(int,int,array_1d<double>&);
