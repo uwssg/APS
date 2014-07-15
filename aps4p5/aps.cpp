@@ -1222,7 +1222,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         gradient.normalize();
                         dchi_want=gstepmin;
                         k=0;
-                        while(k<5){
+                        while(k<10){
                             k++;
                             for(i=0;i<dim;i++){
                                 trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
