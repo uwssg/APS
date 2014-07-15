@@ -851,7 +851,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     array_1d<double> trial,trial_best,gradient;
     double mu_min,crit,crit_best; 
-    double mu1,mu2,x1,x2,gnorm,dchi_want;
+    double mu1,mu2,x1,x2,gstep,gstepmin,dchi_want;
     double mu1_use,mu2_use,x1_use,x2_use;
     int i_best;
     
@@ -1106,28 +1106,38 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     for(i=0;i<dim;i++){
                         rotation_center.set(i,(gg.get_pt(mindex,i)-min.get_data(i))/length.get_data(i));
                     }
-
+                    
+                    gstepmin=2.0*chisq_exception;
+                    
                     for(ix=0;ix<dim && mindex==old_mindex;ix++){
                         for(i=0;i<dim;i++){
                             trial.set(i,rotation_center.get_data(i));
                         }
                 
-                        x1=trial.get_data(ix)-0.01;
-                        x2=trial.get_data(ix)+0.01;
-                        x1_use=x1;
-                        x2_use=x2;
+                        gstep=0.01;
                         
-                        trial.set(ix,x1);
-                        for(i=0;i<dim;i++){
-                            true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                        }
-                        evaluate(true_var,&mu1,&actually_added);
-                        mu1_use=mu1;
+                        mu1=2.0*chisq_exception;
                         
-                        if(mu1<mu_min && actually_added>=0){
-                            mu_min=mu1;
-                            i_best=actually_added;
+                        while(!(mu1<chisq_exception) && gstep>1.0e-6){
+                            x1=rotation_center.get_data(ix)-gstep;
+                            trial.set(ix,x1);
+                            for(i=0;i<dim;i++){
+                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                            }
+                            evaluate(true_var,&mu1,&actually_added);
+                            mu1_use=mu1;
+                            x1_use=x1;
+                        
+                            if(mu1<mu_min && actually_added>=0){
+                                mu_min=mu1;
+                                i_best=actually_added;
+                            }
+                            
+                            if(!(mu1<chisq_exception)){
+                                gstep*=0.5;
+                            }
                         }
+                        if(gstep<gstepmin)gstepmin=gstep;
                         
                         while(mu1<simplex_min){
                             simplex_min=mu1;
@@ -1136,7 +1146,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 mindex=actually_added;
                             }
                             
-                            x1-=0.01;
+                            x1-=gstep;
                             trial.set(ix,x1);
                             for(i=0;i<dim;i++){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
@@ -1152,18 +1162,32 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 mu1=2.0*chisq_exception;
                             }
                         }
-
-                        trial.set(ix,x2);
-                        for(i=0;i<dim;i++){
-                            true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                        }
-                        evaluate(true_var,&mu2,&actually_added);
-                        mu2_use=mu2;
                         
-                        if(mu2<mu_min && actually_added>=0){
-                            mu_min=mu2;
-                            i_best=actually_added;
+                        gstep=0.01;
+                        mu2=2.0*chisq_exception;
+                        
+                        while(!(mu2<chisq_exception) && gstep>1.0e-6){
+                            x2=rotation_center.get_data(ix)+gstep;
+                            
+                            trial.set(ix,x2);
+                            for(i=0;i<dim;i++){
+                                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                            }
+                            evaluate(true_var,&mu2,&actually_added);
+                            mu2_use=mu2;
+                            x2_use=x2;
+                        
+                            if(mu2<mu_min && actually_added>=0){
+                                mu_min=mu2;
+                                i_best=actually_added;
+                            }
+                            
+                            if(!(mu2<chisq_exception)){
+                                gstep*=0.5;
+                            }
+                        
                         }
+                        if(gstep<gstepmin)gstepmin=gstep;
                         
                         while(mu2<simplex_min){
                             simplex_min=mu2;
@@ -1172,7 +1196,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 mindex=actually_added;
                             }
                             
-                            x2+=0.01;
+                            x2+=gstep;
                             trial.set(ix,x2);
                             for(i=0;i<dim;i++){
                                 true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
@@ -1195,10 +1219,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     printf("    CALCULATED GRADIENT %e -- dd %e %d\n",chimin,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
                     
                     if(mindex==old_mindex){
-                        gnorm=gradient.normalize();
-                        dchi_want=0.02;
+                        gradient.normalize();
+                        dchi_want=gstepmin;
                         k=0;
-                        while(dchi_want>0.0005 && dchi_want<0.2 && k<5){
+                        while(k<5){
                             k++;
                             for(i=0;i<dim;i++){
                                 trial.set(i,rotation_center.get_data(i)-dchi_want*gradient.get_data(i));
