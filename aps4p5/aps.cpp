@@ -754,7 +754,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     //write some code to do simplex search here
     int i_before=chisq->get_called();
 
-    array_1d<double> vv;
+    array_1d<double> vv,true_min;
+    
+    true_min.set(0,0.02191591);
+    true_min.set(1,0.1134235);
+    true_min.set(2,0.6889954);
+    true_min.set(3,0.01023216);
+    true_min.set(4,0.9550505);
+    true_min.set(5,3.077629);
     
     vv.set_name("find_global_min_vv");
     
@@ -1087,7 +1094,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             if(mindex==old_mindex){
               
-                printf("    STARTING GRADIENT chimin %e\n",chimin);
+                printf("    STARTING GRADIENT chimin %e -- dd %e\n",chimin,gg.distance(global_mindex,true_min));
                 mu_min=2.0*chisq_exception;
                 i_best=-1;
                 old_mindex=-1;
@@ -1185,7 +1192,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                    
                     }
                     
-                    printf("    CALCULATED GRADIENT %e -- %d\n",chimin,chisq->get_called()-i_before);
+                    printf("    CALCULATED GRADIENT %e -- dd %e %d\n",chimin,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
                     
                     if(mindex==old_mindex){
                         gnorm=gradient.normalize();
@@ -1210,7 +1217,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                                 dchi_want*=2.0;
                             }
                         
-                            printf("    GRADIENT CHIMIN %e -- %e -- %d\n",chimin,mu,chisq->get_called()-i_before);
+                            printf("    GRADIENT CHIMIN %e -- %e dd %e -- %d\n",chimin,mu,gg.distance(global_mindex,true_min),
+                            chisq->get_called()-i_before);
                             if(mu<simplex_min and !(isnan(mu))){
                                 simplex_min=mu;
                                 last_found=chisq->get_called();
@@ -1247,11 +1255,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             }
                             step.normalize();
                             for(j=0;j<dim;j++){
-                                pts.set(i,j,pts.get_data(il,j)+step.get_data(j));
+                                pts.set(i,j,pts.get_data(il,j)+0.1*step.get_data(j));
                                 true_var.set(j,pts.get_data(i,j)*length.get_data(j)+min.get_data(j));
                             }
-                            
+                          
                             evaluate(true_var,&mu,&actually_added);
+                            ff.set(i,mu);
                             if(mu<simplex_min){
                                 simplex_min=mu;
                                 last_found=chisq->get_called();
@@ -1275,11 +1284,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }//if sig<0.1
         
         
-        printf("chimin %e sig %e mu %e -- %d\n",chimin,sig,mu,chisq->get_called()-i_before);
+        printf("chimin %e sig %e dd %e -- %d\n",chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
         
     }
-    printf("chimin %e mu %e sig %e time %e\n",
-    chimin,mu,sig,double(time(NULL))-time_last_found);
+    printf("chimin %e dd %e sig %e time %e\n",
+    chimin,gg.distance(global_mindex,true_min),sig,double(time(NULL))-time_last_found);
     exit(1);
    
     known_minima.add(mindex);
