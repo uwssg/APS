@@ -901,7 +901,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int i_best;
     
     
-    double rrmin;
+    double rrmax;
     
     int iterated=0;
     
@@ -1043,23 +1043,23 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 origin.set(i,pts.get_data(il,i));
             }
             
-            rrmin=2.0*chisq_exception;
+            rrmax=-2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
                 if(i!=il){
                     mu=0.0;
                     for(j=0;j<dim;j++){
                         mu+=power(pts.get_data(i,j)-pts.get_data(il,j),2);
                     }
-                    if(mu<rrmin)rrmin=mu;
+                    if(mu>rrmax)rrmax=mu;
                 }
             }
-            rrmin=sqrt(rrmin/double(dim));
-            if(rrmin<1.0e-10)rrmin=1.0e-4;
+            rrmax=sqrt(rrmax/double(dim));
+            
             
             n_accepted=0;
             for(i=0;i<100;i++){
                 for(j=0;j<dim;j++){
-                    step.set(j,normal_deviate(dice,0.0,5.0*rrmin));
+                    step.set(j,normal_deviate(dice,0.0,5.0*rrmax));
                 }
                 
                 for(j=0;j<dim;j++){
