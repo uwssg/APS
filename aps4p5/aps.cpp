@@ -1082,11 +1082,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             for(i=0;i<dim;i++){
                 if(fabs(gradient.get_data(i))<1.0e-3)gradient.set(i,1.0e-3);
             }
+            for(i=0;i<dim;i++){
+                printf("    g%d %e\n",i,gradient.get_data(i));
+            }
 
             n_accepted=0;
             for(i=0;i<100;i++){
                 for(j=0;j<dim;j++){
-                    step.set(j,normal_deviate(dice,0.0,5.0*rrmax*gradient.get_data(j)));
+                    step.set(j,normal_deviate(dice,0.0,rrmax*gradient.get_data(j)));
                 }
                 
                 for(j=0;j<dim;j++){
