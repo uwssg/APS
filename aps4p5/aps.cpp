@@ -1056,7 +1056,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             rrmax=sqrt(rrmax/double(dim));
             
             //calculate the gradient
-            gradient.reset();
+            /*gradient.reset();
             for(ix=0;ix<dim;ix++){
                 for(i=0;i<dim;i++)trial.set(i,pts.get_data(il,i));
                 x1=trial.get_data(ix)-0.01;
@@ -1084,12 +1084,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             for(i=0;i<dim;i++){
                 printf("    g%d %e\n",i,gradient.get_data(i));
-            }
+            }*/
 
             n_accepted=0;
             for(i=0;i<100;i++){
                 for(j=0;j<dim;j++){
-                    step.set(j,normal_deviate(dice,0.0,rrmax*gradient.get_data(j)));
+                    step.set(j,normal_deviate(dice,0.0,5.0*rrmax));
                 }
                 
                 for(j=0;j<dim;j++){
@@ -1099,7 +1099,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 
                 chinew=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
                 
-                mu=exp(-0.5*(chinew-ff.get_data(il)));
+                mu=exp(-5.0*(chinew-ff.get_data(il)));
                 if(chinew<ff.get_data(il) || mu>dice->doub()){
                     for(j=0;j<dim;j++){
                         pts.set(il,j,trial.get_data(j));
