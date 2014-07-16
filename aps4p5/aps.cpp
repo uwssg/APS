@@ -1036,7 +1036,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         printf("chimin %e sig %e dd %e -- %d -- %d\n",
         chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
         
-        if(sig<0.01 && mindex_ct-last_kicked>50){
+        if(sig<0.01 && mindex_ct-last_kicked>50 && mindex_ct-last_found>5){
             
             rrmax=-2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
