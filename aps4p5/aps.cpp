@@ -1033,52 +1033,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         if(mindex_ct-last_found>delta_max)delta_max=mindex_ct-last_found;
         sig=ff.get_data(ih)-ff.get_data(il);
+        
         printf("chimin %e il %e sig %.3e dd %.3e -- %d -- %d\n",
         chimin,ff.get_data(il),
         sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
         
-        
-        rrmax=-2.0*chisq_exception;
-        for(i=0;i<dim+1;i++){
-            if(i!=il){
-                mu=0.0;
-                for(j=0;j<dim;j++){
-                    mu+=power(pts.get_data(i,j)-pts.get_data(il,j),2);
-                }
-                if(mu>rrmax)rrmax=mu;
-            }
-        }
-        mu=sqrt(mu/double(dim));
-        
-        for(i=0;i<dim;i++){
-            trial.set(i,pts.get_data(il,i)+normal_deviate(dice,0.0,rrmax));
-            true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-        }
-        
-        mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
-        if(mu<chisq_exception){
-            ff.set(il,mu);
-            for(i=0;i<dim;i++){
-                pts.set(il,i,trial.get_data(i));
-            }
-        }
-        
-        for(i=0;i<dim+1;i++){
-            if(i==0 || ff.get_data(i)<ff.get_data(il)){
-                il=i;
-            }
-            if(i==0 || ff.get_data(i)>ff.get_data(ih)){
-                ih=i;
-            }
-        }
-        
-        
-        if(sig<-0.01 && mindex_ct-last_kicked>50 && mindex_ct-last_found>5){
-            
-            for(i=0;i<dim;i++){
-                origin.set(i,pts.get_data(il,i));
-            }
-            
+        if(sig<1.0){
             rrmax=-2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
                 if(i!=il){
@@ -1089,119 +1049,32 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     if(mu>rrmax)rrmax=mu;
                 }
             }
-            rrmax=sqrt(rrmax/double(dim));
-            
-            //calculate the gradient
-            /*gradient.reset();
-            for(ix=0;ix<dim;ix++){
-                for(i=0;i<dim;i++)trial.set(i,pts.get_data(il,i));
-                x1=trial.get_data(ix)-0.01;
-                x2=trial.get_data(ix)+0.01;
-                
-                trial.set(ix,x1);
-                for(i=0;i<dim;i++){
-                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                }
-                mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
-                
-                
-                trial.set(ix,x2);
-                for(i=0;i<dim;i++){
-                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-                }
-                mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
-                
-                gradient.set(ix,(mu1-mu2)/(x1-x2));
-            }
-            
-            gradient.normalize();
+            mu=sqrt(mu/double(dim));
+        
             for(i=0;i<dim;i++){
-                if(fabs(gradient.get_data(i))<1.0e-3)gradient.set(i,1.0e-3);
+                trial.set(i,pts.get_data(il,i)+normal_deviate(dice,0.0,rrmax));
+                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
             }
-            for(i=0;i<dim;i++){
-                printf("    g%d %e\n",i,gradient.get_data(i));
-            }*/
-
-            n_accepted=0;
-            for(i=0;i<100;i++){
-                for(j=0;j<dim;j++){
-                    step.set(j,normal_deviate(dice,0.0,5.0*rrmax));
-                }
-                
-                for(j=0;j<dim;j++){
-                    trial.set(j,pts.get_data(il,j)+step.get_data(j));
-                    true_var.set(j,trial.get_data(j)*length.get_data(j)+min.get_data(j));
-                }
-                
-                chinew=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
-                
-                mu=exp(-5.0*(chinew-ff.get_data(il)));
-                if(chinew<ff.get_data(il) || mu>dice->doub()){
-                    for(j=0;j<dim;j++){
-                        pts.set(il,j,trial.get_data(j));
-                    }
-                    ff.set(il,chinew);
-                    mu=step.normalize();
-                    n_accepted++;
-                    printf("    accepted %e %e %e\n",chinew,chimin,mu);
-                }
-                
-            }
-            
-            if(n_accepted>0){
-                mu=0.0;
+        
+            mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+            if(mu<chisq_exception){
+                ff.set(il,mu);
                 for(i=0;i<dim;i++){
-                    mu+=power(pts.get_data(il,i)-origin.get_data(i),2);
-                }
-                mu=sqrt(mu/double(dim));
-            }
-            else{
-                mu=0.05;
-            }
-            
-            for(i=0;i<dim+1;i++){
-                if(i!=il){
-                    allowed=0;
-                    while(allowed==0){
-                        for(j=0;j<dim;j++){
-                            step.set(j,normal_deviate(dice,0.0,mu));
-                        }
-                        
-                        for(j=0;j<dim;j++){
-                            trial.set(j,pts.get_data(i,j)+step.get_data(j));
-                            true_var.set(j,trial.get_data(j)*length.get_data(j)+min.get_data(j));
-                        }
-                        
-                        allowed=is_valid(true_var);
-                        if(allowed==1){
-                            for(j=0;j<dim;j++){
-                                pts.set(i,j,trial.get_data(j));
-                            }
-                        }
-                    
-                    }
+                    pts.set(il,i,trial.get_data(i));
                 }
             }
-            
+        
             for(i=0;i<dim+1;i++){
-                if(i!=il){
-                    for(j=0;j<dim;j++){
-                        true_var.set(j,pts.get_data(i,j)*length.get_data(j)+min.get_data(j));
-                    }
-                    mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
-                    ff.set(i,mu);
+                if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                    il=i;
+                }
+                if(i==0 || ff.get_data(i)>ff.get_data(ih)){
+                    ih=i;
                 }
             }
-            
-            printf("    before reassessing ffil %e\n",ff.get_data(il));
-            for(i=0;i<dim+1;i++){
-                if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
-                if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
-            }
-            printf("    set ffil %e\n",ff.get_data(il));
-            last_kicked=mindex_ct;
-            
         }
+        
+        
         
     }
     printf("chimin %e dd %e sig %e time %e steps %d\n",
