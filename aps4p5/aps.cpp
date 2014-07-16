@@ -1106,7 +1106,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             true_var.set(j,trial.get_data(j)*length.get_data(j)+min.get_data(j));
                         }
                         
-                        allowed=in_bounds(true_var);
+                        allowed=is_valid(true_var);
                         if(allowed==1){
                             for(j=0;j<dim;j++){
                                 pts.set(i,j,trial.get_data(j));
