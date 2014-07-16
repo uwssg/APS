@@ -1037,7 +1037,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         chimin,ff.get_data(il),
         sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
         
-        if(sig<0.01 && mindex_ct-last_kicked>50 && mindex_ct-last_found>5){
+        if(sig<-0.01 && mindex_ct-last_kicked>50 && mindex_ct-last_found>5){
             
             for(i=0;i<dim;i++){
                 origin.set(i,pts.get_data(il,i));
