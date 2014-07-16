@@ -1053,7 +1053,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }
             }
             rrmax=sqrt(rrmax/double(dim));
-            if(rrmax<0.02)rrmax=0.02;
+            //if(rrmax<0.02)rrmax=0.02;
             
             n_accepted=0;
             for(i=0;i<100;i++){
