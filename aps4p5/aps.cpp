@@ -906,7 +906,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int iterated=0;
     
     double chinew;
-    int last_kicked=0,allowed;
+    int last_kicked=0,allowed,delta_max=0;
     
     mindex_ct=0;
     last_found=mindex_ct;
@@ -914,7 +914,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     found_by_simplex=0;
     while(mindex_ct-last_found<1000 && chimin>1271.0){
         simplex_ct++;
- 
+        
         //printf("    simplex min %e\n",simplex_min);
         for(i=0;i<dim;i++){
             pbar.set(i,0.0);
@@ -1031,8 +1031,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
         }
         
+        if(mindex_ct-last_found>delta_max)delta_max=mindex_ct-last_found;
         sig=ff.get_data(ih)-ff.get_data(il);
-        printf("chimin %e sig %e dd %e -- %d\n",chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
+        printf("chimin %e sig %e dd %e -- %d -- %d\n",
+        chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
         
         if(sig<0.01 && mindex_ct-last_kicked>50){
             
@@ -1110,8 +1112,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }
         
     }
-    printf("chimin %e dd %e sig %e time %e\n",
-    chimin,gg.distance(global_mindex,true_min),sig,double(time(NULL))-time_last_found);
+    printf("chimin %e dd %e sig %e time %e steps %d\n",
+    chimin,gg.distance(global_mindex,true_min),sig,
+    double(time(NULL))-time_last_found,chisq->get_called()-i_before);
     
     for(i=0;i<dim;i++){
         trial.set(i,0.5*(true_min.get_data(i)+gg.get_pt(global_mindex,i)));
