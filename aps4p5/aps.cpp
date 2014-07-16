@@ -894,7 +894,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int ix,iy,old_mindex;
     double theta;
     
-    array_1d<double> trial,trial_best,gradient;
+    array_1d<double> trial,trial_best,gradient,origin;
     double mu_min,crit,crit_best; 
     double mu1,mu2,x1,x2,gstep,gstepmin,dchi_want;
     double mu1_use,mu2_use,x1_use,x2_use;
@@ -1038,6 +1038,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         if(sig<0.01 && mindex_ct-last_kicked>50 && mindex_ct-last_found>5){
             
+            for(i=0;i<dim;i++){
+                origin.set(i,pts.get_data(il,i));
+            }
+            
             rrmax=-2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
                 if(i!=il){
@@ -1074,21 +1078,34 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     printf("    accepted %e %e %e\n",chinew,chimin,mu);
                 }
                 
-                for(j=0;j<dim+1;j++){
-                    if(j!=il){
-                        allowed=0;
-                        while(allowed!=1){
-                            for(k=0;k<dim;k++){
-                                trial.set(k,pts.get_data(j,k)+normal_deviate(dice,0.0,5.0*rrmax));
-                                true_var.set(k,trial.get_data(k)*length.get_data(k)+min.get_data(k));
-                            } 
-                            allowed=in_bounds(true_var);
-                            if(allowed==1){
-                                for(k=0;k<dim;k++){
-                                    pts.set(j,k,trial.get_data(k));
-                                }
+            }
+            
+            mu=0.0;
+            for(i=0;i<dim;i++){
+                mu+=power(pts.get_data(il,i)-origin.get_data(i),2);
+            }
+            mu=sqrt(mu/double(dim));
+            
+            for(i=0;i<dim;i++){
+                if(i!=il){
+                    allowed=0;
+                    while(allowed==0){
+                        for(j=0;j<dim;j++){
+                            step.set(j,normal_deviate(dice,0.0,mu));
+                        }
+                        
+                        for(j=0;j<dim;j++){
+                            trial.set(j,pts.get_data(i,j)+step.get_data(j));
+                            true_var.set(j,trial.get_data(j)*length.get_data(j)+min.get_data(j));
+                        }
+                        
+                        allowed=in_bounds(true_var);
+                        if(allowed==1){
+                            for(j=0;j<dim;j++){
+                                pts.set(i,j,trial.get_data(j));
                             }
                         }
+                    
                     }
                 }
             }
