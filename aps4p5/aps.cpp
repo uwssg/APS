@@ -1033,8 +1033,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         
         if(mindex_ct-last_found>delta_max)delta_max=mindex_ct-last_found;
         sig=ff.get_data(ih)-ff.get_data(il);
-        printf("chimin %e sig %e dd %e -- %d -- %d\n",
-        chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
+        printf("chimin %e il %e sig %.3e dd %.3e -- %d -- %d\n",
+        chimin,ff.get_data(il),
+        sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
         
         if(sig<0.01 && mindex_ct-last_kicked>50 && mindex_ct-last_found>5){
             
