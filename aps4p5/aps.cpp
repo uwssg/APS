@@ -905,11 +905,13 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     int iterated=0;
     
+    double chiold,chinew;
+    
     mindex_ct=0;
     last_found=mindex_ct;
     simplex_ct=0;
     found_by_simplex=0;
-    while(mindex_ct-last_found<200 && iterated<5){
+    while(mindex_ct-last_found<200){
         simplex_ct++;
  
         //printf("    simplex min %e\n",simplex_min);
@@ -1031,18 +1033,39 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         sig=ff.get_data(ih)-ff.get_data(il);
         printf("chimin %e sig %e dd %e -- %d\n",chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
         
-        if(mindex_ct-last_found>50){
+        if(sig<0.01){
+            chiold=ff.get_data(il);
+            rrmax=-2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
-                actually_added=-1;
-                while(actually_added<0){
+                if(i!=il){
+                    mu=0.0;
                     for(j=0;j<dim;j++){
-                        true_var.set(j,min.get_data(j)+dice->doub()*(max.get_data(j)-min.get_data(j)));
-                        pts.set(i,j,(true_var.get_data(j)-min.get_data(j))/length.get_data(j));
+                        mu+=power(pts.get_data(i,j)-pts.get_data(il,j),2);
                     }
-                    
-                    mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
-                    ff.set(i,mu);
-                    
+                    if(mu>rrmax)rrmax=mu;
+                }
+            }
+            rrmax=sqrt(rrmax/double(dim));
+            
+            for(i=0;i<100;i++){
+                for(j=0;j<dim;j++){
+                    step.set(j,normal_deviate(dice,0.0,0.5*rrmax));
+                }
+                
+                for(j=0;j<dim;j++){
+                    trial.set(j,pts.get_data(il,j)+step.get_data(j));
+                    true_var.set(j,trial.get_data(j)*length.get_data(j)+min.get_data(j));
+                }
+                
+                chinew=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                
+                mu=exp(-0.5*(chinew-chiold));
+                if(chinew<chiold || mu<dice->doub()){
+                    for(j=0;j<dim;j++){
+                        pts.set(il,j,trial.get_data(j));
+                        ff.set(il,chinew);
+                    }
+                    printf("    accepted %e\n",chinew);
                 }
             }
             
@@ -1050,9 +1073,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
                 if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
             }
-            iterated++;
-            last_found=mindex_ct;
-            simplex_min=ff.get_data(il);
+            
         }
         
     }
