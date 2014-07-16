@@ -1073,9 +1073,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 if(chinew<ff.get_data(il) || mu>dice->doub()){
                     for(j=0;j<dim;j++){
                         pts.set(il,j,trial.get_data(j));
-                        ff.set(il,chinew);
+                        
                     }
-                    
+                    ff.set(il,chinew);
                     mu=step.normalize();
                     n_accepted++;
                     printf("    accepted %e %e %e\n",chinew,chimin,mu);
@@ -1132,7 +1132,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
                 if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
             }
-            
+            printf("    set ffil %e\n",ff.get_data(il));
             last_kicked=mindex_ct;
             
         }
