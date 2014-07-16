@@ -1065,7 +1065,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         pts.set(il,j,trial.get_data(j));
                         ff.set(il,chinew);
                     }
-                    printf("    accepted %e\n",chinew);
+                    printf("    accepted %e %e\n",chinew,chimin);
                 }
             }
             
