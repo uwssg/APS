@@ -905,7 +905,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     int iterated=0;
     
-    double chiold,chinew;
+    double chinew;
+    int last_kicked=0;
     
     mindex_ct=0;
     last_found=mindex_ct;
@@ -1033,8 +1034,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         sig=ff.get_data(ih)-ff.get_data(il);
         printf("chimin %e sig %e dd %e -- %d\n",chimin,sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before);
         
-        if(sig<0.01){
-            chiold=ff.get_data(il);
+        if(sig<0.01 && mindex_ct-last_kicked>50){
+            
             rrmax=-2.0*chisq_exception;
             for(i=0;i<dim+1;i++){
                 if(i!=il){
@@ -1059,8 +1060,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 
                 chinew=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
                 
-                mu=exp(-0.5*(chinew-chiold));
-                if(chinew<chiold || mu>dice->doub()){
+                mu=exp(-0.5*(chinew-ff.get_data(il)));
+                if(chinew<ff.get_data(il) || mu>dice->doub()){
                     for(j=0;j<dim;j++){
                         pts.set(il,j,trial.get_data(j));
                         ff.set(il,chinew);
@@ -1073,6 +1074,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
                 if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
             }
+            
+            last_kicked=mindex_ct;
             
         }
         
