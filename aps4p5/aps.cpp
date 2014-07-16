@@ -1093,7 +1093,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 mu=0.05;
             }
             
-            for(i=0;i<dim;i++){
+            for(i=0;i<dim+1;i++){
                 if(i!=il){
                     allowed=0;
                     while(allowed==0){
