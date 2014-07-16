@@ -1037,6 +1037,34 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         chimin,ff.get_data(il),
         sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
         
+        
+        rrmax=-2.0*chisq_exception;
+        for(i=0;i<dim+1;i++){
+            if(i!=il){
+                mu=0.0;
+                for(j=0;j<dim;j++){
+                    mu+=power(pts.get_data(i,j)-pts.get_data(il,j),2);
+                }
+                if(mu>rrmax)rrmax=mu;
+            }
+        }
+        mu=sqrt(mu/double(dim));
+        
+        for(i=0;i<dim;i++){
+            trial.set(i,pts.get_data(il,i)+normal_deviate(dice,0.0,rrmax));
+            true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+        }
+        
+        mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+        if(mu<chisq_exception){
+            ff.set(il,mu);
+            for(i=0;i<dim;i++){
+                pts.set(il,i,trial.get_data(i));
+            }
+        }
+        
+        
+        
         if(sig<-0.01 && mindex_ct-last_kicked>50 && mindex_ct-last_found>5){
             
             for(i=0;i<dim;i++){
