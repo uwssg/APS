@@ -1055,11 +1055,38 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             rrmax=sqrt(rrmax/double(dim));
             
+            //calculate the gradient
+            gradient.reset();
+            for(ix=0;ix<dim;ix++){
+                for(i=0;i<dim;i++)trial.set(i,pts.get_data(il,i));
+                x1=trial.get_data(ix)-0.01;
+                x2=trial.get_data(ix)+0.01;
+                
+                trial.set(ix,x1);
+                for(i=0;i<dim;i++){
+                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                }
+                mu1=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                
+                
+                trial.set(ix,x2);
+                for(i=0;i<dim;i++){
+                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                }
+                mu2=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                
+                gradient.set(ix,(mu1-mu2)/(x1-x2));
+            }
             
+            gradient.normalize();
+            for(i=0;i<dim;i++){
+                if(fabs(gradient.get_data(i))<1.0e-3)gradient.set(i,1.0e-3);
+            }
+
             n_accepted=0;
             for(i=0;i<100;i++){
                 for(j=0;j<dim;j++){
-                    step.set(j,normal_deviate(dice,0.0,5.0*rrmax));
+                    step.set(j,normal_deviate(dice,0.0,5.0*rrmax*gradient.get_data(j)));
                 }
                 
                 for(j=0;j<dim;j++){
