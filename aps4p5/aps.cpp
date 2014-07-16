@@ -1077,8 +1077,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         while(allowed!=1){
                             for(k=0;k<dim;k++){
                                 trial.set(k,pts.get_data(j,k)+normal_deviate(dice,0.0,5.0*rrmax));
+                                true_var.set(k,trial.get_data(k)*length.get_data(k)+min.get_data(k));
                             } 
-                            allowed=in_bounds(trial);
+                            allowed=in_bounds(true_var);
                             if(allowed==1){
                                 for(k=0;k<dim;k++){
                                     pts.set(j,k,trial.get_data(k));
