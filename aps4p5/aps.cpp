@@ -1052,6 +1052,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             iterated++;
             last_found=mindex_ct;
+            simplex_min=ff.get_data(il);
         }
         
     }
