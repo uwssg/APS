@@ -1063,6 +1063,14 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
         }
         
+        for(i=0;i<dim+1;i++){
+            if(i==0 || ff.get_data(i)<ff.get_data(il)){
+                il=i;
+            }
+            if(i==0 || ff.get_data(i)>ff.get_data(ih)){
+                ih=i;
+            }
+        }
         
         
         if(sig<-0.01 && mindex_ct-last_kicked>50 && mindex_ct-last_found>5){
