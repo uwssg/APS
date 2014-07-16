@@ -1060,7 +1060,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 chinew=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
                 
                 mu=exp(-0.5*(chinew-chiold));
-                if(chinew<chiold || mu<dice->doub()){
+                if(chinew<chiold || mu>dice->doub()){
                     for(j=0;j<dim;j++){
                         pts.set(il,j,trial.get_data(j));
                         ff.set(il,chinew);
