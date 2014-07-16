@@ -906,7 +906,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int iterated=0;
     
     double chinew;
-    int last_kicked=0,allowed,delta_max=0;
+    int last_kicked=0,allowed,delta_max=0,n_accepted;
     
     mindex_ct=0;
     last_found=mindex_ct;
@@ -1055,6 +1055,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             rrmax=sqrt(rrmax/double(dim));
             if(rrmax<0.02)rrmax=0.02;
             
+            n_accepted=0;
             for(i=0;i<100;i++){
                 for(j=0;j<dim;j++){
                     step.set(j,normal_deviate(dice,0.0,5.0*rrmax));
@@ -1075,16 +1076,22 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                     }
                     
                     mu=step.normalize();
+                    n_accepted++;
                     printf("    accepted %e %e %e\n",chinew,chimin,mu);
                 }
                 
             }
             
-            mu=0.0;
-            for(i=0;i<dim;i++){
-                mu+=power(pts.get_data(il,i)-origin.get_data(i),2);
+            if(n_accepted>0){
+                mu=0.0;
+                for(i=0;i<dim;i++){
+                    mu+=power(pts.get_data(il,i)-origin.get_data(i),2);
+                }
+                mu=sqrt(mu/double(dim));
             }
-            mu=sqrt(mu/double(dim));
+            else{
+                mu=0.05;
+            }
             
             for(i=0;i<dim;i++){
                 if(i!=il){
