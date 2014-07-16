@@ -906,7 +906,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int iterated=0;
     
     double chinew;
-    int last_kicked=0;
+    int last_kicked=0,allowed;
     
     mindex_ct=0;
     last_found=mindex_ct;
@@ -1050,7 +1050,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             for(i=0;i<100;i++){
                 for(j=0;j<dim;j++){
-                    step.set(j,normal_deviate(dice,0.0,0.5*rrmax));
+                    step.set(j,normal_deviate(dice,0.0,5.0*rrmax));
                 }
                 
                 for(j=0;j<dim;j++){
@@ -1066,7 +1066,36 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                         pts.set(il,j,trial.get_data(j));
                         ff.set(il,chinew);
                     }
-                    printf("    accepted %e %e\n",chinew,chimin);
+                    
+                    mu=step.normalize();
+                    printf("    accepted %e %e %e\n",chinew,chimin,mu);
+                }
+                
+                for(j=0;j<dim+1;j++){
+                    if(j!=il){
+                        allowed=0;
+                        while(allowed!=1){
+                            for(k=0;k<dim;k++){
+                                trial.set(k,pts.get_data(j,k)+normal_deviate(dice,0.0,5.0*rrmax));
+                            } 
+                            allowed=in_bounds(trial);
+                            if(allowed==1){
+                                for(k=0;k<dim;k++){
+                                    pts.set(j,k,trial.get_data(k));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            for(i=0;i<dim+1;i++){
+                if(i!=il){
+                    for(j=0;j<dim;j++){
+                        true_var.set(j,pts.get_data(i,j)*length.get_data(j)+min.get_data(j));
+                    }
+                    mu=simplex_evaluate(true_var,&actually_added,&simplex_min,&mindex,&mindex_ct,&last_found);
+                    ff.set(i,mu);
                 }
             }
             
