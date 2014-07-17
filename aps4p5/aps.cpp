@@ -1031,10 +1031,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         if(_min_ct-_last_found>delta_max)delta_max=_min_ct-_last_found;
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        /*printf("chimin %e il %e sig %.3e -- %d -- %d %d\n",
+        printf("chimin %e il %e sig %.3e -- %d -- %d %d\n",
         chimin,ff.get_data(il),
         sig,chisq->get_called()-i_before,delta_max,
-        reflected);*/
+        reflected);
         
         if(sig<1.0e-4){
             //_false_minima.add(_mindex);
