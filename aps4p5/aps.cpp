@@ -724,9 +724,23 @@ void aps::find_global_minimum(int ix){
     
 }
 
+double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added){
+    array_2d<double> pp;
+    array_1d<double> ff;
+    
+    return simplex_evaluate(pt,actually_added,pp,ff,0);
+}
+
+double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
+    array_2d<double> &pp, array_1d<double> &ff){
+
+
+    return simplex_evaluate(pt,actually_added,pp,ff,1);
+    
+}
 
 double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added, 
-     array_2d<double> &pp, array_1d<double> &ff){
+     array_2d<double> &pp, array_1d<double> &ff, int do_log){
           
     double mu,repulsion;
     int i,j;
@@ -735,12 +749,15 @@ double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
     evaluate(pt,&mu,actually_added);
     
     if(mu<_simplex_min){
-       
-       if(_last_simplex.get_rows()==0 || mu<_simplex_min-1.0){
-          for(i=0;i<gg.get_dim()+1;i++){
-              _last_simplex.set_row(i,*pp(i));
-              _last_ff.set(i,ff.get_data(i));
-          }
+       if(do_log==1){
+           if(_last_simplex.get_rows()==0 || mu<_last_min-1.0){
+              printf("    caching pts\n");
+              for(i=0;i<gg.get_dim()+1;i++){
+                  _last_simplex.set_row(i,*pp(i));
+                  _last_ff.set(i,ff.get_data(i));
+              }    
+              _last_min=mu;
+           }
        }
         _simplex_min=mu;
         _last_found=_min_ct;
@@ -749,14 +766,14 @@ double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
         }
     }
     
-    repulsion=0.0;
+    /*repulsion=0.0;
     double dd;
     for(i=0;i<_false_minima.get_dim();i++){
         dd=gg.distance(pt,_false_minima.get_data(i));
-        repulsion+=exp(-1.0*power(dd/0.05,2));
+        repulsion+=10.0*exp(-1.0*power(dd/0.01,2));
     }
     
-    mu+=repulsion;
+    mu+=repulsion;*/
     
     return mu;
 }
@@ -900,7 +917,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     _min_ct=0;
     _last_found=0;
-
+    
+    _last_min=2.0*chisq_exception;
     _last_simplex.reset();
     _false_minima.reset();
     _last_ff.reset();
@@ -1015,20 +1033,34 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         if(_min_ct-_last_found>delta_max)delta_max=_min_ct-_last_found;
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        printf("chimin %e il %e sig %.3e dd %.3e -- %d -- %d\n",
+        printf("chimin %e il %e sig %.3e dd %.3e -- %d -- %d %d\n",
         chimin,ff.get_data(il),
-        sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
+        sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max,
+        _false_minima.get_dim());
         
-        if(sig<1.0e-2){
-            _false_minima.add(_mindex);
+        if(sig<1.0e-3){
+            //_false_minima.add(_mindex);
             
-            pts.reset();
             for(i=0;i<dim+1;i++){
-                pts.add_row(*_last_simplex(i));
-                ff.set(i,_last_ff.get_data(i));
-                
-                if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
-                if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
+                if(i==0 || _last_ff.get_data(i)<_last_ff.get_data(j))j=i;
+            }
+            
+            for(i=0;i<dim;i++){
+                step.set(i,pts.get_data(il,i)-_last_simplex.get_data(j,i));
+            }
+            
+            for(i=0;i<dim+1;i++){
+                for(j=0;j<dim;j++){
+                    pts.add_val(i,j,step.get_data(j));
+                }
+            }
+            
+            for(i=0;i<dim+1;i++){
+                for(j=0;j<dim;j++){
+                    true_var.set(j,pts.get_data(i,j)*length.get_data(j)+min.get_data(j));
+                }
+                mu=simplex_evaluate(true_var,&actually_added);
+                ff.set(i,mu);
             }
             
             
