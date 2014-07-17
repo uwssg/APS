@@ -750,7 +750,7 @@ double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
     
     if(mu<_simplex_min){
        if(do_log==1){
-           if(_last_simplex.get_rows()==0 || mu<_last_min-1.0){
+           if(_last_simplex.get_rows()==0 || mu<_last_min-0.1){
               printf("    caching pts\n");
               for(i=0;i<gg.get_dim()+1;i++){
                   _last_simplex.set_row(i,*pp(i));
@@ -896,7 +896,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     //for(iteration=0;iteration<4;iteration++){
     
     array_1d<double> rotation_center,rotated,displacement;
-    array_1d<double> p_min,p_max,step;
+    array_1d<double> p_min,p_max,step,deviation;
     array_1d<int> ix_candidates;
     int ix,iy,old_mindex;
     double theta;
@@ -1051,17 +1051,33 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 step.set(i,pts.get_data(il,i)-_last_simplex.get_data(j,i));
             }
             
-            for(i=0;i<dim;i++){
-                step.multiply_val(i,normal_deviate(dice,1.0,0.1));
-            }
+            mu=step.normalize();
             
             for(i=0;i<dim+1;i++){
                 for(j=0;j<dim;j++){
-                    pts.add_val(i,j,0.2*step.get_data(j));
-                    if(i!=il){
-                        pts.add_val(i,j,normal_deviate(dice,0.0,0.05));
-                    }
+                    pts.add_val(i,j,mu*step.get_data(j));
                 }
+                
+                if(i!=il){
+                    theta=0.0;
+                    mu1=-1.0;
+                    while(mu1<0.0 || isnan(mu1)){
+                        for(j=0;j<dim;j++){
+                            deviation.set(j,normal_deviate(dice,0.0,1.0));
+                            theta+=deviation.get_data(j)*step.get_data(j);
+                        }
+                        for(j=0;j<dim;j++){
+                            deviation.subtract_val(j,theta*step.get_data(j));
+                        }
+                        mu1=deviation.normalize();
+                    }
+                    
+                    for(j=0;j<dim;j++){
+                        pts.add_val(i,j,0.1*deviation.get_data(j));
+                    }
+                    
+                }
+                
             }
             
             for(i=0;i<dim+1;i++){
