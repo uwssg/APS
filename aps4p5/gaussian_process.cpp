@@ -2859,7 +2859,7 @@ void gp::optimize_grid(array_1d<int> &use_dex, int n_use){
 }
 
 void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
-    double alpha=1.0,beta=0.9,gamma=1.1;
+    double alpha=1.0,beta=0.5,gamma=2.1;
     
     array_2d<double> opt_pts;
     array_1d<double> ff,ps,pss,pbar;
@@ -2948,6 +2948,11 @@ void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
                 for(i=0;i<nparams;i++)opt_pts.set(ih,i,ps.get_data(i));
                 ff.set(ih,ffs);
             }
+        }
+        
+        for(i=0;i<dim+1;i++){
+            if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
+            if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
         }
         
         j=1;
