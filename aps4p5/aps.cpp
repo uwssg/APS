@@ -922,7 +922,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     _last_simplex.reset();
     _false_minima.reset();
     _last_ff.reset();
-    while(chimin>1271.0){
+    while(_min_ct-_last_found<200){
         simplex_ct++;
         
         //printf("    simplex min %e\n",simplex_min);
