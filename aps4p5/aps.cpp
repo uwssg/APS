@@ -808,15 +808,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     //write some code to do simplex search here
     int i_before=chisq->get_called();
 
-    array_1d<double> vv,true_min;
+    array_1d<double> vv;
     array_1d<int> simplex_candidates;
-    
-    true_min.set(0,0.02191591);
-    true_min.set(1,0.1134235);
-    true_min.set(2,0.6889954);
-    true_min.set(3,0.01023216);
-    true_min.set(4,0.9550505);
-    true_min.set(5,3.077629);
     
     vv.set_name("find_global_min_vv");
     
@@ -1038,10 +1031,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         if(_min_ct-_last_found>delta_max)delta_max=_min_ct-_last_found;
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        printf("chimin %e il %e sig %.3e dd %.3e -- %d -- %d %d\n",
+        /*printf("chimin %e il %e sig %.3e -- %d -- %d %d\n",
         chimin,ff.get_data(il),
-        sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max,
-        reflected);
+        sig,chisq->get_called()-i_before,delta_max,
+        reflected);*/
         
         if(sig<1.0e-4){
             //_false_minima.add(_mindex);
@@ -1136,18 +1129,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }
         
     }
-    printf("chimin %e dd %e sig %e time %e steps %d\n",
-    chimin,gg.distance(global_mindex,true_min),sig,
+    printf("chimin %e sig %e time %e steps %d\n",
+    chimin,sig,
     double(time(NULL))-time_last_found,chisq->get_called()-i_before);
-    
-    for(i=0;i<dim;i++){
-        trial.set(i,0.5*(true_min.get_data(i)+gg.get_pt(global_mindex,i)));
-    }
-    mu=(*chisq)(trial);
-    printf("minpt %e\n",mu);
-    
-    exit(1);
-   
+
     known_minima.add(_mindex);
     j=centers.get_rows();
     
