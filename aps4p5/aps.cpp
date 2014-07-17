@@ -725,22 +725,38 @@ void aps::find_global_minimum(int ix){
 }
 
 
-double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added, array_2d<double> &pp){
+double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added, 
+     array_2d<double> &pp, array_1d<double> &ff){
           
-    double mu;
-    int i;
+    double mu,repulsion;
+    int i,j;
     
     _min_ct++;
     evaluate(pt,&mu,actually_added);
     
     if(mu<_simplex_min){
+       
+       if(_last_simplex.get_rows()==0 || mu<_simplex_min-1.0){
+          for(i=0;i<gg.get_dim()+1;i++){
+              _last_simplex.set_row(i,*pp(i));
+              _last_ff.set(i,ff.get_data(i));
+          }
+       }
         _simplex_min=mu;
         _last_found=_min_ct;
         if(actually_added[0]>=0){
             _mindex=actually_added[0];
         }
-        
     }
+    
+    repulsion=0.0;
+    double dd;
+    for(i=0;i<_false_minima.get_dim();i++){
+        dd=gg.distance(pt,_false_minima.get_data(i));
+        repulsion+=exp(-1.0*power(dd/0.05,2));
+    }
+    
+    mu+=repulsion;
     
     return mu;
 }
@@ -886,7 +902,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     _last_found=0;
 
     _last_simplex.reset();
-    _bad_pts.reset();
+    _false_minima.reset();
+    _last_ff.reset();
     while(_min_ct-_last_found<1000 && chimin>1271.0){
         simplex_ct++;
         
@@ -906,7 +923,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             true_var.set(i,min.get_data(i)+pstar.get_data(i)*length.get_data(i));
         }
         
-        fstar=simplex_evaluate(true_var,&actually_added,pts);
+        fstar=simplex_evaluate(true_var,&actually_added,pts,ff);
      
         if(fstar<ff.get_data(ih) && fstar>ff.get_data(il)){
             ff.set(ih,fstar);
@@ -920,7 +937,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*length.get_data(i));
             }
             
-            fstarstar=simplex_evaluate(true_var,&actually_added,pts);
+            fstarstar=simplex_evaluate(true_var,&actually_added,pts,ff);
             
             if(fstarstar<ff.get_data(il)){
                 for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
@@ -946,7 +963,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 true_var.set(i,min.get_data(i)+pstarstar.get_data(i)*length.get_data(i));
             }
             
-            fstarstar=simplex_evaluate(true_var,&actually_added,pts);
+            fstarstar=simplex_evaluate(true_var,&actually_added,pts,ff);
             
             if(fstarstar<ff.get_data(ih)){
                 for(i=0;i<dim;i++)pts.set(ih,i,pstarstar.get_data(i));
@@ -966,7 +983,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                             true_var.set(j,min.get_data(j)+pts.get_data(i,j)*length.get_data(j));
                         }
                         
-                        mu=simplex_evaluate(true_var,&actually_added,pts);
+                        mu=simplex_evaluate(true_var,&actually_added,pts,ff);
                         
                         
                     }
@@ -1002,48 +1019,20 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         chimin,ff.get_data(il),
         sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max);
         
-        if((sig<1.0 && _min_ct-last_kicked>50) || sig<0.01){
+        if(sig<1.0e-2){
+            _false_minima.add(_mindex);
             
-            rrmax=-2.0*chisq_exception;
+            pts.reset();
             for(i=0;i<dim+1;i++){
-                if(i!=il){
-                    mu=0.0;
-                    for(j=0;j<dim;j++){
-                        mu+=power(pts.get_data(i,j)-pts.get_data(il,j),2);
-                    }
-                    if(mu>rrmax)rrmax=mu;
-                }
-            }
-            rrmax=sqrt(rrmax/double(dim));
-            
-            if(rrmax<1.0e-6)rrmax=1.0e-3;
-        
-            for(i=0;i<dim;i++){
-                trial.set(i,pts.get_data(il,i)+normal_deviate(dice,0.0,rrmax));
-                true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
-            }
-        
-            mu=simplex_evaluate(true_var,&actually_added,pts);
-            if(mu<chisq_exception){
-                ff.set(il,mu);
-                for(i=0;i<dim;i++){
-                    pts.set(il,i,trial.get_data(i));
-                }
-            }
-        
-            for(i=0;i<dim+1;i++){
-                if(i==0 || ff.get_data(i)<ff.get_data(il)){
-                    il=i;
-                }
-                if(i==0 || ff.get_data(i)>ff.get_data(ih)){
-                    ih=i;
-                }
+                pts.add_row(*_last_simplex(i));
+                ff.set(i,_last_ff.get_data(i));
+                
+                if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
+                if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
             }
             
-            last_kicked=_min_ct;
+            
         }
-        
-        
         
     }
     printf("chimin %e dd %e sig %e time %e steps %d\n",

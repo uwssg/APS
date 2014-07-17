@@ -171,7 +171,8 @@ private:
     void evaluate(array_1d<double>&,double*);
 
     
-    double simplex_evaluate(array_1d<double>&,int*,array_2d<double>&);     
+    double simplex_evaluate(array_1d<double>&,int*,
+        array_2d<double>&,array_1d<double>&);     
 
     double distance(int,int,array_1d<double>&);
     
@@ -188,7 +189,9 @@ private:
     ///variables related to finding global minimum
     int _min_ct,_last_found,_mindex;
     double _simplex_min;
-    array_2d<double> _last_simplex,_bad_pts;
+    array_2d<double> _last_simplex;
+    array_1d<double> _last_ff;
+    array_1d<int> _false_minima;
     
 };
 
