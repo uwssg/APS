@@ -1043,6 +1043,30 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             reflected++;
             
+            gradient.reset();
+            for(ix=0;ix<dim;ix++){
+                for(i=0;i<dim;i++)trial.set(i,pts.get_data(il,i));
+                x1=trial.get_data(ix)-0.1;
+                x2=trial.get_data(ix)+0.1;
+                
+                trial.set(ix,x1);
+                for(i=0;i<dim;i++){
+                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                }
+                mu1=simplex_evaluate(true_var,&actually_added);
+                
+                trial.set(ix,x2);
+                for(i=0;i<dim;i++){
+                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                }
+                mu2=simplex_evaluate(true_var,&actually_added);
+                
+                gradient.set(ix,(mu1-mu2)/(x1-x2));
+                
+            }
+            
+            mu2=gradient.normalize();
+            
             for(i=0;i<dim+1;i++){
                 if(i==0 || _last_ff.get_data(i)<_last_ff.get_data(j))j=i;
             }
@@ -1052,6 +1076,19 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             }
             
             mu=step.normalize();
+            
+            if(!(isnan(mu2))){
+                for(i=0;i<dim;i++){
+                    mu1=0.5*(step.get_data(i)-gradient.get_data(i));
+                    step.set(i,mu1);
+                }
+            }
+            else{
+                printf("    WARNING gradient had nan norm\n");
+            }
+            printf("    gradient norm %e\n",mu2);
+            
+            step.normalize();
             
             for(i=0;i<dim+1;i++){
                 for(j=0;j<dim;j++){
