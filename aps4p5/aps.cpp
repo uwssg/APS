@@ -910,7 +910,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     double rrmax;
     
-    int iterated=0;
+    int reflected=0;
     
     double chinew;
     int last_kicked=0,allowed,delta_max=0,n_accepted;
@@ -922,7 +922,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     _last_simplex.reset();
     _false_minima.reset();
     _last_ff.reset();
-    while(_min_ct-_last_found<1000 && chimin>1271.0){
+    while(chimin>1271.0){
         simplex_ct++;
         
         //printf("    simplex min %e\n",simplex_min);
@@ -1036,10 +1036,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         printf("chimin %e il %e sig %.3e dd %.3e -- %d -- %d %d\n",
         chimin,ff.get_data(il),
         sig,gg.distance(global_mindex,true_min),chisq->get_called()-i_before,delta_max,
-        _false_minima.get_dim());
+        reflected);
         
-        if(sig<1.0e-3){
+        if(sig<1.0e-4){
             //_false_minima.add(_mindex);
+            
+            reflected++;
             
             for(i=0;i<dim+1;i++){
                 if(i==0 || _last_ff.get_data(i)<_last_ff.get_data(j))j=i;
@@ -1049,9 +1051,16 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 step.set(i,pts.get_data(il,i)-_last_simplex.get_data(j,i));
             }
             
+            for(i=0;i<dim;i++){
+                step.multiply_val(i,normal_deviate(dice,1.0,0.1));
+            }
+            
             for(i=0;i<dim+1;i++){
                 for(j=0;j<dim;j++){
-                    pts.add_val(i,j,step.get_data(j));
+                    pts.add_val(i,j,0.2*step.get_data(j));
+                    if(i!=il){
+                        pts.add_val(i,j,normal_deviate(dice,0.0,0.05));
+                    }
                 }
             }
             
@@ -1061,6 +1070,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }
                 mu=simplex_evaluate(true_var,&actually_added);
                 ff.set(i,mu);
+                if(i==0 || ff.get_data(i)<ff.get_data(il))il=i;
+                if(i==0 || ff.get_data(i)>ff.get_data(ih))ih=i;
             }
             
             
