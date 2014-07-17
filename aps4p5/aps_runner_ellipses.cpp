@@ -26,7 +26,7 @@ matern_covariance cv;
 dim=8;
 ellipses_integrable chisq(dim,2);
 
-//chisq.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_chk.sav");
+chisq.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_chk.sav");
 
 printf("done integrating\n");
 
@@ -36,7 +36,7 @@ aps aps_test(dim,20,15.5,seed);
 aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);
 
-aps_test.set_write_every(100);
+aps_test.set_write_every(1000);
 aps_test.set_grat(1.0);
 
 array_1d<double> max,min;
@@ -65,7 +65,7 @@ aps_test.set_n_samples(1000);
 double chival,chivaltest,err,maxerr;
 
 i=-1;
-while(aps_test.get_called()<80000){
+while(aps_test.get_called()<30000){
     aps_test.search();    
 }
 

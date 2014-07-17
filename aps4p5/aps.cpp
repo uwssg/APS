@@ -751,7 +751,7 @@ double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
     if(mu<_simplex_min){
        if(do_log==1){
            if(_last_simplex.get_rows()==0 || mu<_last_min-0.1){
-              printf("    caching pts\n");
+             // printf("    caching pts\n");
               for(i=0;i<gg.get_dim()+1;i++){
                   _last_simplex.set_row(i,*pp(i));
                   _last_ff.set(i,ff.get_data(i));
@@ -826,7 +826,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     max.set_name("find_global_min_max");
     true_var.set_name("find_global_min_true_var");
     
-    double fstar,fstarstar;
+    double fstar,fstarstar,dx;
     int ih,il,i,j,k,actually_added;
     //double alpha=1.0,beta=0.9,gamma=1.1;
     double alpha=1.0,beta=0.5,gamma=2.1;
@@ -1047,18 +1047,38 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 x1=trial.get_data(ix)-0.1;
                 x2=trial.get_data(ix)+0.1;
                 
-                trial.set(ix,x1);
-                for(i=0;i<dim;i++){
-                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                dx=0.1;
+                k=0;
+                mu1=2.0*chisq_exception;
+                while(!(mu1<chisq_exception) && k<5){
+                    k++;
+                    trial.set(ix,x1);
+                    for(i=0;i<dim;i++){
+                        true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                    }
+                    mu1=simplex_evaluate(true_var,&actually_added);
+                    
+                    if(!(mu1<chisq_exception)){
+                        dx*=0.5;
+                        x1=pts.get_data(il,ix)-dx;
+                    }
                 }
-                mu1=simplex_evaluate(true_var,&actually_added);
                 
-                trial.set(ix,x2);
-                for(i=0;i<dim;i++){
-                    true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                k=0;
+                mu2=2.0*chisq_exception;
+                dx=0.1;
+                while(!(mu2<chisq_exception) && k<5){
+                    k++;
+                    trial.set(ix,x2);
+                    for(i=0;i<dim;i++){
+                        true_var.set(i,trial.get_data(i)*length.get_data(i)+min.get_data(i));
+                    }
+                    mu2=simplex_evaluate(true_var,&actually_added);
+                    if(!(mu2<chisq_exception)){
+                        dx*=0.5;
+                        x2=pts.get_data(il,ix)+dx;
+                    }
                 }
-                mu2=simplex_evaluate(true_var,&actually_added);
-                
                 gradient.set(ix,(mu1-mu2)/(x1-x2));
                 
             }
@@ -1279,7 +1299,6 @@ void aps::guess(array_1d<double> &pt){
 void aps::search(){
     
     double before=double(time(NULL));
-    
     if(chisq==NULL){
         printf("WARNING in search, chisq is null\n");
         exit(1);
@@ -1300,11 +1319,11 @@ void aps::search(){
     }
     
     aps_search(n_samples);
-
+    
     if(gg.get_pts()>n_printed+write_every){
         write_pts();
     }
-        
+      
     time_total+=double(time(NULL))-before;
 }
 
@@ -1969,24 +1988,6 @@ void aps::corner_focus(int ic){
 }
 
 void aps::aps_focus(int in_samples){
-  
- 
-   array_1d<double> pt_1,pt_2;
-   //double mu_1,mu_2,sig_1,sig_2,strad_1,strad_2,chi_1,chi_2;
-   
-   pt_1.set(0,0.02357535);
-   pt_1.set(1,0.09769284);
-   pt_1.set(2,0.7866272);
-   pt_1.set(3,0.1451201);
-   pt_1.set(4,1.012143);
-   pt_1.set(5,3.134884);
-   
-   pt_2.set(0,0.02326539);
-   pt_2.set(1,0.1132865);
-   pt_2.set(2,0.7160583);
-   pt_2.set(3,0.1480378);
-   pt_2.set(4,0.9947237);
-   pt_2.set(5,3.248447);
    
    array_1d<int> neigh;
    array_1d<double> ddneigh;
@@ -2011,23 +2012,6 @@ void aps::aps_focus(int in_samples){
        
    }
    
-   gg.nn_srch(pt_1,1,neigh,ddneigh);
-   
-   /*printf("nearest to pt 1\n");
-   printf("%e %e\n%e %e\n%e\n\n",
-   pt_1.get_data(0),gg.get_pt(neigh.get_data(0),0),
-   pt_1.get_data(2),gg.get_pt(neigh.get_data(0),2),
-   gg.get_fn(neigh.get_data(0)));
-   
-   gg.nn_srch(pt_2,1,neigh,ddneigh);
-   printf("nearest to pt 2\n");
-   printf("%e %e\n%e %e\n%e\n\n",
-   pt_2.get_data(4),gg.get_pt(neigh.get_data(0),4),
-   pt_2.get_data(5),gg.get_pt(neigh.get_data(0),5),
-   gg.get_fn(neigh.get_data(0)));*/
-   
-     
-
 }
 
 
@@ -2411,7 +2395,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
 }
 
 void aps::aps_search(int in_samples){
-
+    
     if(chisq==NULL){
         printf("WARNING chisq is null in aps_scatter_search\n");
         exit(1);
