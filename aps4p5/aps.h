@@ -169,14 +169,10 @@ private:
     void evaluate(array_1d<double>&,double*,int*,int);
     void evaluate(array_1d<double>&,double*,int*);
     void evaluate(array_1d<double>&,double*);
+
     
-    double simplex_evaluate(array_1d<double>&,int*,double*,int*,int*,int*,
-         array_1d<int>&,int);
-    
-    double simplex_evaluate(array_1d<double>&,int*,double*,int*,int*,int*,
-         array_1d<int>&);     
-    double simplex_evaluate(array_1d<double>&,int*,double*,int*,int*,int*);
-    
+    double simplex_evaluate(array_1d<double>&,int*,array_2d<double>&);     
+
     double distance(int,int,array_1d<double>&);
     
     int in_bounds(array_1d<double>&);
@@ -187,6 +183,12 @@ private:
     
     asymm_array_2d<int> gibbs_sets;
     int i_gibbs,called_gibbs,called_wide,called_focus;
+    
+    
+    ///variables related to finding global minimum
+    int _min_ct,_last_found,_mindex;
+    double _simplex_min;
+    array_2d<double> _last_simplex,_bad_pts;
     
 };
 
