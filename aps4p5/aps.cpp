@@ -1201,6 +1201,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         center_dexes.add(_mindex);
     }
     
+    printf("    centers %d\n\n",center_dexes.get_dim());
     set_where("nowhere");
 }
 
@@ -2650,9 +2651,10 @@ void aps::gradient_search(){
     //for(i=0;i<seed.get_dim();i++)gradient_start_pts.add(seed.get_data(i));
     
     
-    for(i=0;i<seed.get_dim();i++){
+    /*for(i=0;i<seed.get_dim();i++){
         attempted_candidates.add(seed.get_data(i));
-    }
+    }*/
+    
     find_global_minimum(seed);
     
     mindex_is_candidate=0;
@@ -2685,6 +2687,8 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
     double stepNorm,devNorm;
     ic=find_nearest_center(*gg.get_pt(i_min));
     
+    printf("    minpt %e\n",gg.get_pt(i_min,0));
+    
     stepNorm=0.0;
     for(i=0;i<gg.get_dim();i++){
         step.set(i,gg.get_pt(i_min,i)-centers.get_data(ic,i));
@@ -2710,7 +2714,7 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
         
         devNorm=0.0;
         for(i=0;i<gg.get_dim();i++){
-            devNorm+=power(step.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
+            devNorm+=power(deviation.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
         }
         devNorm=sqrt(devNorm);
         for(i=0;i<gg.get_dim();i++){
@@ -2718,7 +2722,7 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
         }
         
         for(i=0;i<gg.get_dim();i++){
-            trial.set(i,gg.get_pt(i_min,i)+0.2*step.get_data(i)+0.1*deviation.get_data(i));
+            trial.set(i,gg.get_pt(i_min,i)+0.1*step.get_data(i)+0.01*deviation.get_data(i));
         }
         
         evaluate(trial,&cc,&actually_added);
@@ -2733,9 +2737,9 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
     printf("    after adding have %d candidates\n",candidates.get_dim());
     if(candidates.get_dim()==gg.get_dim()+1){
      
-        for(i=0;i<candidates.get_dim();i++){
+        /*for(i=0;i<candidates.get_dim();i++){
             attempted_candidates.add(candidates.get_data(i));
-        }
+        }*/
         
         find_global_minimum(candidates);
     }
@@ -3179,7 +3183,7 @@ void aps::write_pts(){
     fprintf(output,"%e %e %e %e",
     global_median,chimin,strad.get_target(),volume);
     
-    fprintf(output," -- %d %d ",known_minima.get_dim(),ngood);
+    fprintf(output," -- %d %d centers %d  ",known_minima.get_dim(),ngood,center_dexes.get_dim());
 
     fprintf(output," -- %d %d %d ",called_wide,called_focus,focus_pts.get_dim());
     if(unitSpheres!=NULL){
