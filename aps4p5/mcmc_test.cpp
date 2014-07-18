@@ -43,7 +43,7 @@ true_centers.set_cols(dim);
 for(i=0;i<dim;i++){
     min.set(i,-100.0);
     max.set(i,100.0);
-    sig.set(i,5.0);
+    sig.set(i,10.0);
 
     for(j=0;j<ncenters;j++){
         true_centers.set(j,i,chifn.get_real_center(j,i));

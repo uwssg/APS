@@ -173,8 +173,9 @@ void chisquared::make_bases(int seed){
     while(goon==0){
         iterations++;
         
-        if(iterations>1000){
+        if(iterations>5000){
             printf("WARNING; chisq was unable to construct an acceptable function\n");
+            exit(1);
         }
         
 	for(ii=0;ii<ncenters;ii++){
