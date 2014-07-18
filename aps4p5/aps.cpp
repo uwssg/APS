@@ -2703,7 +2703,7 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
         stepNorm=0.0;
         for(i=0;i<gg.get_dim();i++){
             step.set(i,normal_deviate(dice,0.0,gg.get_max(i)-gg.get_min(i)));
-            stepNorm+=power(trial.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
+            stepNorm+=power(step.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
         }
         stepNorm=sqrt(stepNorm);
         
