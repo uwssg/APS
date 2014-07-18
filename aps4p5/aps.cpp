@@ -93,6 +93,8 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     do_bisection=1;
     focus_directions=NULL;
     
+    target_asserted=0;
+    
     n_bisected=0;
     n_not_bisected=0;
     
@@ -546,6 +548,11 @@ void aps::resume(char *filename){
     write_pts();
 }
 
+void aps::set_target(double tt){
+    target_asserted=1;
+    strad.set_target(tt);
+}
+
 void aps::set_chimin(double cc,array_1d<double> &pt, int dex){
     chimin=cc;
     
@@ -554,7 +561,9 @@ void aps::set_chimin(double cc,array_1d<double> &pt, int dex){
         minpt.set(i,pt.get_data(i));
     }
     
-    strad.set_target(cc+delta_chisquared);
+    if(target_asserted==0){
+        strad.set_target(cc+delta_chisquared);
+    }
     
     global_mindex=dex;
     

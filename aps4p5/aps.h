@@ -87,6 +87,8 @@ public:
     
     void calculate_gradient(int,array_1d<int>&,array_1d<double>&);
     
+    void set_target(double);
+    
 private:
     Ran *dice;
     chisquared *chisq;
@@ -94,7 +96,7 @@ private:
     
     int write_every,n_printed,ngood,dim,last_optimized;
     int global_mindex,mindex_is_candidate,do_bisection;
-    int simplex_ct;
+    int simplex_ct,target_asserted;
     
     int n_bisected,n_not_bisected;
     
