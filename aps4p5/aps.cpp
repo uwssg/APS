@@ -2646,11 +2646,7 @@ void aps::gradient_search(){
         exit(1);
     }
     
-    //only add the minimum of seed; not all of them
-    gradient_start_pts.add(imin);
-    //for(i=0;i<seed.get_dim();i++)gradient_start_pts.add(seed.get_data(i));
-    
-    
+
     /*for(i=0;i<seed.get_dim();i++){
         attempted_candidates.add(seed.get_data(i));
     }*/
@@ -2700,34 +2696,28 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
     }
     
     int ct=0;
+    double trialNorm;
     while(candidates.get_dim()<gg.get_dim()+1 && ct<(gg.get_dim()+1)*5){
         ct++;
         
-        devNorm=0.0;
+        stepNorm=0.0;
         for(i=0;i<gg.get_dim();i++){
-            deviation.set(i,normal_deviate(dice,0.0,(gg.get_max(i)-gg.get_min(i))));
-            devNorm+=deviation.get_data(i)*step.get_data(i);
+            step.set(i,normal_deviate(dice,0.0,gg.get_max(i)-gg.get_min(i)));
+            stepNorm+=power(trial.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
         }
-        for(i=0;i<gg.get_dim();i++){
-            deviation.subtract_val(i,devNorm*step.get_data(i));
-        }
-        
-        devNorm=0.0;
-        for(i=0;i<gg.get_dim();i++){
-            devNorm+=power(deviation.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
-        }
-        devNorm=sqrt(devNorm);
-        for(i=0;i<gg.get_dim();i++){
-            deviation.divide_val(i,devNorm);
-        }
+        stepNorm=sqrt(stepNorm);
         
         for(i=0;i<gg.get_dim();i++){
-            trial.set(i,gg.get_pt(i_min,i)+0.1*step.get_data(i)+0.01*deviation.get_data(i));
+            step.divide_val(i,stepNorm);
+        } 
+        for(i=0;i<gg.get_dim();i++){
+            trial.set(i,gg.get_pt(i_min,i)+0.01*step.get_data(i));
         }
+        
         
         evaluate(trial,&cc,&actually_added);
         
-        if(actually_added>=0){
+        if(actually_added>=0 && is_it_a_candidate(actually_added)){
             candidates.add(actually_added);
         }
         
