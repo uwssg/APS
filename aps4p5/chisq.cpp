@@ -1338,17 +1338,19 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
     scatter_data.set_cols(2);
     
     double sum=0.0;
-    FILE *output=fopen(filename,"w");
+    FILE *output;
+    
+    
     for(i=0;i<dexes.get_dim() && sum<lim*total;i++){
         j=dexes.get_data(i);
-        fprintf(output,"%e %e\n",xarr.get_data(j),yarr.get_data(j));
         sum+=exp(-0.5*chiarr.get_data(j));
-        
         scatter_data.set(i,0,xarr.get_data(j));
         scatter_data.set(i,1,yarr.get_data(j));
         
     }
-    fclose(output);
+
+    
+    //printf("moving on to boundary\n");
     
     array_1d<double> min,max;
     min.set(0,0.0);
@@ -1380,7 +1382,7 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
     last_pt.set(0,origin.get_data(0));
     last_pt.set(1,origin.get_data(1));
     
-    output=fopen("boundary_test.sav","w");
+    output=fopen(filename,"w");
 
     while(boundary_tree.get_pts()>1){
         fprintf(output,"%e %e\n",last_pt.get_data(0),last_pt.get_data(1));
