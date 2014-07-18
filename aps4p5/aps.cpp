@@ -1038,10 +1038,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         if(_min_ct-_last_found>delta_max)delta_max=_min_ct-_last_found;
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        printf("chimin %e il %e sig %.3e -- %d -- %d %d\n",
+        /*printf("chimin %e il %e sig %.3e -- %d -- %d %d\n",
         chimin,ff.get_data(il),
         sig,chisq->get_called()-i_before,delta_max,
-        reflected);
+        reflected);*/
         
         if(sig<1.0e-4){
             //_false_minima.add(_mindex);
@@ -1111,7 +1111,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             else{
                 printf("    WARNING gradient had nan norm\n");
             }
-            printf("    gradient norm %e\n",mu2);
+            //printf("    gradient norm %e\n",mu2);
             
             step.normalize();
             
@@ -2898,6 +2898,8 @@ void aps::write_pts(){
             ii+=boundary_pts.get_cols(i);
         }
         
+        //printf("ii boundary_pts %d\n",ii);
+        
         if(ii>=gg.get_dim()){
             for(i=0;i<gg.get_dim();i++){
                 min.set(i,0.0);
@@ -2959,7 +2961,7 @@ void aps::write_pts(){
 
     fprintf(output," -- %d %d %d ",called_wide,called_focus,focus_pts.get_dim());
     if(unitSpheres!=NULL){
-        printf("unitSpheres engaged %d ",unitSpheres->get_pts());
+        fprintf(output,"unitSpheres engaged %d ",unitSpheres->get_pts());
     }
     fprintf(output,"\n");
     
