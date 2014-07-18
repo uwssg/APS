@@ -2648,7 +2648,7 @@ void aps::gradient_search(){
 }
 
 void aps::refine_center(){
-    printf("    option to refine\n");
+    //printf("    option to refine\n");
     
     int ic,ic_chosen=-1;
     double maxchi;
@@ -2760,7 +2760,7 @@ void aps::refine_center(){
         exit(1);
     }   
 
-    printf("    refining\n");
+    printf("    refining %d\n",ic_chosen);
     find_global_minimum(neigh);
     
 

@@ -443,6 +443,8 @@ chisquared::chisquared(int id){
 chisquared::chisquared(int id, int ic){
     dim=id;
     ncenters=ic;
+    
+    time_spent=0.0;
  
     boundary=NULL;   
     dice=NULL;
@@ -594,6 +596,9 @@ double s_curve::operator()(array_1d<double> &in_pt) const{
          death_knell("you called operator before making bases");
     } 
     
+    
+    double before=double(time(NULL));
+    
     called++;
 
     
@@ -644,6 +649,8 @@ double s_curve::operator()(array_1d<double> &in_pt) const{
     centers.set_where("nowhere");
     bases.set_where("nowhere");
     widths.set_where("nowhere");
+    
+    time_spent+=double(time(NULL))-before;
     
     return ddmin;
 }
@@ -995,6 +1002,8 @@ double ellipses::operator()(array_1d<double> &in_pt) const{
          death_knell("you called operator before making bases");
     } 
     
+    double before=double(time(NULL));
+    
     int ii,ix;
     double dd,ddmin,nn;
     
@@ -1017,6 +1026,8 @@ double ellipses::operator()(array_1d<double> &in_pt) const{
     centers.set_where("nowhere");
     widths.set_where("nowhere");
     bases.set_where("nowhere");
+    
+    time_spent+=double(time(NULL))-before;
     
     return ddmin;
     
@@ -1087,6 +1098,8 @@ double linear_ellipses::operator()(array_1d<double> &in_pt) const{
          death_knell("you called operator before making bases");
     } 
     
+    double before=double(time(NULL));
+    
     int ii,ix;
     double dd,ddmin,nn;
     
@@ -1109,6 +1122,8 @@ double linear_ellipses::operator()(array_1d<double> &in_pt) const{
     centers.set_where("nowhere");
     bases.set_where("nowhere");
     widths.set_where("nowhere");
+    
+    time_spent+=double(time(NULL))-before;
     
     return sqrt(ddmin);
 }

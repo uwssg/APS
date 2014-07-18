@@ -39,7 +39,7 @@ x=seed^88172645463325252LL;
 x^=(x<<21);
 x^=(x>>35);
 x^=(x<<4);
-printf("staring rand with %ld from seed %d\n",x,seed);
+printf("starting rand with %ld from seed %d\n",x,seed);
 }
 
 void thework(){
