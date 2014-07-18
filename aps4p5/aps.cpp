@@ -179,9 +179,16 @@ void aps::enable_bisection(){
 void aps::start_timingfile(){
     FILE *output;
     output=fopen(timingname,"a");
-    fprintf(output,"\n# pts called time ct_aps time_aps ");
-    fprintf(output," ct_grad time_grad ");
-    fprintf(output,"median chimin target volume\n");
+    fprintf(output,"\n# pts_stored calls_to_chisq time_in_chisq ");
+    fprintf(output," time_per_chisq total_time time_per_pt -- ");
+    
+    fprintf(output,"ct_aps time_aps -- ");
+    fprintf(output,"ct_simplex time_simplex -- ");
+    fprintf(output,"time_refactoring -- time_optimizing_gp -- ");
+    fprintf(output,"chisq_min target -- volumes -- called_wide ");
+    fprintf(output,"called_focus");
+    fprintf(output,"\n");
+    
     fclose(output);
 }
 
@@ -2731,7 +2738,7 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
         
     }
     
-    printf("    after adding have %d candidates\n",candidates.get_dim());
+    //printf("    after adding have %d candidates\n",candidates.get_dim());
     if(candidates.get_dim()==gg.get_dim()+1){
      
         /*for(i=0;i<candidates.get_dim();i++){
@@ -3144,16 +3151,13 @@ void aps::write_pts(){
     
     fprintf(output,"%e -- %e -- ",time_optimizing,time_refactoring);
     
-    fprintf(output,"%e %e %e -- ",
-    global_median,chimin,strad.get_target());
+    fprintf(output,"%e %e -- ",chimin,strad.get_target());
     
     for(i=0;i<center_dexes.get_dim();i++){
         fprintf(output,"%e ",volume.get_data(i));
     }
     
-    fprintf(output," -- %d %d centers %d  ",known_minima.get_dim(),ngood,center_dexes.get_dim());
-
-    fprintf(output," -- %d %d %d ",called_wide,called_focus,focus_pts.get_dim());
+    fprintf(output," -- %d %d ",called_wide,called_focus);
     if(unitSpheres!=NULL){
         fprintf(output,"unitSpheres engaged %d ",unitSpheres->get_pts());
     }

@@ -245,6 +245,9 @@ void chisquared::make_bases(int seed){
     bases.set_where("nowhere");
     widths.set_where("nowhere");
     
+    time_spent=0.0;
+    called=0;
+    
     printf("set centers and widths\n");
 }
 
