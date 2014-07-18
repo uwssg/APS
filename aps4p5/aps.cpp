@@ -2529,7 +2529,7 @@ void aps::gradient_search(){
     }
     
     
-    printf("    candidates %d\n",candidates.get_dim());
+    //printf("    candidates %d\n",candidates.get_dim());
     if(candidates.get_dim()<gg.get_dim()+1){
         
         if(candidates.get_dim()==0){
