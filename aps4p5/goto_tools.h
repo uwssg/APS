@@ -55,7 +55,9 @@ double doub(){
 
 int int32(){
   thework();
-  return int(x);
+  int ans=int(x);
+  if(ans<0)ans=-1*ans;
+  return ans;
 }
 
 };

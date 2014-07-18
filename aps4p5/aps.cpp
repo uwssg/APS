@@ -2745,6 +2745,8 @@ void aps::refine_center(){
     for(i=0;i<gg.get_dim()+1;i++){
         ii=dice->int32()%extremityDex.get_dim();
         
+        //printf("random ii %d %d %d\n",ii,extremityDex.get_dim(),(-5%2));
+        
         neigh.add(extremityDex.get_data(ii));
         
         extremityDex.remove(ii);
