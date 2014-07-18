@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include "aps.h"
-#include "exoplanet.h"
 
 main(int iargc, char *argv[]){
 
