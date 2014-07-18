@@ -2377,10 +2377,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     }
     
     if(flow>strad.get_target() || fhigh<strad.get_target()){
-        printf("WAIT in bisection target %e flow %e fhigh %e\n",
-        strad.get_target(),flow,fhigh);
-        
-        exit(1);
+        return;
     }
         
     dd=gg.distance(lowball,highball);
