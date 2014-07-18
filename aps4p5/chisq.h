@@ -102,6 +102,7 @@ public:
     ellipses_integrable();
     ellipses_integrable(int);
     ellipses_integrable(int,int);
+    void integrate_boundary(int,int,double,char*,double);
     void integrate_boundary(int,int,double,char*);
 
 };

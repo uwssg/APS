@@ -69,6 +69,10 @@ aps_extract: aps_extraction_runner.cpp aps_extractor.o kd.o
 	$(gg) -o aps_extract aps_extraction_runner.cpp \
 	containers.o goto_tools.o aps_extractor.o kd.o
 
+aps_extract_ellipse: aps_extraction_ellipse.cpp aps_extractor.o kd.o
+	$(gg) -o aps_extract_ellipse aps_extraction_ellipse.cpp \
+	containers.o goto_tools.o aps_extractor.o kd.o
+
 mcmc.o: chisq.o mcmc.h mcmc.cpp eigen_wrapper.o mcmc_extractor.o kd.o
 	$(gg) -c mcmc.cpp \
 	goto_tools.o containers.o chisq.o eigen_wrapper.o mcmc_extractor.o \

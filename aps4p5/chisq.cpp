@@ -1188,6 +1188,10 @@ void linear_ellipses::build_boundary(double br){
 }
 
 void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char *filename){
+    integrate_boundary(ix1,ix2,lim,filename,5.0);
+}
+
+void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char *filename, double spread){
     
     int i,j;
     for(i=0;i<dim;i++){
@@ -1258,8 +1262,8 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
         xbound=widths.get_data(icenter,ix1);
         ybound=widths.get_data(icenter,ix2);
         
-        for(xx=centers.get_data(icenter,ix1)-7.0*xbound;xx<centers.get_data(icenter,ix1)+7.1*xbound;xx+=0.1*xwidth){
-            for(yy=centers.get_data(icenter,ix2)-7.0*ybound;yy<centers.get_data(icenter,ix2)+7.1*ybound;yy+=0.1*ywidth){
+        for(xx=centers.get_data(icenter,ix1)-spread*xbound;xx<centers.get_data(icenter,ix1)+(spread+0.1)*xbound;xx+=0.1*xwidth){
+            for(yy=centers.get_data(icenter,ix2)-spread*ybound;yy<centers.get_data(icenter,ix2)+(spread+0.1)*ybound;yy+=0.1*ywidth){
                 
                 for(k=0;k<ncenters;k++){
                     for(i=0;i<dim;i++)trial.set(i,centers.get_data(k,i));
