@@ -3,6 +3,7 @@
 
 #include "goto_tools.h"
 #include "containers.h"
+#include "kd.h"
 #include <math.h>
 #include <stdio.h>
 

@@ -19,6 +19,7 @@ for(ncenters=2;ncenters<5;ncenters++){
             sprintf(outname,"ellipse_contorls/ellipses_d%d_c%d _%d_%d.sav",dim,ncenters,i,j);
             
             chifn->integrate_boundary(0,1,0.95,outname,3.0);
+            exit(1);
         }
     }
     delete chifn;

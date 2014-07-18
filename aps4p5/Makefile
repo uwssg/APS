@@ -38,8 +38,8 @@ kde.o: kde.cpp kde.h
 test_kd: test_kd.cpp kd.o
 	$(gg) -o test_kd test_kd.cpp containers.o goto_tools.o kd.o
 
-chisq.o: goto_tools.o chisq.h chisq.cpp containers.o
-	$(gg) -c chisq.cpp goto_tools.o containers.o $(LIBRARIES) $(INCLUDE)
+chisq.o: goto_tools.o chisq.h chisq.cpp containers.o kd.o
+	$(gg) -c chisq.cpp goto_tools.o containers.o kd.o $(LIBRARIES) $(INCLUDE)
 
 chisq_aps4p5.o: chisq.o
 	$(gg) -c chisq_aps4p5.cpp goto_tools.o containers.o chisq.o \

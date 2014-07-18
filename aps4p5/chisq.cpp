@@ -1334,13 +1334,68 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
     array_1d<double> chisorted;
     sort_and_check(chiarr,chisorted,dexes);
     
+    array_2d<double> scatter_data;
+    scatter_data.set_cols(2);
+    
     double sum=0.0;
     FILE *output=fopen(filename,"w");
     for(i=0;i<dexes.get_dim() && sum<lim*total;i++){
         j=dexes.get_data(i);
         fprintf(output,"%e %e\n",xarr.get_data(j),yarr.get_data(j));
         sum+=exp(-0.5*chiarr.get_data(j));
+        
+        scatter_data.set(i,0,xarr.get_data(j));
+        scatter_data.set(i,1,yarr.get_data(j));
+        
     }
+    fclose(output);
+    
+    array_1d<double> min,max;
+    min.set(0,0.0);
+    min.set(1,0.0);
+    max.set(0,0.1*xwidth);
+    max.set(1,0.1*ywidth);
+    
+    kd_tree scatter_tree(scatter_data,min,max);
+    
+    array_2d<double> boundary_pts;
+    array_1d<int> neigh;
+    array_1d<double> ddneigh;
+  
+    for(i=0;i<scatter_data.get_rows();i++){
+        scatter_tree.nn_srch(*scatter_data(i),5,neigh,ddneigh);
+        
+        if(ddneigh.get_data(4)>1.001){
+            boundary_pts.add_row(*scatter_data(i));
+        }
+    }
+    
+    kd_tree boundary_tree(boundary_pts,min,max);
+    
+    array_1d<double> origin,last_pt;
+    int last_dex=0;
+    
+    origin.set(0,boundary_tree.get_pt(0,0));
+    origin.set(1,boundary_tree.get_pt(0,1));
+    last_pt.set(0,origin.get_data(0));
+    last_pt.set(1,origin.get_data(1));
+    
+    output=fopen("boundary_test.sav","w");
+
+    while(boundary_tree.get_pts()>1){
+        fprintf(output,"%e %e\n",last_pt.get_data(0),last_pt.get_data(1));
+        
+        boundary_tree.remove(last_dex);
+        
+        boundary_tree.nn_srch(last_pt,1,neigh,ddneigh);
+        last_dex=neigh.get_data(0);
+        last_pt.set(0,boundary_tree.get_pt(last_dex,0));
+        last_pt.set(1,boundary_tree.get_pt(last_dex,1));
+    }
+    
+    fprintf(output,"%e %e\n",last_pt.get_data(0),last_pt.get_data(1));
+    fprintf(output,"%e %e\n",origin.get_data(0),origin.get_data(1));
+    
     fclose(output);
     
     called=0;
