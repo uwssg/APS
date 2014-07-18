@@ -2968,10 +2968,42 @@ void aps::write_pts(){
         }
     }
     
-    double volume=good_max.get_data(0)-good_min.get_data(0);
-    for(i=1;i<gg.get_dim();i++){
-        mu=good_max.get_data(i)-good_min.get_data(i);
-        volume*=mu;
+    array_1d<double> volume,vmax,vmin;
+    double vol,lvol;
+    
+    volume.set_name("write_volume");
+    vmax.set_name("write_vmax");
+    vmin.set_name("write_vmin");
+    for(i=0;i<center_dexes.get_dim();i++){
+        vmax.reset();
+        vmin.reset();
+        for(j=0;j<boundary_pts.get_cols(i);j++){
+            for(k=0;k<gg.get_dim();k++){
+                if(j==0 || gg.get_pt(boundary_pts.get_data(i,j),k)<vmin.get_data(k)){
+                    vmin.set(k,gg.get_pt(boundary_pts.get_data(i,j),k));
+                }
+                
+                if(j==0 || gg.get_pt(boundary_pts.get_data(i,j),k)>vmax.get_data(k)){
+                    vmax.set(k,gg.get_pt(boundary_pts.get_data(i,j),k));
+                }
+            }
+        }
+        
+        if(vmax.get_dim()!=gg.get_dim() || vmin.get_dim()!=gg.get_dim()){
+            vol=0.0;
+        }
+        else{
+            lvol=0.0;
+            for(j=0;j<gg.get_dim();j++){
+                if(vmax.get_data(j)-vmin.get_data(j)>1.0e-20){
+                    lvol+=log(vmax.get_data(j)-vmin.get_data(j));
+                }
+                else lvol-=1.0e10;
+            }
+            vol=exp(lvol);
+            volume.set(i,vol);
+        }
+        
     }
     
     
@@ -3105,8 +3137,12 @@ void aps::write_pts(){
     
     fprintf(output,"%e -- %e -- ",time_optimizing,time_refactoring);
     
-    fprintf(output,"%e %e %e %e",
-    global_median,chimin,strad.get_target(),volume);
+    fprintf(output,"%e %e %e -- ",
+    global_median,chimin,strad.get_target());
+    
+    for(i=0;i<center_dexes.get_dim();i++){
+        fprintf(output,"%e ",volume.get_data(i));
+    }
     
     fprintf(output," -- %d %d centers %d  ",known_minima.get_dim(),ngood,center_dexes.get_dim());
 
