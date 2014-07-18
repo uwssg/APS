@@ -63,11 +63,11 @@ public:
     
     void search();
     void aps_search(int);
-    void gradient_search();
+    void simplex_search();
     void guess(array_1d<double>&);
     
     int get_ct_aps();
-    int get_ct_gradient();
+    int get_ct_simplex();
     int get_called();
     
     void write_pts();
@@ -126,7 +126,7 @@ private:
     
     double time_node,time_aps,time_gradient,time_total,start_time;
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
-    int ct_node,ct_aps,ct_gradient;
+    int ct_node,ct_aps,ct_simplex;
     
     double global_median,sphere_median;
     

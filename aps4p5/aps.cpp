@@ -119,7 +119,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     mindex_is_candidate=0;
     
     ct_aps=0;
-    ct_gradient=0;
+    ct_simplex=0;
 
     ngood=0;
     
@@ -1282,8 +1282,8 @@ int aps::get_ct_aps(){
     return ct_aps;
 }
 
-int aps::get_ct_gradient(){
-    return ct_gradient;
+int aps::get_ct_simplex(){
+    return ct_simplex;
 }
 
 int aps::get_called(){
@@ -1328,7 +1328,7 @@ void aps::search(){
         exit(1);
     }
     
-    double aps_score,grad_score;
+    double aps_score,simplex_score;
     int i;
     
     //printf("in search\n");
@@ -1336,10 +1336,10 @@ void aps::search(){
     //aps_score=time_aps;
     
     aps_score=ct_aps;
-    grad_score=ct_gradient;
+    simplex_score=ct_simplex;
     
-    if(grad_score<aps_score){
-        gradient_search();
+    if(simplex_score<aps_score){
+        simplex_search();
     }
     
     aps_search(n_samples);
@@ -2511,9 +2511,9 @@ double aps::distance(int i1, int i2, array_1d<double> &range){
     return sqrt(dd);
 }
 
-void aps::gradient_search(){
+void aps::simplex_search(){
     //printf("\ngradient searching\n");
-    set_where("gradient_search");
+    set_where("simplex_search");
   
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
@@ -2524,13 +2524,13 @@ void aps::gradient_search(){
     array_1d<double> local_max,local_min,local_range;
 
     for(i=0;i<wide_pts.get_dim();i++){
-        if(ct_gradient<10 || is_it_a_candidate(wide_pts.get_data(i))>0){
+        if(ct_simplex<10 || is_it_a_candidate(wide_pts.get_data(i))>0){
             candidates.add(wide_pts.get_data(i));
         }
     }
     
     for(i=0;i<gibbs_pts.get_dim();i++){
-        if(ct_gradient <10 || is_it_a_candidate(gibbs_pts.get_data(i))>0){
+        if(ct_simplex <10 || is_it_a_candidate(gibbs_pts.get_data(i))>0){
             candidates.add(gibbs_pts.get_data(i));
         }
     }
@@ -2547,7 +2547,7 @@ void aps::gradient_search(){
         }
         
     
-        ct_gradient+=chisq->get_called()-ibefore;
+        ct_simplex+=chisq->get_called()-ibefore;
         time_gradient+=double(time(NULL))-before;
         return;
     }
@@ -2571,7 +2571,7 @@ void aps::gradient_search(){
     }
     
     array_1d<double> vv;
-    vv.set_name("gradient_search_vv");
+    vv.set_name("simplex_search_vv");
    
     
     int o_mindex=global_mindex;
@@ -2662,7 +2662,7 @@ void aps::gradient_search(){
     
     mindex_is_candidate=0;
     
-    ct_gradient+=chisq->get_called()-ibefore;
+    ct_simplex+=chisq->get_called()-ibefore;
     time_gradient+=double(time(NULL))-before;
     
     set_where("nowhere");
@@ -3140,7 +3140,7 @@ void aps::write_pts(){
     (time_now-start_time)/double(chisq->get_called()));
     
     fprintf(output,"%d %e -- ",ct_aps,time_aps);
-    fprintf(output,"%d %e -- ",ct_gradient,time_gradient);
+    fprintf(output,"%d %e -- ",ct_simplex,time_gradient);
     
     fprintf(output,"%e -- %e -- ",time_optimizing,time_refactoring);
     

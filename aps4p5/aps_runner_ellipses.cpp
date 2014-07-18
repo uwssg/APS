@@ -75,8 +75,8 @@ aps_test.get_minpt(minpt);
 
 printf("chimin %e\n",aps_test.get_chimin());
 
-printf("ct_aps %d ct_grad %d total %d\n",
-aps_test.get_ct_aps(),aps_test.get_ct_gradient(),
+printf("ct_aps %d ct_simplex %d total %d\n",
+aps_test.get_ct_aps(),aps_test.get_ct_simplex(),
 aps_test.get_called());
 
 

@@ -169,15 +169,15 @@ void chisquared::make_bases(int seed){
     trial_center.set_dim(dim);
     trial_pt.set_dim(dim);
 
-    goon=1;
-    while(goon==1){
+    goon=0;
+    while(goon==0){
         
 	for(ii=0;ii<ncenters;ii++){
             for(i=0;i<dim;i++)centers.set(ii,i,1.0e30);
 	    for(i=0;i<dim;i++)widths.set(ii,i,1.0e-5);
         }
 	
-	goon=0;
+	goon=1;
         for(ii=0;ii<ncenters;ii++){
 	    
 	    acceptable=1;
@@ -222,14 +222,15 @@ void chisquared::make_bases(int seed){
 	
 	
 	
-	for(i=0;i<dim && goon==0;i++){
-	    for(ii=0;ii<ncenters && goon==0;ii++){
-	        for(jj=ii+1;jj<ncenters && goon==0;jj++){
+	for(i=0;i<dim && acceptable==1;i++){
+	    for(ii=0;ii<ncenters && acceptable==1;ii++){
+	        for(jj=ii+1;jj<ncenters && acceptable==1;jj++){
 		    nn=fabs(centers.get_data(ii,i)-centers.get_data(jj,i));
-		    if(nn<2.0*widths.get_data(ii,i) || nn<2.0*widths.get_data(jj,i))acceptable=0;
+		    if(nn<3.0*widths.get_data(ii,i) || nn<3.0*widths.get_data(jj,i))acceptable=0;
 		}
 	    }
 	}
+        if(acceptable==0)goon=0;
 	
     }
     
@@ -1282,6 +1283,7 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
                 }
                 
                 if(imin!=icenter && ddmin<50.0){
+                    printf("dim %d %d\n",ix1,ix2);
                     printf("CURIOUS icenter %d imin %d\n",imin,icenter);
                     
                     printf("%e %e -- %e %e %e %e -- %e %e %e %e\n",
