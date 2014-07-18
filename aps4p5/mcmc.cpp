@@ -16,13 +16,13 @@ mcmc::mcmc(){
 
 void mcmc::set_statname(char *word){
     int i;
-    for(i=0;i<499 && word[i]!=0;i++)statname[i]=word[i];
+    for(i=0;i<letters-1 && word[i]!=0;i++)statname[i]=word[i];
     statname[i]=0;
 }
 
 void mcmc::set_diagname(char *word){
     int i;
-    for(i=0;i<499 && word[i]!=0;i++)diagname[i]=word[i];
+    for(i=0;i<letters-1 && word[i]!=0;i++)diagname[i]=word[i];
     diagname[i]=0;
     FILE *output;
     output=fopen(diagname,"w");
@@ -64,32 +64,10 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
   degen.set_dim(chains);
   called=0;
   
-  chisqfn=new chisquared*[chains];
+  chisqfn=NULL;
   
-  for(i=0;i<chains;i++){
-      chisqfn[i]=NULL;
-  }
-  
-  
-  names=new char*[chains];
-  for(i=0;i<chains;i++){
-    names[i]=new char[100];
-    for(j=0;word[j]!=0;j++)names[i][j]=word[j];
-    names[i][j++]='_';
-    if(i<9)names[i][j++]='0'+i+1;
-    else{
-      k=(i+1)/10;
-      l=i+1-10*k;
-      names[i][j++]='0'+k;
-      names[i][j++]='0'+l;
-    }
-    names[i][j++]='.';
-    names[i][j++]='t';
-    names[i][j++]='x';
-    names[i][j++]='t';
-    names[i][j++]=0;
-    
-  }
+  for(i=0;i<letters-1 && word[i]!=0;i++)chainroot[i]=word[i];
+  chainroot[i]=0;
   
   for(i=0;i<dim;i++){
     max.set(i,mx.get_data(i));
@@ -117,19 +95,7 @@ mcmc::mcmc(int dd, int cc, char *word, array_1d<double> &mn,
 
 }
 
-mcmc::~mcmc(){
-  int i;
-  
-  printf("deleting mcmc\n");
-  
-  for(i=0;i<chains;i++){
-    delete [] names[i];
-  }  
-  delete [] names;
-
-  printf("and we're done\n");
-  
-}
+mcmc::~mcmc(){}
 
 void mcmc::do_gibbs(){
     _do_gibbs=1;
@@ -149,19 +115,7 @@ void mcmc::disable_update(){
 
 void mcmc::set_chisq(chisquared *afn, int nchi){
     
-    int i;
-    
-    if(nchi==1){
-        for(i=0;i<chains;i++)chisqfn[i]=afn;
-    }
-    else if(nchi==chains){
-        for(i=0;i<chains;i++)chisqfn[i]=&afn[i];
-    }
-    else{
-       printf("I can't do anything with this\n");
-       printf("nchi %d nchains %d\n",nchi,chains);
-       exit(1);
-    }
+    chisqfn=afn;
     
 }
 
@@ -172,11 +126,14 @@ void mcmc::resume(){
     array_1d<double> v;
     int cc,i,j;
     
+    char inname[2*letters];
+    
     v.set_dim(dim);
    
     printf("resuming\n");
     for(cc=0;cc<chains;cc++){
-        input=fopen(names[cc],"r");
+        sprintf(inname,"%s_%d.txt",chainroot,cc+1);
+        input=fopen(inname,"r");
 	while(fscanf(input,"%d",&j)>0){
 	    
             n_samples+=j;
@@ -256,7 +213,7 @@ void mcmc::sample(int npts){
   array_1d<double> oldchi,oldl,trial,proposed;
   double newchi,newl,rr,diff,nn;
 
-  char word[100];
+  char word[letters],inname[2*letters];
   FILE *output;
   
   oldchi.set_dim(chains);
@@ -272,20 +229,20 @@ void mcmc::sample(int npts){
   if(called==0 && resumed==0){
     for(i=0;i<chains;i++){
              
-        if(chisqfn[i]==NULL){
+        if(chisqfn==NULL){
             printf("CANNOT sample, chisqfn %d is null\n",i);
             throw -1;
         }
     
-    
-     sprintf(word,"rm %s",names[i]);
+      
+     sprintf(word,"rm %s_%d.txt",chainroot,i+1);
      system(word);
      
      if(start.get_rows()<=i){
          nn=2.0*chisq_exception;
      }
      else{
-         nn=(*chisqfn[i])(*start(i));
+         nn=(*chisqfn)(*start(i));
      }
      
      //printf("nn %e\n",nn);
@@ -297,7 +254,7 @@ void mcmc::sample(int npts){
              //printf("starting %e \n",start.get_data(i,j));
          }
 
-         nn=(*chisqfn[i])(*start(i));  
+         nn=(*chisqfn)(*start(i));  
      }
      oldchi.set(i,nn);
      oldl.set(i,-0.5*nn);
@@ -308,7 +265,7 @@ void mcmc::sample(int npts){
   else{
       //printf("calling old start pts\n");
       for(i=0;i<chains;i++){
-          nn=(*chisqfn[i])(*start(i));
+          nn=(*chisqfn)(*start(i));
           oldchi.set(i,nn);
           oldl.set(i,-0.5*nn);
           //printf("chi %e\n",nn);
@@ -333,13 +290,6 @@ void mcmc::sample(int npts){
       
   for(cc=0;cc<chains;cc++){
     n_samples++;
-    
-    if(dofastslow==1){
-        chisqfn[cc]->set_i_chain(cc);
-    }
-    
-    
-   // printf("oldl %e oldchi %e\n",oldl,oldchi);
     
       inbounds=0;  
      // printf("   ii %d\n",ii);    
@@ -381,7 +331,7 @@ void mcmc::sample(int npts){
             }
 	}
         
-        newchi=(*chisqfn[cc])(trial);
+        newchi=(*chisqfn)(trial);
         
         inbounds=1;
 
@@ -400,7 +350,9 @@ void mcmc::sample(int npts){
       diff=newl-oldl.get_data(cc);
       if(newl>oldl.get_data(cc) || exp(diff)>rr || ii==npts-1){
         
-	output=fopen(names[cc],"a");
+        sprintf(inname,"%s_%d.txt",chainroot,cc+1);
+        
+	output=fopen(inname,"a");
 	
 	fprintf(output,"%d %e ",degen.get_data(cc),oldchi.get_data(cc));
 	for(i=0;i<dim;i++)fprintf(output,"%e ",start.get_data(cc,i));
@@ -436,25 +388,13 @@ void mcmc::sample(int npts){
       
       
      }//loop over chains 
-     
-     /*if(ii%update_interval==0 && 
-        ii>=start_update && 
-	(stop_update<0 || ii<=stop_update) &&
-	do_update==1){*/
-	
-            //printf("ii %d npts %d start %d\n",ii,npts,start_update);
-            
+             
     if((n_samples/chains)>=start_update && do_update==1 && (n_samples/chains)%update_interval==0){        
             update_directions();    
     }
     
    
   }//loop over npts
-  
-  /*printf("ending with chi\n");
-  for(i=0;i<chains;i++){
-      printf("%e\n",oldchi.get_data(i));
-  }*/
   
   output=fopen(statname,"a");
   fprintf(output,"total samples %d\n",n_samples);
@@ -464,7 +404,7 @@ void mcmc::sample(int npts){
 void mcmc::update_directions(){
     
     double ratio=calculate_acceptance();
-
+    
     FILE *output=fopen(diagname,"a");
     fprintf(output,"\nfound ratio to be %e\n",ratio);
     fclose(output);
@@ -540,23 +480,14 @@ void mcmc::calculate_covariance(){
     
     //printf("ready to try calculating covariance\n");
     
-    char root[500];
-    int i;
-    for(i=0;i<500 && names[0][i]!=0;i++);
-    i-=4;
-    while(names[0][i]!='_')i--;
-    
-    
-    int j;
-    for(j=0;j<500 && j<i;j++)root[j]=names[0][j];
-    root[j]=0;
+    int i,j;
     
     //printf("root %s\n",root);
     
     mcmc_extractor covar_extractor;
     covar_extractor.set_nparams(dim);
     covar_extractor.set_nchains(chains);
-    covar_extractor.set_chainname(root);
+    covar_extractor.set_chainname(chainroot);
     covar_extractor.set_keep_frac(0.5);
     covar_extractor.learn_thinby();
     
@@ -569,6 +500,11 @@ void mcmc::calculate_covariance(){
     }
     
     int nmaster=independent_samples.get_rows();
+    
+    FILE *output;
+    output=fopen(diagname,"a");
+    fprintf(output,"independent samples %d\n",nmaster);
+    fclose(output);
     
     if(nmaster==0){
         throw -1;
@@ -632,9 +568,11 @@ double mcmc::calculate_acceptance(){
     FILE *input;
     double nn;
     int tot=0,steps=0,ct=0;
+    char inname[2*letters];
     
     for(cc=0;cc<chains;cc++){
-        input=fopen(names[cc],"r");
+        sprintf(inname,"%s_%d.txt",chainroot,cc+1);
+        input=fopen(inname,"r");
         ct=0;
         while(fscanf(input,"%d",&ii)>0){
             for(i=0;i<dim+1;i++)fscanf(input,"%le",&nn);
@@ -702,83 +640,12 @@ void mcmc::generate_random_basis(array_2d<double> &samples){
 void mcmc::generate_random_basis(array_1d<double> &sigs, 
         array_2d<double> &input_independent_samples){
     
-    array_2d<double> random_basis;
-    array_1d<double> vv;
+    array_2d<double> random_basis,dummy;
     
     int i,j,k,l;
     double nn,mm;
     
-    random_basis.set_cols(dim);
-    
-    for(i=0;i<dim;i++){
-        nn=(chaos->doub()-0.5)*sigs.get_data(i);
-        vv.set(i,nn);
-    }
-    
-    vv.normalize();
-    random_basis.set_row(0,vv);
-    
-    int use_it,ct_abort=0;
-    
-    for(i=1;i<dim;i++){
-        use_it=0;
-        while(use_it==0){
-            for(j=0;j<dim;j++){
-                nn=(chaos->doub()-0.5)*sigs.get_data(j);
-                vv.set(j,nn);
-            }
-        
-            for(j=0;j<i;j++){
-                nn=0.0;
-                for(k=0;k<dim;k++)nn+=vv.get_data(k)*random_basis.get_data(j,k);
-                for(k=0;k<dim;k++){
-                    vv.subtract_val(k,nn*random_basis.get_data(j,k));
-                }
-            }
-        
-            nn=0.0;
-            for(j=0;j<dim;j++)nn+=vv.get_data(j)*vv.get_data(j);
-            
-            if(nn>1.0e-20){
-                vv.normalize();
-                random_basis.set_row(i,vv);
-                use_it=1;
-                ct_abort=0;
-            }
-            else{
-                ct_abort++;
-            }
-            
-            if(ct_abort>1000){
-                printf("WARNING aborted %d times in generate_random_basis\n");
-                throw -1;
-            }
-        }
-    }
-    
-    for(i=0;i<dim;i++){
-        nn=0.0;
-        for(j=0;j<dim;j++){
-            nn+=random_basis.get_data(i,j)*random_basis.get_data(i,j);
-        }
-        
-        if(fabs(1.0-nn)>1.0e-4){
-            printf("WARNING in generate_random_basis norm of %d is %e\n",i,nn);
-            throw -1;
-        }
-        
-        for(j=0;j<i;j++){
-            nn=0.0;
-            for(k=0;k<dim;k++){
-                nn+=random_basis.get_data(i,k)*random_basis.get_data(j,k);
-            }
-            if(fabs(nn)>1.0e-2){
-                printf("WARNING component of %d %d in generate_random_basis is %e\n",i,j,nn);
-                
-                throw -1;
-            }
-        }
-    }
+    generate_random_vectors(dummy,random_basis);
     
     for(i=0;i<dim;i++){
         for(j=0;j<dim;j++){
@@ -786,9 +653,8 @@ void mcmc::generate_random_basis(array_1d<double> &sigs,
         }
     }
     
-    array_2d<double> projected_independent_samples;
-    double pmean,pvar;
-    
+    array_1d<double> variances;
+     
     if(input_independent_samples.get_rows()<dim){
         for(i=0;i<dim;i++){
             nn=0.0;
@@ -800,39 +666,189 @@ void mcmc::generate_random_basis(array_1d<double> &sigs,
     }
     else{
         
-        projected_independent_samples.set_cols(dim);
-        
-        for(i=0;i<input_independent_samples.get_rows();i++){
-            for(j=0;j<dim;j++){
-                nn=0.0;
-                for(k=0;k<dim;k++){
-                    nn+=input_independent_samples.get_data(i,k)*random_basis.get_data(j,k);
-                }
-                projected_independent_samples.set(i,j,nn);
-            }
-        }
+        generate_random_variances(input_independent_samples,random_basis,variances);
         
         for(i=0;i<dim;i++){
-            pmean=0.0;
-            for(j=0;j<projected_independent_samples.get_rows();j++){
-                pmean+=projected_independent_samples.get_data(j,i);
-            }
-            pmean=pmean/double(projected_independent_samples.get_rows());
-            
-            pvar=0.0;
-            for(j=0;j<projected_independent_samples.get_rows();j++){
-                pvar+=power(pmean-projected_independent_samples.get_data(j,i),2);
-            }
-            pvar=pvar/double(projected_independent_samples.get_rows());
-            
-            p_values.set(i,2.38*sqrt(pvar/double(dim)));
-            
+            p_values.set(i,2.38*sqrt(variances.get_data(i)/double(dim)));
         }
-        
-        
+               
     }
     
     write_directions();
+    
+}
+
+void mcmc::generate_random_variances(array_2d<double> &samples, array_2d<double> &vectors, 
+              array_1d<double> &output){
+
+    /*
+    project samples onto the basis vectors in &vectors
+    
+    return the variances of those projected variables
+    */
+
+    int i,j,k;
+    array_2d<double> projected_samples;
+    double pmean,pvar,nn;
+    
+    projected_samples.set_cols(vectors.get_rows());
+    
+    for(i=0;i<samples.get_rows();i++){
+        for(j=0;j<vectors.get_rows();j++){
+            nn=0.0;
+            for(k=0;k<dim;k++){
+                nn+=samples.get_data(i,k)*vectors.get_data(j,k);
+            }
+            
+            projected_samples.set(i,j,nn);
+            
+        }
+    }
+    
+    output.reset();
+    output.set_dim(vectors.get_rows());
+    
+    for(i=0;i<vectors.get_rows();i++){
+        pmean=0.0;
+        for(j=0;j<projected_samples.get_rows();j++){
+            pmean+=projected_samples.get_data(j,i);
+        }
+        pmean=pmean/double(projected_samples.get_rows());
+        
+        pvar=0.0;
+        for(j=0;j<projected_samples.get_rows();j++){
+            pvar+=power(pmean-projected_samples.get_data(j,i),2);
+        }
+        pvar=pvar/double(projected_samples.get_rows());
+        
+        output.set(i,pvar);
+    }
+
+}
+
+void mcmc::generate_random_vectors(array_2d<double> &seed, array_2d<double> &output){
+    /*
+    Generate random vectors that are perpendicular to each other and to the rows of 
+    seed
+    
+    store them in the rows of output
+    */
+    
+    output.reset();
+    output.set_cols(dim);
+    int wanted;
+    
+    wanted=dim-seed.get_rows();
+    
+    array_1d<double> vv;
+    double nn;
+    
+    int i,j,k,ii,irow=0;
+    int aborted=0,abort_max=1000,use_it;
+    
+    if(wanted==dim){
+        for(i=0;i<dim;i++){
+            vv.set(i,normal_deviate(chaos,0.0,1.0));
+        }
+        vv.normalize();
+        for(i=0;i<dim;i++){
+            output.set(0,i,vv.get_data(i));
+        }
+        irow++;
+    }
+    
+    for(;irow<wanted;irow++){
+        use_it=0;
+        while(use_it==0 && aborted<abort_max){
+            for(i=0;i<dim;i++){
+                vv.set(i,normal_deviate(chaos,0.0,1.0));
+            }
+        
+            for(i=0;i<seed.get_rows();i++){
+                nn=0.0;
+                for(j=0;j<dim;j++){
+                    nn+=seed.get_data(i,j)*vv.get_data(j);
+                }
+                for(j=0;j<dim;j++){
+                    vv.subtract_val(j,nn*seed.get_data(i,j));
+                }
+            }
+        
+            for(i=0;i<irow;i++){
+                nn=0.0;
+                for(j=0;j<dim;j++){
+                    nn+=output.get_data(i,j)*vv.get_data(j);
+                }
+                for(j=0;j<dim;j++){
+                    vv.subtract_val(j,nn*output.get_data(i,j));
+                }
+            }
+        
+            nn=vv.normalize();
+            
+            if(nn>1.0e-20){
+                use_it=1;
+                aborted=0;
+                for(j=0;j<dim;j++)output.set(irow,j,vv.get_data(j));
+            }
+            else{
+                aborted++;
+            }
+            
+            if(aborted>=abort_max){
+                printf("WARNING aborted too many times in generate_random_vectors\n");
+                throw -1;
+            }
+            
+        }
+    }
+    
+    double err,maxerr=-1.0;
+    
+    for(i=0;i<output.get_rows();i++){
+        for(j=0;j<seed.get_rows();j++){
+            nn=0.0;
+            for(k=0;k<dim;k++){
+                nn+=output.get_data(i,k)*seed.get_data(j,k);
+            }
+            
+            err=fabs(nn);
+            if(err>maxerr){
+                maxerr=err;
+            }
+            
+        }
+        
+        for(j=i+1;j<output.get_rows();j++){
+            nn=0.0;
+            for(k=0;k<dim;k++){
+                nn+=output.get_data(i,k)*output.get_data(j,k);
+            }
+            
+            err=fabs(nn);
+            if(err>maxerr){
+                maxerr=err;
+            }
+        }
+        
+        nn=0.0;
+        for(k=0;k<dim;k++){
+            nn+=output.get_data(i,k)*output.get_data(i,k);
+        }
+        nn=sqrt(nn);
+        
+        err=fabs(1.0-nn);
+        if(err>maxerr){
+            maxerr=err;
+        }
+        
+    }
+    
+    if(maxerr>1.0e-2){
+        printf("WARNING at end of generate random vectors maxerr %e\n",maxerr);
+        throw -1;
+    }
+    
     
 }
 
@@ -843,8 +859,8 @@ void mcmc::update_eigen(){
     
     FILE *output;
     
-    array_1d<double> e_values,v;
-    array_2d<double> e_vectors;
+    array_1d<double> e_values,v,random_variances;
+    array_2d<double> e_vectors,e_vec_transpose,random_bases;
     
     
     e_values.set_dim(dim);
@@ -859,21 +875,43 @@ void mcmc::update_eigen(){
 
     
     double nn,maxerr,mm;
+    int try_again,n_evecs=dim;
     
     try{
- 
-        eval_symm(covariance,e_vectors,e_values,dim-2,dim,1);
-        eval_symm(covariance,vbuff,evbuff,2,dim,-1);
+        
+        try{
+            eval_symm(covariance,e_vectors,e_values,dim-2,dim,1);
+            eval_symm(covariance,vbuff,evbuff,2,dim,-1);
     
-        e_values.set(dim-2,evbuff.get_data(0));
-        e_values.set(dim-1,evbuff.get_data(1));
+            e_values.set(dim-2,evbuff.get_data(0));
+            e_values.set(dim-1,evbuff.get_data(1));
     
-        for(i=0;i<dim;i++){
-            e_vectors.set(i,dim-2,vbuff.get_data(i,0));
-            e_vectors.set(i,dim-1,vbuff.get_data(i,1));
+            for(i=0;i<dim;i++){
+                e_vectors.set(i,dim-2,vbuff.get_data(i,0));
+                e_vectors.set(i,dim-1,vbuff.get_data(i,1));
+            }
         }
- 
-        for(i=0;i<dim;i++){
+        catch(int iex){
+            
+            n_evecs-=2;
+            try_again=1;
+            while(n_evecs>0 && try_again==1){
+                e_vectors.set_dim(dim,n_evecs);
+                e_values.set_dim(n_evecs);
+            
+                try_again=0;
+                try{
+                    eval_symm(covariance,e_vectors,e_values,n_evecs,dim,1);
+                }
+                catch(int iex){
+                    n_evecs--;
+                    try_again=1;
+                }
+            }
+        }
+        
+
+        for(i=0;i<n_evecs;i++){
             nn=0.0;
 	    for(j=0;j<dim;j++)nn+=e_vectors.get_data(j,i)*e_vectors.get_data(j,i);
 	    //printf("nn %e\n",nn);
@@ -883,15 +921,13 @@ void mcmc::update_eigen(){
 	    for(j=0;j<dim;j++)e_vectors.divide_val(j,i,nn);
         }
 
-        for(ii=0;ii<dim;ii++){
-          for(j=ii+1;j<dim;j++){
+        for(ii=0;ii<n_evecs;ii++){
+          for(j=ii+1;j<n_evecs;j++){
               nn=0.0;
 	      for(i=0;i<dim;i++)nn+=e_vectors.get_data(i,ii)*e_vectors.get_data(i,j);
 	      if(ii==0 && j==1 || fabs(nn)>maxerr){
 	          maxerr=fabs(nn);
 	      }
-	  
-	
           }
 
           for(i=0;i<dim;i++)v.set(i,e_vectors.get_data(i,ii));
@@ -913,23 +949,57 @@ void mcmc::update_eigen(){
         }
         
         output=fopen(diagname,"a");
-        if(maxerr>1.0e-10)fprintf(output,"eigen maxerr %e\n",maxerr);
+        fprintf(output,"nevecs %d\n",n_evecs);
+        if(maxerr>1.0e-10)fprintf(output,"eigen maxerr %e -- n_evecs %d\n",maxerr,n_evecs);
         fclose(output);
 
-        if(maxerr<=tolerance){
-            for(i=0;i<dim;i++){
-                p_values.set(i,2.38*sqrt(e_values.get_data(i)/double(dim)));
+        if(maxerr<=tolerance && n_evecs>0){
+            
+            if(n_evecs<dim){
+                e_vec_transpose.set_cols(dim);
+                for(i=0;i<n_evecs;i++){
+                    for(j=0;j<dim;j++){
+                        e_vec_transpose.set(i,j,e_vectors.get_data(j,i));
+                    }
+                }
+            
+                generate_random_vectors(e_vec_transpose,random_bases);
+            
+                if(independent_samples.get_rows()>5){
+                    generate_random_variances(independent_samples,random_bases,random_variances);
+                }
+                else{
+                    for(i=0;i<dim-n_evecs;i++){
+                        random_variances.set(i,0.1);
+                    }
+                }
             }
-            for(i=0;i<dim;i++){
-	        for(j=0;j<dim;j++)p_vectors.set(i,j,e_vectors.get_data(i,j));
-	    }
+            
+            for(i=0;i<n_evecs;i++){
+                p_values.set(i,2.38*sqrt(e_values.get_data(i)/double(dim)));
+                for(j=0;j<dim;j++){
+                    p_vectors.set(j,i,e_vectors.get_data(j,i));
+                }
+            }
+            
+            if(n_evecs<dim){
+                for(i=0;i<random_bases.get_rows();i++){
+                    p_values.set(i+n_evecs,2.38*sqrt(random_variances.get_data(i)/double(dim)));
+                    for(j=0;j<dim;j++){
+                        p_vectors.set(j,i+n_evecs,random_bases.get_data(i,j));
+                    }
+                }
+            }
+
        }
        else{
-           for(i=0;i<dim;i++){
-               if(covariance.get_data(i,i)>0.0){
-                   p_values.set(i,2.38*sqrt(covariance.get_data(i,i)/double(dim)));
-               }
-           }   
+           if(independent_samples.get_rows()==0) throw -1;
+           output=fopen(diagname,"a");
+           fprintf(output,"eigen err %e n_evecs %d\n",maxerr,n_evecs);
+           fprintf(output,"attempting random basis\n");
+           fclose(output);
+           
+           generate_random_basis(independent_samples);   
        }
        
        
@@ -947,17 +1017,7 @@ void mcmc::update_eigen(){
        generate_random_basis(independent_samples);
        
    }
-   
-   /*
-   i=accept_degen/accept_total;
-   if(i>4)p_factor=p_factor*0.5;
-   else if(i<4){
-       p_factor=p_factor*1.25;
-   }
-   
-   printf("\n\np_factor %e\n\n",p_factor);
-   */
-   
+      
 }
 
 void mcmc::write_directions(){
@@ -994,6 +1054,7 @@ void mcmc::update_fastslow(){
     
     int info;
     dpotrf_(uplo,&dim,arr,&dim,&info);
+    
     
     if(info==0){
     //only change directions if the decomposition was successful

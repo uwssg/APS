@@ -7,7 +7,7 @@
 
 class mcmc{
   private:
-    chisquared **chisqfn;
+    chisquared *chisqfn;
     int seed,do_update,stop_update,start_update,update_interval;
     int resumed,last_updated,_do_gibbs,n_calc_covar;
     
@@ -17,9 +17,8 @@ class mcmc{
     double p_factor;
     
     int chains,dim,called,n_samples;
-    char **names;
     Ran *chaos;
-    char statname[500],diagname[500];     
+    char statname[letters],diagname[letters],chainroot[letters];     
     
     array_1d<int> degen,i_gibbs;
     array_1d<double> sigs,max,min,p_values;
@@ -68,6 +67,9 @@ class mcmc{
     void generate_random_basis();
     void generate_random_basis(array_2d<double>&);
     void generate_random_basis(array_1d<double>&,array_2d<double>&);
+    
+    void generate_random_vectors(array_2d<double>&,array_2d<double>&);
+    void generate_random_variances(array_2d<double>&, array_2d<double>&,array_1d<double>&);
 };
 
 #endif

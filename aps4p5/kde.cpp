@@ -249,6 +249,7 @@ void kde::plot_boundary(int ix1_in, double dx1_in, int ix2_in, double dx2_in, do
     max.set(1,dx2_in);
     
     int j;
+    sum=0.0;
     for(i=0;i<grid_wgt.get_dim() && sum<limit;i++){
         pixels.add_row(*grid(i));
         sum+=grid_wgt.get_data(i);
@@ -257,7 +258,7 @@ void kde::plot_boundary(int ix1_in, double dx1_in, int ix2_in, double dx2_in, do
     kd_tree *pixel_tree=NULL;
     
     pixel_tree=new kd_tree(pixels,min,max);
- 
+    
     pixels.reset();
     
     array_1d<int> neigh;
