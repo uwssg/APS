@@ -1171,9 +1171,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         }
         
     }
-    printf("chimin %e sig %e time %e steps %d\n",
+    
+    /*printf("chimin %e sig %e time %e steps %d\n",
     chimin,sig,
-    double(time(NULL))-time_last_found,chisq->get_called()-i_before);
+    double(time(NULL))-time_last_found,chisq->get_called()-i_before);*/
 
     known_minima.add(_mindex);
     j=centers.get_rows();
@@ -1210,7 +1211,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         center_dexes.add(_mindex);
     }
     
-    printf("    centers %d\n\n",center_dexes.get_dim());
+    //printf("    centers %d\n\n",center_dexes.get_dim());
     set_where("nowhere");
 }
 
@@ -2797,7 +2798,7 @@ void aps::refine_center(){
     
     refined_simplex.set_row(ic_chosen,neigh);
     
-    printf("    refining %d\n",ic_chosen);
+    //printf("    refining %d\n",ic_chosen);
     find_global_minimum(neigh);
     
 
