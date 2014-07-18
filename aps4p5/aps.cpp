@@ -1375,12 +1375,14 @@ void aps::aps_wide(int in_samples){
                 }
                 else if(sphere_median>0.0){
                     ic=find_nearest_center(simplex_best);
-                    project_to_unit_sphere(ic,simplex_best,unit_v);
-                    unitSpheres->nn_srch(unit_v,1,neigh_sphere,dd_sphere);
-                    ddUnitSpheres.add(dd_sphere.get_data(0));
+                    if(ic>=0){
+                        project_to_unit_sphere(ic,simplex_best,unit_v);
+                        unitSpheres->nn_srch(unit_v,1,neigh_sphere,dd_sphere);
+                        ddUnitSpheres.add(dd_sphere.get_data(0));
                    
-                    if(dd_sphere.get_data(0)>sphere_median){
-                        bisect_it=1;
+                        if(dd_sphere.get_data(0)>sphere_median){
+                            bisect_it=1;
+                        }
                     }
                 
                 }
@@ -2447,9 +2449,11 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     array_1d<double> unit_v;
     unit_v.set_name("bisection_unit_v");
-    if(unitSpheres!=NULL){
-        project_to_unit_sphere(i_center,*gg.get_pt(i_nearest),unit_v);
-        unitSpheres->add(unit_v);
+    if(i_nearest>=0 && i_center>=0){
+        if(unitSpheres!=NULL){
+            project_to_unit_sphere(i_center,*gg.get_pt(i_nearest),unit_v);
+            unitSpheres->add(unit_v);
+        }
     }
     
 }
