@@ -117,7 +117,7 @@ private:
     
     array_2d<double> centers;
     array_1d<int> center_dexes;
-    asymm_array_2d<int> boundary_pts;
+    asymm_array_2d<int> boundary_pts,refined_simplex;
     
     double simplex_strad_best,simplex_mu_best,simplex_sig_best;
     array_1d<double> simplex_best;
@@ -137,6 +137,8 @@ private:
     void find_global_minimum(int);
     void find_global_minimum(array_1d<double>&);
     void find_global_minimum(array_1d<int>&);
+    
+    void refine_center();
     
     void find_global_minimum_meta();
     

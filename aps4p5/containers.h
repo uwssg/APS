@@ -127,6 +127,7 @@ public:
     void set_name(char*);
     void set_where(char*) const;
     void add_row(const array_1d<T>&);
+    void set_row(int, const array_1d<T>&);
     
     void remove_row(int);
     void zero();

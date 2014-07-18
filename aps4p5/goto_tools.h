@@ -77,4 +77,6 @@ array_1d<double>&,int);
 
 double compare_arr(array_1d<double>&,array_1d<double>&);
 
+int compare_int_arr(array_1d<int>&, array_1d<int>&);
+
 #endif

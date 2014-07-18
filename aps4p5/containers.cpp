@@ -1413,6 +1413,24 @@ void asymm_array_2d<T>::set(int ir, int ic, T val){
 }
 
 template <typename T>
+void asymm_array_2d<T>::set_row(int ir, const array_1d<T> &vv){
+    
+    int i;
+    array_1d<T> empty;
+    
+    while(rows<=ir){
+        add_row(empty);
+    }
+    
+    data[ir].reset();
+    for(i=0;i<vv.get_dim();i++){
+        data[ir].set(i,vv.get_data(i));
+    }
+    
+
+}
+
+template <typename T>
 T asymm_array_2d<T>::get_data(int ir, int ic){
     
     if(ir<0 || ir>=rows){

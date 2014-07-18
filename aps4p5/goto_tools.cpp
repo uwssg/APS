@@ -499,3 +499,28 @@ double compare_arr(array_1d<double> &v1, array_1d<double> &v2){
     
 }
 
+int compare_int_arr(array_1d<int> &p1, array_1d<int> &p2){
+    /*
+    returns 0 if the arrays have different contents (order does not matter)
+    
+    returns 1 if they have the same contents
+    */
+    if(p1.get_dim()!=p2.get_dim()){
+        return 0;
+    }
+    
+    int i,j,ans=1,found_it;
+    
+    for(i=0;i<p1.get_dim() && ans==1;i++){
+        found_it=0;
+        for(j=0;j<p2.get_dim() && found_it==0;j++){
+            if(p1.get_data(i)==p2.get_data(j))found_it=1;
+        }
+        
+        if(found_it=0)ans=0;
+        
+    }
+    
+    return ans;
+    
+}

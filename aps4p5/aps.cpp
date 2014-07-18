@@ -82,6 +82,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     range_max.set_name("range_max");
     range_min.set_name("range_min");
     ddUnitSpheres.set_name("ddUnitSpheres");
+    refined_simplex.set_name("refined_simplex");
     
     unitSpheres=NULL;
     
@@ -2523,6 +2524,9 @@ void aps::gradient_search(){
     
     
     if(candidates.get_dim()<dim+1){
+        
+        refine_center();
+    
         ct_gradient+=chisq->get_called()-ibefore;
         time_gradient+=double(time(NULL))-before;
         return;
@@ -2641,6 +2645,123 @@ void aps::gradient_search(){
     
     set_where("nowhere");
     //printf("done gradient searching\n");
+}
+
+void aps::refine_center(){
+    printf("    option to refine\n");
+    
+    int ic,ic_chosen=-1;
+    double maxchi;
+    
+    for(ic=0;ic<centers.get_rows();ic++){
+        
+        if(boundary_pts.get_cols(ic)>gg.get_dim()+1 && 
+        (ic_chosen<0 || gg.get_fn(center_dexes.get_data(ic))>maxchi)){
+            
+            maxchi=gg.get_fn(center_dexes.get_data(ic));
+            ic_chosen=ic;
+        
+        }
+        
+    }
+    
+    if(ic_chosen<0){
+        return;
+    }
+    
+    int i,j,ii;
+    array_1d<int> maxDex,minDex;
+    array_1d<double> max;
+    array_1d<double> min;
+    
+    maxDex.set_name("refine_maxDex");
+    minDex.set_name("refine_minDex");
+    max.set_name("refine_max");
+    min.set_name("refine_min");
+    
+    for(i=0;i<gg.get_dim();i++){
+        max.set(i,-2.0*chisq_exception);
+        min.set(i,2.0*chisq_exception);
+        maxDex.set(i,-1);
+        minDex.set(i,-1);
+    }
+    
+    for(i=0;i<boundary_pts.get_cols(ic_chosen);i++){
+        ii=boundary_pts.get_data(ic_chosen,i);
+        for(j=0;j<gg.get_dim();j++){
+            if(i==0 || gg.get_pt(ii,j)<min.get_data(j)){
+                min.set(j,gg.get_pt(ii,j));
+                minDex.set(j,ii);
+            }
+            
+            if(i==0 || gg.get_pt(ii,j)>max.get_data(j)){
+                max.set(j,gg.get_pt(ii,j));
+                maxDex.set(j,ii);
+            }
+        } 
+    }
+    
+    array_1d<int> extremityDex;
+    extremityDex.set_name("refine_extremityDex");
+    
+    for(i=0;i<gg.get_dim();i++){
+        ii=1;
+        for(j=0;j<extremityDex.get_dim() && ii==1;j++){
+            if(minDex.get_data(i)==extremityDex.get_data(j)){
+                ii=0;
+            }
+        }
+        
+        if(ii==1)extremityDex.add(minDex.get_data(i));
+        
+        ii=1;
+        for(j=0;j<extremityDex.get_dim() && ii==1;j++){
+            if(maxDex.get_data(i)==extremityDex.get_data(j)){
+                ii=0;
+            }
+        }
+        
+        if(ii==1)extremityDex.add(maxDex.get_data(i));
+       
+    }
+    
+    if(extremityDex.get_dim()<gg.get_dim()+1){
+        return;
+    }
+    
+    if(refined_simplex.get_rows()>ic_chosen){
+        if(compare_int_arr(extremityDex,*refined_simplex(ic_chosen))==1){
+            return;
+        }
+    }
+    
+    
+    array_1d<int> neigh;
+    neigh.set_name("refine_neigh");
+    int use_dex;
+    
+    refined_simplex.set_row(ic_chosen,extremityDex);
+    
+    for(i=0;i<gg.get_dim()+1;i++){
+        ii=dice->int32()%extremityDex.get_dim();
+        
+        neigh.add(extremityDex.get_data(ii));
+        
+        extremityDex.remove(ii);
+            
+    }
+        
+    if(neigh.get_dim()!=gg.get_dim()+1){
+        printf("WARNING somehow in refine_center, neigh has dim %d but want %d\n",
+        neigh.get_dim(),gg.get_dim()+1);
+        
+        exit(1);
+    }   
+
+    printf("    refining\n");
+    find_global_minimum(neigh);
+    
+
 }
 
 void aps::calculate_gradient(int center, array_1d<int> &neigh, 
