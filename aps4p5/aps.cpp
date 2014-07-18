@@ -83,6 +83,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     range_min.set_name("range_min");
     ddUnitSpheres.set_name("ddUnitSpheres");
     refined_simplex.set_name("refined_simplex");
+    attempted_candidates.set_name("attempted_candidates");
     
     unitSpheres=NULL;
     
@@ -589,6 +590,10 @@ int aps::is_it_a_candidate(int dex){
     int i,use_it;
     array_1d<double> mid_pt;
     double chitrial;
+    
+    for(i=0;i<attempted_candidates.get_dim();i++){
+        if(dex==attempted_candidates.get_data(i))return 0;
+    }
     
     //printf("  is %e a candidate -- med %e grat %e min %e\n",gg.get_fn(dex),global_median,grat,chimin);
     
@@ -2524,14 +2529,21 @@ void aps::gradient_search(){
     
     
     printf("    candidates %d\n",candidates.get_dim());
-    if(candidates.get_dim()<dim+1){
+    if(candidates.get_dim()<gg.get_dim()+1){
         
-        refine_center();
+        if(candidates.get_dim()==0){
+            refine_center();
+        }
+        else{
+            simplex_too_few_candidates(candidates);
+        }
+        
     
         ct_gradient+=chisq->get_called()-ibefore;
         time_gradient+=double(time(NULL))-before;
         return;
     }
+    
     
     for(i=0;i<candidates.get_dim();i++){
         ix=candidates.get_data(i);
@@ -2637,6 +2649,10 @@ void aps::gradient_search(){
     gradient_start_pts.add(imin);
     //for(i=0;i<seed.get_dim();i++)gradient_start_pts.add(seed.get_data(i));
     
+    
+    for(i=0;i<seed.get_dim();i++){
+        attempted_candidates.add(seed.get_data(i));
+    }
     find_global_minimum(seed);
     
     mindex_is_candidate=0;
@@ -2646,6 +2662,84 @@ void aps::gradient_search(){
     
     set_where("nowhere");
     //printf("done gradient searching\n");
+}
+
+void aps::simplex_too_few_candidates(array_1d<int> &candidates){
+    
+    int i,actually_added,i_min;
+    double ccmin,cc;
+    array_1d<double> trial,step,deviation;
+    
+    trial.set_name("simplex_too_few_trial");
+    step.set_name("simplex_too_few_step");
+    deviation.set_name("simplex_too_few_deviation");
+    
+    for(i=0;i<candidates.get_dim();i++){
+        if(i==0 || gg.get_fn(candidates.get_data(i))<ccmin){
+            ccmin=gg.get_fn(candidates.get_data(i));
+            i_min=candidates.get_data(i);
+        }
+    }
+    
+    int ic;
+    double stepNorm,devNorm;
+    ic=find_nearest_center(*gg.get_pt(i_min));
+    
+    stepNorm=0.0;
+    for(i=0;i<gg.get_dim();i++){
+        step.set(i,gg.get_pt(i_min,i)-centers.get_data(ic,i));
+        stepNorm+=power(step.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
+    }
+    stepNorm=sqrt(stepNorm);
+    for(i=0;i<gg.get_dim();i++){
+        step.divide_val(i,stepNorm);
+    }
+    
+    int ct=0;
+    while(candidates.get_dim()<gg.get_dim()+1 && ct<(gg.get_dim()+1)*5){
+        ct++;
+        
+        devNorm=0.0;
+        for(i=0;i<gg.get_dim();i++){
+            deviation.set(i,normal_deviate(dice,0.0,(gg.get_max(i)-gg.get_min(i))));
+            devNorm+=deviation.get_data(i)*step.get_data(i);
+        }
+        for(i=0;i<gg.get_dim();i++){
+            deviation.subtract_val(i,devNorm*step.get_data(i));
+        }
+        
+        devNorm=0.0;
+        for(i=0;i<gg.get_dim();i++){
+            devNorm+=power(step.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
+        }
+        devNorm=sqrt(devNorm);
+        for(i=0;i<gg.get_dim();i++){
+            deviation.divide_val(i,devNorm);
+        }
+        
+        for(i=0;i<gg.get_dim();i++){
+            trial.set(i,gg.get_pt(i_min,i)+0.2*step.get_data(i)+0.1*deviation.get_data(i));
+        }
+        
+        evaluate(trial,&cc,&actually_added);
+        
+        if(actually_added>=0){
+            candidates.add(actually_added);
+        }
+        
+        
+    }
+    
+    printf("    after adding have %d candidates\n",candidates.get_dim());
+    if(candidates.get_dim()==gg.get_dim()+1){
+     
+        for(i=0;i<candidates.get_dim();i++){
+            attempted_candidates.add(candidates.get_data(i));
+        }
+        
+        find_global_minimum(candidates);
+    }
+    
 }
 
 void aps::refine_center(){
