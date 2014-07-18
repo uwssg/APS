@@ -37,6 +37,10 @@ aps::~aps(){
      
     int i;
     
+    if(unitSpheres!=NULL){
+        delete unitSpheres;
+    }
+    
     if(focus_directions!=NULL){
         delete focus_directions;
     }
@@ -77,6 +81,9 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     characteristic_length.set_name("characteristic_length");
     range_max.set_name("range_max");
     range_min.set_name("range_min");
+    ddUnitSpheres.set_name("ddUnitSpheres");
+    
+    unitSpheres=NULL;
     
     good_rr_avg=0.1;
     write_every=1000;
@@ -130,6 +137,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     chisq=NULL;
     
     global_median=-2.0*chisq_exception;
+    sphere_median=-2.0*chisq_exception;
     grat=1.0;
     
     dot_product_threshold=0.8;
@@ -591,10 +599,9 @@ int aps::is_it_a_candidate(int dex){
         if(dex==known_minima.get_data(i))return 0;
     }
     
-    if(gg.get_fn(dex)<chimin+grat*(global_median-chimin) && gg.get_fn(dex)>strad.get_target()){
-        //printf(" yes it is\n");
-        
-        
+    if(gg.get_fn(dex)<chimin+grat*(fabs(global_median)-chimin) && 
+        gg.get_fn(dex)>strad.get_target()){
+          
         /*
         * Test the point halfway between the new point (dex) and the midpoint.
         * If chisquared at the test point is more than chimin + 0.75 *(fn(dex) - chimin),
@@ -1341,6 +1348,14 @@ void aps::aps_wide(int in_samples){
     array_1d<double> dir,test_dir;
     double dot,dot_max,dot_threshold;
     
+    int bisect_it=0;
+    array_1d<double> unit_v,dd_sphere;
+    array_1d<int> neigh_sphere;
+    
+    unit_v.set_name("aps_wide_unit_v");
+    dd_sphere.set_name("aps_wide_dd_sphere");
+    neigh_sphere.set_name("aps_wide_neigh_sphere");
+    
     dot_threshold=0.8;
     
     if(simplex_best.get_dim()==gg.get_dim()){
@@ -1355,7 +1370,23 @@ void aps::aps_wide(int in_samples){
             sig_storage.add(simplex_sig_best);
          
             if(do_bisection==1){
-                if(chitrue<global_median){
+                if(sphere_median<0.0 && chitrue<global_median){
+                    bisect_it=1;
+                }
+                else if(sphere_median>0.0){
+                    ic=find_nearest_center(simplex_best);
+                    project_to_unit_sphere(ic,simplex_best,unit_v);
+                    unitSpheres->nn_srch(unit_v,1,neigh_sphere,dd_sphere);
+                    ddUnitSpheres.add(dd_sphere.get_data(0));
+                   
+                    if(dd_sphere.get_data(0)>sphere_median){
+                        bisect_it=1;
+                    }
+                
+                }
+            
+            
+                if(bisect_it==1){
                     bisection(simplex_best,chitrue);
                 }
             }
@@ -2199,6 +2230,30 @@ int aps::find_nearest_center(array_1d<double> &pt, double chi_in){
     
 }
 
+void aps::project_to_unit_sphere(int ic, array_1d<double> &pt_in, array_1d<double> &pt_out){
+
+    if(ic<0 || ic>=centers.get_rows()){
+        return;
+    }
+    
+    array_1d<double> dir;
+    double norm=0.0;
+    int i;
+    for(i=0;i<gg.get_dim();i++){
+        dir.set(i,pt_in.get_data(i)-centers.get_data(ic,i));
+        norm+=power(dir.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
+    }
+    norm=sqrt(norm);
+    for(i=0;i<gg.get_dim();i++){
+        dir.divide_val(i,norm);
+    } 
+    
+    for(i=0;i<gg.get_dim();i++){
+        pt_out.set(i,centers.get_data(ic,i)+dir.get_data(i));
+    }
+    
+}
+
 void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     if(chi_in<strad.get_target() && strad.get_target()-chi_in<0.1*delta_chisquared){
@@ -2361,10 +2416,8 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         dd*=0.5;
         
     }
-    
-    
-    
-        
+   
+    /*    
     for(i=0;i<dim;i++){
         dir.set(i,nearest_pt.get_data(i)-dir_origin.get_data(i));
     }
@@ -2381,7 +2434,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     }
       
     evaluate(trial,&mu,&i_test);
-    
+    */
     
     if(i_center>=0 && i_nearest>=0){
         if(i_center>=boundary_pts.get_rows()){
@@ -2390,6 +2443,13 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         else{
             boundary_pts.add(i_center,i_nearest);
         }
+    }
+    
+    array_1d<double> unit_v;
+    unit_v.set_name("bisection_unit_v");
+    if(unitSpheres!=NULL){
+        project_to_unit_sphere(i_center,*gg.get_pt(i_nearest),unit_v);
+        unitSpheres->add(unit_v);
     }
     
 }
@@ -2801,6 +2861,7 @@ void aps::write_pts(){
     array_1d<int> inn;
     inn.set_name("aps_write_pts_inn");
     
+   
     for(i=0;i<wide_pts.get_dim();i++){
         tosort.set(i,gg.get_fn(wide_pts.get_data(i)));
         inn.set(i,wide_pts.get_data(i));
@@ -2813,19 +2874,48 @@ void aps::write_pts(){
     
     sort_and_check(tosort,sorted,inn);
     global_median=sorted.get_data(tosort.get_dim()/10);
+    sorted.reset();
+    inn.reset();
     
+    if(ddUnitSpheres.get_dim()>0){
+        for(i=0;i<ddUnitSpheres.get_dim();i++)inn.set(i,i);
+        sort_and_check(ddUnitSpheres,sorted,inn);
+        sphere_median=sorted.get_data((2*tosort.get_dim())/3);
+        
+        ddUnitSpheres.reset();
+    }
     
-    array_1d<int> *to_choose_from;
-    int ii,jj;
+    int ii,jj,ic;
+    array_1d<double> min,max;
+    array_2d<double> sphere_data;
+    min.set_name("unitsphere_min");
+    max.set_name("unitsphere_max");
+    sphere_data.set_name("sphere_data");
     
-    n_printed=gg.get_pts();
-    
-    
+    if(unitSpheres==NULL){
+        ii=0;
+        for(i=0;i<boundary_pts.get_rows();i++){
+            ii+=boundary_pts.get_cols(i);
+        }
+        
+        if(ii>=gg.get_dim()){
+            for(i=0;i<gg.get_dim();i++){
+                min.set(i,0.0);
+                max.set(i,gg.get_max(i)-gg.get_min(i));
+            }
+            
+            for(i=0;i<boundary_pts.get_rows();i++){
+                for(j=0;j<boundary_pts.get_cols(i);j++){
+                    sphere_data.add_row(*gg.get_pt(boundary_pts.get_data(i,j)));
+                }
+            }
+            
+            unitSpheres=new kd_tree(sphere_data,min,max);
+        }
+    }
 
-    array_1d<int> to_optimize;
-    
-    int n_to_optimize;
-    int go_ahead_and_optimize=1;
+    n_printed=gg.get_pts();
+
     double nn;
     
     i=gg.get_last_refactored()/2;
@@ -2839,52 +2929,7 @@ void aps::write_pts(){
         gg.refactor();
         time_refactoring+=double(time(NULL))-nn;
     }
-    
-    /*if(wide_pts.get_dim()>last_optimized+1000){
-        //printf("optimizing\n");
-        
-        nn=double(time(NULL));
-        //printf("    time refactoring %e\n",double(time(NULL))-nn);
-        
-        gg.get_hyper_parameters(hyper_params);
-        if(compare_arr(hyper_params,old_hyper_1)<0.1 &&
-           compare_arr(hyper_params,old_hyper_2)<0.1){
-    
-            go_ahead_and_optimize=0;
-        }
-    
-        for(i=0;i<old_hyper_1.get_dim();i++){
-            old_hyper_2.set(i,old_hyper_1.get_data(i));
-        }
-        
-        for(i=0;i<hyper_params.get_dim();i++){
-            old_hyper_1.set(i,hyper_params.get_data(i));
-        }
-        
-        if(go_ahead_and_optimize==1){
-            nn=double(time(NULL));
-            //printf("\n    OPTIMIZING\n");
-            
-            optimize();
-            
-            last_optimized=wide_pts.get_dim();
-        }
-    }*/
-     
-    /*output=fopen("candidates_log.sav","w");
-    for(i=0;i<n_candidates;i++){
-        fprintf(output,"%e %e %d\n",gg.get_pt(candidates.get_data(i),0),
-        gg.get_pt(candidates.get_data(i),3),candidates.get_data(i));
-    }
-    fclose(output);
-    
-    output=fopen("minima_log.sav","w");
-    for(i=0;i<known_minima.get_dim();i++){
-        fprintf(output,"%e %e\n",gg.get_pt(known_minima.get_data(i),0),
-        gg.get_pt(known_minima.get_data(i),3));
-    }
-    
-    fclose(output);*/
+
     
     output=fopen("startpts_log.sav","w");
     for(i=0;i<gradient_start_pts.get_dim();i++){
@@ -2912,11 +2957,11 @@ void aps::write_pts(){
     
     fprintf(output," -- %d %d ",known_minima.get_dim(),ngood);
 
-    fprintf(output," -- %d %d %d\n",called_wide,called_focus,focus_pts.get_dim());
-    
-    /*for(i=0;i<focus_pts.get_dim();i++){
-        fprintf(output,"%d\n",focus_pts.get_data(i));
-    }*/
+    fprintf(output," -- %d %d %d ",called_wide,called_focus,focus_pts.get_dim());
+    if(unitSpheres!=NULL){
+        printf("unitSpheres engaged %d ",unitSpheres->get_pts());
+    }
+    fprintf(output,"\n");
     
     fclose(output);
      

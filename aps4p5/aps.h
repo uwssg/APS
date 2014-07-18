@@ -126,7 +126,7 @@ private:
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
     int ct_node,ct_aps,ct_gradient;
     
-    double global_median;
+    double global_median,sphere_median;
     
     double chimin,delta_chisquared,grat,dot_product_threshold;
     
@@ -196,6 +196,12 @@ private:
     array_2d<double> _last_simplex;
     array_1d<double> _last_ff;
     array_1d<int> _false_minima;
+    
+    //variables for figuring out which wide points to do bisection on
+    kd_tree *unitSpheres;
+    array_1d<double> ddUnitSpheres;
+    
+    void project_to_unit_sphere(int, array_1d<double>&, array_1d<double>&);
     
 };
 
