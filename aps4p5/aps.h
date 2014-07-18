@@ -105,7 +105,7 @@ private:
     char minimaname[letters];
     char **paramnames;
     
-    array_1d<int> known_minima,gradient_start_pts;
+    array_1d<int> known_minima,forbidden_candidates;
     array_1d<int> wide_pts,focus_pts,gibbs_pts,good_pts;
     
     array_1d<double> characteristic_length;

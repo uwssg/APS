@@ -597,8 +597,8 @@ int aps::is_it_a_candidate(int dex){
     
     //printf("  is %e a candidate -- med %e grat %e min %e\n",gg.get_fn(dex),global_median,grat,chimin);
     
-    for(i=0;i<gradient_start_pts.get_dim();i++){
-        if(dex==gradient_start_pts.get_data(i))return 0;
+    for(i=0;i<forbidden_candidates.get_dim();i++){
+        if(dex==forbidden_candidates.get_data(i))return 0;
     }
     
     for(i=0;i<known_minima.get_dim();i++){
@@ -625,7 +625,7 @@ int aps::is_it_a_candidate(int dex){
             return 1;
         }
         else{
-            gradient_start_pts.add(dex);
+            forbidden_candidates.add(dex);
             return 0;
         }
     
@@ -2586,7 +2586,7 @@ void aps::gradient_search(){
     }
     
     for(ii=0;ii<dim+1;ii++){
-        if(gradient_start_pts.get_dim()==0 && known_minima.get_dim()==0 && seed.get_dim()==0){
+        if(forbidden_candidates.get_dim()==0 && known_minima.get_dim()==0 && seed.get_dim()==0){
             for(i=0;i<candidates.get_dim();i++){     
                 if(i==0 || delta.get_data(i)>delta_max){
                     delta_max=delta.get_data(i);
@@ -2603,8 +2603,8 @@ void aps::gradient_search(){
                     if(nn<nnmin)nnmin=nn;
                 }
             
-                for(j=0;j<gradient_start_pts.get_dim();j++){
-                    nn=distance(candidates.get_data(i),gradient_start_pts.get_data(j),local_range);
+                for(j=0;j<forbidden_candidates.get_dim();j++){
+                    nn=distance(candidates.get_data(i),forbidden_candidates.get_data(j),local_range);
                     if(nn<nnmin)nnmin=nn;
                 } 
                 
@@ -2960,9 +2960,9 @@ void aps::write_pts(){
     for(i=0;i<known_minima.get_dim();i++){
         fprintf(output,"%d\n",known_minima.get_data(i));
     }
-    fprintf(output,"gradient_start_pts %d\n",gradient_start_pts.get_dim());
-    for(i=0;i<gradient_start_pts.get_dim();i++){
-        fprintf(output,"%d\n",gradient_start_pts.get_data(i));
+    fprintf(output,"forbidden_candidates %d\n",forbidden_candidates.get_dim());
+    for(i=0;i<forbidden_candidates.get_dim();i++){
+        fprintf(output,"%d\n",forbidden_candidates.get_data(i));
     }
     fclose(output);
     
@@ -3148,14 +3148,7 @@ void aps::write_pts(){
         time_refactoring+=double(time(NULL))-nn;
     }
 
-    
-    output=fopen("startpts_log.sav","w");
-    for(i=0;i<gradient_start_pts.get_dim();i++){
-        fprintf(output,"%e %e\n",
-        gg.get_pt(gradient_start_pts.get_data(i),0),
-        gg.get_pt(gradient_start_pts.get_data(i),3));
-    }
-    fclose(output);
+   
    
     double time_now = double(time(NULL));
    
