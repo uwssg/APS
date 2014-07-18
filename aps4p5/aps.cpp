@@ -587,7 +587,7 @@ int aps::is_it_a_candidate(int dex){
         exit(1);
     }
     
-    int i,use_it;
+    int i,use_it,ic;
     array_1d<double> mid_pt;
     double chitrial;
     
@@ -615,20 +615,20 @@ int aps::is_it_a_candidate(int dex){
         * a part of the same low chisquared locus associated with chimin.  Do not consider
         * it a candidate for function minimization.
         */
-        for(i=0;i<dim;i++){
-            mid_pt.set(i,0.5*(minpt.get_data(i)+gg.get_pt(dex,i)));
-        }
         
-        evaluate(mid_pt,&chitrial);
+        for(ic=0;ic<centers.get_rows();ic++){
+            for(i=0;i<dim;i++){
+                mid_pt.set(i,0.5*(centers.get_data(ic,i)+gg.get_pt(dex,i)));
+            }
+        
+            evaluate(mid_pt,&chitrial);
 
-        if(chitrial>gg.get_fn(dex)-0.25*(gg.get_fn(dex)-chimin)){
-            return 1;
+            if(chitrial<=gg.get_fn(dex)-0.25*(gg.get_fn(dex)-gg.get_fn(center_dexes.get_data(ic)))){
+                forbidden_candidates.add(dex);
+                return 0;
+            }
         }
-        else{
-            forbidden_candidates.add(dex);
-            return 0;
-        }
-    
+        return 1;
     }
     else return 0;
 }
