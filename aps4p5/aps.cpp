@@ -625,14 +625,14 @@ int aps::is_it_a_candidate(int dex){
         * it a candidate for function minimization.
         */
         
-        for(ic=0;ic<centers.get_rows();ic++){
+        for(ic=0;ic<known_minima.get_dim();ic++){
             for(i=0;i<dim;i++){
-                mid_pt.set(i,0.5*(centers.get_data(ic,i)+gg.get_pt(dex,i)));
+                mid_pt.set(i,0.5*(gg.get_pt(known_minima.get_data(ic),i)+gg.get_pt(dex,i)));
             }
         
             evaluate(mid_pt,&chitrial);
 
-            if(chitrial<=gg.get_fn(dex)-0.25*(gg.get_fn(dex)-gg.get_fn(center_dexes.get_data(ic)))){
+            if(chitrial<=gg.get_fn(dex)-0.25*(gg.get_fn(dex)-gg.get_fn(known_minima.get_data(ic)))){
                 forbidden_candidates.add(dex);
                 return 0;
             }

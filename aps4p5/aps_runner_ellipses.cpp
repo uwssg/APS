@@ -45,8 +45,8 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-aps_test.set_timingname("aps_output/timing_file_ellipses_chk.sav");
-aps_test.set_outname("aps_output/master_output_ellipses_chk.sav");
+aps_test.set_timingname("test_dir/timing_file_ellipses_chk.sav");
+aps_test.set_outname("test_dir/master_output_ellipses_chk.sav");
 
 
 int i,j;
