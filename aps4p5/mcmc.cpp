@@ -207,7 +207,8 @@ void mcmc::guess(array_1d<double> &input){
 }
 
 void mcmc::sample(int npts){
-
+  
+  
   int i,j,k,l,cc,ii,inbounds;
   
   array_1d<double> oldchi,oldl,trial,proposed;
