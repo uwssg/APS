@@ -124,7 +124,7 @@ private:
     double simplex_strad_best,simplex_mu_best,simplex_sig_best;
     array_1d<double> simplex_best;
     
-    double time_node,time_aps,time_gradient,time_total,start_time;
+    double time_node,time_aps,time_simplex,time_total,start_time;
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
     int ct_node,ct_aps,ct_simplex;
     

@@ -124,7 +124,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     ngood=0;
     
     time_aps=0.0;
-    time_gradient=0.0;
+    time_simplex=0.0;
     time_total=0.0;
     time_cleaning=0.0;
     time_writing=0.0;
@@ -2548,7 +2548,7 @@ void aps::simplex_search(){
         
     
         ct_simplex+=chisq->get_called()-ibefore;
-        time_gradient+=double(time(NULL))-before;
+        time_simplex+=double(time(NULL))-before;
         return;
     }
     
@@ -2663,7 +2663,7 @@ void aps::simplex_search(){
     mindex_is_candidate=0;
     
     ct_simplex+=chisq->get_called()-ibefore;
-    time_gradient+=double(time(NULL))-before;
+    time_simplex+=double(time(NULL))-before;
     
     set_where("nowhere");
     //printf("done gradient searching\n");
@@ -3140,7 +3140,7 @@ void aps::write_pts(){
     (time_now-start_time)/double(chisq->get_called()));
     
     fprintf(output,"%d %e -- ",ct_aps,time_aps);
-    fprintf(output,"%d %e -- ",ct_simplex,time_gradient);
+    fprintf(output,"%d %e -- ",ct_simplex,time_simplex);
     
     fprintf(output,"%e -- %e -- ",time_optimizing,time_refactoring);
     
