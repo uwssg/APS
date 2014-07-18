@@ -23,7 +23,7 @@ if(iargc>1){
 }
 
 Ran chaos(seed);
-int i,j,dim=8,nchains=8,ncenters=3;
+int i,j,dim=5,nchains=5,ncenters=3;
 
 ellipses_integrable chifn(dim,ncenters);
 //chifn.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_0_1.sav");

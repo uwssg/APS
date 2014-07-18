@@ -3007,8 +3007,8 @@ void aps::write_pts(){
                 else lvol-=1.0e10;
             }
             vol=exp(lvol);
-            volume.set(i,vol);
         }
+        volume.set(i,vol);
         
     }
     

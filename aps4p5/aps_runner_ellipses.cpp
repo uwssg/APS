@@ -22,11 +22,11 @@ Ran chaos(seed);
 
 matern_covariance cv;
 
-dim=8;
+dim=5;
 ncenters=3;
 ellipses_integrable chisq(dim,ncenters);
 
-chisq.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_chk.sav");
+//chisq.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_chk.sav");
 
 printf("done integrating\n");
 
