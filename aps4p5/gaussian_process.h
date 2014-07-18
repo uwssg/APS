@@ -297,6 +297,7 @@ class gp{
     double distance(array_1d<double>&,array_1d<double>&);
     double distance(int,array_1d<double>&);
     double distance(array_1d<double>&,int);
+    double distance(int,int);
     
     double get_max(int);
     double get_min(int);

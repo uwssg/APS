@@ -114,6 +114,17 @@ double gp::get_min(int dex){
     return kptr->get_min(dex);
 }
 
+double gp::distance(int d1, int d2){
+    if(d1>=pts || d2>=pts || d1<0 || d2<0){
+        printf("WARNING asked for gp distance between %d %d but pts %d\n",
+        d1,d2,pts);
+        
+        exit(1);
+    }
+    
+    return kptr->distance(d1,d2);
+}
+
 double gp::distance(int dex, array_1d<double> &p){
     
     if(dex>=pts || dex<0){

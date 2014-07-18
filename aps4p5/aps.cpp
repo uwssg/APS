@@ -2744,7 +2744,7 @@ void aps::refine_center(){
     
     for(ic=0;ic<centers.get_rows();ic++){
         
-        if(boundary_pts.get_cols(ic)>gg.get_dim()+1 && 
+        if(boundary_pts.get_cols(ic)>=gg.get_dim()+1 && 
         (ic_chosen<0 || gg.get_fn(center_dexes.get_data(ic))>maxchi)){
             
             maxchi=gg.get_fn(center_dexes.get_data(ic));
@@ -2758,97 +2758,39 @@ void aps::refine_center(){
         return;
     }
     
-    int i,j,ii;
-    array_1d<int> maxDex,minDex;
-    array_1d<double> max;
-    array_1d<double> min;
+    array_1d<double> tosort,sorted;
+    array_1d<int> inn;
     
-    maxDex.set_name("refine_maxDex");
-    minDex.set_name("refine_minDex");
-    max.set_name("refine_max");
-    min.set_name("refine_min");
+    tosort.set_name("refine_tosort");
+    sorted.set_name("refine_sorted");
+    inn.set_name("refine_inn");
     
-    for(i=0;i<gg.get_dim();i++){
-        max.set(i,-2.0*chisq_exception);
-        min.set(i,2.0*chisq_exception);
-        maxDex.set(i,-1);
-        minDex.set(i,-1);
-    }
+    int ii,i;
     
     for(i=0;i<boundary_pts.get_cols(ic_chosen);i++){
         ii=boundary_pts.get_data(ic_chosen,i);
-        for(j=0;j<gg.get_dim();j++){
-            if(i==0 || gg.get_pt(ii,j)<min.get_data(j)){
-                min.set(j,gg.get_pt(ii,j));
-                minDex.set(j,ii);
-            }
-            
-            if(i==0 || gg.get_pt(ii,j)>max.get_data(j)){
-                max.set(j,gg.get_pt(ii,j));
-                maxDex.set(j,ii);
-            }
-        } 
+        
+        inn.set(i,ii);
+        tosort.set(i,gg.distance(ii,center_dexes.get_data(ic_chosen)));
+    
     }
+    sort_and_check(tosort,sorted,inn);
     
-    array_1d<int> extremityDex;
-    extremityDex.set_name("refine_extremityDex");
+    array_1d<int> neigh;
+    neigh.set_name("refine_neigh");
     
-    for(i=0;i<gg.get_dim();i++){
-        ii=1;
-        for(j=0;j<extremityDex.get_dim() && ii==1;j++){
-            if(minDex.get_data(i)==extremityDex.get_data(j)){
-                ii=0;
-            }
-        }
-        
-        if(ii==1)extremityDex.add(minDex.get_data(i));
-        
-        ii=1;
-        for(j=0;j<extremityDex.get_dim() && ii==1;j++){
-            if(maxDex.get_data(i)==extremityDex.get_data(j)){
-                ii=0;
-            }
-        }
-        
-        if(ii==1)extremityDex.add(maxDex.get_data(i));
-       
-    }
-    
-    if(extremityDex.get_dim()<gg.get_dim()+1){
-        return;
+    for(i=0;i<gg.get_dim()+1;i++){
+        neigh.set(i,inn.get_data(inn.get_dim()-1-i));
     }
     
     if(refined_simplex.get_rows()>ic_chosen){
-        if(compare_int_arr(extremityDex,*refined_simplex(ic_chosen))==1){
+        if(compare_int_arr(*refined_simplex(ic_chosen),neigh)==1){
             return;
         }
     }
     
+    refined_simplex.set_row(ic_chosen,neigh);
     
-    array_1d<int> neigh;
-    neigh.set_name("refine_neigh");
-    int use_dex;
-    
-    refined_simplex.set_row(ic_chosen,extremityDex);
-    
-    for(i=0;i<gg.get_dim()+1;i++){
-        ii=dice->int32()%extremityDex.get_dim();
-        
-        //printf("random ii %d %d %d\n",ii,extremityDex.get_dim(),(-5%2));
-        
-        neigh.add(extremityDex.get_data(ii));
-        
-        extremityDex.remove(ii);
-            
-    }
-        
-    if(neigh.get_dim()!=gg.get_dim()+1){
-        printf("WARNING somehow in refine_center, neigh has dim %d but want %d\n",
-        neigh.get_dim(),gg.get_dim()+1);
-        
-        exit(1);
-    }   
-
     printf("    refining %d\n",ic_chosen);
     find_global_minimum(neigh);
     
