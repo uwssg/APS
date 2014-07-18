@@ -84,9 +84,14 @@ for(ii=1;ii<=nchains;ii++){
         }
         
         d1=euclideanDistance(vv,c1);
-        if(d1<min1)min1=d1;
         d2=euclideanDistance(vv,c2);
-        if(d2<min2)min2=d2;
+        
+        if(d1<d2){
+            if(d1<min1)min1=d1;
+        }
+        else{
+            if(d2<min2)min2=d2;
+        }
     }
     
     fclose(input);

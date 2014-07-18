@@ -2523,6 +2523,7 @@ void aps::gradient_search(){
     }
     
     
+    printf("    candidates %d\n",candidates.get_dim());
     if(candidates.get_dim()<dim+1){
         
         refine_center();
