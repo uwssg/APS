@@ -517,7 +517,7 @@ int compare_int_arr(array_1d<int> &p1, array_1d<int> &p2){
             if(p1.get_data(i)==p2.get_data(j))found_it=1;
         }
         
-        if(found_it=0)ans=0;
+        if(found_it==0)ans=0;
         
     }
     
