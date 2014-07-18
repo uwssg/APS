@@ -7,7 +7,7 @@
 main(int iargc, char *argv[]){
 
 int seed=99;
-int dim;
+int dim,ncenters;
 
 if(iargc>1){
     seed=atoi(argv[1]);
@@ -24,7 +24,8 @@ Ran chaos(seed);
 matern_covariance cv;
 
 dim=8;
-ellipses_integrable chisq(dim,2);
+ncenters=3;
+ellipses_integrable chisq(dim,ncenters);
 
 chisq.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_chk.sav");
 

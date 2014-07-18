@@ -2683,7 +2683,7 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
     double stepNorm,devNorm;
     ic=find_nearest_center(*gg.get_pt(i_min));
     
-    printf("    minpt %e\n",gg.get_pt(i_min,0));
+    //printf("    minpt %e\n",gg.get_pt(i_min,0));
     
     stepNorm=0.0;
     for(i=0;i<gg.get_dim();i++){

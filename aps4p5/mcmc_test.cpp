@@ -23,28 +23,32 @@ if(iargc>1){
 }
 
 Ran chaos(seed);
-int i,j,dim=8,nchains=8;
+int i,j,dim=8,nchains=8,ncenters=3;
 
-ellipses_integrable chifn(dim,2);
+ellipses_integrable chifn(dim,ncenters);
 //chifn.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_0_1.sav");
 
 
 //ellipses chifn(dim,2);
-array_1d<double> min,max,c1,c2,sig;
+array_1d<double> min,max,sig;
+array_2d<double> true_centers;
 
 for(i=0;i<dim;i++){
     printf("%e %e\n",chifn.get_real_center(0,i),
     chifn.get_real_center(1,i));
 }   
 
-
+true_centers.set_cols(dim);
 
 for(i=0;i<dim;i++){
     min.set(i,-100.0);
     max.set(i,100.0);
     sig.set(i,5.0);
-    c1.set(i,chifn.get_real_center(0,i));
-    c2.set(i,chifn.get_real_center(1,i));
+
+    for(j=0;j<ncenters;j++){
+        true_centers.set(j,i,chifn.get_real_center(j,i));
+    }
+    
 }
 
 
@@ -71,8 +75,13 @@ mcmc_test.sample(7500);
 FILE *input;
 char inname[letters];
 int ii;
-array_1d<double> vv;
-double nn,d1,d2,min1=2.0e30,min2=2.0e30;
+array_1d<double> vv,dd,ddmin;
+double nn;
+
+for(i=0;i<ncenters;i++){
+    ddmin.set(i,2.0*chisq_exception);
+}
+
 for(ii=1;ii<=nchains;ii++){
     sprintf(inname,"chains/ellipse_140718_chains_%d.txt",ii);
     input=fopen(inname,"r");
@@ -83,20 +92,23 @@ for(ii=1;ii<=nchains;ii++){
             vv.set(i,nn);
         }
         
-        d1=euclideanDistance(vv,c1);
-        d2=euclideanDistance(vv,c2);
+        for(i=0;i<ncenters;i++){
+            dd.set(i,euclideanDistance(vv,*true_centers(i)));
+            if(dd.get_data(i)<ddmin.get_data(i)){
+                ddmin.set(i,dd.get_data(i));
+            }
+        }
         
-        if(d1<d2){
-            if(d1<min1)min1=d1;
-        }
-        else{
-            if(d2<min2)min2=d2;
-        }
+    
     }
     
     fclose(input);
 }
 
-printf("min1 %e min2 %e\n",min1,min2);
+printf("mins ");
+for(i=0;i<ncenters;i++){
+    printf("%e ",ddmin.get_data(i));
+}
+printf("\n");
 
 }
