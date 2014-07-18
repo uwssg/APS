@@ -238,6 +238,15 @@ explore: test_exploration.cpp gaussian_process.o
 	goto_tools.o containers.o eigen_wrapper.o kd.o gaussian_process.o \
 	$(LIBRARIES) $(INCLUDE)
 
+all:
+	make test_containers
+	make test_kd
+	make test_eigen
+	make ellipse
+	make mcmc_test
+	make aps_extract
+	make aps_extract_ellipse
+
 
 clean:
 	rm *.o aps_run aps_test test_containers test_kd planet dummy planet2 \
