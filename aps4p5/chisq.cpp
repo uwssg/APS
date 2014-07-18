@@ -164,13 +164,18 @@ void chisquared::make_bases(int seed){
     
     double rr,theta;
     array_1d<double> trial_center,trial_pt;
-    int acceptable;
+    int acceptable,iterations=0;;
     
     trial_center.set_dim(dim);
     trial_pt.set_dim(dim);
 
     goon=0;
     while(goon==0){
+        iterations++;
+        
+        if(iterations>1000){
+            printf("WARNING; chisq was unable to construct an acceptable function\n");
+        }
         
 	for(ii=0;ii<ncenters;ii++){
             for(i=0;i<dim;i++)centers.set(ii,i,1.0e30);
@@ -194,8 +199,7 @@ void chisquared::make_bases(int seed){
 	    } 
 	     
 	    for(i=0;i<dim;i++){
-	        if(i<2 && ii>0)trial_center.add_val(i,normal_deviate(dice,3.0,3.0));
-		else trial_center.add_val(i,normal_deviate(dice,30.0,15.0));
+                trial_center.add_val(i,normal_deviate(dice,30.0,15.0));
 	    }
 	    
 	    for(i=0;i<dim;i++){
@@ -210,8 +214,7 @@ void chisquared::make_bases(int seed){
 	    if(acceptable==1){
 	        for(i=0;i<dim;i++){
 		    centers.set(ii,i,trial_center.get_data(i));
-	            //widths[ii][i]=dice->doub()*1.0+0.1;
-		    widths.set(ii,i,fabs(normal_deviate(dice,1.0,0.5))+0.1);
+		    widths.set(ii,i,fabs(normal_deviate(dice,3.0,0.5))+0.1);
 	        }
 	    }
 	    else ii--;
@@ -224,6 +227,9 @@ void chisquared::make_bases(int seed){
 	
 	for(i=0;i<dim && acceptable==1;i++){
 	    for(ii=0;ii<ncenters && acceptable==1;ii++){
+                if(centers.get_data(ii,i)-4.0*widths.get_data(ii,i)<-100.0)acceptable=0;
+                if(centers.get_data(ii,i)+4.0*widths.get_data(ii,i)>100.0)acceptable=0;
+                
 	        for(jj=ii+1;jj<ncenters && acceptable==1;jj++){
 		    nn=fabs(centers.get_data(ii,i)-centers.get_data(jj,i));
 		    if(nn<3.0*widths.get_data(ii,i) || nn<3.0*widths.get_data(jj,i))acceptable=0;

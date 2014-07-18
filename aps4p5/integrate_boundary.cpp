@@ -11,7 +11,7 @@ char outname[letters];
 
 int i,j;
 
-for(ncenters=2;ncenters<5;ncenters++){
+for(ncenters=2;ncenters<4;ncenters++){
     chifn = new ellipses_integrable(dim,ncenters);
     for(i=0;i<dim;i++){
         for(j=i+1;j<dim;j++){
