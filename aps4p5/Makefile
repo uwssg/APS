@@ -96,10 +96,10 @@ ellipse: aps_runner_ellipses.cpp aps.o chisq.o
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
 	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
 
-integrate: integrate_boundary.cpp aps.o chisq.o
+integrate: integrate_boundary.cpp kd.o eigen_wrapper.o gaussian_process.o chisq.o
 	$(gg) -o integrate integrate_boundary.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
+	chisq.o $(LIBRARIES) $(INCLUDE)
 
 mcmc_test: mcmc.o mcmc_test.cpp
 	$(gg) -o mcmc_test mcmc_test.cpp \
