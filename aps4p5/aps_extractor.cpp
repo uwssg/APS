@@ -15,6 +15,8 @@ aps_extractor::aps_extractor(){
     box_max.set_name("box_max");
     box_min.set_name("box_min");
     l_probability.set_name("l_probability");
+    l_prob_dexes.set_name("l_prob_dexes");
+    chisq.set_name("chisq");
 }
 
 aps_extractor::~aps_extractor(){}
@@ -184,8 +186,8 @@ void aps_extractor::sample_posterior(array_2d<double> &samples, int nsamples){
     sample_posterior(dummy,samples,nsamples,2);
 }
 
-void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, int nsamples, int which_output){
-    
+
+void aps_extractor::make_boxes(){
     
     if(filename[0]==0){
         printf("WARNING filename no set in sample_posterior\n");
@@ -197,9 +199,11 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
         exit(1);
     }
     
+    l_prob_dexes.reset();
     l_probability.reset();
     box_max.reset();
     box_min.reset();
+    chisq.reset();
     
     box_max.set_cols(nparams);
     box_min.set_cols(nparams);
@@ -210,7 +214,7 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     data.set_name("data");
     
     FILE *input;
-    array_1d<double> vv,chisq;
+    array_1d<double> vv;
 
     char word[letters];
     int i,ct=0;
@@ -242,8 +246,6 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
 
     array_1d<double> dd;
     array_1d<int> neigh;
-
-    FILE *output;
 
     int j,k;
     int n_neigh=3*nparams+1,found_it;
@@ -382,21 +384,31 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     }
     printf("\ntotal_p %e\n",total_p);
 
-    Ran chaos(99);
-    int cc,nchains=1,ii;
-    double roll,sum,rr;
 
-    array_1d<double> pt;
 
-    array_1d<int> dexes;
     array_1d<double> sorted_prob;
-    for(i=0;i<l_probability.get_dim();i++)dexes.set(i,i);
+    for(i=0;i<l_probability.get_dim();i++)l_prob_dexes.set(i,i);
     
-    sort_and_check(l_probability,sorted_prob,dexes);
+    sort_and_check(l_probability,sorted_prob,l_prob_dexes);
     
     //for(i=0;i<chisq.get_dim();i++)chisq.multiply_val(i,-1.0);
     //sort_and_check(chisq,sorted_prob,dexes);
     
+}
+
+void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, int nsamples, int which_output){
+   
+    if(l_probability.get_dim()==0){
+        make_boxes();
+    }
+   
+    FILE *output;
+    Ran chaos(99);
+    int cc,nchains=1,ii,i,j,k;
+    double roll,sum,rr;
+
+    array_1d<double> pt;
+
     
     if(which_output==1){
         output=fopen(outname,"w");
@@ -410,10 +422,10 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
         sum=0.0;
  
         for(i=l_probability.get_dim()-1;i>0 && sum<roll;i--){
-            sum+=exp(l_probability.get_data(dexes.get_data(i)));
+            sum+=exp(l_probability.get_data(l_prob_dexes.get_data(i)));
         } 
     
-        k=dexes.get_data(i);
+        k=l_prob_dexes.get_data(i);
         
         for(j=0;j<nparams;j++){
             pt.set(j,box_min.get_data(k,j)+chaos.doub()*(box_max.get_data(k,j)-box_min.get_data(k,j)));    

@@ -21,6 +21,8 @@ public:
     void sample_posterior(array_2d<double>&,int);
     void sample_posterior(char*,array_2d<double>&,int,int);
     
+    void make_boxes();
+    
     void set_cutoff(int);
 
 private:
@@ -30,7 +32,8 @@ private:
     int nparams,extra_words;
     int cutoff;
     
-    array_1d<double> min_pt,l_probability;
+    array_1d<int> l_prob_dexes;
+    array_1d<double> min_pt,l_probability,chisq;
     array_2d<double> box_max,box_min;
     
     void learn_chimin();
