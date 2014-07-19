@@ -475,7 +475,7 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
     double sum=0.0;
     
     output=fopen(filename,"w");
-    for(i=l_probability.get_dim()-1;i>=0 && sum<limit;i--){
+    for(i=0;i<l_probability.get_dim() && sum<limit;i++){
         ibox=l_prob_dexes.get_data(i);
         sum+=exp(l_probability.get_data(ibox));
         
