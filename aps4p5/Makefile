@@ -114,6 +114,12 @@ mcmc_test: mcmc.o mcmc_test.cpp
 	mcmc_extractor.o kd.o \
 	$(LIBRARIES) $(INCLUDE)
 
+mcmcBrute: mcmc.o mcmc_brute.cpp
+	$(gg) -o mcmcBrute mcmc_brute.cpp \
+	goto_tools.o containers.o eigen_wrapper.o chisq.o mcmc.o \
+	mcmc_extractor.o kd.o \
+	$(LIBRARIES) $(INCLUDE)
+
 all:
 	make test_containers
 	make test_kd
@@ -124,9 +130,10 @@ all:
 	make aps_extract
 	make aps_extract_ellipse
 	make ellipseBrute
+	make mcmcBrute
 
 
 clean:
 	rm *.o test_containers test_kd test_eigen ellipse \
 	integrate mcmc_test aps_extract aps_extract_ellipse \
-	ellipseBrute
+	ellipseBrute mcmcBrute
