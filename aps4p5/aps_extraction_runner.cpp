@@ -3,11 +3,11 @@
 main(){
 
 aps_extractor test;
-test.set_filename("aps_output/apsWMAP_unitSphere_GaussLearn_output.sav");
+test.set_filename("aps_output/apsWMAP_unitSphere_NNLearn_output.sav");
 test.set_delta_chi(12.6);
 //test.set_delta_chi(100.0);
 
-//test.set_cutoff(15000);
+test.set_cutoff(30000);
 
 test.write_good_points("aps_processed/apsSphere_good_points.sav");
 //test.plot_chimin("aps_chi_min_test.sav");

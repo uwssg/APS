@@ -137,6 +137,8 @@ void aps_extractor::write_good_points(char *outname){
     
     fclose(output);
     fclose(input);
+    
+    printf("wrote good pts with chi_min %e\n",chi_min);
 }
 
 void aps_extractor::plot_chimin(char *outname){

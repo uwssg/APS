@@ -872,9 +872,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     pbar.set_dim(dim);
     ff.set_dim(dim+1);
     
-    printf("    minimizing on\n");
+    /*printf("    minimizing on\n");
     for(i=0;i<dim+1;i++)printf("%d\n",neigh.get_data(i));
-    printf("\n");
+    printf("\n");*/
     
     for(i=0;i<dim;i++){
         max.set(i,range_max.get_data(i));
