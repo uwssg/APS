@@ -404,7 +404,7 @@ void aps_extractor::make_boxes(){
     array_1d<double> sorted_prob;
     for(i=0;i<l_probability.get_dim();i++)l_prob_dexes.set(i,i);
     
-    sort_and_check(l_probability,sorted_prob,l_prob_dexes);
+    sort_and_check(chisq,sorted_prob,l_prob_dexes);
     
     //for(i=0;i<chisq.get_dim();i++)chisq.multiply_val(i,-1.0);
     //sort_and_check(chisq,sorted_prob,dexes);
@@ -436,7 +436,7 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
         roll=chaos.doub();
         sum=0.0;
  
-        for(i=l_probability.get_dim()-1;i>0 && sum<roll;i--){
+        for(i=0;i<chisq.get_dim() && sum<roll;i++){
             sum+=exp(l_probability.get_data(l_prob_dexes.get_data(i)));
         } 
     
