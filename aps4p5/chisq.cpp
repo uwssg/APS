@@ -94,7 +94,9 @@ void chisquared::make_bases(int seed){
         do_random_bases=0;
     }
     
-    dice=new Ran(seed);
+    if(dice==NULL){
+        dice=new Ran(seed);
+    }
     
     double nn;
     int i,j,ii,jj,goon;
@@ -175,6 +177,7 @@ void chisquared::make_bases(int seed){
         
         if(iterations>5000){
             printf("WARNING; chisq was unable to construct an acceptable function\n");
+            
             exit(1);
         }
         
@@ -215,7 +218,7 @@ void chisquared::make_bases(int seed){
 	    if(acceptable==1){
 	        for(i=0;i<dim;i++){
 		    centers.set(ii,i,trial_center.get_data(i));
-		    widths.set(ii,i,fabs(normal_deviate(dice,3.0,0.5))+0.1);
+		    widths.set(ii,i,fabs(normal_deviate(dice,1.0,0.5))+0.1);
 	        }
 	    }
 	    else ii--;
@@ -233,7 +236,11 @@ void chisquared::make_bases(int seed){
                 
 	        for(jj=ii+1;jj<ncenters && acceptable==1;jj++){
 		    nn=fabs(centers.get_data(ii,i)-centers.get_data(jj,i));
-		    if(nn<3.0*widths.get_data(ii,i) || nn<3.0*widths.get_data(jj,i))acceptable=0;
+		    if(nn<2.0*widths.get_data(ii,i) || nn<2.0*widths.get_data(jj,i)){
+                        acceptable=0;
+                        printf("centers %d %d -- %d -- %e %e -- %e %e\n",ii,jj,i,centers.get_data(ii,i),widths.get_data(ii,i),
+                        centers.get_data(jj,i),widths.get_data(jj,i));
+                    }
 		}
 	    }
 	}
@@ -248,7 +255,7 @@ void chisquared::make_bases(int seed){
     time_spent=0.0;
     called=0;
     
-    printf("set centers and widths\n");
+    printf("set centers and widths %d %d\n",dim,ncenters);
 }
 
 void chisquared::add_to_boundary(array_1d<double> &alpha, int ix, int iy,double chitest){
@@ -1392,7 +1399,7 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
         printf("WARNING dexes %d but ct %d\n",dexes.get_dim(),ct);
         exit(1);
     }
-    //printf("time to sort %d -- %d\n",dexes.get_dim(),ct);
+    printf("time to sort %d -- %d\n",dexes.get_dim(),ct);
     
     array_1d<double> chisorted;
     sort_and_check(chiarr,chisorted,dexes);

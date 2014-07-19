@@ -13,7 +13,7 @@ FILE *output;
 
 int i,j,k;
 
-for(ncenters=3;ncenters<4;ncenters++){
+for(ncenters=2;ncenters<5;ncenters++){
     chifn = new ellipses_integrable(dim,ncenters);
     chifn->build_boundary(11.0);
     
