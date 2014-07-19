@@ -218,7 +218,7 @@ void chisquared::make_bases(int seed){
 	    if(acceptable==1){
 	        for(i=0;i<dim;i++){
 		    centers.set(ii,i,trial_center.get_data(i));
-		    widths.set(ii,i,fabs(normal_deviate(dice,1.0,0.5))+0.1);
+		    widths.set(ii,i,fabs(normal_deviate(dice,2.0,0.5))+0.1);
 	        }
 	    }
 	    else ii--;

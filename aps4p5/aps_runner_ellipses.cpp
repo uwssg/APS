@@ -68,9 +68,10 @@ aps_test.set_n_samples(1000);
 double chival,chivaltest,err,maxerr;
 
 i=-1;
-while(aps_test.get_called()<100000){
+while(aps_test.get_called()<100000 && aps_test.get_n_centers()<3){
     aps_test.search();    
 }
+
 
 array_1d<double> minpt;
 
@@ -83,6 +84,6 @@ aps_test.get_ct_aps(),aps_test.get_ct_simplex(),
 aps_test.get_called());
 
 
-printf("maxerr %e npts %d\n",maxerr,aps_test.get_n_pts());
+printf("maxerr %e npts %d\n",maxerr,aps_test.get_called());
 
 }

@@ -59,6 +59,7 @@ public:
     void resume(char*);
     
     int get_n_pts();
+    int get_n_centers();
     double get_pt(int,array_1d<double>&);
     
     void search();

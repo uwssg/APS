@@ -872,6 +872,10 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     pbar.set_dim(dim);
     ff.set_dim(dim+1);
     
+    printf("    minimizing on\n");
+    for(i=0;i<dim+1;i++)printf("%d\n",neigh.get_data(i));
+    printf("\n");
+    
     for(i=0;i<dim;i++){
         max.set(i,range_max.get_data(i));
         min.set(i,range_min.get_data(i));
@@ -1299,6 +1303,10 @@ int aps::get_called(){
 
 int aps::get_n_pts(){
     return gg.get_pts();
+}
+
+int aps::get_n_centers(){
+    return center_dexes.get_dim();
 }
 
 double aps::get_pt(int dex, array_1d<double> &output){
