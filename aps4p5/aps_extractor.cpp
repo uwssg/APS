@@ -447,3 +447,30 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
         fclose(output);
     }
 }
+
+void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double limit){
+    if(l_probability.get_dim()==0){
+        make_boxes();
+    }
+    
+    FILE *output;
+    int i,j,ibox;
+    
+    
+    double sum=0.0;
+    
+    output=fopen(filename,"w");
+    for(i=l_probability.get_dim()-1;i>=0 && sum<limit;i--){
+        ibox=l_prob_dexes.get_data(i);
+        sum+=exp(l_probability.get_data(ibox));
+        
+        fprintf(output,"%e %e\n",box_max.get_data(ibox,ix),box_max.get_data(ibox,iy));
+        fprintf(output,"%e %e\n",box_max.get_data(ibox,ix),box_min.get_data(ibox,iy));
+        fprintf(output,"%e %e\n",box_min.get_data(ibox,ix),box_min.get_data(ibox,iy));
+        fprintf(output,"%e %e\n",box_min.get_data(ibox,ix),box_max.get_data(ibox,iy));
+        fprintf(output,"%e %e\n",box_max.get_data(ibox,ix),box_max.get_data(ibox,iy));
+        
+        
+    }
+    fclose(output);
+}

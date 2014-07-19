@@ -21,6 +21,8 @@ public:
     void sample_posterior(array_2d<double>&,int);
     void sample_posterior(char*,array_2d<double>&,int,int);
     
+    void draw_bayesian_bounds(char*,int,int,double);
+    
     void make_boxes();
     
     void set_cutoff(int);
