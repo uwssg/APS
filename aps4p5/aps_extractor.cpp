@@ -11,6 +11,10 @@ aps_extractor::aps_extractor(){
     extra_words=5;
     
     tol=1.0e-6;
+    
+    box_max.set_name("box_max");
+    box_min.set_name("box_min");
+    l_probability.set_name("l_probability");
 }
 
 aps_extractor::~aps_extractor(){}
@@ -182,6 +186,7 @@ void aps_extractor::sample_posterior(array_2d<double> &samples, int nsamples){
 
 void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, int nsamples, int which_output){
     
+    
     if(filename[0]==0){
         printf("WARNING filename no set in sample_posterior\n");
         exit(1);
@@ -191,6 +196,13 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
         printf("WARNING delta_chi %e in sample_posterior\n");
         exit(1);
     }
+    
+    l_probability.reset();
+    box_max.reset();
+    box_min.reset();
+    
+    box_max.set_cols(nparams);
+    box_min.set_cols(nparams);
     
     array_2d<double> data;
     array_1d<double> min,max;
@@ -232,14 +244,6 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     array_1d<int> neigh;
 
     FILE *output;
-
-    array_2d<double> box_max,box_min;
-
-    box_max.set_name("max");
-    box_min.set_name("min");
-
-    box_max.set_cols(nparams);
-    box_min.set_cols(nparams);
 
     int j,k;
     int n_neigh=3*nparams+1,found_it;
@@ -353,8 +357,6 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     }
 
     printf("rows %d %d %d\n",data.get_rows(),box_max.get_rows(),box_min.get_rows());
-
-    array_1d<double> l_probability;
 
     double lv,lp,total_p=0.0;;
 

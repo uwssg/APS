@@ -30,7 +30,8 @@ private:
     int nparams,extra_words;
     int cutoff;
     
-    array_1d<double> min_pt;
+    array_1d<double> min_pt,l_probability;
+    array_2d<double> box_max,box_min;
     
     void learn_chimin();
     void learn_nparams();
