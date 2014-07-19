@@ -2282,7 +2282,7 @@ void aps::project_to_unit_sphere(int ic, array_1d<double> &pt_in, array_1d<doubl
 
 void aps::bisection(array_1d<double> &inpt, double chi_in){
     
-    if(chi_in<strad.get_target() && strad.get_target()-chi_in<0.1*delta_chisquared){
+    if(chi_in<strad.get_target() && strad.get_target()-chi_in<0.1*delta_chisquared || chimin>strad.get_target()){
         return;
     }
     

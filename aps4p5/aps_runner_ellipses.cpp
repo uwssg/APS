@@ -5,6 +5,9 @@
 
 main(int iargc, char *argv[]){
 
+//d=8 -> delta_chisq=15.5
+//d=5 -> delta_chisq=11
+
 int seed=99;
 int dim,ncenters;
 
@@ -30,7 +33,7 @@ ellipses_integrable chisq(dim,ncenters);
 
 printf("done integrating\n");
 
-aps aps_test(dim,20,15.5,seed);
+aps aps_test(dim,20,11.0,seed);
 //15.5 is the 95% CL for 8 dof 
 
 aps_test.assign_chisquared(&chisq);
