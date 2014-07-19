@@ -96,6 +96,13 @@ ellipse: aps_runner_ellipses.cpp aps.o chisq.o
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
 	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
 
+ellipseBrute: aps_ellipse_brute.cpp aps.o chisq.o
+	$(gg) -o ellipseBrute aps_ellipse_brute.cpp \
+	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
+	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
+
+
+
 integrate: integrate_boundary.cpp kd.o eigen_wrapper.o gaussian_process.o chisq.o
 	$(gg) -o integrate integrate_boundary.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
@@ -116,8 +123,10 @@ all:
 	make mcmc_test
 	make aps_extract
 	make aps_extract_ellipse
+	make ellipseBrute
 
 
 clean:
 	rm *.o test_containers test_kd test_eigen ellipse \
-	integrate mcmc_test aps_extract aps_extract_ellipse
+	integrate mcmc_test aps_extract aps_extract_ellipse \
+	ellipseBrute

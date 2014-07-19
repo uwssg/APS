@@ -1305,6 +1305,23 @@ int aps::get_n_pts(){
     return gg.get_pts();
 }
 
+array_1d<double>* aps::get_pt(int i){
+    if(i>=gg.get_pts() || i<0){
+        printf("WOAH; asked APS for pt %d but only have %d\n",i,gg.get_pts());
+    }
+    
+    return gg.get_pt(i);
+}
+
+int aps::get_nn(array_1d<double> &pt){
+    array_1d<int> neigh;
+    array_1d<double> ddneigh;
+    
+    gg.nn_srch(pt,1,neigh,ddneigh);
+    
+    return neigh.get_data(0);
+}
+
 int aps::get_n_centers(){
     return center_dexes.get_dim();
 }

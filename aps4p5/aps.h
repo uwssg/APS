@@ -90,6 +90,9 @@ public:
     
     void set_target(double);
     
+    array_1d<double>* get_pt(int);
+    int get_nn(array_1d<double>&);
+    
 private:
     Ran *dice;
     chisquared *chisq;
