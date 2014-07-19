@@ -20,7 +20,7 @@ main(int iargc, char *argv[]){
 
 int seed=99;
 int dim,ncenters;
-
+double before=double(time(NULL));
 
 if(iargc){
     seed=atoi(argv[1]);
@@ -56,6 +56,8 @@ max.set_name("driver_max");
 min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
+
+system("rm test_dir/*sav");
 
 aps_test.set_timingname("test_dir/timing_file_ellipses_chk.sav");
 aps_test.set_outname("test_dir/master_output_ellipses_chk.sav");
@@ -94,13 +96,17 @@ printf("time to start searching\n");
 while(aps_test.get_called()<100000 && found_all==0){
     aps_test.search();    
     
-    if(aps_test.get_n_centers()>=ncenters){
+   
+    if(aps_test.get_n_centers()>=ncenters && aps_test.get_called()>last_assessed+1000){
+        last_assessed=aps_test.get_called();
+        aps_test.write_pts();
         ddmax=-1.0;
         for(i=0;i<ncenters;i++){
             j=aps_test.get_nn(*true_centers(i));
             
             dd=euclideanDistance(*true_centers(i),*aps_test.get_pt(j));
-            if(dd>ddmax)dd=ddmax;
+          
+            if(dd>ddmax)ddmax=dd;
         }
         
         if(ddmax<1.0){
@@ -114,5 +120,7 @@ while(aps_test.get_called()<100000 && found_all==0){
 fprintf(output,"seed %d ddmax %e called %d\n",
 seed,ddmax,aps_test.get_called());
 fclose(output);
+
+printf("that took %e\n",double(time(NULL))-before);
 
 }
