@@ -11,9 +11,15 @@ main(int iargc, char *argv[]){
 int seed=99;
 int dim,ncenters;
 
-if(iargc>1){
-    seed=atoi(argv[1]);
-}
+
+seed=atoi(argv[1]);
+dim=atoi(argv[2]);
+ncenters=atoi(argv[3]);
+
+char timingname[letters],outname[letters];
+sprintf(timingname,"aps_output/ellipse/fullAnalysis/ellipse_d%d_c%d_timing.sav",dim,ncenters);
+sprintf(outname,"aps_output/ellipse/fullAnalysis/ellipse_d%d_c%d_output.sav",dim,ncenters);
+
 
 if(seed<0){
     seed=int(time(NULL));
@@ -25,16 +31,10 @@ Ran chaos(seed);
 
 matern_covariance cv;
 
-dim=5;
-ncenters=3;
 ellipses_integrable chisq(dim,ncenters);
 
-//chisq.integrate_boundary(0,1,0.95,"aps_output/ellipses_integrable_truth_chk.sav");
-
-printf("done integrating\n");
 
 aps aps_test(dim,20,11.0,seed);
-//15.5 is the 95% CL for 8 dof 
 
 aps_test.assign_chisquared(&chisq);
 aps_test.assign_covariogram(&cv);
@@ -48,8 +48,8 @@ min.set_name("driver_min");
 max.set_dim(dim);
 min.set_dim(dim);
 
-aps_test.set_timingname("test_dir/timing_file_ellipses_chk.sav");
-aps_test.set_outname("test_dir/master_output_ellipses_chk.sav");
+aps_test.set_timingname(timingname);
+aps_test.set_outname(outname);
 
 
 int i,j;
@@ -65,13 +65,13 @@ printf("done initializing\n");
 
 aps_test.set_n_samples(1000);
 
-double chival,chivaltest,err,maxerr;
+double chival,chivaltest,err;
 
 i=-1;
 while(aps_test.get_called()<10000){
     aps_test.search();    
 }
-
+aps_test.write_pts();
 
 array_1d<double> minpt;
 
@@ -82,8 +82,5 @@ printf("chimin %e\n",aps_test.get_chimin());
 printf("ct_aps %d ct_simplex %d total %d\n",
 aps_test.get_ct_aps(),aps_test.get_ct_simplex(),
 aps_test.get_called());
-
-
-printf("maxerr %e npts %d\n",maxerr,aps_test.get_called());
 
 }
