@@ -360,8 +360,23 @@ void aps_extractor::make_boxes(){
 
     printf("rows %d %d %d\n",data.get_rows(),box_max.get_rows(),box_min.get_rows());
 
-    double lv,lp,total_p=0.0;;
-
+    double lv,lp,total_p=0.0;
+    double dmin,dmax;
+    
+    for(i=0;i<data.get_rows();i++){
+        for(j=0;j<nparams;j++){
+            dmin=data.get_data(i,j)-box_min.get_data(i,j);
+            dmax=box_max.get_data(i,j)-data.get_data(i,j);
+            
+            if(dmax>dmin){
+                box_max.set(i,j,data.get_data(i,j)+dmin);
+            }
+            else{
+                box_min.set(i,j,data.get_data(i,j)-dmax);
+            }
+        }
+    }
+    
 
     for(i=0;i<data.get_rows();i++){
     
