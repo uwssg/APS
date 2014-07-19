@@ -740,7 +740,7 @@ void s_curve::build_boundary(double br){
 
     int ix,iy,ic,ir,i,j;
     
-    
+    double tol=0.5;
     double theta,dxdth,dydth,x0,y0;
     double grad[2],norm,dfabsdth,ds,chitest;
     
@@ -822,7 +822,7 @@ void s_curve::build_boundary(double br){
 		
 	    }
 	    
-	    if(fabs(chitest-br)<5.0){
+	    if(fabs(chitest-br)<tol){
 	        add_to_boundary(alpha,ix,iy,chitest);
 	    }
 	    /*for(i=0;i<2;i++){
@@ -1052,8 +1052,19 @@ void ellipses::build_boundary(double br){
     
     reset_boundary();
     
+    double tol=0.5;
     int ix,iy,ic,i,j;
     double theta,rr,aa,chitest;
+    
+    /*
+    printf("in build_boundary centers are\n");
+    for(i=0;i<dim;i++){
+        for(j=0;j<ncenters;j++){
+            printf("%e ",centers.get_data(j,i));
+        }
+        printf("\n");
+    }
+    */
     
     array_1d<double> alpha,pt;
     alpha.set_dim(dim);
@@ -1085,7 +1096,7 @@ void ellipses::build_boundary(double br){
 		    }
 		    
 		    chitest=(*this)(pt);
-		    if(fabs(chitest-br)<5.0){
+		    if(fabs(chitest-br)<tol){
 		        add_to_boundary(alpha,ix,iy,chitest);
 		    }
 		    else{
@@ -1146,6 +1157,7 @@ void linear_ellipses::build_boundary(double br){
     
     reset_boundary();
     
+    double tol=0.5;
     int ic,ix,iy,i,j;
  
     double theta,rr,aa,chitest;
@@ -1180,7 +1192,7 @@ void linear_ellipses::build_boundary(double br){
 			for(j=0;j<dim;j++)pt.add_val(i,alpha.get_data(j)*bases.get_data(j,i));
 		    }
 		    chitest=(*this)(pt);
-		    if(fabs(chitest-br)<5.0){
+		    if(fabs(chitest-br)<tol){
 		        add_to_boundary(alpha,ix,iy,chitest);
 		    }
 		    else{
@@ -1205,6 +1217,16 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
 void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char *filename, double spread){
     
     int i,j;
+    /*
+    printf("in integrate_boundary, centers are\n");
+    for(i=0;i<dim;i++){
+        for(j=0;j<ncenters;j++){
+            printf("%e ",centers.get_data(j,i));
+        }
+        printf("\n");
+    }
+    */
+    
     for(i=0;i<dim;i++){
         for(j=0;j<dim;j++){
             if(i==j){
@@ -1232,11 +1254,11 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
         }
     }*/
     
-    int icenter,k,imin,ct=0;
+    int icenter,k,imin,ct=0,duplicate;
     array_1d<double> chiarr,xarr,yarr,trial;
     array_1d<int> dexes;
-    double xx,yy,xwidth,ywidth,nn,ddmin,ddshld,total=0.0;
-    double xbound,ybound;
+    double xx,yy,xwidth,ywidth,nn,mm,ddmin,ddshld,total=0.0;
+    double xbound,ybound,chival,xstep,ystep;
     
     array_1d<double> l_marginalized_volume;
     
@@ -1249,9 +1271,9 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
         }
     }
     
-    for(icenter=0;icenter<ncenters;icenter++){
+    /*for(icenter=0;icenter<ncenters;icenter++){
         printf("l_vol %e \n",l_marginalized_volume.get_data(icenter));
-    }
+    }*/
     
     for(icenter=0;icenter<ncenters;icenter++){
         if(icenter==0 || widths.get_data(icenter,ix1)>xbound)xbound=widths.get_data(icenter,ix1);
@@ -1265,16 +1287,22 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
     xarr.set_dim(100);
     yarr.set_dim(100);
     chiarr.set_dim(100);
+    
+    array_1d<int> doubled_up;
+    doubled_up.set_name("doubled_up");
+    
+    xstep=0.1*xwidth;
+    ystep=0.1*ywidth;
      
     for(icenter=0;icenter<ncenters;icenter++){
         //xwidth=widths.get_data(icenter,ix1);
         //ywidth=widths.get_data(icenter,ix2);
         
-        xbound=widths.get_data(icenter,ix1);
-        ybound=widths.get_data(icenter,ix2);
+        //xbound=widths.get_data(icenter,ix1);
+        //ybound=widths.get_data(icenter,ix2);
         
-        for(xx=centers.get_data(icenter,ix1)-spread*xbound;xx<centers.get_data(icenter,ix1)+(spread+0.1)*xbound;xx+=0.1*xwidth){
-            for(yy=centers.get_data(icenter,ix2)-spread*ybound;yy<centers.get_data(icenter,ix2)+(spread+0.1)*ybound;yy+=0.1*ywidth){
+        for(xx=centers.get_data(icenter,ix1)-spread*xbound;xx<centers.get_data(icenter,ix1)+(spread+0.1)*xbound;xx+=xstep){
+            for(yy=centers.get_data(icenter,ix2)-spread*ybound;yy<centers.get_data(icenter,ix2)+(spread+0.1)*ybound;yy+=ystep){
                 
                 for(k=0;k<ncenters;k++){
                     for(i=0;i<dim;i++)trial.set(i,centers.get_data(k,i));
@@ -1292,7 +1320,8 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
                     if(k==icenter)ddshld=nn;
                 }
                 
-                if(imin!=icenter && ddmin<50.0){
+                /*if(imin!=icenter){
+                    
                     printf("dim %d %d\n",ix1,ix2);
                     printf("CURIOUS icenter %d imin %d\n",imin,icenter);
                     
@@ -1307,19 +1336,41 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
                     
                     
                     exit(1);
-                }
+                }*/
                 
-                for(i=0;i<dim;i++)trial.set(i,centers.get_data(imin,i));
+                for(i=0;i<dim;i++)trial.set(i,centers.get_data(icenter,i));
                 trial.set(ix1,xx);
                 trial.set(ix2,yy);
                 
-                nn=(*this)(trial)-2.0*l_marginalized_volume.get_data(imin);
-                xarr.set(ct,xx);
-                yarr.set(ct,yy);
-                chiarr.set(ct,nn);
-                dexes.set(ct,ct);
-                ct++;
-                total+=exp(-0.5*nn);
+                chival=(*this)(trial)-2.0*l_marginalized_volume.get_data(icenter);
+                
+                
+                if(icenter==imin){
+                    duplicate=-1;
+                }
+                else{
+                    duplicate=-1;
+                    for(i=0;i<xarr.get_dim() && duplicate<0;i++){
+                        if(fabs(xx-xarr.get_data(i))<xstep && fabs(yy-yarr.get_data(i))<ystep){
+                            duplicate=i;
+                        }
+                    }
+               
+                }
+                
+                if(duplicate<0){
+                    xarr.set(ct,xx);
+                    yarr.set(ct,yy);
+                    chiarr.set(ct,chival);
+                    dexes.set(ct,ct);
+                    ct++;
+                }
+                else{
+                    nn=exp(-0.5*chiarr.get_data(duplicate))+exp(-0.5*chival);
+                    chiarr.set(duplicate,-2.0*log(nn));
+                
+                }
+                total+=exp(-0.5*chival);
                 
                 if(dexes.get_room()==ct){
                    //printf("adding room %d %d\n",dexes.get_dim(),ct);
@@ -1341,7 +1392,7 @@ void ellipses_integrable::integrate_boundary(int ix1, int ix2, double lim, char 
         printf("WARNING dexes %d but ct %d\n",dexes.get_dim(),ct);
         exit(1);
     }
-    printf("time to sort %d -- %d\n",dexes.get_dim(),ct);
+    //printf("time to sort %d -- %d\n",dexes.get_dim(),ct);
     
     array_1d<double> chisorted;
     sort_and_check(chiarr,chisorted,dexes);
