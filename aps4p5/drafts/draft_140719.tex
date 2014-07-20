@@ -191,7 +191,10 @@ The $\sigma$ term provides an incentive for APS to explore unknown regions of
 parameter space, making the algorithm robust against multimodal $\chi^2$
 functions.  
 
-Bryan {\it et al.} (2007) show that this algorithm is robust against multi-modal
+\subsection{Modifications to the APS algorithm in the present work}
+
+Bryan {\it et al.} (2007) show that the algorithm above 
+is robust against multi-modal
 likelihood functions, using it to identify a disjoint region of high likelihood in
 cosmological parameter space as constrained by the 1-year WMAP CMB anisotropy power
 spectrum.  This is the principal advantage to selecting points for evaluation according
@@ -201,15 +204,20 @@ likelihood functions.  Therefore, we propose the following modifications to the 
 to ensure that it adequately characterizes known regions of high likelihood while
 simultaneously searching for new regions to explore.
 
-\subsubsection{Characterization of known high likelihood regions}
+We are greatly indebted to Eric Linder of the Lawrence Berkeley National
+Laboratory who first suggested to us the modifications described below
+in sections \ref{sec:focus} and \ref{sec:simplex}.
+
+\subsubsection{Characterization of known low-$\chi^2$ regions}
 \label{sec:focus}
 
-As the algorithm searches, it will keep track of a list of all of the discovered points
+As it searches, APS will keep track of a list of all of the discovered points
 which are believed to be local minima of $\chi^2$ (how it finds these will be described below
-in Section \ref{sec:simplex}).  After each cycle of the main algorithm (steps 1A-3A above),
+in Section \ref{sec:simplex}).  These points will be stored in the set
+$\{\Gamma\}$.  After each cycle of the main algorithm (steps 1A-3A above),
 our version of APS attempts ``focused searches'' about these local minima.  
 
-For each local minimum $\vec{M}$, APS performs the following:
+For each local minimum $\vec{M}$ in $\{\Gamma\}$, APS performs the following:
 \begin{itemize}
 \item (1B) If fewer than $N_p$ focused searches have been proposed around this minimum, randomly
 choose a point from a small sphere surrounding $\vec{M}$ in parameter space and 
@@ -252,18 +260,95 @@ To reiterate, our version of APS alternates between performing steps (1A-3A) and
 (1B-5B).  If there are $N_m$ distinct known local minima in $\chi^2$, or algoritm will perform
 $N_m$ iterations of steps (1A-3A), and then perform steps (1B-5B) once on each local minimum.
 
-\subsubsection{Extending the boundary}
+\subsubsection{Extension of the $\chi^2=\chi^2_\text{lim}$ contour}
 \label{sec:unitSphere}
 
 The modification suggested in section \ref{sec:focus} is designed to explore 
 $\chi^2=\chi^2_\text{lim}$ surface by starting from its extreme corners and stepping
 perpendicularly to its ``radii'' (the vector $\vec{B}^{(j)}-\vec{M}$ would be a radius of
-$\chi^2=\chi^2_\text{lim}$ described a sphere).
+$\chi^2=\chi^2_\text{lim}$ described a sphere).  It is, however, also possible
+that the $S$-maximization in steps (1A-3A) could also learn something about the
+shape of the $\chi^2=\chi^2_\text{lim}$ contour, even if it does not place
+points directly on that contour.  To explore that possibility, we add the
+following steps to the end of the sequence (1A-3A).
 
-something about APS wide helping to discover new corners of the surface as well
+\begin{itemize}
+\item(1C) For each point $\vec{M}$ in $\{\Gamma\}$, store, 
+in addition to the boundary
+points associated with $\vec{M}$, the projection of those boundary points
+onto a unit sphere in parameter space, i.e. for each boundary point, draw a line
+connecting that boundary point with $\vec{M}$ and keep track of
+where a unit sphere centered on $\vec{M}$ intersects that line.  Call this set
+of projectsion $\vec{s}^{(i)}$.
+\\
+\item(2C) Call the point for which $\chi^2$ has been evaluated in step (3A)
+$\vec{P}$., find the
+point $\vec{M}$ in $\{\Gamma\}$ that is nearest to $\vec{P}$ in parameter space.
+\\
+\item(3C) Find the
+projection of $\vec{P}$ onto the unit sphere surrounding $\vec{M}$.  
+Call this projected point $\vec{u}$.  Find the point among
+$\vec{s}^{(i)}$ that is nearest to $\vec{u}$.  Record the distance between them.
+Keep track of this distance in the set $\{D\}$ ($\{D\}$ will be a running list
+of the $\vec{u}-\vec{s}^{(i)}$ distance for all points $\vec{P}$ found by steps
+1A-3A).
+\\
+\item(4C) If the distance between $\vec{u}$ and its nearest neighbor in
+$\vec{s}^{(i)}$ is greater than the 2/3 quantile of $\{D\}$,
+then perform bisection between $\vec{M}$ and the point evaluated in step (3A).
+\end{itemize}
+
+This way, points on the $\chi^2=\chi^2_\text{lim}$ contour can be found whose
+directions away from $\vec{M}$ in parameter space have not yet been explored.
+Because we expect the unit sphere surrounding $\vec{M}$ to become more densely
+populated as the algorithm runs, we periodically delete the list $\{D\}$ so that
+new directions away from $\vec{M}$ can still be explored.
 
 \subsubsection{Function minimization}
 \label{sec:simplex}
+
+The final modification to the original APS algorithm which we propose in this
+work is to utilize function minimization to identify local minima in $\chi^2$.
+One of the principal drawbacks of the algorithm presented in steps (1A-3A) is
+that it makes no account of ``near misses.''  If step (3A) finds that $\chi^2$
+is lower than average but still greater than $\chi^2_\text{lim}$, the original
+APS algorithm does nothing with that information.  We have tried to improve upon
+that with our incorporation of bisection in sections \ref{sec:focus} and
+\ref{sec:unitSphere} above.  Our final innovation is to allow APS to use points
+with 
+\begin{equation}
+\label{eqn:simplexCriterion}
+\chi^2_\text{lim}\le\chi^2\le\chi^2_\text{sig}
+\end{equation}
+to seed a simplex function minimizer as developed by Nelder and Mead (1965).
+
+We set
+$\chi_\text{sig}=\chi^2_\text{min}+G\times(\chi^2_{1/10}-\chi^2_\text{min})$
+where $G$ is a user-set parameter, $\chi^2_\text{min}$ is the minimum discovered
+$\chi^2$ value and $\chi^2_{1/10}$ is the 1/10 quantile of the $\chi^2$ values
+discovered by steps (1A-3A) (not those discovered by any of the modifications
+discussed in sections \ref{sec:focus}, \ref{sec:unitSphere} or
+\ref{sec:simplex}).
+
+Because the Nelder-Mead simplex minimizer can be very time intensive, we balance our
+algorithm by demanding that the number of $\chi^2$ evaluations devoted to all
+other variants of search (i.e. steps (1A-3A) and (1B-5B)) equal the number of
+$\chi^2$ evaluations devoted to the simplex minimizer before a new simplex
+minimization can occur, and if no new points are known that satisfy the
+criterion in equation \ref{eqn:simplexCriterion} above, no simplex minimization
+will be undertaken, regardless.
+
+If the simplex minimizer converges to a point such that
+$\chi^2<\chi^2_\text{lim}$, our APS determines whether or not it
+has found a new local minimum to be added to $\{\Gamma\}$ by comparing the end
+point $\vec{\gamma}$ of the minimization to each of the points already in
+$\{\Gamma\}$.  For each $\vec{M}$ in $\{\Gamma\}$, APS calculates the mid-point
+between $\vec{\gamma}$ and $\vec{M}$.  If, for all $\vec{M}$, 
+$\chi^2$ at that mid-point is greater
+than $\chi^2_\text{lim}$, then it is deemed that $\vec{\gamma}$ is a new local
+minimum and is added to $\{\Gamma\}$.  If not, $\vec{\gamma}$ is assumed to be a
+part of the one of the previously identified loci of low $\chi^2$ and it is not
+added to $\{\Gamma\}$.
 
 \subsection{Determining $\chi^2_\text{lim}$}
 \label{sec:chi}
