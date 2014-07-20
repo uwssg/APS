@@ -124,8 +124,11 @@ while(aps_test.get_called()<100000 && found_all==0){
     
 }
 
-fprintf(output,"seed %d ddmax %e called %d\n",
+fprintf(output,"seed %d ddmax %e called %d ",
 seed,ddmax,aps_test.get_called());
+fprintf(output,"found ");
+for(i=0;i<ncenters;i++)fprintf(output,"%d ",found_it.get_data(i));
+fprintf(output,"\n");
 fclose(output);
 
 printf("that took %e\n",double(time(NULL))-before);
