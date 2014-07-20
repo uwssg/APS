@@ -92,6 +92,7 @@ public:
     
     array_1d<double>* get_pt(int);
     int get_nn(array_1d<double>&);
+    double get_chival(int);
     
 private:
     Ran *dice;

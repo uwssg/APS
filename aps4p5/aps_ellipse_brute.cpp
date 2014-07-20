@@ -88,11 +88,15 @@ for(i=0;i<ncenters;i++){
 FILE *output;
 output=fopen(brute_name,"a");
 
-int last_assessed=0;
-double dd,ddmax;
+int last_assessed=0,ic;
+double dd,ddmax,ddc;
+array_1d<int> found_it;
 
 found_all=0;
 printf("time to start searching\n");
+for(i=0;i<ncenters;i++)found_it.set(i,0);
+
+
 while(aps_test.get_called()<100000 && found_all==0){
     aps_test.search();    
     
@@ -107,10 +111,13 @@ while(aps_test.get_called()<100000 && found_all==0){
             dd=euclideanDistance(*true_centers(i),*aps_test.get_pt(j));
           
             if(dd>ddmax)ddmax=dd;
+            
+            if(aps_test.get_chival(j)<11.0)found_it.set(i,1);
         }
         
-        if(ddmax<1.0){
-            found_all=1;
+        found_all=1;
+        for(i=0;i<ncenters;i++){
+            if(found_it.get_data(i)==0)found_all=0;
         }
     
     }

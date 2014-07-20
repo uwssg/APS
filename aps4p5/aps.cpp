@@ -1322,6 +1322,17 @@ int aps::get_nn(array_1d<double> &pt){
     return neigh.get_data(0);
 }
 
+double aps::get_chival(int dex){
+    if(dex>=gg.get_pts() || dex<0){
+        printf("WARNING asked aps for chi at %d but pts %d\n",
+        dex,gg.get_pts());
+        
+        exit(1);
+    }
+    
+    return gg.get_fn(dex);
+}
+
 int aps::get_n_centers(){
     return center_dexes.get_dim();
 }
