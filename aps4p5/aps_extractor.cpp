@@ -108,10 +108,13 @@ void aps_extractor::learn_chimin(){
 
 void aps_extractor::set_cutoff(int ii){
     cutoff=ii;
+    chi_min=-1.0;
 }
 
 void aps_extractor::write_good_points(char *outname){
-    learn_chimin();
+    if(chi_min<0.0){
+        learn_chimin();
+    }
     
     int i,ct=0;
     FILE *output=fopen(outname,"w");
@@ -148,7 +151,9 @@ void aps_extractor::write_good_points(char *outname){
 }
 
 void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol){
-    learn_chimin();
+    if(chi_min<0.0){
+        learn_chimin();
+    }
     
     int i,ct=0,j;
     FILE *input=fopen(filename,"r");
