@@ -27,13 +27,15 @@ public:
     void make_boxes();
     
     void set_cutoff(int);
+    void set_target(double);
 
 private:
 
     char filename[letters];
-    double chi_min,delta_chi,tol;
+    double chi_target;
+    double chi_min,delta_chi,global_tol;
     int nparams,extra_words;
-    int cutoff;
+    int cutoff,asserted;
     
     array_1d<int> l_prob_dexes;
     array_1d<double> min_pt,l_probability,chisq;

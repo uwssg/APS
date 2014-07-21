@@ -2,15 +2,17 @@
 
 aps_extractor::aps_extractor(){
     chi_min=-1.0;
+    chi_target=-1.0;
     delta_chi = chisq_exception;
     filename[0]=0;
     nparams=-1;
+    asserted=0;
     
     cutoff=-1;
     
     extra_words=5;
     
-    tol=1.0e-6;
+    global_tol=1.0e-6;
     
     box_max.set_name("box_max");
     box_min.set_name("box_min");
@@ -35,6 +37,11 @@ void aps_extractor::validate(){
         printf("WARNING, no filename\n");
         throw -1;
     }
+}
+
+void aps_extractor::set_target(double tt){
+    chi_target=tt;
+    asserted=1;
 }
 
 void aps_extractor::set_delta_chi(double nn){
@@ -104,6 +111,11 @@ void aps_extractor::learn_chimin(){
     }
     
     fclose(input);
+    
+    if(asserted==0){
+        chi_target=chi_min+delta_chi;
+    }
+    
 }
 
 void aps_extractor::set_cutoff(int ii){
@@ -134,7 +146,7 @@ void aps_extractor::write_good_points(char *outname){
         }
         fscanf(input,"%le",&nn);
         
-        if(nn<=chi_min+delta_chi+tol){
+        if(nn<=chi_target+global_tol){
             for(i=0;i<nparams;i++){
                 fprintf(output,"%le ",vv.get_data(i));
             }
@@ -147,7 +159,7 @@ void aps_extractor::write_good_points(char *outname){
     fclose(output);
     fclose(input);
     
-    printf("wrote good pts with chi_min %e\n",chi_min);
+    printf("wrote good pts with chi_min %e target %e\n",chi_min,chi_target);
 }
 
 void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol){
@@ -175,7 +187,7 @@ void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol)
         }
         fscanf(input,"%le",&nn);
         
-        if(nn<=chi_min+delta_chi+tol){
+        if(nn<=chi_target+global_tol){
             j=to_plot.get_rows();
             to_plot.set(j,0,vv.get_data(ix));
             to_plot.set(j,1,vv.get_data(iy));
@@ -189,7 +201,7 @@ void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol)
     
     plot_thinned_data(to_plot,tol,outname);
     
-    printf("wrote good pts with chi_min %e\n",chi_min);
+    printf("wrote good pts with chi_min %e target %e\n",chi_min,chi_target);
 }
 
 void aps_extractor::plot_chimin(char *outname){
