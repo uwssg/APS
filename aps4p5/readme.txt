@@ -8,6 +8,10 @@ This readme file will provide an overview for how the code works.  More specific
 documentation describing the classes and functions involved can be found in the
 .h header files.
 
+(that ``more specific documentation'' has not actually been written yet, but
+will be pushed onto the git repository in the next few weeks; I apologize for
+the delay -- Scott)
+
 ///////////////////////REQUIREMENTS////////////////////////
 
 In order to run APS, you will have to install the linear algebra
