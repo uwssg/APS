@@ -19,7 +19,7 @@ char outname[letters];
 for(i=0;i<6;i++){
     for(j=i+1;j<6;j++){
         if(i!=3 && j!=3){
-            sprintf(outname,"aps_processed/WMAP/bayesian/nnLearn_%d_%d_10k_bayes.sav",i,j);
+            sprintf(outname,"aps_processed/WMAP/bayesianTest/nnLearn_%d_%d_10k_bayes.sav",i,j);
             test.draw_bayesian_bounds(outname,i,j,0.95);
         }
     }

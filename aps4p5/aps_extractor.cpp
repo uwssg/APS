@@ -474,6 +474,117 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
     
     double sum=0.0;
     
+    array_2d<double> to_plot;
+    array_1d<double> min,max,center;
+    
+    to_plot.set_cols(2);
+    min.set(0,chisq_exception);
+    min.set(1,chisq_exception);
+    max.set(0,-1.0*chisq_exception);
+    max.set(1,-1.0*chisq_exception);
+    for(i=0;i<l_probability.get_dim() && sum<limit;i++){
+        ibox=l_prob_dexes.get_data(i);
+        sum+=exp(l_probability.get_data(ibox));
+        
+        j=to_plot.get_rows();
+        to_plot.set(j,0,box_max.get_data(ibox,ix));
+        to_plot.set(j,1,box_max.get_data(ibox,iy));
+        
+        j=to_plot.get_rows();
+        to_plot.set(j,0,box_max.get_data(ibox,ix));
+        to_plot.set(j,1,box_min.get_data(ibox,iy));
+        
+        j=to_plot.get_rows();
+        to_plot.set(j,0,box_min.get_data(ibox,ix));
+        to_plot.set(j,1,box_min.get_data(ibox,iy));
+        
+        j=to_plot.get_rows();
+        to_plot.set(j,0,box_min.get_data(ibox,ix));
+        to_plot.set(j,1,box_max.get_data(ibox,iy));
+        
+        if(box_max.get_data(ibox,ix)>max.get_data(0))max.set(0,box_max.get_data(ibox,ix));
+        if(box_max.get_data(ibox,iy)>max.get_data(1))max.set(1,box_max.get_data(ibox,iy));
+        
+        if(box_min.get_data(ibox,ix)<min.get_data(0))min.set(0,box_min.get_data(ibox,ix));
+        if(box_min.get_data(ibox,iy)<min.get_data(1))min.set(1,box_min.get_data(ibox,iy));
+        
+    }
+    
+   
+    center.set(0,0.5*(max.get_data(0)+min.get_data(0)));
+    center.set(1,0.5*(max.get_data(1)+min.get_data(1)));
+    
+    array_1d<double> dd;
+    array_1d<int> dex;
+    double nn;
+    for(i=0;i<to_plot.get_rows();i++){
+        
+        nn=0.0;
+        for(j=0;j<2;j++){
+            nn+=power((to_plot.get_data(i,j)-center.get_data(j))/(max.get_data(j)-min.get_data(j)),2);
+        }
+        dd.set(i,nn);
+        dex.set(i,i);
+        
+    }
+    
+    array_1d<double> sorted;
+    sort_and_check(dd,sorted,dex);
+    
+    array_2d<double> been_plotted;
+    kd_tree *been_plotted_tree;
+    been_plotted_tree=NULL;
+    
+    int chosen,plot_it;
+    array_1d<int> neigh;
+    array_1d<double> ddneigh;
+    
+    output=fopen(filename,"w");
+    for(i=0;i<to_plot.get_rows();i++){
+        chosen=dex.get_data(to_plot.get_rows()-1-i);
+        
+        if(been_plotted_tree==NULL){
+            plot_it=1;
+        }
+        else{
+            been_plotted_tree->nn_srch(*to_plot(chosen),1,neigh,ddneigh);
+            
+            if(ddneigh.get_data(0)>0.01){
+                plot_it=1;
+            }
+            else{
+                plot_it=0;
+            }
+        }
+        
+        if(plot_it==1){
+            fprintf(output,"%e %e\n",to_plot.get_data(chosen,0),to_plot.get_data(chosen,1));
+            
+            if(been_plotted_tree==NULL){
+                been_plotted.add_row(*to_plot(chosen));
+                
+                if(been_plotted.get_rows()>=10){
+                    been_plotted_tree=new kd_tree(been_plotted,min,max);
+                }
+                
+            }
+            else{
+                been_plotted_tree->add(*to_plot(chosen));
+            }
+            
+        }
+        
+        
+    }
+    fclose(output);
+    
+ 
+    if(been_plotted_tree!=NULL){
+        delete been_plotted_tree;
+    }
+    
+    /*
+    sum=0.0;
     output=fopen(filename,"w");
     for(i=0;i<l_probability.get_dim() && sum<limit;i++){
         ibox=l_prob_dexes.get_data(i);
@@ -488,4 +599,6 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
         
     }
     fclose(output);
+    */
+    
 }
