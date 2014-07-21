@@ -97,12 +97,14 @@ We consider the following problem.  A researcher wants to constrain a theory
 described by some number $N_p$ of tunable parameters, which we will represent by
 the $N_p$-dimensional vector $\vec{\theta}$.  The available data measure some
 function $f$ which is an implicit function of $\vec{\theta}$.  The researcher
-is able to calculate some statistic (e.g. $\chi^2$) quantifying the fit of a 
-model $f(\vec{\theta})$ to the data and wishes to find a confidence limit
+is able to calculate a $\chi^2$ value quantifying the fit of a 
+model $f(\vec{\theta})$ to the data and wishes to find either a confidence limit
 defined by some rule, e.g $\chi^2\le\chi^2_\text{lim}$.  This is a general
 phrasing of a Frequentist confidence limit as discussed in Appendix
 \ref{sec:frequentism}.  We discuss alternatives for determining
-$\chi^2_\text{lim}$ in Section \ref{sec:chi} below.
+$\chi^2_\text{lim}$ in Section \ref{sec:chi} below.  We will also consider
+the case that the reseracher wishes to find Bayesian credible limt
+to some probability $(1-\alpha)\%$.
 
 If the calculation going from $\vec{\theta}\rightarrow\chi^2$ is rapid, this
 problem is trivial.  One generates a fine grid of points in the 
@@ -123,8 +125,8 @@ the data.
 With enough of these samples, one can integrate this
 probability density and find regions which contain some set amount of the total
 probability.  In this case, ``credible limits'' are phrased as target values
-for the probability integral, i.e. 
-$0.68$ for ``1-$\sigma$'' limits, $0.95$ for ``2-$\sigma$'' limits
+for the probability integral $(1-\alpha)\%$, i.e. 
+68\% for ``1-$\sigma$'' limits, 95\% for ``2-$\sigma$'' limits
 and so on \cite{mcmc}.
 
 We propose an alternative solution, using methods from machine learning
@@ -145,9 +147,16 @@ behavior makes APS more robust against multi-modal $\chi^2$ functions (see
 Section \ref{sec:toy}) without
 sacrificing the speed of convergence 
 associated with traditional MCMC methods (see Section \ref{sec:wmap}).
-We show that APS is capable of yielding both Frequentist confidence
-limits (which we define in Appendix \ref{sec:frequentism}) as well as more traditional
-Bayesian credible limits on the space of $\vec{\theta}$.
+We show that, while APS is designed specifically to
+yield Frequentist confidence
+limits (which we define in Appendix \ref{sec:frequentism}),
+it is also capable of roughly approximating
+Bayesian credible limits on the space of
+$\vec{\theta}$ (see Sections \ref{sec:bayes},\ref{sec:toy} and \ref{sec:wmap}).
+This rough approximation may principally be of use in cases where little 
+prior information about $\vec{\theta}$ exists and the researcher
+requires APS's robustness against multi-modality to be certain that she
+has discovered all of the best fits to her data.
 
 
 \section{The APS Algorithm}
@@ -184,7 +193,8 @@ space, ought to sketch out a region which contains the true value of $\vec{\thet
 with the desired confidence (as defined in Appendix \ref{sec:frequentism}).
 This is in contrast to the credible
 limits of MCMC, which represent an integral over the sampled points containing some
-fraction of the total posterior probability.
+fraction of the total posterior probability.  We present an alternative
+interpretation for yielding credible limits from APS in Section \ref{sec:bayes}.
 
 The $|\mu-\chi^2_\text{lim}|$ term in equation (\ref{eqn:sstat}) provides an
 incentive for APS to choose points that it believes will lie on the boundary of
@@ -208,7 +218,7 @@ based on the characteristics of the data at hand,
 or $\chi^2_\text{lim}$ can be set adaptively, based on APS'
 knowledge of $\vec{\theta}\rightarrow\chi^2$.
 
-The first possibility, a user-defined $\chi^2_\text{lim}$ is based
+The first possibility, a user-defined $\chi^2_\text{lim}$, is based
 on the theory of Frequentist confidence intervals, which we briefly discuss
 here and consider in much greater detail in Appendix \ref{sec:frequentism}.
 If a data set is comprised of $N_d$ Gaussian-distributed data points
@@ -236,7 +246,7 @@ limit.  This is the well-known Likelihood Ratio Test \cite{np}.
 In this case, the user is relying on APS to eventually find the true
 $\chi^2_\text{min}$ of the likelihood surface being explored.  
 Section \ref{sec:simplex} below outlines an additional means of search
-by which our APS is capable of efficiently locating $\chi^2_\text{lim}$.
+by which our expanded APS is capable of efficiently locating $\chi^2_\text{lim}$.
 
 \subsection{Modified search algorithms}
 
@@ -248,13 +258,14 @@ spectrum.  This is the principal advantage to selecting points for evaluation ac
 to the statistic (\ref{eqn:sstat}).  Unfortunately, it is possible that the focus on 
 exploring
 unknown regions of parameter space might slow down convergence in the case of uni-modal
-likelihood functions.  Therefore, we propose the following modified search
-to ensure that it adequately characterizes known regions of high likelihood while
+likelihood functions.  Therefore, we augment steps (1A-3A) with
+the following modified search algorithms
+to ensure that APS adequately characterizes known regions of high likelihood while
 simultaneously searching for new regions to explore.
 
 These modified searches will require APS to keep track of information it learns about the
 $\vec{\theta}\rightarrow\chi^2$ fuction as it searches.  
-To facilitate this discussion, we introduce the folling notations.
+To facilitate this discussion, we introduce the following notation.
 Symbols denoted with $\vec{x}$ represent points in parameter space.  Variables denoted with
 $\{\hat{X}\}$ denote sets of points in parameter space.  Variables denoted $\{X\}$ are sets
 of numbers stored by APS.
@@ -275,17 +286,17 @@ our version of APS attempts ``focused searches'' about the points in $\{\hat{\Ga
 
 For each point $\vec{M}$ in $\{\hat{\Gamma}\}$, APS performs the following:
 \begin{itemize}
-\item (1B) If fewer than $N_p$ focused searches have been proposed around this minimum, 
+\item (1B) If fewer than $N_p$ focused searches have been proposed about $\vec{M}$, 
 randomly choose a point from a small sphere surrounding $\vec{M}$ in parameter space and 
 evaluate $\chi^2$ at that point.  
 \\
 \item(2B) If the point does not satisfy $\chi^2=\chi^2_\text{lim}$ (which is highly probable), 
 use bisection
 along the line connecting the proposed point to $\vec{M}$ to find a point which does
-satisfy $\chi^2=\chi^2_\text{lim}$, i.e. find a point on that line with
+satisfy $\chi^2=\chi^2_\text{lim}$, i.e. find a point on that line for which
 $\chi^2<\chi^2_\text{lim}$ -- often $\vec{M}$ itself -- and a point along that line
-with $\chi^2>\chi^2_\text{lim}$ and iteratively step half the distance between them until
-arriving at the desired $\chi^2_\text{lim}$ \cite{minuit}.  The points discovered this way \
+for which $\chi^2>\chi^2_\text{lim}$ and iteratively step half the distance between them until
+arriving at the desired $\chi^2_\text{lim}$ \cite{minuit}.  The points discovered in this way \
 with $\chi^2=\chi^2_\text{lim}$ are stored in the set $\{\hat{B}(\vec{M})\}$ of 
 ``boundary points'' about $\vec{M}$ (each $\vec{M}$ in $\{\hat{\Gamma}\}$ will have its own
 set $\{\hat{B}(\vec{M})\}$).  
@@ -305,12 +316,22 @@ $\vec{b}-\vec{M}$.  There will now be $2\times N_p \times N_v$ points $\vec{v}$
 ($N_v$ such points for each of the $2\times N_p$ extremal boundary points in
 $\{\hat{B}_\text{MaxMin}(\vec{M})\}$).
 \\
-\item(5B) At each point $\vec{v}$ above, evaluate equation (\ref{eqn:sstat}).  
-Evaluate $\chi^2$ at the point $\vec{v}$ which maximizes $S$. If
+\item(5B) At each point $\vec{v}$ above, find the $N_g$ nearest neighbor points as in step (2A) above
+and evaluate equation (\ref{eqn:sstat}).  
+Find the point $\vec{v}$ which maximizes $S$ and evaluate $\vec{\theta}\rightarrow\chi^2$ at
+that point.  If
 $\chi^2 \neq \chi^2_\text{lim}$, bisection is again used and a new boundary point is found.
+Store the resulting $\chi^2=\chi^2_\text{lim}$ point in $\{\hat{B}(\vec{M})\}$
 \end{itemize}
 
-To reiterate, our version of APS alternates between performing steps (1A-3A) and steps
+The modification suggested in section \ref{sec:focus} is designed to explore 
+$\chi^2=\chi^2_\text{lim}$ surface by starting from its extreme corners and stepping
+perpendicularly to its ``radii'' (the vector $\vec{b}-\vec{M}$ would be a radius of
+$\chi^2=\chi^2_\text{lim}$ described a sphere), with the hopes of being able
+to extend the bounds of $\{\hat{B}_\text{MaxMin}(\vec{M})\}$.  In this way,
+our extended APS attempts to plum the full Frequentist confidence limit $\chi^2\le\chi^2_\text{lim}$
+as rapidly as possible.  However, we do not want this to come at the expense of the wide-ranging
+exploration of steps (1A-3A).  Our version of APS alternates between performing steps (1A-3A) and steps
 (1B-5B).  If there are $N_m$ distinct known local minima in $\{\hat{\Gamma}\}$, 
 our algoritm will perform
 $N_m$ iterations of steps (1A-3A), and then perform steps (1B-5B) once for each
@@ -319,14 +340,12 @@ $\vec{M}$ in $\{\hat{\Gamma}\}$.
 \subsubsection{Extension of the $\chi^2=\chi^2_\text{lim}$ contour}
 \label{sec:unitSphere}
 
-The modification suggested in section \ref{sec:focus} is designed to explore 
-$\chi^2=\chi^2_\text{lim}$ surface by starting from its extreme corners and stepping
-perpendicularly to its ``radii'' (the vector $\vec{b}-\vec{M}$ would be a radius of
-$\chi^2=\chi^2_\text{lim}$ described a sphere).  It is, however, also possible
+It is, however, also possible
 that the $S$-maximization in steps (1A-3A) could also learn something about the
 shape of the $\chi^2=\chi^2_\text{lim}$ contour, even if it does not place
-points directly on that contour.  To explore that possibility, we add the
-following steps to the end of the sequence (1A-3A).
+points directly on that contour.  To explore that possibility, our
+extended APS performs the
+following modified search after each iteration of steps (1A-3A).
 
 \begin{itemize}
 \item(1C) For each point $\vec{M}$ in $\{\hat{\Gamma}\}$, store, 
@@ -335,10 +354,10 @@ points $\{\hat{B}(\vec{M})\}$, the projection of those boundary points
 onto a unit sphere in parameter space, i.e. for each point $\vec{b}$ in $\{\hat{B}(\vec{M})\}$, draw a line
 connecting $\vec{b}$ with $\vec{M}$ and keep track of
 where a unit sphere centered on $\vec{M}$ intersects that line.  Call this set
-of projectsion $\{\hat{U}\}$.
+of projections $\{\hat{U}\}$.
 \\
 \item(2C) Call the point for which $\chi^2$ has been evaluated in step (3A)
-$\vec{P}$., find the
+$\vec{P}$.  Find the
 point $\vec{M}$ in $\{\hat{\Gamma}\}$ that is nearest to $\vec{P}$ in parameter space.
 \\
 \item(3C) Find the
@@ -352,10 +371,18 @@ of the $\vec{u}-\vec{p}$ distance for all points $\vec{P}$ found by steps
 \\
 \item(4C) If the $\vec{p}-\vec{u}$ distance is greater than the 2/3 quantile of $\{D\}$,
 then perform bisection between $\vec{M}$ and the point evaluated in step (3A).
+Add the resulting $\chi^2=\chi^2_\text{lim}$ point to $\{\hat{B}(\vec{M})\}$.
 \end{itemize}
 
-This way, points on the $\chi^2=\chi^2_\text{lim}$ contour can be found whose
-directions away from $\vec{M}$ in parameter space have not yet been explored.
+Step (4C) ensures that, if the point $\vec{P}$ is in a novel direction from
+$\vec{M}$, APS will find a point on the $\chi^2=\chi^2_\text{lim}$ contour
+in that direction.  Because $\vec{P}$ was
+chosen by maximizing equation (\ref{eqn:sstat}), we assume that there was something
+``interesting'' about that direction from $\vec{M}$ (perhaps a sharp corner or distended
+extension of the $\chi^2=\chi^2_\text{lim}$ contour).  In this way, our extended APS
+will attempt to cover the surface of $\chi^2=\chi^2_\text{lim}$ in the most informative
+way possible.
+
 Because we expect the unit spheres surrounding the points $\vec{M}$ to become more densely
 populated as the algorithm runs, we periodically delete the list $\{D\}$ so that
 new directions away from $\vec{M}$ can still be explored.
@@ -374,7 +401,7 @@ that with our incorporation of bisection in sections \ref{sec:focus} and
 with 
 \begin{eqnarray}
 \chi^2_\text{lim}&\le&\chi^2\le\chi^2_\text{threshold}\label{eqn:simplexCriterion}\\
-\chi_\text{threshold}&=&\chi^2_\text{min}+G\times(\chi^2_{1/10}-\chi^2_\text{min})
+\chi_\text{threshold}&\equiv&\chi^2_\text{min}+G\times(\chi^2_{1/10}-\chi^2_\text{min})
 \label{eqn:threshold}
 \end{eqnarray}
 to seed a simplex function minimizer as developed by Nelder and Mead (1965).
@@ -385,38 +412,41 @@ discussed in sections \ref{sec:focus}, \ref{sec:unitSphere} or
 \ref{sec:simplex}).
 
 Because the Nelder-Mead simplex minimizer can be very time intensive, we balance our
-algorithm by demanding that the number of $\chi^2$ evaluations devoted to all
-other variants of search (i.e. steps (1A-3A) and (1B-5B)) equal the number of
+algorithm by keeping track of how many times $\vec{\theta}\rightarrow\chi^2$
+is called by the different searches and
+demanding that the number of $\chi^2$ evaluations devoted to all
+other variants of search (i.e. steps (1A-3A), (1B-5B), and (1C-4C)) equal the number of
 $\chi^2$ evaluations devoted to the simplex minimizer before a new simplex
 minimization can occur.
 
 If the simplex minimizer converges to a point such that
-$\chi^2<\chi^2_\text{lim}$, our APS determines whether or not it
+$\chi^2<\chi^2_\text{lim}$, our extended APS determines whether or not it
 has found a new local minimum to be added to $\{\hat{\Gamma}\}$ by comparing the end
 point $\vec{y}$ of the minimization to each of the points already in
 $\{\hat{\Gamma}\}$.  For each $\vec{M}$ in $\{\hat{\Gamma}\}$, APS calculates the mid-point
 \begin{equation}
 \label{eqn:midpt}
-\vec{m}=0.5\times\left(\vec{y}+\vec{M}\right)
+\vec{m}(\vec{M})=0.5\times\left(\vec{y}+\vec{M}\right)
 \end{equation}
-and $\vec{M}$.  If, for all $\vec{M}$, 
-$\chi^2$ at $\vec{m}$ is greater
-than $\chi^2_\text{lim}$, then it is deemed that $\vec{\gamma}$ is a new local
-minimum and is added to $\{\hat{\Gamma}\}$.  If not, $\vec{\gamma}$ is assumed to be a
+If, for all $\vec{M}$, 
+$\chi^2$ at $\vec{m}(\vec{M})$ is greater
+than $\chi^2_\text{lim}$, then it is deemed that $\vec{y}$ is a new local
+minimum and is added to $\{\hat{\Gamma}\}$.  If not, $\vec{y}$ is assumed to be a
 part of the one of the previously identified loci of low $\chi^2$ and it is not
 added to $\{\hat{\Gamma}\}$.  Regardless of whether or not $\vec{y}$ passes the test in
 equation (\ref{eqn:midpt}), $\vec{y}$ is added to the set $\{\hat{Y}\}$ of all
 simplex end points discovered by APS.
 
 As a further guard against excessive simplex searching, all points $\vec{w}$ 
-that pass the test in equation(\ref{eqn:simplexCriterion}) are further required
+that pass the test in equation (\ref{eqn:simplexCriterion}) are further required
 to satisfy the condition
 \begin{eqnarray}
-\chi^2(\vec{z})&\le&\chi^2(\vec{w})-0.25\times\left(\chi^2(\vec{w})-\chi^2(\vec{y})\right)\\
+\chi^2(\vec{z})&>&\chi^2(\vec{w})-0.25\times\left(\chi^2(\vec{w})-\chi^2(\vec{y})\right)\\
 \vec{z}&\equiv&0.5\times\left(\vec{w}+\vec{y}\right)\\
 \vec{y}&\in&\{\hat{Y}\}
 \end{eqnarray}
-before it is allowed to seed a new simplex search.  In this way, our APS avoids seeding simplex
+before they are allowed to seed a new simplex search.  In this way, our 
+extended APS avoids seeding simplex
 searches with points that are inside of already known regions of low $\chi^2$.
 
 \subsection{Code implementing APS}
@@ -425,7 +455,18 @@ searches with points that are inside of already known regions of low $\chi^2$.
 We make code implementing our extended APS for 
 an arbitrary $\vec{\theta}\rightarrow\chi^2$
 function available at \verb|https://github.com/uwssg/APS/|.
-The code is written in C++.  It provides the option for several
+The code is written in C++.  It is designed for users to use
+with any $\vec{theta}\rightarrow\chi^2$ function.  Users need only
+to write a sub-class of the \verb|chisquared| class defined in
+\verb|chisq.h| and \verb|chisq.cpp| which evaluates their desired
+$\vec{\theta}\rightarrow\chi^2$ and pass an instantiation of this
+sub-class to an instantiation of the \verb|aps| class defined in
+\verb|aps.h| and \verb|aps.cpp|.  It is this \verb|aps| class which
+does the work of performing the searches described above.
+The user should not need to modify this class (though she is 
+certainly welcome to).
+
+Our \verb|aps| class provides the option for several
 user-specified parameters.  We list them below along with the C++ 
 methods (belonging to the class \verb|aps|) used to set them.  
 This code includes several user-specified parameters which we
@@ -446,14 +487,19 @@ for the class \verb|aps|
 \\
 \item The minimum and maximum bounds in parameter space can be set using the 
 method \verb|aps.set_max| and \verb|aps.set_min|.  These bounds will constrain the range of
-points sampled in step 2A.  It will not contraint searches performed with bisection or the 
+points sampled in step 2A.  They will not contraint searches performed with bisection or the 
 simplex minimizer.
 \\
 \item If there is a characteristic length scale associated with a parameter, this can be set
 using the method \verb|aps.set_characteristic_length|.  This length scale will be used to
 normalize all distances in parameter space.  If it is not set, it will default to the
 difference between the maximum and minimum values set by \verb|aps.set_max| and
-\verb|aps.set_min|.
+\verb|aps.set_min|.  Setting a characteristic length scale will principally
+effect what points are considered nearest neighbors for the purposes of step 2A.
+If the characteristic length scale of a parameter is large, that parameter will
+be down-weighted when calculating the parameter-space distance between two points.
+If the characteristic length scale of a parameter is small, that parameter will
+be up-weighted in length calculations.
 \end{itemize}
 
 More complete documentation is made available with the source code.
@@ -461,13 +507,11 @@ More complete documentation is made available with the source code.
 \subsection{Interpreting APS outputs}
 \label{sec:bayes}
 
-Originally, APS was conceived as a way to draw Frequentist confidence limits. 
-$\chi^2_\text{lim}$ is determined, either in a vacuum or as some $\Delta\chi^2$ away from
-$\chi^2_\text{min}$ (see Appendix \ref{sec:frequentism} for a more thorough discussion).
+Originally, APS was conceived as a way to draw Frequentist confidence limits $\chi^2\le\chi^2_\text{lim}$. 
 This is by far the most direct way to interpret APS outputs: a list of points is given with
 corresponding values of $\chi^2$.  All of the points with $\chi^2\le\chi^2_\text{lim}$ are
-taken to circumscribe the desired confidence limit.  There is, however, also a way to use the
-outputs from APS to draw a Bayesian credible limit.
+taken to cover the desired confidence limit.  There is, however, also a way to use the
+outputs from APS to draw an approximate Bayesian credible limit.
 
 As discussed in the introduction, Bayesian parameter constraints assume that there is some
 probability distribution (``the posterior'') over $\vec{\theta}$.  
@@ -479,23 +523,25 @@ difficulty by randomly drawing samples from the posterior and assuming that, if 
 are drawn, the distribution of those samples will be sufficient to reconstruct the attributes
 of the full posterior probability density.
 
-APS outputs cannot be used this way, since APS does not select points to evaluate
-probabilisticaly, but in an attempt to recreate the behavior of the $\chi^2$ function in
+APS outputs cannot be used this way, since APS does not select its points
+probabilisticaly, but in an attempt to recreate the behavior of the 
+$\vec{\theta}\rightarrow\chi^2$ function in
 interesting regions of parameter space.  We can still, however, use these points to approximate
 the integral over the posterior probability density.  The algorithm we propose is as follows.
 The total set of points sampled by APS will be referred to below as $\{\hat{A}\}$.
 
+For each $\vec{a}$ in $\{\hat{A}\}$:
 \begin{itemize}
-\item(1D) For each point $\vec{a}$ in $\{\hat{A}\}$ initialize two vectors $\vec{a}_\text{max}$ and
-$\vec{a}_\text{min}$.
+\item(1D) Initialize two vectors $\vec{a}_\text{max}$ and
+$\vec{a}_\text{min}$.  Set all of the values in these vectors to some nonsense number.
 
 \item(2D) Select the $3N_p+1$ nearest neighbor points to $\vec{a}$ from
 $\{\hat{A}\}$ (this will obviously include $\vec{a}$ itself, which can be discarded).  Call
 this set of nearest neighbors $\{\hat{N}\}$.
 \\
 \item(3D) For each point $\vec{n}$ in $\{\hat{N}\}$, calculate the vector
-$\vec{\delta}=\|\vec{n}-\vec{a}|$ (where the vertical bars denote the absolute value of the
-components of $\vec{\delta}$, not any kind of vector normalization).  For each component
+$\vec{\delta}$ such that $\delta_i=|n_i-a_i|$ (here the vertical bars denote the absolute value).  
+For each component
 $\delta_i$ of $\vec{\delta}$, starting with the largest and working towards the smallest:
 \\
 \begin{itemize}
@@ -504,36 +550,41 @@ $\delta_i$ of $\vec{\delta}$, starting with the largest and working towards the 
 \item(3Db) If $n_i<a_i$ and $a_{\text{min},i}$ has not been set, set $a_{\text{min},i}=n_i$.
 \\
 \item(3Dc) If both $a_\text{max,i}$ and $a_\text{min,i}$ have already been set, move on to the
-next largest component of $\vec{\delta}$ and repeat at step (3Da).
+next largest $\delta_i$ and repeat at step (3Da).
 \end{itemize}
 \item(4D) Choose the next neighbor $\vec{n}$ and repeat from step (3D). Continue until all
 $a_{\text{max},i}$ and $a_{\text{min},i}$ have been set.  Once all $a_{\text{max},i}$ and
 $a_{\text{min},i}$ have been set, move on to step (5D).
 \\
-\item(5D) $\vec{a}_\text{max}$ an $\vec{a}_\text{min}$ should now describe an asymmetric,
+\item(5D) $\vec{a}_\text{max}$ adn $\vec{a}_\text{min}$ should now describe an asymmetric,
 rectangular hyperbox about $\vec{a}$.  To symmetrize it, step through all $N_p$ dimensions
 and reset either $a_{\text{max},i}$ or $a_{\text{min},i}$ so that 
 $d_\text{min}=a_i-a_{\text{min},i}$ and
 $d_\text{max}=a_{\text{max},i}-a_i$ are equal to the minimum of $\{d_\text{max},d_\text{min}\}$
-from the asymmetric hyperbox.
+from the asymmetric hyperbox.  Return to step (1D) and repeat for the next $\vec{a}$.
 \end{itemize}
 
 At this point, each $\vec{a}$ in $\{\hat{A}\}$ should have a corresponding symmetric hyperbox
-surrounding it.  To integrate the posterior probability density, we will assume that all of the
-parameter space points in each hyperbox correspond to a $\chi^2$ equal to $\chi^2(\vec{a})$.
+surrounding it described by the corresponding 
+$\vec{a}_\text{max}(\vec{a})$ and $\vec{a}_\text{min}(\vec{a})$.  
+To integrate the posterior probability density, we will assume that all of the
+parameter space points in each hyperbox correspond have $\chi^2=\chi^2(\vec{a})$
+($\chi^2)\vec{a})$ being already known because $\vec{a}$ is one of the points for which APS evaluated
+$\vec{theta}\rightarrow\chi^2$).
 The posterior probability associated with each box is then
 \begin{eqnarray}
 P(\vec{a})&=&\frac{V(\vec{a})}{P_\text{tot}}\times\exp\left[-\chi^2(\vec{a})/2\right]
 \label{eqn:posterior}\\
 P_\text{tot}&\equiv&\sum_{\vec{a}} V(\vec{a})\times\exp\left[-\chi^2(\vec{a})/2\right]
 \end{eqnarray}
-where $V(\vec{a})$ is the hypervolume associated with the hyperbox surrouning $\vec{a}$.
+where $V(\vec{a})$ is the hypervolume of with the hyperbox surrounding $\vec{a}$.
 To plot the $(1-\alpha)\%$ credible limit, one need only plot the points in hyperspace that
 enclose the lowest-$\chi^2$ hyperboxes containing $(1-\alpha)\%$ of the total probability.
 We test this algorithm on a function with an exactly known credible limit
-in Section \ref{sec:toy} and on a real, physical dataset in Section \ref{sec:wmap}.  In 
-Section \ref{sec:toy}, we find that our results agree with the known credible limit.
-In Section \ref{sec:wmap}, we find that our results agree with results derived from traditional
+in Section \ref{sec:toy} (see Figures \ref{fig:toyBayes2}-\ref{fig:toyBayes4}) 
+and on a real, physical dataset in Section \ref{sec:wmap} (see Figure \ref{fig:contours_bayes}).  
+In  Section \ref{sec:toy}, we find that our results agree with the known credible limit.
+In Section \ref{sec:wmap}, we find that our results roughly approximate those derived from traditional
 Markov Chain Monte Carlo methods.
 
 The functionality described by this section is provided in by the classes defined in the source
@@ -599,8 +650,8 @@ Rasmussen and Williams (2006) treat
 the special case
 $\bar{\chi}^2=0$ and find (see their equations 2.19, 2.25 and 2.26)
 \begin{eqnarray}
-\mu&=&\sum_{i,j} C_{qi}C^{-1}_{ij}\chi^{2,(j)}\nonumber\\
-\sigma^2&=&C_{qq}-\sum_{i,j}C_{qi}C^{-1}_{ij}C_{jq}\label{sig}
+\mu&=&\sum_{i,j}^{N_g} C_{qi}C^{-1}_{ij}\chi^{2,(j)}\nonumber\\
+\sigma^2&=&K\times\left(C_{qq}-\sum_{i,j}^{N_g}C_{qi}C^{-1}_{ij}C_{jq}\right)\label{sig}
 \end{eqnarray}
 where the sums over $i$ and $j$ are sums over the sampled points 
 in parameter space.  $C_{iq}$ relates the sampled point $i$ to the candidate
@@ -609,7 +660,7 @@ We do not wish to assume that the mean value of $\chi^2$ is zero everywhere.
 Therefore, we modify the equation for $\mu$ to give
 \begin{equation}
 \label{mu}
-\mu=\bar{\chi}^2+\sum_{i,j} C_{qi}C^{-1}_{ij}
+\mu=\bar{\chi}^2+\sum_{i,j}^{N_g} C_{qi}C^{-1}_{ij}
 (\chi^{2,(j)}-\bar{\chi}^2)
 \end{equation}
 where $\bar{\chi}^2$ is the algebraic mean of the 
@@ -623,7 +674,7 @@ $$\gamma_{ij}=\text{var}[\chi^2(\vec{\theta}^{(i)})
 in place of the covariance $C_{ij}$.  In practice, the two assumptions result in
 equivalently valid $\mu$ and $\sigma$.
 
-The form of the covariance function 
+The form of the covariogram
 $C_{ij}(\vec{\theta}^{(i)},\vec{\theta}^{(j)})$ must be
 assumed.  One possibility, 
 taken from equation 4.9 of Rasmussen and Williams (2006) is
@@ -640,13 +691,12 @@ D^2_{ij}\equiv\sum_n^{N_p}
 \end{equation}
 where $\text{max}_n-\text{min}_n$ is the difference between the maximum and minimum values of
 the $n$th parameter taken from the $N_g$ points used to seed the Gaussian process and $\ell_n$
-is a ``hyper-parameter'' associated with the $n$th parameter.  We both the normalization
+is a ``hyper-parameter'' associated with the $n$th parameter.  We discuss the normalization
 paramter $K$ below in section \ref{sec:kriging}.  We discuss the setting of
 hyper-parameters in section \ref{sec:hyperparams}.
 The exponential form of $C_{ij}$ quantifies the assumption 
 that distant points should
-not be very correlated.  We will use this covariogram in
-our tests in Section \ref{sec:toy} and \ref{sec:wmap}.
+not be very correlated.
 
 Another possibility (equation 4.29 of Rasmussen and Williams) is
 \begin{eqnarray}
@@ -665,9 +715,10 @@ corresponding to the covariance function of a neural network with a single
 hidden layer.  In this function $\tilde{\vec{\theta}}$ is the vector of
 parameters $\vec{\theta}$ recentered and renormalized relative to the span
 $(\text{max}_n-\text{min}_n)$ in each dimension.  $\sigma_0$ and $\sigma_1$
-are hyperparameters.  We also consider this
-covariogram in Section \ref{sec:wmap} and find no appreciable difference
-in performance when compared to the use of covariogram (\ref{eqn:GaussianCovar}).
+are hyperparameters.  
+In Section \ref{sec:wmap}, we test APS using both covarigorams (\ref{eqn:GaussianCovar})
+and (\ref{eqn:NNCovar}) and find no appreciable difference
+in the resulting parameter constraints.
 
 \subsection{Normalizing the covariogram}
 \label{sec:kriging}
@@ -691,7 +742,7 @@ used to perform the Gaussian Process inference.
 Recall from equation (\ref{eqn:likelihood}) that we are treating our
 input data as though they were samples drawn from a probability distribution.
 To maximize the probability of the observed data (i.e. maximizing the value
-of $P(\vec{\chi}^2)$) we must set $K$ equal to
+of $P(\vec{\chi}^2)$ in equation \ref{eqn:likelihood}) we must set $K$ equal to
 \begin{equation}
 \label{eqn:kriging}
 K=\frac{\sum_{i,j}^{N_g}(\chi^{2,(i)}-\bar{\chi}^2)
@@ -729,7 +780,8 @@ equation (\ref{eqn:kriging}) wth $N_g=5$ for the 5 sampled points.
 \subsection{Setting hyper-parameters}
 \label{sec:hyperparams}
 
-The covariance functions $C_{ij}$ presented above (indeed, any covariance function)
+The covariograms $C_{ij}$ presented above in equations (\ref{eqn:GaussianCovar})
+and (\ref{eqn:NNCovar}) (indeed, any covariogram)
 each contain arbitrary hyper-parameters whose values can be set to fine-tune
 the Gaussian Process model ($\ell_n$ in equation \ref{eqn:GaussianCovar}
 and $\{\sigma_0,\sigma_1\}$ in equation \ref{eqn:NNCovar}).  
@@ -757,8 +809,10 @@ Process, so we allow it to periodically reset the hyper-parameters $\vec{h}$.  H
 minimizing $E$ can be a very time-consuming process, so we have APS keep track of the amount of
 time elapsed since the algorithm began.  We divide this value by the number of calls made to
 the $\vec{\theta}\rightarrow\chi^2$ function and compare this amortized time to the average
-amount of time spent on one call to $\vec{theta}\rightarrow\chi^2$.  APS us only allowed to
-reset its hyper-parameters if the difference between these two times is less than 0.1 second.
+amount of time spent on one call to $\vec{\theta}\rightarrow\chi^2$.  APS us only allowed to
+reset its hyper-parameters if the difference between these two times is less than 0.1 second
+(of course, we do require that APS optimize its hyper parameters at least once, so that
+we can have confidence in our Gaussian Process model).
 
 \section{A Toy Example}
 \label{sec:toy}
@@ -798,13 +852,14 @@ Readers wishing to re-create this $\chi^2$ function can find it in our software
 package as the class \verb|ellipses_integrable| in the source code files \verb|chisq.h| and
 \verb|chisq.cpp|.
 
-To test the performance of our APS algorithm, we ran APS on iterations of this
+To test the performance of APS, we ran APS on versions of this
 $\vec{\theta}\rightarrow\chi^2$ function with 2, 3, and 4 discrete minima in $\chi^2$.  We
 allowed APS to sample a total of 10,000 points in the 5-dimensional parameter space.  
-We had APS adaptively set $\chi^2_\text{lim}=\chi^2_\text{min}+11.0$ -- $11.0$ being the $95\%$
+We had APS adaptively set $\chi^2_\text{lim}=\chi^2_\text{min}+\Delta\chi^2$, 
+$\Delta\chi^2=11.0$ being the 95\%
 confidence limit bound for $\chi^2$ probability distribution with 5 degrees of freedom.
-Figures
-\ref{fig:toyFreq2}, \ref{fig:toyFreq3}, and \ref{fig:toyFreq4} plot the
+We used a Mat\`ern covagiogram with $\nu=3/2$ for our Gaussian Process (Rasmussen and Williams equation
+4.17). Figures \ref{fig:toyFreq2}, \ref{fig:toyFreq3}, and \ref{fig:toyFreq4} plot the
 $\chi^2\le\chi^2_\text{lim}$ points found by APS (black points) against the
 known $\Delta\chi^2=11.0$ contours of the function (red contours).  Obviously, APS did a very
 good job of exploring all of the available low-$\chi^2$ regions.
@@ -820,7 +875,7 @@ APS-determined credible limits correspond well with the true credible limits,
 giving us confidence in APS's ability to map out Bayesian credible limits as well
 as Frequentist confidence limits.
 
-The tests above demonstrate APS's ability to correctly determin credible and
+The tests above demonstrate APS's ability to correctly determine credible and
 confidence limits.  They do not, however, address the question of APS's chief
 advantage over Markov Chain Monte Carlo methods: its ability to successfully
 locate all of the low-$\chi^2$ regions in a given parameter space.  To
@@ -832,7 +887,9 @@ fewer than 10,000 evaluations of $\chi^2$ (one case of the 2-mode $\chi^2$
 function required 10,352 evaluations to find both low-$\chi^2$ regions; one
 required 12,549 evaluations).  For comparison, we also ran 100 Markov Chain
 Monte Carlo searches on these $\chi^2$ function, each run consisting of five
-independent chains.  These searches were not nearly as successful as APS at
+independent chains.  We allowed the MCMCs to run
+until they had sampled 100,000 points in parameter space.  
+These searches were not nearly as successful as APS at
 locating all of the low-$\chi^2$ regions.  In the case of the 2-mode function,
 50 of the 100 MCMC searches failed to identify both modes.  In the case of the
 3-mode function, 56 of the 100 MCMC searches failed to identify all of the
@@ -1092,11 +1149,16 @@ function.
 \label{sec:wmap}
 
 Section \ref{sec:toy} demonstrates the robustness of APS against multi-modal
-$\chi^2$ functions.  In this section, we demonstrate 
-that, on well-behaved likelihood functions, APS' rate of convergence is
-comparable to that of MCMC.  
-We also show that APS can be used on actual astrophysical
-problems by using for our $\chi^2$ function the likelihood function on the
+$\chi^2$ functions.  However, it does have some short-comings as a test of
+APS's abilities.  As was already noted, there are no interesting parameter
+degeneracies in equation (\ref{eqn:toychi}).  Furthermore,
+because this function was constructed artificially, there is no noise.  At
+any point in parameter space, $\chi^2$ falls smoothly and monotonically towards
+the associated local minimum of $\chi^2$.  To really have confidence in APS
+abilities, we must test it on actual physical data drawn from the universe,
+with all of the noisy and ill-behaved properties that entails.
+To that end, we ill no consider for our $\vec{\theta}\rightarrow\chi^2$ 
+function the likelihood function on the
 7-year data release of the WMAP CMB satellite \cite{wmap7,wmap7likelihood}.
 For simplicity, we consider only the anisotropy
 power spectrum of the temperature-temperature correlation function.
@@ -1109,9 +1171,9 @@ flat concordance $\Lambda$CDM cosmology:
 \item$\Omega_\text{CDM}h^2$ -- the density of cold dark matter in the Universe
 \\
 \item$\tau$ -- the optical depth to the surface of last scattering.  $\tau$ cannot be
-constrained without polarizationd data, which we do not consider here.  However, it functions
+constrained without polarization data, which we do not consider here.  However, it functions
 as a nuisance parameter to be marginalized over.  The fact that APS can handle it as well as
-MCMC is an important test of APS' feasibility.
+MCMC is an important test of APS's feasibility.
 \\
 \item$h$ -- the Hubble parameter in units of
 $100~\text{km}~\text{s}^{-1}~\text{Mpc}^{-1}$
@@ -1130,12 +1192,14 @@ comparing those $C_\ell$s to the actual measurements registered by the WMAP
 satellite.  Using the (very fast) Boltzmann code CAMB to calculate the $C_\ell$s
 \cite{camb} takes 1.3 seconds on a 2.5 GHz processor.  
 Evaluating the $\chi^2$ using the likelihood code provided by the WMAP team
-\cite{wmap7likelihood} takes an additional 2 seconds.  Hence the need
+\cite{wmap7likelihood} takes an additional 2 seconds (this can, of course, be sped up by using a faster
+machine and multiple cores).  Hence the need
 for an algorithm like APS or MCMC to accelerate the search.
 We will consider both equations (\ref{eqn:GaussianCovar}) and (\ref{eqn:NNCovar})
-as covariogram for our Gaussian Process, 
+as the covariogram for our Gaussian Process, 
 though we find that the choice has little effect on our
-results.
+results.  We will also consider setting $\chi^2_\text{lim}=\chi^2+\Delta\chi^2$ 
+as wel as setting $\chi^2_\text{lim}$ by hand.
 
 To gauge the appropriateness of applying APS to this problem, we consider
 the two following tests.  In Figure \ref{fig:chimin} we plot the minimum discovered value
@@ -1155,9 +1219,8 @@ descent to $\chi^2_\text{min}$ does not translate into rapid convergence to
 the final credible limit.  Because MCMC infers its limits based on the number
 of samples drawn from the Bayesian posterior probability, MCMC still requires
 many tens (or hundreds) of thousands of points to be sampled after $\chi^2_\text{min}$
-has been discovered.  Because APS is designed to locate points at the precise value
-$\chi^2=\chi^2_\text{lim}$, it requires much fewer samples after discovering 
-$\chi^2_\text{min}$ to infer the correct confidence limit.
+has been discovered.  Because it is learning the shape of the function
+directly, APS does not impose this requirement.
 
 The second question we consider is whether or not our assumption that
 $\vec{\theta}\rightarrow\chi^2$ can be modeled by a Gaussian Process is 
@@ -1187,7 +1250,9 @@ The average value of $|\mu-\chi^2|/\chi^2$ as a function of the number of points
 sampled by APS in the WMAP 7 problem.  
 This is shown as a check on our assumption that
 $\vec{\theta}\rightarrow\chi^2$ can be approximated as a Gaussian Process.
-Though the squared exponential covariogram gives a better fit to the $\chi^2$ function,
+Though the squared exponential covariogram (\ref{eqn:GaussianCovar})
+gives a better fit to the $\chi^2$ function than the arcsine covariogram
+(\ref{eqn:NNCovar}),
 we see in Figures \ref{fig:contours_gauss} and \ref{fig:contours_nn}
 that this has little effect on the parameter constraints derived by APS.
 }
@@ -1225,30 +1290,39 @@ below.  Against these control contours, we plot the Frequentist
 confidence limits (all points with $\chi^2\le\chi^2_\text{lim}$)
 discovered by APS after only 50,000 evaluations of $\chi^2$.
 We consider both an adaptive $\chi^2_\text{lim}=\chi^2_\text{min}+12.6$
+(12.6 is the $\Delta\chi^2$ corresponding for 95\% confidence limit in the case
+of 6 parameters)
 and an absoulte $\chi^2_\text{lim}=1283.3$ (this is the 95\% confidence limit
-for a $\chi^2$ probability distribution with 1199 degrees of freedom).
+for a $\chi^2$ probability distribution with the 1199 degrees of freedom corresponding
+to the 1199 $C_\ell$s in the data set).
 These are the black points in Figures \ref{fig:contours_gauss}, \ref{fig:contours_nn},
 and \ref{fig:contours_br} respectively.  These confidence limits overlap very nicely
-with the credible limits discovered by MCMC after many more $\chi^2$ evaluations,
+with the true credible limits discovered by MCMC,
 comporting the the idea that, in the large data limit, Bayesiand credible limits
 and Frequentist confidence limits ought to align.
 
 For comparison of convergence properties, we plot the Bayesian credible limits discovered
 by MCMC after only 50,000 $\chi^2$ evaluations.  These are the black regions in
-Figure \ref{fig:mcmc_comparison}.  As can be seen, MCMC has not yet totally converged
+Figure \ref{fig:mcmc_comparison}.  As can be seen from Figures \ref{fig:mcmc_1_4},
+\ref{fig:mcmc_1_5}, and \ref{fig:mcmc_4_5}, MCMC has not yet totally converged
 in all of the sub-spaces of cosmological parameter space.  This should be compared
-with the reasonably complete coverage of the control credible limits seen in
+with the reasonably coverage of the confidence limits seen in
 Figures \ref{fig:contours_gauss}-\ref{fig:contours_br}.
 
 In Figure \ref{fig:contours_bayes}, we plot the 95\% Bayesian credible limit discovered
 by APS after 50,000 evalutations of $\chi^2$ and determined by the method outlined in
-Section \ref{sec:bayes}.  While we do not see the clean equivalence between the APS-derived credible limits and
-the true credible limits that we saw in Figures \ref{fig:toyBayes2}-\ref{fig:toyBayes4},
-we do find that the APS-derived credible limits roughly sketch the bounds of the 
-true credible limit.  This, combined with its robustness against multi-modal likelihood
-functions, suggests that APS may, at the very least be useful in cases where very little
-prior information is available and exploring the paramter space is at least as important as
-integrating it to find a rigorous bound.
+Section \ref{sec:bayes}.  Unfortunately, we do not see here the convergence to the true
+credible limits that we say in Figures \ref{fig:toyBayes2}-\ref{fig:toyBayes4}.  While
+it does appear that APS has correctly identified the locations and general shapes of the
+true credible limits, it has, in most cases, drawn credible limits that are larger than
+those found by MCMC.  This should not be surprising.  APS was designed with Frequentist
+confidence limits in mind, and Figures \ref{fig:contours_gauss}-\ref{fig:contours_br}
+seem much better converged than Figure \ref{fig:contours_bayes}.  However, it does seem
+that APS might be useful in cases where little prior knowledge is known about $\vec{\theta}$
+and researchers need to be confident that they have discovered all of the low-$\chi^2$
+regions in a particular parameter space.  Once APS has been used to identify rough
+Bayesian credible limits, more detailed algorithms (like MCMC) can be run using the prior
+knowledge gained by APS to refine the credible limits.
 
 As a final note, we do not plot any confidence or 
 credible limits for $\tau$.
@@ -1398,33 +1472,43 @@ Equation (\ref{eqn:GaussianCovar}) is used for the Gaussian Process covariogram.
 \begin{figure*}
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_0_1_50k.eps}
+\label{fig:mcmc_0_1}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_0_2_50k.eps}
+\label{fig:mcmc_0_2}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_0_4_50k.eps}
+\label{fig:mcmc_0_4}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_0_5_50k.eps}
+\label{fig:mcmc_0_5}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_1_2_50k.eps}
+\label{fig:mcmc_1_2}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_1_4_50k.eps}
+\label{fig:mcmc_1_4}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_1_5_50k.eps}
+\label{fig:mcmc_1_5}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_2_4_50k.eps}
+\label{fig:mcmc_2_4}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_2_5_50k.eps}
+\label{fig:mcmc_2_5}
 }
 \subfigure[]{
 \includegraphics[scale=0.15]{mcmc_comparison_4_5_50k.eps}
+\label{fig:mcmc_4_5}
 }
 \caption{
 The 10 2-dimensional sub-spaces of our 6-dimensional parameter space
@@ -1481,39 +1565,71 @@ covers the entire MCMC limit, it also covers regions of parameter space excluded
 \section{Conclusions}
 \label{sec:conclusions}
 
-In Section \ref{sec:toy} we indicated that APS is more robust
-than MCMC against multi-modal likelihood functions.
-In Section \ref{sec:wmap} we showed that, on more well-behaved
-likelihood functions, APS discovers comparable parameter constraints
-as MCMC and that APS does not converge any more slowly than does MCMC.
-We also showed a great deal of qualitative similarity but quantitative
-difference between the Bayesian credible limits drawn by MCMC
-and the frequentist confidence limits drawn by APS.  The different
-convergence properties and different outputs of APS and MCMC lend themselves
-to different use cases.
+In Section \ref{sec:toy} we indicated that, consistent with the findings
+of Bryan {\it et al}. (2007), APS is more robust
+than MCMC against multi-modal likelihood functions (at least on the idealized
+cartoon $\vec{\theta}\rightarrow\chi^2$ functions considered).
+In Section \ref{sec:wmap} we showed that on realistic data, APS
+is able to yield Frequentist confidence limits that are comparable to
+Bayesian credible limits with significantly fewer calls to $\vec{\theta}\rightarrow\chi^2$
+than MCMC (recall that APS required only 50,000 $\chi^2$ evaluations to yield Figures
+\ref{fig:contours_gauss}-\ref{fig:contours_br}).  However, the Bayesian credible
+limits yielded by APS remain rough and imprecise.  We believe that this performance
+can still be of use to the community, especially when trying to evaluate proof-of-concept
+parameter constraints (perhaps for forecasting future parameter constraints)
+with very expensive $\vec{\theta}\rightarrow\chi^2$ functions on poorly-understood
+parameter spaces.  Certainly, for researchers interested in plotting Frequentist confidence limits,
+APS is a viable option.
 
-As was demonstrated in Figure \ref{fig:chimin}, MCMC is significantly
-more efficient than APS at finding the true value of $\chi^2_\text{min}$
-in a given parameter space.  This makes it ideally suited to problems where
-the uncertainty of the data set is poorly understood and must be fit
-for.  However, as we saw in Figure \ref{fig:toy}, this rapid convergence to
-$\chi^2_\text{min}$ can also result in a myopic disregard for other regions of
-interest in parameter space.  Once MCMC has been used to learn the uncertainty
-model of the data, it may be advisable to run APS as a guarantor that no
-alternative best-fit models have been ignored by MCMC.
+There remain, however, several concerns to be addressed in the use of APS.  Unlike MCMC, there is
+no obvious criterion for convergence of the APS algorithm.  One possibility is to interpret the Frequentist
+confidence limit as a hyperbox (i.e. keep track of the allowable maximum and minimum values of each parameter
+as $\chi^2=\chi^2_\text{lim}$ is explored) and watch the growth of the volume of that hyperbox as a function
+of the number of $\vec{\theta}\rightarrow\chi^2$ evaluations.  Figure \ref{fig:convergence} plots this
+convergence metric for the APS run in Figure \ref{fig:contours_gauss}.  While it appears that APS may have
+converged after $\sim$50,000 evaluations, the volume of the Frequentist confidence limit continues to grow,
+though Figure \ref{fig:contours_gauss} already shows good coverage of the control Bayesian credible limit. 
+It is, of course, possible that we are seeing the effect of the slight difference between the Bayesian
+credible limit at the Frequentist confidence limt, even in the large-data case.
 
-In cases where the uncertainty model is well-understood and the contraints in
-parameter space can safely be described by either the likelihood ratio's
-$\chi^2\le\chi^2_\text{min}+\Delta\chi^2$ or an imposed
-$\chi^2\le\chi^2_\text{lim}$, APS' robustness against multi-modality and
-comparatively rapid convergence in a confidence limit sense (recall Figures
-\ref{fig:contours_gauss} through \ref{fig:contours_br}) make it ideal for rapidly
-drawing constraints on parameter space.
+\begin{figure}
+\includegraphics[scale=0.3]{convergencePlot.eps}
+\caption{
+The parameter space volume of the Frequentist confidence limit
+in figure \ref{fig:contours_gauss} as a function of the number of
+$\vec{\theta}\rightarrow\chi^2$ evaluations.
+}
+\label{fig:convergence}
+\end{figure}
 
-One advantage of MCMC that APS cannot overcome is its comparative ease to
+Another concern is that, while APS was explicitly designed to rapidly converge
+to the Frequentist confidence limit (where rapidity is measured in the number of
+$\vec{\theta}\rightarrow\chi^2$ evaluations made), the searches in Section \ref{sec:algorithm}
+are complicated enough that they will add extra clock time to each $\vec{\theta}\rightarrow\chi^2$
+evaluation.  We have attempted to balance APS so that it does not rely to heavily on expensive calculations.
+However, some overhead is inevitably required.  Figure \ref{fig:time} shows the average overhead
+time in seconds added by APS to each $\vec{\theta}\rightarrow\chi^2$ evaluation as a function
+of the number of evaluations.  As the number of evaluations grow and the number of points APS must search
+when constructing its Gaussian Processes also grows, so does this extra time (the initial spike is due to the
+first expensive call to the hyperparameter optimization in Section \ref{sec:hyperparams}).
+Though the extra time stays within the bounds of a few 0.1 seconds per $\vec{\theta}\rightarrow\chi^2$
+evaluation, this may still be too expensive in the case of functions for whom a direct
+$\vec{\theta}\rightarrow\chi^2$ takes a vanishingly small amount of time.
+
+\begin{figure}
+\includegraphics[scale=0.3]{timeConvergencePlot.eps}
+\caption{
+The extra time added by APS to a $\vec{\theta}\rightarrow\chi^2$ 
+as a function of the number of
+$\vec{\theta}\rightarrow\chi^2$ evaluations.
+}
+\label{fig:time}
+\end{figure}
+
+Finally, one advantage of MCMC that APS cannot overcome is its comparative ease to
 implement.  To this end,
 we make our code available at \verb|https://github.com/uwssg/APS/|.  
-The code is presented as a series of C++ modules with directions
+The code is presented as a series of C++ classes with directions
 indicating where the user can interface with 
 the desired $\vec{\theta}\rightarrow\chi^2$ function.  
 Those with questions about the code or the algorithm should not
