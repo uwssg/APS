@@ -20,17 +20,11 @@ struct Ran{
 //this structure will be based on the Xorshift random number generator
 // discovered by George Marsaglia and published in
 //Journal of Statistical Software, volume 8, no. 14 pp 1-6
-//
-//those who have access would do well to replace it with the 
-//structure Ran from 
+
+//parameters are drawn from the table on page 347 of 
 //Numerical Recipes (3rd edition) 
 //William H. press, Saul A. Teukolsky, William T. Vetterling, Brian P. Flannery
 //Cambridge University Press, 2007
-//p 342
-
-
-//parameters are drawn from the table on page 347 of Numerical Recipes
-
 
 unsigned long long x;
 Ran(unsigned long long seed){
