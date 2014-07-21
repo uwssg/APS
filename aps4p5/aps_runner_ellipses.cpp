@@ -18,10 +18,10 @@ ncenters=atoi(argv[3]);
 char timingname[letters],outname[letters];
 
 //what is the name of the file where APS will store its timing information
-sprintf(timingname,"aps_output/ellipse/fullAnalysis/ellipse_d%d_c%d_timing.sav",dim,ncenters);
+sprintf(timingname,"timingFiles/ellipse_d%d_c%d_timing.sav",dim,ncenters);
 
 //what is the name of the file where APS will output the points it sampled
-sprintf(outname,"aps_output/ellipse/fullAnalysis/ellipse_d%d_c%d_output.sav",dim,ncenters);
+sprintf(outname,"outputFiles/ellipse_d%d_c%d_output.sav",dim,ncenters);
 
 
 if(seed<0){
