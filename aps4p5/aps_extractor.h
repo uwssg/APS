@@ -41,6 +41,8 @@ private:
     void learn_chimin();
     void learn_nparams();
     void validate();
+    
+    void plot_thinned_data(array_2d<double>&,double,char*);
 };
 
 #endif

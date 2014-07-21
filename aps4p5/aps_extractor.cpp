@@ -468,20 +468,14 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
         make_boxes();
     }
     
-    FILE *output;
+
     int i,j,ibox;
-    
-    
     double sum=0.0;
     
     array_2d<double> to_plot;
-    array_1d<double> min,max,center;
     
     to_plot.set_cols(2);
-    min.set(0,chisq_exception);
-    min.set(1,chisq_exception);
-    max.set(0,-1.0*chisq_exception);
-    max.set(1,-1.0*chisq_exception);
+
     for(i=0;i<l_probability.get_dim() && sum<limit;i++){
         ibox=l_prob_dexes.get_data(i);
         sum+=exp(l_probability.get_data(ibox));
@@ -502,15 +496,24 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
         to_plot.set(j,0,box_min.get_data(ibox,ix));
         to_plot.set(j,1,box_max.get_data(ibox,iy));
         
-        if(box_max.get_data(ibox,ix)>max.get_data(0))max.set(0,box_max.get_data(ibox,ix));
-        if(box_max.get_data(ibox,iy)>max.get_data(1))max.set(1,box_max.get_data(ibox,iy));
-        
-        if(box_min.get_data(ibox,ix)<min.get_data(0))min.set(0,box_min.get_data(ibox,ix));
-        if(box_min.get_data(ibox,iy)<min.get_data(1))min.set(1,box_min.get_data(ibox,iy));
         
     }
     
-   
+    plot_thinned_data(to_plot,0.01,filename);    
+}
+
+void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, double tol, char *filename){    
+    
+    array_1d<double> max,min,center;
+    int i,j;
+    for(i=0;i<to_plot.get_rows();i++){
+        if(i==0 || to_plot.get_data(i,0)>max.get_data(0))max.set(0,to_plot.get_data(i,0));
+        if(i==0 || to_plot.get_data(i,1)>max.get_data(1))max.set(1,to_plot.get_data(i,1));
+        
+        if(i==0 || to_plot.get_data(i,0)<min.get_data(0))min.set(0,to_plot.get_data(i,0));
+        if(i==0 || to_plot.get_data(i,1)<min.get_data(1))min.set(1,to_plot.get_data(i,1));
+    }
+    
     center.set(0,0.5*(max.get_data(0)+min.get_data(0)));
     center.set(1,0.5*(max.get_data(1)+min.get_data(1)));
     
@@ -539,6 +542,7 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
     array_1d<int> neigh;
     array_1d<double> ddneigh;
     
+    FILE *output;
     output=fopen(filename,"w");
     for(i=0;i<to_plot.get_rows();i++){
         chosen=dex.get_data(to_plot.get_rows()-1-i);
