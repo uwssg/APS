@@ -6,21 +6,14 @@ main(){
 
 mcmc_extractor test;
 
-int nparams=22;
-
-//nparams=46;
-
+int nparams;
 nparams = 81;
 
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(2500);
-
-
-//test.set_chainname("/Users/noldor/physics/recreate_getdist/planck_chains/planckTESTgibbs_chain");
-//test.set_chainname("chains/test_nogibbs_chains");
-//test.set_chainname("/Users/noldor/physics/planckLikelihood/base_planck_lowl/base/planck_lowl/base_planck_lowl");
+//test.set_cutoff(7500);
+//control has a total 453,051 samples
 
 test.set_chainname("/Users/noldor/physics/recreate_getdist/ieuchains_1304/wmap7_learn");
 
@@ -31,8 +24,9 @@ test.learn_thinby();
 printf("independent samples %d\n",test.get_nsamples());
 printf("thinby %d\nused %d\nkept %d\n",test.get_thinby(),test.get_total_used(),test.get_total_kept());
 printf("rows %d\n",test.get_total_rows());
+printf("best_covar %e\n",test.get_best_covar());
 
-test.print_samples("test_wmap7_samples10k.sav");
+test.print_samples("test_wmap7_samplescontrol.sav");
 
 kde kde_test;
 kde_test.set_data(test.get_samples());
@@ -63,14 +57,14 @@ for(i=0;i<6;i++){
     for(j=i+1;j<6;j++){
         if(i!=3 && j!=3){
  
-           sprintf(outname,"mcmc_processed/wmap_%d_%d_10k.sav",i,j);
+           sprintf(outname,"mcmc_processed/wmap_%d_%d_control.sav",i,j);
 
             kde_test.plot_boundary(ix.get_data(i),dx.get_data(i),ix.get_data(j),dx.get_data(j),0.95,outname,3);
         }
     }
 }
 
-test.plot_delta("mcmc_good_pts_test10k.sav",0.5*12.61);
+test.plot_delta("mcmc_good_pts_testcontrol.sav",0.5*12.61);
 
 
 array_1d<double> RR,VV,WW,mean,var;

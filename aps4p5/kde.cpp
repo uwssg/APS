@@ -54,7 +54,7 @@ int kde::get_dex(array_1d<double> &pt, int ixx, double dxx){
 void kde::initialize_density(int ix1_in, double dx1_in, 
            int ix2_in, double dx2_in, int smoothby_in){
     
-    printf("\n\nINITIALIZING DENSITY\n\n");
+    //printf("\n\nINITIALIZING DENSITY\n\n");
     
     grid.reset();
     grid_wgt.reset();
