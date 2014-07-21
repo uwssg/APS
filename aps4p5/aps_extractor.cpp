@@ -147,6 +147,46 @@ void aps_extractor::write_good_points(char *outname){
     printf("wrote good pts with chi_min %e\n",chi_min);
 }
 
+void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol){
+    learn_chimin();
+    
+    int i,ct=0,j;
+    FILE *input=fopen(filename,"r");
+    
+    char word[letters];
+    for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
+    
+    double nn;
+    array_1d<double> vv;
+    array_2d<double> to_plot;
+    
+    to_plot.set_cols(2);
+    while(fscanf(input,"%le",&nn)>0 && (ct<cutoff || cutoff<0)){
+        ct++;
+        vv.set(0,nn);
+        for(i=1;i<nparams;i++){
+            fscanf(input,"%le",&nn);
+            vv.set(i,nn);
+        }
+        fscanf(input,"%le",&nn);
+        
+        if(nn<=chi_min+delta_chi+tol){
+            j=to_plot.get_rows();
+            to_plot.set(j,0,vv.get_data(ix));
+            to_plot.set(j,1,vv.get_data(iy));
+        }
+        
+        for(i=0;i<extra_words-2;i++)fscanf(input,"%le",&nn);
+    }
+    
+    
+    fclose(input);
+    
+    plot_thinned_data(to_plot,tol,outname);
+    
+    printf("wrote good pts with chi_min %e\n",chi_min);
+}
+
 void aps_extractor::plot_chimin(char *outname){
     learn_nparams();
     
@@ -463,7 +503,7 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     }
 }
 
-void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double limit){
+void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double limit, double tol){
     if(l_probability.get_dim()==0){
         make_boxes();
     }
@@ -499,7 +539,7 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
         
     }
     
-    plot_thinned_data(to_plot,0.01,filename);    
+    plot_thinned_data(to_plot,tol,filename);    
 }
 
 void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, double tol, char *filename){    

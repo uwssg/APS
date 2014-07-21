@@ -13,6 +13,7 @@ public:
     void set_filename(char*);
     void set_delta_chi(double);
     void write_good_points(char*);
+    void write_good_points(char*,int,int,double);
     void plot_chimin(char*);
     
     void show_minpt();
@@ -21,7 +22,7 @@ public:
     void sample_posterior(array_2d<double>&,int);
     void sample_posterior(char*,array_2d<double>&,int,int);
     
-    void draw_bayesian_bounds(char*,int,int,double);
+    void draw_bayesian_bounds(char*,int,int,double,double);
     
     void make_boxes();
     
