@@ -251,9 +251,8 @@ void aps_extractor::make_boxes(){
         exit(1);
     }
     
-    if(!(delta_chi<chisq_exception)){
-        printf("WARNING delta_chi %e in sample_posterior\n");
-        exit(1);
+    if(chi_min<0.0){
+        learn_chimin();
     }
     
     l_prob_dexes.reset();
