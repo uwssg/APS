@@ -1,33 +1,81 @@
+#ifndef GP_H
+#define GP_H
+
+#include "goto_tools.h"
+#include "eigen_wrapper.h"
+#include "containers.h"
 #include "kd.h"
+
+
+class paranoid_backup{
+
+public:
+    paranoid_backup();
+    ~paranoid_backup();
+    
+    int get_dim();
+    
+    void set_dim(int);
+    void add_pt(array_1d<double>&);
+    double get_pt(int,int);
+    double validate(int,array_1d<double>&);
+
+private:
+    array_2d<double> data;
+    int pts,dim;
+
+};
+
+class fbar_model{
+
+private:
+    int dim;
+    array_1d<double> coeffs;
+
+public:
+    fbar_model();
+    fbar_model(int);
+    ~fbar_model();
+    double operator()(array_1d<double>&);
+    void set_model(array_2d<double>&,array_1d<double>&,int,int);
+    double get_coeff(int);
+  
+ 
+
+};
 
 class covariance_function{
 
 protected:
     int dim;
-    double *maxs,*mins;
+    array_1d<double> global_maxs,global_mins;
+    
+    int n_hyperparameters;
+    array_1d<double> hyper_max,hyper_min;
+
     
 public:
     
     covariance_function();
     ~covariance_function();
+    virtual double operator()(const array_1d<double>&, const array_1d<double>&,
+              const array_1d<double>&, const array_1d<double>&, array_1d<double>&, const int) const;
     
-    virtual double operator()(double*,double*,double*,int);
-    /*  regardign the operator()
-    
-        the first and second double* point to arrays containing the two points
-	in parameter space being related.
-	
-	the third double* will contain the gradient of the covariogram on
-	output.
-	
-	the gradient is only calculated if the int is greater than zero
-    */
-    
-    virtual void set_hyper_parameters(double*);
-    void set_dim(int);
+    virtual void set_hyper_parameters(array_1d<double>&);
+    virtual void set_dim(int);
     void set_max(int,double);
     void set_min(int, double);
     int get_dim();
+    
+    int get_n_hyper_parameters();
+    double get_hyper_parameter_max(int);
+    double get_hyper_parameter_min(int);
+    void set_hyper_parameter_max(int,double);
+    void set_hyper_parameter_min(int,double);
+    
+    virtual void get_hyper_parameters(array_1d<double>&);
+    
+    virtual void print_hyperparams();
 
 };
 
@@ -38,8 +86,14 @@ private:
     
 public:
     gaussian_covariance();
-    virtual double operator()(double*,double*,double*,int);
-    virtual void set_hyper_parameters(double*);
+    virtual double operator()(const array_1d<double>&, const array_1d<double>&,
+        const array_1d<double>&, const array_1d<double>&, array_1d<double>&, const int)const;
+	
+    virtual void set_hyper_parameters(array_1d<double>&);
+    
+    virtual void print_hyperparams();
+    
+    virtual void get_hyper_parameters(array_1d<double>&);
 
 };
 
@@ -50,66 +104,242 @@ private:
 
 public:
     nn_covariance();
-    virtual double operator()(double*,double*,double*,int);
-    virtual void set_hyper_parameters(double*);
+    virtual double operator()(const array_1d<double>&, const array_1d<double>&, const array_1d<double>&,
+        const array_1d<double>&, array_1d<double>&, const int)const;
+	
+    virtual void set_hyper_parameters(array_1d<double>&);
+    
+    virtual void get_hyper_parameters(array_1d<double>&);
+    
+    virtual void print_hyperparams();
 
+};
+
+class matern_covariance : public covariance_function{
+
+private:
+    double ell;
+
+public:
+    matern_covariance();
+    virtual double operator()(const array_1d<double>&,const array_1d<double>&, const array_1d<double>&,
+        const array_1d<double>&,array_1d<double>&, const int)const;
+	
+    virtual void set_hyper_parameters(array_1d<double>&);
+    
+    virtual void print_hyperparams();
+    
+    virtual void get_hyper_parameters(array_1d<double>&);
+
+};
+
+class matern_covariance_multiD : public covariance_function{
+
+    private:
+        array_1d<double> ell;
+    
+    public:
+        matern_covariance_multiD();
+        
+        virtual double operator()(const array_1d<double>&,const array_1d<double>&, const array_1d<double>&,
+        const array_1d<double>&,array_1d<double>&, const int)const;
+	
+        virtual void set_hyper_parameters(array_1d<double>&);
+    
+        virtual void print_hyperparams();
+    
+        virtual void get_hyper_parameters(array_1d<double>&);
+        
+        virtual void set_dim(int);
+};
+
+class gaussian_covariance_multiD : public covariance_function{
+
+    private:
+        array_1d<double> ell;
+    
+    public:
+        gaussian_covariance_multiD();
+        
+        virtual double operator()(const array_1d<double>&,const array_1d<double>&, const array_1d<double>&,
+        const array_1d<double>&,array_1d<double>&, const int)const;
+	
+        virtual void set_hyper_parameters(array_1d<double>&);
+    
+        virtual void print_hyperparams();
+    
+        virtual void get_hyper_parameters(array_1d<double>&);
+        
+        virtual void set_dim(int);
+};
+
+class neighbor_cache{
+
+public:
+   neighbor_cache(kd_tree*);
+   ~neighbor_cache();
+   int compare(array_1d<double>&,int);
+   void set(array_1d<double>&,array_1d<double>&,array_1d<int>&,int);
+   void set_ggin(int,int,double);
+   double get_ggin(int,int);
+   
+   double get_dd(int);
+   int get_neigh(int);
+   void reset();
+
+private:
+    kd_tree *kptr;
+    
+    array_1d<double> dd,pt;
+    array_2d<double> ggin;
+    array_1d<int> neigh;    
+    
+    int dim;
+    int kk;
 };
 
 class gp{
   
   private:
-    
+    mutable neighbor_cache *neighbor_storage;   
     covariance_function *covariogram;
     
-    int initialized,room,roomstep,allottedpts;
-    int calledpredict,calleduserpredict,calledavpredict;
-    int called_fastgrad,sizeoffastgrad,calledgrad,gradkkold;
-    double **gg,**ggin,*ggq,*grad;
-    double *neighf,**neighpts,*dd,*ddav;
-    int *neigh,*neighav,kkoldav,kkoldusr;
+    paranoid_backup paranoia;
     
-    double **ggf,**ggfin,**gqf;
-    double **g_gg,**g_ggin,**g_grad,*g_dd;
-    int *g_neigh;
-    
-    
-    void predict(double**,double*,double*,double*,int,int,double*,double*,int);
-    
-  public:
-  
-    
-  
+    array_1d<double> fn,hhbest;
+    array_1d<int> opt_dex;
     kd_tree *kptr;
-    int dim,kk,pts;
-    double inversionerr,*fn;
-    double dav,dsig,ctav,kriging_parameter;
+    int pts,kk,called_opt,last_set;
     
+    int initialized,allottedpts,dim;
+    int last_optimized,last_validated,last_refactored;
+    double sigcap,time_optimize,eebest;
+   
+    mutable int ct_search,ct_predict;
+    mutable double time_search,time_predict;
+    mutable double time_dummy_search;
+    
+ 
+    double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
+ 
+  public:
+
+    double inversionerr;
+    double dav,dsig,ctav;
+  
     gp();
     ~gp();
-    void initialize(int,double**,double*,double*,double*);
+    void initialize(array_2d<double>&,array_1d<double>&,array_1d<double>&,
+       array_1d<double>&);
+    
+    void initialize(array_2d<double>&,array_1d<double>&);
+    
+    void set_hyper_parameters(array_1d<double>&);
+    
+    int is_kptr_null();
+    
+    int get_kk();
+    
+    void set_max(int,double);
+    void set_min(int,double);
+       
+    double user_predict(array_1d<double>&,double*,int) const;
+    double user_predict(array_1d<double>&,int) const;
+    double user_predict(array_1d<double>&,int,array_1d<double>&) const;
+    double user_predict(array_1d<double>&,double*,int,array_1d<double>&) const;
+    
+    double self_predict(int) const;
+    double self_predict(int,double*) const;
+    double self_predict(int,double*, int) const;
+    
+    void user_predict_gradient(array_1d<double>&,array_1d<double>&,int);
+    double actual_gradient(int,array_1d<double>&);
+    double actual_gradient(array_1d<double>&,array_1d<double>&);
+
+    void add_pt(array_1d<double>&,double);
+    void write_data(char*);
     
     void assign_covariogram(covariance_function*);
+    void refactor();
+    void print_search_time(char*);
+    void reset_cache() const;
+    void set_sig_cap(double);
+    double get_biggest_neighbor(array_1d<double>&);
+    void get_neighbor_range(array_1d<double>&,array_1d<double>&,array_1d<double>&,double*);
     
-    //user_predict is the routine the outside code calls for a Gaussian
-    //process prediction.  It calls the private function predict to actually
-    //do the work
-    double user_predict(double*,double*,int,double*);
+    double get_nearest_distance();
     
-    //user_predict_gradient is the routine the outside callse for a Gaussian
-    //process prediction of the gradient of chisquared at a point in parameter
-    //space
-    void user_predict_gradient(double*,double*,int);
+       int get_dim();
+    int get_last_optimized();
+    int get_last_refactored();
     
-    //add_pt is the routine called to add data to the Gaussian process
-    void add_pt(double*,double);
+    void optimize_grid(array_1d<int>&,int);
+    void optimize_simplex(array_1d<int>&,int);
     
-    //below are vestigial routines that are not actually used by APS
-    double user_predict_av(double*,int);
-    void write_data(char*);
-    void set_kp(int*);
-    void copy(gp*);
-    void fast_predict_gradient(double*,int*,int,double*,int);
+    void optimize(array_1d<int>&,int);
+    void optimize();
+    void optimize(int,int);
+    int optimize(array_1d<double>&,double);
+    void optimize(array_1d<double>&,int);
     
-
-  
+    double optimization_error(array_1d<double>&);
+    
+    double get_time_optimize();
+    
+    void set_kk(int);
+    double get_fn(int) const;
+    
+    double get_pt(int,int);
+    void get_pt(int,array_1d<double>&);
+    
+    int get_pts();
+    
+    double distance(array_1d<double>&,array_1d<double>&);
+    double distance(int,array_1d<double>&);
+    double distance(array_1d<double>&,int);
+    double distance(int,int);
+    
+    double get_max(int);
+    double get_min(int);
+    
+    void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&) const;
+    void nn_srch(int,int,array_1d<int>&,array_1d<double>&) const;
+    
+    int get_ct_predict();
+    int get_ct_search();
+    double get_time_predict();
+    double get_time_search();
+    
+    void get_hyper_parameters(array_1d<double>&);
+    
+    array_1d<double>* get_pt(int);
+    covariance_function* get_covariogram();
+    
 };
+
+class gross_gp{
+
+public:
+     gross_gp();
+     ~gross_gp();
+     double user_predict(array_1d<double>&,double*) const;
+     void set_pts(array_2d<double>&,array_1d<double>&,int,int);
+     void set_covariogram(covariance_function*);
+     int get_dim() const;
+
+private:
+     double ikp;
+     
+     array_2d<double> pts,ggin;
+     array_1d<double> fn,fbarvec,gginvec;
+     array_1d<double> min,max;
+     
+     
+     int dim,kk;
+     covariance_function *covariogram;
+     fbar_model *fbar;
+
+     void make_ggin();
+};
+
+#endif

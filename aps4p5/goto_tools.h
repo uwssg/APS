@@ -1,11 +1,17 @@
+#include "containers.h"
+
+#ifndef GOTO_H
+#define GOTO_H
 #define pi 3.141592654
-#define letters 100
-#include <stdio.h>
+
+#define chisq_exception 1.0e30
+
 
 void kill(char*);
 
+double raiseup(double,double);
 
-int compare_char(char*,char*);
+
 
 double power(double,int);
 
@@ -49,16 +55,30 @@ double doub(){
 
 int int32(){
   thework();
-  return int(x);
+  int ans=int(x);
+  if(ans<0)ans=-1*ans;
+  return ans;
 }
 
 };
 
+void polint(double*,double*,int,double,double*,double*);
 
 double interpolate(double*,double*,double,int);
 
 void sort(double*,int*,int);
 
+void check_sort(double*,int*,int);
+
+void sort_and_check(double*,double*,int*,int);
+
 double normal_deviate(Ran*,double,double);
 
+void naive_gaussian_solver(array_1d<double>&,array_1d<double>&,
+array_1d<double>&,int);
 
+double compare_arr(array_1d<double>&,array_1d<double>&);
+
+int compare_int_arr(array_1d<int>&, array_1d<int>&);
+
+#endif
