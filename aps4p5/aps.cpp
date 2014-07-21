@@ -2946,7 +2946,7 @@ void aps::write_pts(){
     double mu,sig;
     FILE *output;
     
-    
+    /*
     output=fopen(minimaname,"w");
     fprintf(output,"known_minima %d\n",known_minima.get_dim());
     for(i=0;i<known_minima.get_dim();i++){
@@ -2957,7 +2957,7 @@ void aps::write_pts(){
         fprintf(output,"%d\n",forbidden_candidates.get_data(i));
     }
     fclose(output);
-    
+    */
     
     /*
     array_1d<double> correct_ans;
