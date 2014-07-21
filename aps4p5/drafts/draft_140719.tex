@@ -576,7 +576,7 @@ across parameter space.  At each point in parameter space,
 $\chi^2$ is assumed to be
 distributed according to a normal distribution with mean 
 $\bar{\chi}^2$
-and variance dictated by the covariance function 
+and variance dictated by the ``covariogram''
 $C_{ij}(\vec{\theta}^{(i)},\vec{\theta}^{(j)})$.
 If we have $N_g$ measurements of $\chi^2$, then we assume
 they are distributed according to
@@ -808,6 +808,42 @@ Figures
 $\chi^2\le\chi^2_\text{lim}$ points found by APS (black points) against the
 known $\Delta\chi^2=11.0$ contours of the function (red contours).  Obviously, APS did a very
 good job of exploring all of the available low-$\chi^2$ regions.
+
+As mentioned above, because our toy $\chi^2$ function is constructed without any
+parameter degeneracies, we are able to directly integrate the posterior and
+determine the true Bayesian credible limits in our parameter space.  Figures
+\ref{fig:toyBayes2}, \ref{fig:toyBayes3}, and \ref{fig:toyBayes4} plot the true
+95\% credible limits in all 10 2-dimensional sub-spaces of our 5-dimensional
+parameter space (red contours).  They also show the APS-determined credible
+limits as described in Section \ref{sec:bayes} (black points).  The
+APS-determined credible limits correspond well with the true credible limits,
+giving us confidence in APS's ability to map out Bayesian credible limits as well
+as Frequentist confidence limits.
+
+The tests above demonstrate APS's ability to correctly determin credible and
+confidence limits.  They do not, however, address the question of APS's chief
+advantage over Markov Chain Monte Carlo methods: its ability to successfully
+locate all of the low-$\chi^2$ regions in a given parameter space.  To
+demonstrate this, we ran APS 100 times on each of the likelihood functions
+plotted in Figures \ref{fig:toyFreq2}-\ref{fig:toyFreq4}.  Each time, the
+pseudo-random number generator driving APS was given a different seed.  In all
+cases, APS successfully located all of the local minima in $\chi^2$, usually in
+fewer than 10,000 evaluations of $\chi^2$ (one case of the 2-mode $\chi^2$
+function required 10,352 evaluations to find both low-$\chi^2$ regions; one
+required 12,549 evaluations).  For comparison, we also ran 100 Markov Chain
+Monte Carlo searches on these $\chi^2$ function, each run consisting of five
+independent chains.  These searches were not nearly as successful as APS at
+locating all of the low-$\chi^2$ regions.  In the case of the 2-mode function,
+50 of the 100 MCMC searches failed to identify both modes.  In the case of the
+3-mode function, 56 of the 100 MCMC searches failed to identify all of the
+modes.  In the case of the 4-mode function, 87 of the 100 MCM searches failed to
+identify all of the modes.  This is not to say that APS is perfect at
+identifying all of the modes of a likelihood function.  If we reduce the
+characteristic widths $w_{j,i}$ in equation (\ref{eqn:toychi}), we enter a regime
+in which neither APS nor MCMC is capable of reliably,
+identifying all of the modes.  However, this test does indicate that APS is more
+robust than MCMC against multi-modal likelihood functions, as was first
+demonstrated by Bryan {\it et al}. (2007).
 
 \begin{figure*}
 \subfigure[]{
@@ -1096,21 +1132,9 @@ satellite.  Using the (very fast) Boltzmann code CAMB to calculate the $C_\ell$s
 Evaluating the $\chi^2$ using the likelihood code provided by the WMAP team
 \cite{wmap7likelihood} takes an additional 2 seconds.  Hence the need
 for an algorithm like APS or MCMC to accelerate the search.
-We run APS with the following input parameters:
-\begin{eqnarray}
-\Delta\chi^2&=&12.59 \nonumber\\
-&&\text{(according to the likelihood ratio test,}\nonumber\\
-&&\text{the
-95\% confidence limit for a 6-dimensional}\nonumber\\
-&&\text{ parameter space
-ought to be }\chi^2_\text{min}+12.59\text{)}\nonumber\\
-R_g&=&0.1\nonumber\\
-N_w&=&100\nonumber\\
-N_c&=&250\nonumber\\
-N_g&=&15\nonumber
-\end{eqnarray}
-We will consider both equations (\ref{eqn:covraw}) and (\ref{eqn:cov_nn})
-as covariograms, though we find that the choice has little effect on our
+We will consider both equations (\ref{eqn:GaussianCovar}) and (\ref{eqn:NNCovar})
+as covariogram for our Gaussian Process, 
+though we find that the choice has little effect on our
 results.
 
 To gauge the appropriateness of applying APS to this problem, we consider
@@ -1140,10 +1164,11 @@ $\vec{\theta}\rightarrow\chi^2$ can be modeled by a Gaussian Process is
 valid.  In Figure
 \ref{fig:goodness} we plot the average fractional error in $\mu$ as a proxy for $\chi^2$ as a
 function of the number of steps sampled (note: the vertical axis actually shows the average
-fractional error over the preceding 2,000 steps so that the early, imprecise models do not
+fractional error over the preceding 500 steps so that the early, imprecise models do not
 contaminate the later, precise models).  As APS samples more points, its Gaussian Process
-model becomes more accurate and the fractional error converges to a few percent.  Thus our
-use of Gaussian Processes to model $\vec{\theta}\rightarrow\chi^2$ is also justified.
+model becomes more accurate.  This effect is more pronounced for covariogram (\ref{eqn:GaussianCovar})
+than for covariogram (\ref{eqn:NNCovar}).  However, we will see below that this difference
+does not effect the parameter constraints determined by APS.
 
 \begin{figure}
 \includegraphics[scale=0.3]{chimin_plot.eps}
@@ -1162,8 +1187,9 @@ The average value of $|\mu-\chi^2|/\chi^2$ as a function of the number of points
 sampled by APS in the WMAP 7 problem.  
 This is shown as a check on our assumption that
 $\vec{\theta}\rightarrow\chi^2$ can be approximated as a Gaussian Process.
-As the number of sample points increases, the average error yielded by either
-covariogram quickly converges to a few percent in $\chi^2$.
+Though the squared exponential covariogram gives a better fit to the $\chi^2$ function,
+we see in Figures \ref{fig:contours_gauss} and \ref{fig:contours_nn}
+that this has little effect on the parameter constraints derived by APS.
 }
 \label{fig:goodness}
 \end{figure}
@@ -1183,57 +1209,46 @@ Quantitatively, this is determined by keeping only every $L$th sample after
 burn-in, where $L$ is set as the length such that the normalized correlation
 \begin{equation}
 \frac{\text{Cov}[\theta_n^{(i)},\theta_n^{(i+L)}]}
-{\text{Var}[\theta_n]}\le 0.01
+{\text{Var}[\theta_n]}\le 0.1
 \end{equation}
 where $n$ is the index over the $N_p$ parameters and $(i)$ is the index
 over the samples drawn.
 
 We find the 95\% credible
 limits in two-dimensional slices of our parameter space using
-a total of 460,000 MCMC steps.  These are the solid
-black contours in Figures \ref{fig:contours_gauss} through 
+a total of 460,000 MCMC steps.  These are assumed to be the
+true credible limits on the parameter space and are plotted
+as the thick red
+contours in Figures \ref{fig:contours_gauss} through 
 \ref{fig:contours_br} 
-below.  They are referred to below as the ``final credible limits''
-returned by MCMC.  To gauge
-convergence as a function of time, we also plot the 95\% credible limit contours
-taken from our set of four MCMC chains after they have sampled
-a total of 100,000 points.  
-These are the dotted green
-contours in Figures \ref{fig:contours_gauss} through \ref{fig:contours_br}.
-They are referred to as the ``pre-convergence'' credible limits.
-Note that, even though MCMC has discovered its final value of $\chi^2_\text{min}$
-by this point (see Figure \ref{fig:chimin}), this rapid convergence in
-$\chi^2_\text{min}$ has not translated into convergence for the credible limits
-on parameter space.
+below.  Against these control contours, we plot the Frequentist
+confidence limits (all points with $\chi^2\le\chi^2_\text{lim}$)
+discovered by APS after only 50,000 evaluations of $\chi^2$.
+We consider both an adaptive $\chi^2_\text{lim}=\chi^2_\text{min}+12.6$
+and an absoulte $\chi^2_\text{lim}=1283.3$ (this is the 95\% confidence limit
+for a $\chi^2$ probability distribution with 1199 degrees of freedom).
+These are the black points in Figures \ref{fig:contours_gauss}, \ref{fig:contours_nn},
+and \ref{fig:contours_br} respectively.  These confidence limits overlap very nicely
+with the credible limits discovered by MCMC after many more $\chi^2$ evaluations,
+comporting the the idea that, in the large data limit, Bayesiand credible limits
+and Frequentist confidence limits ought to align.
 
-In the case of APS, the confidence limit is interpreted 
-as that set of points found
-which satisfy $\chi^2\le\chi^2_\text{lim}$.  Figures \ref{fig:contours_gauss}
-and \ref{fig:contours_nn} plot these points after APS has sampled 100,000 
-points in the case where $\chi^2_\text{lim}\equiv\chi^2_\text{min}+12.59$
-using equations (\ref{eqn:covraw}) and (\ref{eqn:cov_nn}) as covariograms,
-respectively.
-We find that the confidence limits returned by APS overlap with
-the final credible limits of MCMC, but are generally too permissive,
-they include regions of parameter space which MCMC ultimately excludes.
-It is tempting to say that
-this is due to the fact that the $\chi^2_\text{min}$ discovered by
-APS is $\sim3$ greater than the $\chi^2_\text{min}$ discovered by
-MCMC (therefore, $\chi^2_\text{lim}$ is $\sim 3$ too large).
-However, Figure \ref{fig:contours_br} uses the same data as
-Figure \ref{fig:contours_gauss}, but plots only those APS points
-such that $\chi^2\le 1283.3$, i.e. $\chi^2\le\chi^2_\text{min, MCMC}+12.59$.
-Still we find that the APS confidence limit includes regions of parameter
-space excluded by the final MCMC contour.  Thus, the difference in
-parameter space constraints between APS and MCMC amounts to difference
-between the frequentist confidence limit (see Appendix \ref{sec:frequentism})
-and the Bayesian credible limit.  The fact that the two contraints overlap
-significantly but not entirely indicates the value in performing multiple
-statistical tests before drawing conclusions from one's data set.
-It is also worth noting that in all cases, APS has thoroughly explored
-the correct confidence limit in fewer samples than has MCMC.  Compare the
-coverage of the red scatter plot to the green pre-convergence MCMC contours in
-Figures \ref{fig:contours_gauss} through \ref{fig:contours_br}.
+For comparison of convergence properties, we plot the Bayesian credible limits discovered
+by MCMC after only 50,000 $\chi^2$ evaluations.  These are the black regions in
+Figure \ref{fig:mcmc_comparison}.  As can be seen, MCMC has not yet totally converged
+in all of the sub-spaces of cosmological parameter space.  This should be compared
+with the reasonably complete coverage of the control credible limits seen in
+Figures \ref{fig:contours_gauss}-\ref{fig:contours_br}.
+
+In Figure \ref{fig:contours_bayes}, we plot the 95\% Bayesian credible limit discovered
+by APS after 50,000 evalutations of $\chi^2$ and determined by the method outlined in
+Section \ref{sec:bayes}.  While we do not see the clean equivalence between the APS-derived credible limits and
+the true credible limits that we saw in Figures \ref{fig:toyBayes2}-\ref{fig:toyBayes4},
+we do find that the APS-derived credible limits roughly sketch the bounds of the 
+true credible limit.  This, combined with its robustness against multi-modal likelihood
+functions, suggests that APS may, at the very least be useful in cases where very little
+prior information is available and exploring the paramter space is at least as important as
+integrating it to find a rigorous bound.
 
 As a final note, we do not plot any confidence or 
 credible limits for $\tau$.
@@ -1256,140 +1271,220 @@ systematics.
 
 \begin{figure*}
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_0_1.eps}
+\includegraphics[scale=0.15]{gaussLearn_0_1_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_0_2.eps}
+\includegraphics[scale=0.15]{gaussLearn_0_2_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_0_3.eps}
+\includegraphics[scale=0.15]{gaussLearn_0_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_0_4.eps}
+\includegraphics[scale=0.15]{gaussLearn_0_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_1_2.eps}
+\includegraphics[scale=0.15]{gaussLearn_1_2_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_1_3.eps}
+\includegraphics[scale=0.15]{gaussLearn_1_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_1_4.eps}
+\includegraphics[scale=0.15]{gaussLearn_1_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_2_3.eps}
+\includegraphics[scale=0.15]{gaussLearn_2_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_2_4.eps}
+\includegraphics[scale=0.15]{gaussLearn_2_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_100k_3_4.eps}
+\includegraphics[scale=0.15]{gaussLearn_4_5_50k_frequentist.eps}
 }
 \caption{
-95\% confidence limits in two-dimensional slices of parameter space as
-determined by MCMC and APS after 100,000 points have been sampled.  Solid (black)
-contours are the baseline result found by 4 MCMC chains
-after sampling a total of 460,000 points.  
-Dotted (green) contours are the result found by a 4 MCMC
-chains after each has sampled 25,000 points (for a total of 100,000
-sampled points).  Red points show the $\chi^2\le\chi^2_\text{min}+12.59$
-points found by APS after sampling a total of 100,000 points.
-These plots use equation (\ref{eqn:covraw}) for the covariogram.
+The 10 2-dimensional sub-spaces of our 6-dimensional parameter space
+($\tau$ is ignored because not real constraint can be gleaned from this data).
+The thick red contours are the 95\% Bayesian credible limits determined by MCMC after
+460,000 calls to $\chi^2$.  The black points are the 95\% Frequentist confidence limits
+determined by APS after 50,000 calls to $\chi^2$.  $\chi^2_\text{lim}=\chi^2_\text{min}+12.6$.
+Equation (\ref{eqn:GaussianCovar}) is used for the Gaussian Process covariogram.
 }
 \label{fig:contours_gauss}
 \end{figure*}
 
 \begin{figure*}
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_0_1.eps}
+\includegraphics[scale=0.15]{nnLearn_0_1_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_0_2.eps}
+\includegraphics[scale=0.15]{nnLearn_0_2_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_0_3.eps}
+\includegraphics[scale=0.15]{nnLearn_0_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_0_4.eps}
+\includegraphics[scale=0.15]{nnLearn_0_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_1_2.eps}
+\includegraphics[scale=0.15]{nnLearn_1_2_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_1_3.eps}
+\includegraphics[scale=0.15]{nnLearn_1_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_1_4.eps}
+\includegraphics[scale=0.15]{nnLearn_1_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_2_3.eps}
+\includegraphics[scale=0.15]{nnLearn_2_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_2_4.eps}
+\includegraphics[scale=0.15]{nnLearn_2_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_nn_100k_3_4.eps}
+\includegraphics[scale=0.15]{nnLearn_4_5_50k_frequentist.eps}
 }
 \caption{
-95\% confidence limits in two-dimensional slices of parameter space as
-determined by MCMC and APS after 100,000 points have been sampled.  Solid (black)
-contours are the baseline result found by 4 MCMC chains
-after sampling a total of 460,000 points.  
-Dotted (green) contours are the result found by a 4 MCMC
-chains after each has sampled 25,000 points (for a total of 100,000
-sampled points).  Red points show the $\chi^2\le\chi^2_\text{min}+12.59$
-points found by APS after sampling a total of 100,000 points.
-These plots use equation (\ref{eqn:cov_nn}) for the covariogram.
+The 10 2-dimensional sub-spaces of our 6-dimensional parameter space
+($\tau$ is ignored because not real constraint can be gleaned from this data).
+The thick red contours are the 95\% Bayesian credible limits determined by MCMC after
+460,000 calls to $\chi^2$.  The black points are the 95\% Frequentist confidence limits
+determined by APS after 50,000 calls to $\chi^2$.  $\chi^2_\text{lim}=\chi^2_\text{min}+12.6$.
+Equation (\ref{eqn:NNCovar}) is used for the Gaussian Process covariogram.
 }
 \label{fig:contours_nn}
 \end{figure*}
+
 \begin{figure*}
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_0_1.eps}
+\includegraphics[scale=0.15]{gaussAssert_0_1_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_0_2.eps}
+\includegraphics[scale=0.15]{gaussAssert_0_2_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_0_3.eps}
+\includegraphics[scale=0.15]{gaussAssert_0_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_0_4.eps}
+\includegraphics[scale=0.15]{gaussAssert_0_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_1_2.eps}
+\includegraphics[scale=0.15]{gaussAssert_1_2_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_1_3.eps}
+\includegraphics[scale=0.15]{gaussAssert_1_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_1_4.eps}
+\includegraphics[scale=0.15]{gaussAssert_1_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_2_3.eps}
+\includegraphics[scale=0.15]{gaussAssert_2_4_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_2_4.eps}
+\includegraphics[scale=0.15]{gaussAssert_2_5_50k_frequentist.eps}
 }
 \subfigure[]{
-\includegraphics[scale=0.15]{scatter_br_100k_3_4.eps}
+\includegraphics[scale=0.15]{gaussAssert_4_5_50k_frequentist.eps}
 }
 \caption{
-The black and green contours are as in Figure \ref{fig:contours_gauss}.
-The red points represent the $\chi^2\le 1283.3$ points sampled by the
-APS run used to generate Figure \ref{fig:contours_gauss}.
+The 10 2-dimensional sub-spaces of our 6-dimensional parameter space
+($\tau$ is ignored because not real constraint can be gleaned from this data).
+The thick red contours are the 95\% Bayesian credible limits determined by MCMC after
+460,000 calls to $\chi^2$.  The black points are the 95\% Frequentist confidence limits
+determined by APS after 50,000 calls to $\chi^2$.  $\chi^2_\text{lim}=1283.3$.
+Equation (\ref{eqn:GaussianCovar}) is used for the Gaussian Process covariogram.
 }
 \label{fig:contours_br}
 \end{figure*}
 
+\begin{figure*}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_0_1_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_0_2_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_0_4_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_0_5_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_1_2_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_1_4_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_1_5_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_2_4_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_2_5_50k.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{mcmc_comparison_4_5_50k.eps}
+}
+\caption{
+The 10 2-dimensional sub-spaces of our 6-dimensional parameter space
+($\tau$ is ignored because not real constraint can be gleaned from this data).
+The thick red contours are the 95\% Bayesian credible limits determined by MCMC after
+460,000 calls to $\chi^2$.  The black regions are the 95\% Bayesian credible limits
+determined by MCMC after 50,000 calls to $\chi^2$.
+}
+\label{fig:mcmc_comparison}
+\end{figure*}
+
+\begin{figure*}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_0_1_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_0_2_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_0_4_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_0_5_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_1_2_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_1_4_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_1_5_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_2_4_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_2_5_50k_bayes.eps}
+}
+\subfigure[]{
+\includegraphics[scale=0.15]{gaussLearn_4_5_50k_bayes.eps}
+}
+\caption{
+The 10 2-dimensional sub-spaces of our 6-dimensional parameter space
+($\tau$ is ignored because not real constraint can be gleaned from this data).
+The thick red contours are the 95\% Bayesian credible limits determined by MCMC after
+460,000 calls to $\chi^2$.  The black points are the 95\% Bayesian credible limits determined
+by APS according to the method outlined in Section \ref{sec:bayes}.  While the APS credible limit
+covers the entire MCMC limit, it also covers regions of parameter space excluded by MCMC.
+}
+\label{fig:contours_bayes}
+\end{figure*}
 
 \section{Conclusions}
 \label{sec:conclusions}
 
-In Section \ref{sec:toy} we showed that APS is more robust
+In Section \ref{sec:toy} we indicated that APS is more robust
 than MCMC against multi-modal likelihood functions.
 In Section \ref{sec:wmap} we showed that, on more well-behaved
-likelihood functions, APS discovers the same parameter constraints
+likelihood functions, APS discovers comparable parameter constraints
 as MCMC and that APS does not converge any more slowly than does MCMC.
 We also showed a great deal of qualitative similarity but quantitative
 difference between the Bayesian credible limits drawn by MCMC
@@ -1428,7 +1523,7 @@ hesitate to contact the authors.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section*{Acknowledgments}
-The authors would like to thank the referee for useful comments and suggestions
+The authors would like to thank the referee for comments and suggestions
 which we hope have made this paper more useful to astrophysical audiences.
 They would also like to thank Christopher Genovese for useful discussions
 regarding statistial theory and interpretation.

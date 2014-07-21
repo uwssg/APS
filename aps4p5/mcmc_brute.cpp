@@ -28,7 +28,7 @@ ncenters=atoi(argv[3]);
 
 char outname[letters];
 
-sprintf(outname,"aps_output/ellipse/scriptOutput/ellipse_mcmc_d%d_c%d.sav",dim,ncenters);
+sprintf(outname,"aps_output/ellipse/scriptOutput/ellipse_mcmc_d%d_c%d_100k.sav",dim,ncenters);
 
 Ran chaos(seed);
 int i,j;
@@ -90,7 +90,7 @@ while(iteration<20 && found_all==0){
     
     found_all=1;
     iteration++;
-    mcmc_test.sample(200);
+    mcmc_test.sample(1000);
     
     ddmax=-1.0;
     for(i=0;i<ncenters;i++){
