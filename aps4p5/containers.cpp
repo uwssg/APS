@@ -900,14 +900,12 @@ void array_2d<T>::set(int ir, int ic, T val){
     array_1d<T> vector;
     if(ir>=rows){
         for(i=0;i<cols;i++)vector.set(i,0);
-	vector.set(ic,val);
-	
-	for(i=rows;i<ir+1;i++)add_row(vector);
+	while(rows<=ir)add_row(vector);
 	
     }
-    else{
-        data[ir].set(ic,val);
-    }
+
+    data[ir].set(ic,val);
+    
     
     
 }
@@ -1394,13 +1392,10 @@ void asymm_array_2d<T>::set(int ir, int ic, T val){
     
     array_1d<T> vector;
     int i;
-    
-    if(ir<rows){
-        data[ir].set(ic,val);
-    }
-    else{
+ 
+    if(ir>=rows){
         vector.set_dim(ic+1);
-	for(i=0;i<ic+1;i++)vector.set(i,val);
+	for(i=0;i<ic+1;i++)vector.set(i,0);
 	while(rows<=ir){
             add_row(vector);
             if(rows-1!=ir){
@@ -1409,6 +1404,8 @@ void asymm_array_2d<T>::set(int ir, int ic, T val){
             
         }
     }
+    
+    data[ir].set(ic,val);
 
 }
 
