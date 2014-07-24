@@ -59,7 +59,11 @@ class array_1d{
 
     /*
     This is a class of 1-dimensional arrays with elements of type T.
-    presently, the code will compile with T set to double or int
+    
+    Presently, the code will compile with T set to double or int
+    To change that, change the 'template class' statements in
+    containers.cpp
+    
     */
 
 public:
@@ -345,54 +349,169 @@ private:
 template <typename T>
 class asymm_array_2d{
 
+    /*
+    This is a class for a 2-dimensional 'matrix' in which each row has a 
+    different number of columns.
+    
+    The rows are stored as array_1d's.
+    
+    As before, the code will currently compile so that you can have 
+    asymm_array_2d's of either ints or doubles.
+    */
+
 public:
     asymm_array_2d();
     ~asymm_array_2d();
     
+    /*set the name of this asymm_array_2d for diagnostic purposes*/
     void set_name(char*);
+    
+    /*set the location of this asymm_array_2d for diagnostic purposes*/
     void set_where(char*) const;
+    
+    /*add a row to the end of this asymm_array_2d*/
     void add_row(const array_1d<T>&);
+    
+    /*set the indexed row to the provided array_1d;
+    If you set a row beyond the current size of this asymm_array_2d,
+    then empty rows will be used to fill in the gaps
+    */
     void set_row(int, const array_1d<T>&);
     
+    /*
+    remove the row indexed by int.  Rows with indexes greater than the provided
+    index will be shifted down to fill in the gap
+    */
     void remove_row(int);
+    
+    /*set all of the elements in this asymm_array_2d to zero*/
     void zero();
     
+    /*
+    set the element indexed by the ints to the provided value.
+    
+    If you specify an element beyond the present size of the asymm_array_2d,
+    zeros will be used to fill in the empty space.
+    
+    Note that there is no longer any restriction on the specified column
+    index as each row in asymm_array_2d is allowed to have a different
+    number of columns.
+    */
     void set(int,int,T);
+    
+    /*
+    Return the indexed element
+    */
     T get_data(int,int);
     
+    /*add T to the end of the row specified by int*/
     void add(int,T);
     
+    /*add the value T onto the indexed element, i.e.
+    asymm_array[int1][int2] = asymm_array[int1][int2] + T
+    */
     void add_val(int,int,T);
+    
+    /*subtract the value T from the indexed element*/
     void subtract_val(int,int,T);
+    
+    /*divide the indexed element by the value T*/
     void divide_val(int,int,T);
+    
+    /*multiply the indexed elmement by the value T*/
     void multiply_val(int,int,T);
     
+    /*replace the indexed row with the provided array_1d*/
     void replace_row(int,array_1d<T>&);
     
+    /*return the number of rows*/
     int get_rows();
+    
+    /*return the number of columns in the row indexed by int*/
     int get_cols(int);
     
+    /*throw an exception; the argument indicates the row index being
+    called for when the exception was thrown*/
     void die(int) const;
     
+    /*reset the contents of this asymm_array_2d*/
     void reset();
     
+    /*return a pointer to the row indexed by int, i.e.
+    
+    myAsymmArray(i) is a pointer to the array_1d in the ith row
+    
+    so
+    
+    *myAsymmArray(i) behaves like an array_1d
+    
+    */
     array_1d<T>* operator()(int);
     
 private:
+    
+    /*
+    rows is the number of rows
+    
+    row_room is the number of array_1d's allocated for rows (so
+    the code knows how much room it has when you call add_row)
+    */
     int rows,row_room;
+    
+    /*this will be allocated as an array of array_1d's for storing the
+    rows of this asymm_array_2d*/
     array_1d<T> *data;
+    
+    /*the name of this asymm_array_2d for diagnostic purposes*/
     char *name;
+    
+    /*the location of this asymm_array_2d in the code, for diagnostic purposes*/
     mutable char *where_am_i;
 
+    /*name and where_am_i will be passed down to the array_1d's making up the rows
+    of this assymm_array_2d*/
 };
 
 
+///////////////*BELOW ARE ROUTINES FOR SORTING array_1d's/////////////
+
+/*a driver for a merge sort as described here
+
+http://en.wikipedia.org/wiki/Merge_sort
+
+The user should not call this routine; it is called by sort_and_check, which
+the user should call
+*/
 template <typename T>
 void merge_sort(const array_1d<T>&,array_1d<int>&,int,int);
 
+
+
+/*
+The first array_1d<T> is the input data
+
+The second array_1d<T> will store the sorted output
+
+The array_1d<int> are unique id's associated with each element of the input data.
+It will be rearranged to preserve the relationship between these indexes and the
+sorted data.
+
+This routine will check to make sure that the output is sorted from lowest
+to highest and that the unique id's are preserved relative to the input data.
+
+The routine returns the maximum error fabs(input(unique_id=i)-output(unique_id=i)).
+
+If this maximum error is greater than 10^-12, then the code throws an exception
+*/
 template <typename T>
 double sort_and_check(const array_1d<T>&, array_1d<T>&, array_1d<int>&);
 
+
+
+/*return the index of the element of the array_1d that is closest in value to T;
+
+ASSUMES THAT THE array_1d IS SORTED FROM LOWEST TO HIGHEST
+*/
 template <typename T>
 int get_dex(const array_1d<T>&, T);
 

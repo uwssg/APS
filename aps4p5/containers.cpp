@@ -1390,20 +1390,13 @@ void asymm_array_2d<T>::add_row(const array_1d<T> &in){
 template <typename T>
 void asymm_array_2d<T>::set(int ir, int ic, T val){
     
-    array_1d<T> vector;
+    array_1d<T> empty;
     int i;
  
-    if(ir>=rows){
-        vector.set_dim(ic+1);
-	for(i=0;i<ic+1;i++)vector.set(i,0);
-	while(rows<=ir){
-            add_row(vector);
-            if(rows-1!=ir){
-                data[rows-1].reset();
-            }
-            
-        }
+    while(rows<=ir){
+        add_row(empty);
     }
+    
     
     data[ir].set(ic,val);
 
