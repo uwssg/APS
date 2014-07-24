@@ -144,7 +144,15 @@ double, representing the value of chisquared at that point.
 
 chisq_aps4p5.cpp -- this file defines some specific daught classes of the
 chisquared class from chisq.cpp.  Specifically, it defines the wmap_likelihood
-class, which is how APS runs the WMAP 7 year likelihood function.
+class, which is how APS runs the WMAP 7 year likelihood function.  If you want
+to run this option, you will have to install CAMB and the WMAP likelihood code
+on your machine and change the Makefile accordingly.
+
+camb_wrapper_wmap.F90 -- fortran code that interfaces the wmap_likelihood class
+from chisq_aps4p5.cpp with CAMB.
+
+wmap_wrapper.F90 -- fortran code that interfaces the wmap_likelihood class form
+chisq_aps4p5.cpp with the WMAP 7 likelihood code.
 
 gaussian_process.cpp -- this file defines the class gp.cpp which performs the
 Gaussian process inferences for APS.
