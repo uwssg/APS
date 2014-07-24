@@ -142,6 +142,10 @@ daughter class will need to include an operator () which accepts an
 array_1d<double>&, representing a point in parameter space and returning a
 double, representing the value of chisquared at that point.
 
+chisq_aps4p5.cpp -- this file defines some specific daught classes of the
+chisquared class from chisq.cpp.  Specifically, it defines the wmap_likelihood
+class, which is how APS runs the WMAP 7 year likelihood function.
+
 gaussian_process.cpp -- this file defines the class gp.cpp which performs the
 Gaussian process inferences for APS.
 
