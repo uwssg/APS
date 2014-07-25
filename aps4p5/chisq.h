@@ -159,8 +159,6 @@ public:
     double get_min(int);
     double get_max(int);
     
-    virtual void activate_small_m();
-    
     virtual double distance_to_center(int,array_1d<double>&);
     
     int get_ncenters();
