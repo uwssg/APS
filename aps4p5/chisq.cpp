@@ -4,11 +4,6 @@
 #include <time.h>
 #include "chisq.h"
 
-void chisquared::set_i_chain(int ii){
-    printf("sorry; you cannot set i_chain for this chisquared function\n");
-    throw -1;
-}
-
 void chisquared::allot_arrays(){
     int ix,iy;
     
