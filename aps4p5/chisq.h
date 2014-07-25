@@ -1,3 +1,24 @@
+/*
+This file defines the class chiquared, which provides the form in which APS
+expects to interface with the users' likelihood function.  To write her own 
+likelihood function, the user needs to write a class that inherits from the 
+chisquared class.
+
+The only method that APS requires the users' likelihood to contain is an operator()
+that receives an array_1d<double> of parameters and returns a double that is the
+chisquared value at that point in parameter space.
+
+Most of the other methods defined on the chisquared class exist to support the
+various daughter classes also defined in this file, which are cartoon likelihood
+meant for testing the performance of APS.
+
+Should the user wish to define a hard boundary on parameter space beyond which the
+chisquared value is set to 2.0e30, she can do so using the methods set_min and
+set_max in the chisquared class.
+
+Specific methods are documented below.
+*/
+
 #ifndef CHISQ_H
 #define CHISQ_H
 
@@ -8,26 +29,6 @@
 #include <stdio.h>
 
 class chisquared{
-
-protected:
-    int dim,ncenters;
-    mutable int called;
-    mutable double time_spent;
-  
-    array_2d<double> bases,widths,centers;
-    array_1d<double> maxs,mins;
-    
-    double ***boundary,rr_max;
-    
-    array_1d<int> nboundary,boundary_room;
-    
-    Ran *dice;
-    
-    void reset_boundary();
-    void death_knell(char*) const;
-    void allot_arrays();
-    void make_bases(int);
-    void add_to_boundary(array_1d<double>&,int,int,double);
 
 public:
     chisquared();
@@ -65,6 +66,28 @@ public:
     double get_time_spent();
     
     virtual void set_i_chain(int);
+
+protected:
+    int dim,ncenters;
+    mutable int called;
+    mutable double time_spent;
+  
+    array_2d<double> bases,widths,centers;
+    array_1d<double> maxs,mins;
+    
+    double ***boundary,rr_max;
+    
+    array_1d<int> nboundary,boundary_room;
+    
+    Ran *dice;
+    
+    void reset_boundary();
+    void death_knell(char*) const;
+    void allot_arrays();
+    void make_bases(int);
+    void add_to_boundary(array_1d<double>&,int,int,double);
+
+
 };
 
 
