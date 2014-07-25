@@ -4,10 +4,6 @@
 #include <time.h>
 #include "chisq.h"
 
-void chisquared::set_characteristic_error(double nn){
-    death_knell("used meaningless set characteristic error");
-}
-
 void chisquared::activate_small_m(){
     death_knell("used nonsense small m");
 }
