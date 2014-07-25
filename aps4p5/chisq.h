@@ -8,7 +8,23 @@ The only method that APS requires the user's likelihood to contain is an operato
 that receives an array_1d<double> of parameters and returns a double that is the
 chisquared value at that point in parameter space.
 
-The constructor fo the user's likelihood function should call the constructor
+It is very important that the operator that the user supplies increments
+called every time it is called.  This is how APS balances its various searches
+(by making sure that no one class of search monopolizes all of the calls
+to the likelihood function).
+
+Similarly, it is important that the operator contain code like
+
+    double before=double(time(NULL));
+    
+    execute the chisquared calculation
+    
+    time_spent+=double(time(NULL)) - before;
+
+This way, APS can also keep track of how much overhead in clock time is
+being added to each call to the likelihood function.
+
+The constructor for the user's likelihood function should call the constructor
 for the chisquared class with the correct number of dimensions (see the constructors
 for the ellipses classes in chisq.cpp for examples)
 
@@ -66,6 +82,38 @@ public:
     virtual double operator()(array_1d<double>&) const;
     
     /*
+    Return the number of times chisquared::operator() was called.
+    This is important for APS in determining how to balance the 
+    searches that it performs.
+    */
+    int get_called();
+    
+    /*
+    Return the total amount of clock time spent in the chisquared::operator()
+    function
+    */
+    double get_time_spent();
+    
+    /*
+    Decrease the official tally of the number of calls to chisquared by 1
+    */    
+    void decrement_called();
+    
+    /*
+    Set the minimum and maximum allowed values of the parameter specified
+    by the int to the value specified by the double.
+    */
+    void set_max(int,double);
+    void set_min(int,double);
+    
+    /*
+    Return the minimum or maximum bounds in the dimension of parameter space
+    specified by the argument.
+    */
+    double get_min(int);
+    double get_max(int);
+    
+    /*
     For the cartoon functions defined in this file, build_boundary(xx)
     will assemble all of the points in parameter space on the
     chisquared = xx contour in all of the 2-dimensional sub-spaces
@@ -89,6 +137,10 @@ public:
     points found by ths method are reckoned in those bases, not
     in the bases used by APS (though the two may align if the user
     forces them to).
+    
+    Note also that because each cartoon likelihood is different,
+    the actual version of build_boundary to be used must be
+    defined by the daughter class of chisquared in question.
     */
     virtual void build_boundary(double);
     
@@ -151,44 +203,101 @@ public:
     likelihood function
     */
     void print_mins_maxs();
-    
+
     /*
-    Return the minimum or maximum bounds in the dimension of parameter space
-    specified by the argument.
+    Return the distance in parameter space between the point
+    given by the array_1d and the mode specified by the int
     */
-    double get_min(int);
-    double get_max(int);
-    
     virtual double distance_to_center(int,array_1d<double>&);
     
+    /*return the number of modes in a cartoon likelihood function*/
     int get_ncenters();
+    
+    /*return the dimensionality of the parameter space*/
     int get_dim();
-    int get_called();
-    void decrement_called();
-    
-    void set_max(int,double);
-    void set_min(int,double);
-    
-    double get_time_spent();
-    
+
+
 protected:
+    /*
+    dim is the dimensionality of the parameter space
+    
+    ncenters is the number of modes (only relevant for cartoon likelihoods)
+    */
     int dim,ncenters;
+    
+    /*
+    This is where APS keeps track of how many times chisquared::operator() has
+    been called
+    */
     mutable int called;
+
+    /*
+    This is where APS keeps track of how much clock time has been spent (total)
+    in chisquared::operator()
+    */
     mutable double time_spent;
   
-    array_2d<double> bases,widths,centers;
+    /*
+    The maximum and minimum values allowed in each parameter
+    */
     array_1d<double> maxs,mins;
-    
+  
+    /*
+    In the case of cartoon likelihoods, these will store the basis vectors
+    in paramter space, the centers of the modes, and the widths in paramter
+    space of each mode
+    */
+    array_2d<double> bases,widths,centers;
+
+    /*
+    This is where chisquared will store the boundary points found
+    by build_boundary above
+    */
     double ***boundary,rr_max;
     
+    /*
+    These store the number of boundary points in each 2-dimensional
+    sub-space, and the amount of room allotted in ***boundary for
+    each 2-dimensional sub-space
+    */
     array_1d<int> nboundary,boundary_room;
     
+    /*
+    A random number generator for use by make_bases on cartoon likelihoods
+    */
     Ran *dice;
     
+    /*
+    Reset the contents of ***boundary
+    */
     void reset_boundary();
+    
+    /*
+    Print char* to the screen and then exit the program
+    */
     void death_knell(char*) const;
+    
+    /*
+    Mostly for use by cartoon likelihood functions.  allot_arrays()
+    declares all of the arrays needed for storing centers and bases.
+    However, it also declares maxs and mins, which is why it is important
+    for the user's likelihood function to call the appropriate
+    chisquared(int=dimensionality) constructor
+    */
     void allot_arrays();
+    
+    /*
+    Only for use by cartoon likelihoods.  Will construct random
+    centers and bases in parameter space, using the int as a seed.
+    
+    If the seed is negative, the centers will be randomized, but
+    the bases will be the usual (1,0,0,0), (0,1,0,0), (0,0,1,0), etc.
+    */
     void make_bases(int);
+    
+    /*
+    Used by build_boundary() to add points to **boundary
+    */
     void add_to_boundary(array_1d<double>&,int,int,double);
 
 
