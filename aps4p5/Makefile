@@ -5,11 +5,23 @@ ARPACK_LIB = -L/Users/noldor/physics/ARPACK/ -larpack
 
 FORTRAN_LIB = -L/opt/local/lib/ -lf95 -lgfortran
 
+CAMB_LIB = -L/Users/noldor/physics/CAMB_110419/camb/ -lcamb
+CAMB_INC = -I/Users/noldor/physics/CAMB_110419/camb/
+
+CFITSIO_LIB = -L/Users/noldor/physics/cfitsio/ -lcfitsio
+
+WMAP_LIB = -L/astro/users/danielsf/WMAP7likelihood/ -lwmap7 -lpthread
+WMAP_INC = -I/astro/users/danielsf/WMAP7likelihood/
+
 R_PATH = /Users/noldor/physics/lib/
 
-LIBRARIES = $(LAPACK_LIB) $(BLAS_LIB) $(ARPACK_LIB) $(FORTRAN_LIB) \
+LIBRARIES = $(LAPACK_LIB) $(BLAS_LIB) $(ARPACK_LIB) $(FORTRAN_LIB)
 
-INCLUDE = 
+INCLUDE =
+
+WMAP_LIBRARIES =$(WMAP_LIB) $(CAMB_LIB) $(CFITSIO_LIB)
+
+WMAP_INCLUDE = $(CAMB_INC) $(WMAP_INC)
 
 #do not use these compilers with omp
 #gg = g++ -Wno-write-strings -O3
