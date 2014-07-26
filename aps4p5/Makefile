@@ -10,8 +10,8 @@ CAMB_INC = -I/Users/noldor/physics/CAMB_110419/camb/
 
 CFITSIO_LIB = -L/Users/noldor/physics/cfitsio/ -lcfitsio
 
-WMAP_LIB = -L/astro/users/danielsf/WMAP7likelihood/ -lwmap7 -lpthread
-WMAP_INC = -I/astro/users/danielsf/WMAP7likelihood/
+WMAP_LIB = -L/Users/noldor/physics/WMAP7likelihood/ -lwmap7 -lpthread
+WMAP_INC = -I/Users/noldor/physics/WMAP7likelihood/
 
 R_PATH = /Users/noldor/physics/lib/
 
@@ -19,9 +19,9 @@ LIBRARIES = $(LAPACK_LIB) $(BLAS_LIB) $(ARPACK_LIB) $(FORTRAN_LIB)
 
 INCLUDE =
 
-WMAP_LIBRARIES =$(WMAP_LIB) $(CAMB_LIB) $(CFITSIO_LIB)
+WMAP_LIBRARIES = $(LIBRARIES) $(WMAP_LIB) $(CAMB_LIB) $(CFITSIO_LIB)
 
-WMAP_INCLUDE = $(CAMB_INC) $(WMAP_INC)
+WMAP_INCLUDE = $(INCLUDE) $(CAMB_INC) $(WMAP_INC)
 
 #do not use these compilers with omp
 #gg = g++ -Wno-write-strings -O3
@@ -54,8 +54,15 @@ chisq.o: goto_tools.o chisq.h chisq.cpp containers.o kd.o
 	$(gg) -c chisq.cpp goto_tools.o containers.o kd.o $(LIBRARIES) $(INCLUDE)
 
 chisq_aps4p5.o: chisq.o
-	$(gg) -c chisq_aps4p5.cpp goto_tools.o containers.o chisq.o \
+	$(gg) -D_WMAP7_ -c chisq_aps4p5.cpp goto_tools.o containers.o chisq.o \
 	$(LIBRARIES) $(INCLUDE)
+
+camb_wrapper_wmap.o:
+	$(ff) -D_WMAP7_ -c camb_wrapper_wmap.F90 $(WMAP_LIBRARIES) \
+	$(WMAP_INCLUDE)
+
+wmap_wrapper.o:
+	$(ff) -D_WMAP7_ -c wmap_wrapper.F90 $(WMAP_LIBRARIES) $(WMAP_INCLUDE)
 
 eigen_wrapper.o: goto_tools.o eigen_wrapper.cpp eigen_wrapper.h containers.o
 	$(gg) -c eigen_wrapper.cpp goto_tools.o $(LIBRARIES) \
@@ -132,6 +139,14 @@ mcmcBrute: mcmc.o mcmc_brute.cpp
 	mcmc_extractor.o kd.o \
 	$(LIBRARIES) $(INCLUDE)
 
+apsWMAP: aps_runner_wmap7.cpp aps.o chisq_aps4p5.o camb_wrapper_wmap.o \
+wmap_wrapper.o
+	$(gg) -D_WMAP7_ -o apsWMAP aps_runner_wmap7.cpp \
+	goto_tools.o containers.o wmap_wrapper.o camb_wrapper_wmap.o \
+	kd.o eigen_wrapper.o gaussian_process.o \
+	chisq.o chisq_aps4p5.o aps.o \
+	$(WMAP_LIBRARIES) $(WMAP_INCLUDE)
+
 all:
 	make test_containers
 	make test_kd
@@ -143,9 +158,10 @@ all:
 	make aps_extract_ellipse
 	make ellipseBrute
 	make mcmcBrute
+	make apsWMAP
 
 
 clean:
 	rm *.o test_containers test_kd test_eigen ellipse \
 	integrate mcmc_test aps_extract aps_extract_ellipse \
-	ellipseBrute mcmcBrute
+	ellipseBrute mcmcBrute apsWMAP
