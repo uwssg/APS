@@ -313,13 +313,33 @@ private:
     /*the characteristic lengths of dimensions in parameter space*/
     array_1d<double> characteristic_length;
  
+    /*
+    mu_storage stores the values mu predicted by the Gaussian Process for points sampled by aps_wide
     
+    sig_storage stores the uncertainties sigma in mu for points sampled by aps_wide
+    
+    good_max and good_min store the maximum and minimum values of each parameter associated
+    with chisquared<=chisquared_lim points
+    */
     array_1d<double> mu_storage,sig_storage,good_max,good_min;
-    array_1d<double> old_hyper_1,old_hyper_2,minpt;
+    
+    /*
+    minpt is the minimum chisquared point in parameter space
+    */
+    array_1d<double> minpt;
+    
+    /*
+    The minimum and maximum allowed values of each parameter
+    */
     array_1d<double> range_max,range_min;
     
+    /*a list of the points which are centers of low chisquared regions*/
     array_2d<double> centers;
-    array_1d<int> center_dexes,attempted_candidates;
+    
+    /*
+    center_dexes stores the indexes of points that are centers of low chisquared regions
+    */
+    array_1d<int> center_dexes;
     asymm_array_2d<int> boundary_pts,refined_simplex;
     
     double simplex_strad_best,simplex_mu_best,simplex_sig_best;

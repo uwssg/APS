@@ -78,7 +78,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     range_min.set_name("range_min");
     ddUnitSpheres.set_name("ddUnitSpheres");
     refined_simplex.set_name("refined_simplex");
-    attempted_candidates.set_name("attempted_candidates");
     
     unitSpheres=NULL;
     
@@ -589,11 +588,7 @@ int aps::is_it_a_candidate(int dex){
     int i,use_it,ic;
     array_1d<double> mid_pt;
     double chitrial;
-    
-    for(i=0;i<attempted_candidates.get_dim();i++){
-        if(dex==attempted_candidates.get_data(i))return 0;
-    }
-    
+
     //printf("  is %e a candidate -- med %e grat %e min %e\n",gg.get_fn(dex),global_median,grat,chimin);
     
     for(i=0;i<forbidden_candidates.get_dim();i++){
@@ -2575,12 +2570,7 @@ void aps::simplex_search(){
         printf("WARNING could not find proper candidate to remove\n");
         exit(1);
     }
-    
 
-    /*for(i=0;i<seed.get_dim();i++){
-        attempted_candidates.add(seed.get_data(i));
-    }*/
-    
     find_global_minimum(seed);
     
     mindex_is_candidate=0;
@@ -2656,11 +2646,7 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
     
     //printf("    after adding have %d candidates\n",candidates.get_dim());
     if(candidates.get_dim()==gg.get_dim()+1){
-     
-        /*for(i=0;i<candidates.get_dim();i++){
-            attempted_candidates.add(candidates.get_data(i));
-        }*/
-        
+
         find_global_minimum(candidates);
     }
     
