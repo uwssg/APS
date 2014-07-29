@@ -286,8 +286,10 @@ private:
     */
     int simplex_ct,target_asserted;
     
-    int failed_to_add,n_samples;
-    int aps_failed,minuit_failed,assess_failed;
+    /*
+    the number of random candidates to propose for steps 1A-3A
+    */
+    int n_samples;
     
     char outname[letters],timingname[letters];
     char minimaname[letters];

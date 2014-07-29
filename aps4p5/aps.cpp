@@ -102,10 +102,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     last_optimized=0;
     time_optimizing=0.0;
     time_refactoring=0.0;
-    failed_to_add=0;
-    aps_failed=0;
-    minuit_failed=0;
-    assess_failed=0;
     
     global_mindex=-1;
     mindex_is_candidate=0;
