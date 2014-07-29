@@ -37,7 +37,6 @@ for the pseuod random number generator used in APS).
 
 will run APS on a 6-dimensional parameter space with 2 modes.
 
-
 //////////////////////OUTPUT/////////////////
 
 These runs will create files
@@ -97,6 +96,35 @@ Each row represents a moment during the run of APS.  The columns are as follows
         
         A diagnostic to make sure that the unit spheres in steps 1C-4C are being
         used
+
+//////////////////RUNNING THE WMAP7 CODE
+
+(Note: this code was written with a version CAMB downloaded on April 19, 2011
+and version 4.1 of the WMAP likelihood code; there is no guarantee that it will
+run with the most up-to-date version of either code; the user may have to modify
+the following source code that is charged with interfacing APS with WMAP:
+
+    camb_wrapper_wmap.F90
+    wmap_wrapper.F90
+    the class wmap_likelihood in chisq_aps4p5.cpp
+
+)
+
+If the user has successfully downloaded and compiled both CAMB and the WMAP
+likelihood code and made the appropriate modifications to the Makefile, she can
+run APS on the WMAP data by compiling
+
+    make apsWMAP
+
+and then running
+
+    ./apsWMAP seed n_init n_end
+
+where seed is a seed for the random number generator (-1 to use the system
+clock), n_init is the number of initial random samples to make, and n_end is the
+total number of calls to chisquared to make
+
+The source code for apsWMAP can be found in aps_runner_wmap7.cpp
 
 /////////////LIST OF SOURCE FILES AND BASIC DESCRIPTION OF THEIR CONTENTS
 
