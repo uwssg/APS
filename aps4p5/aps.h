@@ -340,8 +340,21 @@ private:
     center_dexes stores the indexes of points that are centers of low chisquared regions
     */
     array_1d<int> center_dexes;
+    
+    /*
+    boundary_pts stores the indexes of all of the boundary points associated with each center of
+    a low-chisquared region
+    
+    refined_simplex stores the list of dexes of points used by simplex_search to improve the chisquared
+    value of a low_chisquared regions (if there are not enough candidates to start a new simplex search, APS
+    may choose to use simplex to verify that its known local minima in chisquared are actually local minima)
+    */
     asymm_array_2d<int> boundary_pts,refined_simplex;
     
+    /*
+    These are variables used by simplex_strad to keep track of
+    where the point that maximizes the S statistic is located
+    */
     double simplex_strad_best,simplex_mu_best,simplex_sig_best;
     array_1d<double> simplex_best;
     
