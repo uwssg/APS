@@ -253,11 +253,38 @@ private:
     /*a pointer to the chisquared function*/
     chisquared *chisq;
     
-    int write_every,n_printed,ngood,dim,last_optimized;
-    int global_mindex,mindex_is_candidate,do_bisection;
-    int simplex_ct,target_asserted;
+    /*
+    write_every is the number of calls to chisquared between calls to write_pts()
     
-    int n_bisected,n_not_bisected;
+    n_printed is the number points that have been printed
+    
+    ngood is the number of points with chisquared<=chisquared_lim
+    
+    dim is the dimensionality of parameter space
+    
+    last_optimized is the number of points chosen by aps_wide after the last time
+    that optimize() was called
+    */
+    int write_every,n_printed,ngood,dim,last_optimized;
+    
+    /*
+    global_mindex is the index of the minimum point in chisquared
+    
+    mindex_is_candidate will be set to unity if the minimum point was set by a search other than simplex_search
+    (in which case, a simplex search should probably start from that point to make sure it actually
+    is a minimum in chisquared)
+    
+    do_bisection = 1 if bisection is allowed; 0 otherwise
+    */
+    int global_mindex,mindex_is_candidate,do_bisection;
+    
+    /*
+    simplex_ct will keep track of the number of times a simplex was initialized
+    
+    target_asserted = 1 if chisquared_lim was set by hand; 0 if it is allowed to
+    change as chisquared_min changes
+    */
+    int simplex_ct,target_asserted;
     
     int failed_to_add,n_samples;
     int aps_failed,minuit_failed,assess_failed;

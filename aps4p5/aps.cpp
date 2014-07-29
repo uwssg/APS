@@ -89,10 +89,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     do_bisection=1;
     
     target_asserted=0;
-    
-    n_bisected=0;
-    n_not_bisected=0;
-    
+
     chimin=-1.0;
     
     i_gibbs=0;
