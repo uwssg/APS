@@ -291,15 +291,28 @@ private:
     */
     int n_samples;
     
+    /*the names of the output files*/
     char outname[letters],timingname[letters];
-    char minimaname[letters];
+    
+    /*this would store the names of the parameters, but the code
+    really does not care about paramter names anymore*/
     char **paramnames;
     
+    /*These arrays store the indexes of points that should not be used
+    as the seeds for simplex searches, either because they were the local
+    minima discovered by simplex searches, or because they are clearly
+    a part of a known region of low chisquared*/
     array_1d<int> known_minima,forbidden_candidates;
+    
+    /*
+    these arrays store the indexes of points found by aps_wide, aps_focus, aps_gibbs,
+    and points that satisfy chisquared<=chisquared_lim, respectively
+    */
     array_1d<int> wide_pts,focus_pts,gibbs_pts,good_pts;
     
+    /*the characteristic lengths of dimensions in parameter space*/
     array_1d<double> characteristic_length;
-    double good_rr_avg;
+ 
     
     array_1d<double> mu_storage,sig_storage,good_max,good_min;
     array_1d<double> old_hyper_1,old_hyper_2,minpt;
@@ -345,8 +358,6 @@ private:
     void aps_choose_best(array_2d<double>&,int);
     
     void bisection(array_1d<double>&,double);
-    
-    void calculate_good_rr();
     
     void aps_wide(int);
     void aps_focus(int);

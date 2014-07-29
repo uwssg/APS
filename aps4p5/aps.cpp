@@ -61,7 +61,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     sprintf(outname,"master_output.sav");
     sprintf(timingname,"timing_file.sav");
-    sprintf(minimaname,"minima.sav");
     
     mu_storage.set_name("aps_mu_storage");
     sig_storage.set_name("aps_sig_storage");
@@ -83,7 +82,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     unitSpheres=NULL;
     
-    good_rr_avg=0.1;
     write_every=1000;
     n_printed=0;
     do_bisection=1;
@@ -1211,36 +1209,6 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     set_where("nowhere");
 }
 
-void aps::calculate_good_rr(){
-    int i,j,ct;
-    double dd,ddmin,wgt,total_wgt;
-    
-    if(good_pts.get_dim()<3){
-        good_rr_avg=0.1;
-        return;
-    }
-    
-    good_rr_avg=0.0;
-    ct=0;
-    total_wgt=0.0;
-    
-    for(i=0;i<good_pts.get_dim();i++){
-        ddmin=2.0*chisq_exception;
-        for(j=0;j<centers.get_rows();j++){
-            dd=gg.distance(good_pts.get_data(i),*centers(j));
-            if(j==0 || dd<ddmin){
-                ddmin=dd;
-            }
-        }
-        ct++;
-        wgt=exp(-0.5*fabs(gg.get_fn(good_pts.get_data(i))-strad.get_target()));
-        good_rr_avg+=ddmin*wgt;
-        total_wgt+=wgt;
-    }
-    
-    good_rr_avg=good_rr_avg/total_wgt;
-    
-}
 
 int aps::add_pt(array_1d<double> &vv, double chitrue){
     
@@ -2857,29 +2825,7 @@ void aps::write_pts(){
     int i,j,k,lling,aps_dex;
     double mu,sig;
     FILE *output;
-    
-    /*
-    output=fopen(minimaname,"w");
-    fprintf(output,"known_minima %d\n",known_minima.get_dim());
-    for(i=0;i<known_minima.get_dim();i++){
-        fprintf(output,"%d\n",known_minima.get_data(i));
-    }
-    fprintf(output,"forbidden_candidates %d\n",forbidden_candidates.get_dim());
-    for(i=0;i<forbidden_candidates.get_dim();i++){
-        fprintf(output,"%d\n",forbidden_candidates.get_data(i));
-    }
-    fclose(output);
-    */
-    
-    /*
-    array_1d<double> correct_ans;
-    
-    correct_ans.set(0,5205.0);
-    correct_ans.set(1,14.65160);
-    correct_ans.set(2,44.342);
-    correct_ans.set(3,259.8);
-    correct_ans.set(4,0.736539);
-    */
+
     
     array_1d<double> hy;
     
@@ -3112,9 +3058,6 @@ void aps::write_pts(){
     fprintf(output,"\n");
     
     fclose(output);
-     
-    
-    calculate_good_rr();
        
     set_where("nowhere");
     time_writing+=double(time(NULL))-before;
