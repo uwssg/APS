@@ -15,14 +15,26 @@
 #include "chisq.h"
 
 class straddle_parameter{
+    /*
+    This class is meant to store both the target value of chisquared_lim and
+    the calculation of the S statistic from equation (1) of the paper.
+    
+    If the user wanted to try a different combination of sigma, mu, and
+    chisquared_lim than equation(1), she should alter the code in the 
+    operator () of this class.
+    */
 
 public:
     ~straddle_parameter();
     straddle_parameter();
     
+    /*set the value of chisquared_lim*/
     void set_target(double);
+    
+    /*return the value of chisquared_lim*/
     double get_target();
     
+    /*accept mu and sigma and return S (equation 1 of the paper)*/
     double operator()(double,double) const;
 
 
@@ -35,22 +47,54 @@ class aps{
 
 public:
     aps();
+    
+    /*
+    The arguments of the contructor are:
+    int dim -- the dimensionality of parameter space
+    int kk -- the number of nearest neighbors used by the Gaussian Process
+    double dd -- the value of delta_chisquared used to calculate chisquared_lim
+    int seed -- the seed for the pseudo random number generator (use -1 to call the system clock for this)
+    */
     aps(int,int,double,int);
     ~aps();
     
+    /*set the name of the file where the sampled points will be output*/
     void set_outname(char*);
+    
+    /*set the name of the file where the timing statistics will be output*/
     void set_timingname(char*);
     
+    /*set the number of calls to chisquared between calls to write_pts
+    (write_pts outputs both the sampled points and the timing statistics)*/
     void set_write_every(int);
     
+    /*
+    set the G parameter from equation(4) which is used in determining
+    whether or not a given point should be used as the seed of a simplex
+    search
+    */
     void set_grat(double);
     
+    /*assign a chisquared function to this aps object*/
     void assign_chisquared(chisquared*);
+    
+    /*assign a covariogram for the Gaussian Process*/
     void assign_covariogram(covariance_function*);
     
+    /*
+    initialize the aps samples.  The arguments are
+    int npts -- the number of random initial samples to make in parameter space
+    array_1d<double> min -- the minimum bounds in parameter space
+    array_1d<double> max -- the maximum bounds in parameter space
+    
+    optional arguments
+    
+    array_2d<double> guesses -- specifically chosen points to be included in the initial "random" samples
+    (each row is a new point in parameter space)
+    */
     void initialize(int,array_1d<double>&,array_1d<double>&);
     void initialize(int,array_1d<double>&,array_1d<double>&,
-        int,array_2d<double>&);
+        array_2d<double>&);
     
     void set_min(array_1d<double>&);
     void set_max(array_1d<double>&);

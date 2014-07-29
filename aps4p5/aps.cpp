@@ -236,7 +236,7 @@ void aps::set_gibbs_set(array_1d<int> &row){
 
 void aps::initialize(int npts,array_1d<double> &min, array_1d<double> &max){
     array_2d<double> q;
-    initialize(npts,min,max,0,q);
+    initialize(npts,min,max,q);
 }
 
 int aps::in_bounds(array_1d<double> &pt){
@@ -311,17 +311,14 @@ void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex, int validity)
     }
 }
 
-void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, int nguesses, array_2d<double> &guesses){
+void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max, 
+    array_2d<double> &guesses){
     if(chisq==NULL){
         printf("WARNING chisq is null in APS initializer\n");
         exit(1);
     }
     
-    if(nguesses!=guesses.get_rows()){
-        printf("WARNING nguesses %d but guess_rows %d\n",
-        nguesses,guesses.get_rows());
-        exit(1);
-    }
+    int nguesses=guesses.get_rows();
     printf("dim %d\n",dim);
     
     set_where("aps_initializer");
