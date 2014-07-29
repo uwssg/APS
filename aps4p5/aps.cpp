@@ -41,10 +41,6 @@ aps::~aps(){
         delete unitSpheres;
     }
     
-    if(focus_directions!=NULL){
-        delete focus_directions;
-    }
-    
     for(i=0;i<gg.get_dim();i++){
         delete [] paramnames[i];
     }
@@ -91,7 +87,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     write_every=1000;
     n_printed=0;
     do_bisection=1;
-    focus_directions=NULL;
     
     target_asserted=0;
     
@@ -1472,59 +1467,6 @@ void aps::aps_wide(int in_samples){
    
 }
 
-void aps::initialize_focus(){
-    
-    if(focus_directions!=NULL){
-        return;
-    }
-    
-    array_1d<double> rr,trial;
-    array_2d<double> seed;
-    int use_it,i,ii,ic,actually_added,ct_used;
-    double dd,chi_true;
-    
-    seed.set_cols(gg.get_dim());
-    
-    for(ii=0;ii<2*gg.get_dim();ii++){
-        
-        for(i=0;i<gg.get_dim();i++)rr.set(i,0.0);
-        if(ii%2==0)rr.set(ii/2,1.0);
-        else rr.set(ii/2,-1.0);
-
-        ct_used=0;
-        for(ic=0;ic<centers.get_rows();ic++){
-            dd=0.1;
-            use_it=0;
-            while(use_it==0){
-                for(i=0;i<gg.get_dim();i++){
-                    trial.set(i,centers.get_data(ic,i)+dd*rr.get_data(i)*(gg.get_max(i)-gg.get_min(i)));
-                }
-                
-                use_it=1;
-                if(in_bounds(trial)==0){
-                    use_it=0;
-                    dd*=0.5;
-                }
-            }
-            
-            evaluate(trial,&chi_true,&actually_added);
-            
-            if(actually_added>=0){
-                if(do_bisection==1)bisection(trial,chi_true);
-                called_focus++;
-                focus_pts.add(actually_added);
-                ct_used++;
-            }
-        }
-        
-        seed.add_row(rr);
-        
-    }
-    
-    focus_directions=new kd_tree(seed);
-    
-}
-
 double aps::simplex_metric(array_1d<double> &pt, array_1d<double> &min_bound, array_1d<double> &max_bound){
     
     
@@ -2234,27 +2176,7 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
         if(chitrue<global_median){
              if(do_bisection==1)bisection(sambest,chitrue);
         }
-        
-        /*if(focus_directions!=NULL && do_bisection==1){
-            i_center=find_nearest_center(sambest);
-            for(i=0;i<gg.get_dim();i++){
-                rr.set(i,(sambest.get_data(i)-gg.get_pt(i_center,i))/(gg.get_max(i)-gg.get_min(i)));
-            }
-            rr.normalize();
-            
-            focus_directions->nn_srch(rr,1,rr_i_neigh,rrneigh);
-            dd=0.0;
-            for(i=0;i<gg.get_dim();i++){
-                dd+=rr.get_data(i)*focus_directions->get_pt(rr_i_neigh.get_data(0),i);
-            }
-            
-            if(fabs(dd)<dot_product_threshold){
-                bisection(sambest,chitrue);
-            }
-            
-        
-        }*/
-        
+
     }
     
     if(global_mindex!=o_mindex && which_aps==iWIDE){

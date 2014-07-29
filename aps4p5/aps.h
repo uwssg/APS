@@ -213,19 +213,45 @@ public:
     /*transcribed the point in parameter space corresponding to chisquared_min
     into the array-1d*/
     void get_minpt(array_1d<double>&);
-
+    
+    /*
+    Try to approximate the gradient at a point by inverting a Taylor expansion 
+     
+    The int specifies the index of the point where we are approximating the gradient.
+    
+    The array_1d<int> specifies the indexes of points near that point whose value of chisquared
+    will be used in the Taylor expansion.
+    
+    The array_1d<double> is where the gradient approximation will be transcribed. 
+    
+    NOTE: THIS IS NOT USED ANYWHERE IN THE CODE
+    */
     void calculate_gradient(int,array_1d<int>&,array_1d<double>&);
     
+    /*
+    set the value of chisquared_lim
+    */
     void set_target(double);
     
+    /*return a pointer to the point in parameter space specified by the int*/
     array_1d<double>* get_pt(int);
+    
+    /*
+    Return the index of the point that is the nearest neighbor of the point 
+    specified by the array_1d<double>
+    */
     int get_nn(array_1d<double>&);
+    
+    /*return the value of chisquared at the point specified by the int*/
     double get_chival(int);
     
 private:
+    
+    /*the pseudo random number generator used by APS*/
     Ran *dice;
+    
+    /*a pointer to the chisquared function*/
     chisquared *chisq;
-    kd_tree *focus_directions;
     
     int write_every,n_printed,ngood,dim,last_optimized;
     int global_mindex,mindex_is_candidate,do_bisection;
