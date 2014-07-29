@@ -96,40 +96,124 @@ public:
     void initialize(int,array_1d<double>&,array_1d<double>&,
         array_2d<double>&);
     
+    /*set the minimum and maximum bounds in parameter space*/
     void set_min(array_1d<double>&);
     void set_max(array_1d<double>&);
+    
+    /*set the hyper parameters for the covariogram*/
     void set_hyper_parameters(array_1d<double>&);
+    
+    /*
+    If the APS run was interrupted for some reason, read in the specified output
+    file and resume the run that was interrupted.
+    
+    If a filename is not specified, it will take the filename from outputname set by
+    set_outname(char*)
+    
+    NOTE THIS IS NOT WELL-TESTED
+    */
     void resume();
     void resume(char*);
     
+    /*return the number of points stored in the Gaussian Process object*/
     int get_n_pts();
+    
+    /*return the number of low-chisquared centers discovered*/
     int get_n_centers();
+    
+    /*
+    The int is the index of a point stored in the Gaussian Process.  The point itself will be
+    transcribed into the array_1d.  The value of chisquared at that point will be
+    returned by this function.
+    */
     double get_pt(int,array_1d<double>&);
     
+    /*
+    Draw a sample from parameter space.  This function will determine how to sample this
+    point based on statistics that the APS object has stored.
+    
+    this method will call simplex_search() and aps_search() below
+    */
     void search();
+    
+    /*
+    Perform an APS search (either steps 1A-3A or 1B-5B)
+    
+    The int is the number of candidate points to propose to steps 1A-3A
+    
+    i.e., this method will call aps_wide() and aps_focus() below
+    */
     void aps_search(int);
+    
+    /*
+    Perform the simplex search
+    */
     void simplex_search();
+    
+    /*
+    Sample chisquared at the point specified by the array_1d
+    */
     void guess(array_1d<double>&);
     
+    /*return the number of chisquared calls devoted to aps_search() above*/
     int get_ct_aps();
+    
+    /*return the number of chisquared calls devoted to simplex_search() above*/
     int get_ct_simplex();
+    
+    /*return the total number of chisquared calls*/
     int get_called();
     
+    /*
+    Write the sampled points to the specified output file.
+    Also write some timing statistics as specified by readme.txt
+    */
     void write_pts();
+    
+    /*
+    Set the characteristic length of a dimension.
+    int specifies the dimension
+    double is the characteristic length
+    
+    This will effect the normalization of distances in parameter space
+    used to select nearest neighbors.
+    */
     void set_characteristic_length(int,double);
+    
+    /*
+    There is another variation on the APS search in which all of the dimensions
+    but a few are held fixed to their best fit values and an APS search (steps 1A-3A)
+    is carried out on the other dimensions. The array_1d<int> lists the dimensions that
+    are allowed to vary.
+    
+    If such sets are specified, the code will alternate between conducting one of these
+    ``Gibbs'' - like searches and conducting the other variants of search.
+    
+    NOTE: THIS IS NOT WELL-TESTED
+    */
     void set_gibbs_set(array_1d<int>&);
     
+    /*
+    set the number of random candidates to be chosen for steps 1A-3A
+    */
     void set_n_samples(int);
     
+    /*turn off the bisection option (default is to turn it on)*/
     void disable_bisection();
+    
+    /*turn on the bisection option (this is the default)*/
     void enable_bisection();
     
+    /*optimize the hyper parameters in the Gaussian Process covariogram*/
     void optimize();
+    
+    /*return the minimum value of chisquared disocvered*/
     double get_chimin();
+    
+    /*transcribed the point in parameter space corresponding to chisquared_min
+    into the array-1d*/
     void get_minpt(array_1d<double>&);
-    
-    double absurd_planet_test(double,double*,double*);
-    
+
     void calculate_gradient(int,array_1d<int>&,array_1d<double>&);
     
     void set_target(double);

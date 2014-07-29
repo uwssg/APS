@@ -3208,13 +3208,3 @@ void aps::write_pts(){
     
 }
 
-double aps::absurd_planet_test(double pp, double *sigout, double *stradout){
-    int i;
-    array_1d<double> trial;
-    for(i=0;i<dim;i++)trial.set(i,minpt.get_data(i));
-    trial.set(dim-1,pp);
-    double mu=gg.user_predict(trial,sigout,0);
-    if(mu<0.0)mu=0.0;
-    stradout[0]=strad(mu,sigout[0]);
-    return mu;
-}
