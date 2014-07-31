@@ -241,7 +241,7 @@ private:
     chisquared *chisq;
     
     /*
-    write_every is the number of calls to chisquared between calls to write_pts()
+    write_every is the number of calls APS makes to chisquared between calls to write_pts()
     
     n_printed is the number points that have been printed
     
