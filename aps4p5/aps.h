@@ -54,6 +54,11 @@ public:
     int kk -- the number of nearest neighbors used by the Gaussian Process
     double dd -- the value of delta_chisquared used to calculate chisquared_lim
     int seed -- the seed for the pseudo random number generator (use -1 to call the system clock for this)
+    
+    
+    NOTE: even if you intend to set a chisquared_lim by hand, it is important to set
+    a delta_chisquared value that makes sense.  Several subroutines (most notably
+    simplex_strad() use delta_chisquared to gauge convergence)
     */
     aps(int,int,double,int);
     ~aps();
@@ -172,6 +177,10 @@ public:
     /*
     Write the sampled points to the specified output file.
     Also write some timing statistics as specified by readme.txt
+    
+    write_pts() will also tally some running statistics, including
+    global_threshold and sphere_threshold, which are used to determine
+    whether or not to do bisection on points discovered by aps_wide()
     */
     void write_pts();
     
@@ -436,16 +445,66 @@ private:
     variables (to keep track of where the code is in the event of a crash)*/
     void set_where(char*);
     
- 
+    /*
+    simplex_strad() and simplex_metric() run the simplex search which aps_wide()
+    uses to maximize S.  
+    
+    The arguments to simplex_strad() are two array_1d<double>s which 
+    specify the minimum and maximum bounds of parameter space to be considered (in this case,
+    just the total allowed minimum and maximum bounds of parameter space).
+    
+    The arguments of simplex_metric() are the point at which S is to be calculated
+    and the minimum and maximum bounds passed to simplex_strad()
+    
+    simplex_metric() returns S at the sampled point.
+    
+    The local maximum of S found by simplex_strad() will be stored in the global
+    array_1d<double> simplex_best
+    
+    This is the point at which aps_wide() evaluates chisquared
+    */
     double simplex_strad(array_1d<double>&, array_1d<double>&);
     double simplex_metric(array_1d<double>&,array_1d<double>&, array_1d<double>&);
        
- 
+    /*
+    Find the parameter space distance between the two points specified by the int dexes
+    and normalized by the array_1d<double> of ranges.
+    */
     double distance(int,int,array_1d<double>&);
     
+    /*
+    determine whether or not the specified point is within the bounds allowed
+    by the chisquard funciton (return 1 if so; return 0 if not)
+    */
     int in_bounds(array_1d<double>&);
+    
+    /*
+    Do all of the validity checks required by evaluate(), i.e.
+    
+    1) is the point inside of the bounds allowed by the chisquared function
+    
+    2) is the point farther than a normalized parameter space distance of 10^-8
+    from its nearest neighbor
+    
+    If so return 1.  If not, return 0.
+    
+    The optional double* will store the chisquared value associated with the nearest
+    neighbor, if the nearest neighbor is too close.  If the first test failed, this
+    pointer will store an absurdly high value (2 x 10^30) 
+    */
     int is_valid(array_1d<double>&);
     int is_valid(array_1d<double>&, double*);
+    
+    /*
+    Find the nearest center of a low-chisquared region.
+    
+    The int returned is the index of that center as stored in array_1d<int> center_dexes
+    and array_2d<double> centers.
+    
+    The optional double is a chisquared value that is input to this subroutine.  If present,
+    find_nearest_center will only return centers with values of chisquared less than
+    the provided value.
+    */
     int find_nearest_center(array_1d<double>&);
     int find_nearest_center(array_1d<double>&, double);
 
@@ -482,12 +541,10 @@ private:
     int global_mindex,mindex_is_candidate,do_bisection;
     
     /*
-    simplex_ct will keep track of the number of times a simplex was initialized
-    
     target_asserted = 1 if chisquared_lim was set by hand; 0 if it is allowed to
     change as chisquared_min changes
     */
-    int simplex_ct,target_asserted;
+    int target_asserted;
     
     /*the names of the output files*/
     char outname[letters],timingname[letters];
@@ -543,9 +600,7 @@ private:
     boundary_pts stores the indexes of all of the boundary points associated with each center of
     a low-chisquared region
     
-    refined_simplex stores the list of dexes of points used by simplex_search to improve the chisquared
-    value of a low_chisquared regions (if there are not enough candidates to start a new simplex search, APS
-    may choose to use simplex to verify that its known local minima in chisquared are actually local minima)
+    refined_simplex stores the seeds used by refine_center() for each low-chisquared center
     */
     asymm_array_2d<int> boundary_pts,refined_simplex;
     
@@ -555,11 +610,24 @@ private:
     */
     double simplex_strad_best,simplex_mu_best,simplex_sig_best;
     array_1d<double> simplex_best;
+    int simplex_ct;
     
+    /*
+    These are all variables used to keep track of how much time or how many calls
+    to chisquared are used by each subroutine
+    */
     double time_node,time_aps,time_simplex,time_total,start_time;
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
     int ct_node,ct_aps,ct_simplex;
     
+    /*
+    global_threshold is the 1/10 quantile of chisquared values of points discovered by aps_wide, used
+    in determining whether or not a point should be a candidate for simplex searching
+    
+    sphere_threshold is the 2/3 quantile of recent nearest-neighbor distances for
+    boundary points projected onto unit spheres about the low-chisquared centers.  It is used
+    to determine whether or not to run bisection on the points discovered by aps_wide()
+    */
     double global_threshold,sphere_threshold;
     
     double chimin,delta_chisquared,grat,dot_product_threshold;

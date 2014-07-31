@@ -1262,6 +1262,14 @@ void aps::aps_wide(){
     called_wide++;
     double sig;
     
+    /*
+    Run the simplex search that seeks to maximize S
+    
+    After calling simplex_strad, the point at which S is maximized
+    will be stored in the global array_1d<double> simplex_best
+    
+    That is the point at which to evaluate chisquared.
+    */
     sig=simplex_strad(range_min,range_max);
     
     array_1d<double> midpt;
@@ -1380,16 +1388,11 @@ double aps::simplex_metric(array_1d<double> &pt, array_1d<double> &min_bound, ar
     
     stradval=strad(mu,sig);
     
-    /*
-    array_1d<int> neigh;
-    array_1d<double> dd;
-    
-    gg.nn_srch(pt,1,neigh,dd);
-    stradval=dd.get_data(0);
-    */
-    
     simplex_ct++;
     
+    /*
+    If a new local maximum is found for S, store that and reset simplex_ct to zero
+    */
     if(stradval>simplex_strad_best){
         simplex_strad_best=stradval;
         
@@ -1403,6 +1406,10 @@ double aps::simplex_metric(array_1d<double> &pt, array_1d<double> &min_bound, ar
         }
     }
     
+    /*
+    Because the Nelder-Mead (1965) simplex is designed to minimize functions,
+    we return -S to find the local maxmimum in S
+    */
     return -1.0*stradval;
     
 }
@@ -1433,7 +1440,17 @@ double aps::simplex_strad(array_1d<double> &min_bound, array_1d<double> &max_bou
    simplex_ct=0;
 
    
-   ////now do simplex search using simplex_metric
+   /*
+   now do simplex search using simplex_metric
+   
+   This is essentially the same algorithm as run by find_global_minimum()
+   except with different alpha, beta, and gamma parameters and 
+   different stopping conditions
+   
+   Note: this algorithm does not utilize the modified gradient descent algorithm
+   by which find_global_minimum tried to avoid getting trapped in narrow valleys
+   of chisquared.
+   */
    array_2d<double> pts;
    array_1d<double> pbar,ff,pstar,pstarstar;
    double fstar,fstarstar;
@@ -1463,6 +1480,17 @@ double aps::simplex_strad(array_1d<double> &min_bound, array_1d<double> &max_bou
    
    sig=2.0*chisq_exception;
    
+   /*
+   Stop the simplex search when either:
+   
+   1) the standard deviation of S values in the simplex is less than delta_chisquared
+   
+   2) more than 1000 evaluations of chisquared have been made without improving the best
+   found value of S
+   
+   S wil be evaluated by simplex_metric, which will be charged with storing the local maximum
+   of S discovered and of keeping track of simplex_ct for convergence purposes
+   */
    while(sig>delta_chisquared && simplex_ct<1000){
        for(i=0;i<gg.get_dim();i++){
            pbar.set(i,0.0);
@@ -1561,7 +1589,6 @@ double aps::simplex_strad(array_1d<double> &min_bound, array_1d<double> &max_bou
        }
        sig=sig/double(gg.get_dim()+1);
        sig=sqrt(sig);
-   
    }
    
    return sig;
@@ -2279,6 +2306,13 @@ void aps::simplex_search(){
 
 
     if(mindex_is_candidate==1 && global_mindex>=0){
+        /*
+        Replace the seed point with the highest chisquared value
+        with the index of the current chisquared minimum.
+        
+        This will only happen the first time find_global_minimum() 
+        is run
+        */
         for(i=0;i<dim+1;i++){
             if(i==0 || gg.get_fn(seed.get_data(i))>nn){
                 nn=gg.get_fn(seed.get_data(i));
