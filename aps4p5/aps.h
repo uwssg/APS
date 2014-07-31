@@ -64,7 +64,7 @@ public:
     /*set the name of the file where the timing statistics will be output*/
     void set_timingname(char*);
     
-    /*set the number of calls to chisquared between calls to write_pts
+    /*set the number of calls to chisquared APS will make before calling write_pts
     (write_pts outputs both the sampled points and the timing statistics)*/
     void set_write_every(int);
     
@@ -125,6 +125,12 @@ public:
     The int is the index of a point stored in the Gaussian Process.  The point itself will be
     transcribed into the array_1d.  The value of chisquared at that point will be
     returned by this function.
+    
+    e.g. get_pt(2,v)
+    
+    will return the value of chisquared at the 3rd point sampled by APS (points are stored
+    in a zero-indexed array).  The coordinates of the 3rd point will be transcribed in the
+    array_1d<double> v
     */
     double get_pt(int,array_1d<double>&);
     
@@ -137,11 +143,10 @@ public:
     void search();
     
     /*
-    Perform an APS search (either steps 1A-3A or 1B-5B)
+    Perform a search based on maximizing the S-statistic
     
-    The int is the number of candidate points to propose to steps 1A-3A
-    
-    i.e., this method will call aps_wide() and aps_focus() below
+    i.e., this method will call aps_wide() and aps_focus() in the private
+    functions below
     */
     void aps_search();
     
@@ -172,8 +177,8 @@ public:
     
     /*
     Set the characteristic length of a dimension.
-    int specifies the dimension
-    double is the characteristic length
+    the int specifies the dimension
+    the double is the characteristic length
     
     This will effect the normalization of distances in parameter space
     used to select nearest neighbors.
@@ -192,12 +197,12 @@ public:
     /*return the minimum value of chisquared disocvered*/
     double get_chimin();
     
-    /*transcribed the point in parameter space corresponding to chisquared_min
+    /*transcribe the point in parameter space corresponding to chisquared_min
     into the array-1d*/
     void get_minpt(array_1d<double>&);
     
     /*
-    Try to approximate the gradient at a point by inverting a Taylor expansion 
+    Try to approximate the gradient of chisquared at a point by inverting a Taylor expansion 
      
     The int specifies the index of the point where we are approximating the gradient.
     
