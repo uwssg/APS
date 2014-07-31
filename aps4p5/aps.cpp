@@ -1261,16 +1261,14 @@ void aps::aps_wide(){
     
     called_wide++;
     double sig;
+    
     sig=simplex_strad(range_min,range_max);
     
     array_1d<double> midpt;
     
     double chitrue,chimid;
     int actually_added,ic,i,j,use_it;
-    
-    array_1d<double> dir,test_dir;
-    double dot,dot_max,dot_threshold;
-    
+     
     int bisect_it=0;
     array_1d<double> unit_v,dd_sphere;
     array_1d<int> neigh_sphere;
@@ -1279,14 +1277,10 @@ void aps::aps_wide(){
     dd_sphere.set_name("aps_wide_dd_sphere");
     neigh_sphere.set_name("aps_wide_neigh_sphere");
     
-    dot_threshold=0.8;
     
     if(simplex_best.get_dim()==gg.get_dim()){
         evaluate(simplex_best,&chitrue,&actually_added);
-        
-       //printf("wide found %.4e -- %.3e -- %.3e %.3e -- %d %.3e\n",
-       //chitrue,simplex_strad_best,simplex_mu_best,simplex_sig_best,simplex_ct,sig);
-        
+
         if(actually_added>=0){
             wide_pts.add(actually_added);
             mu_storage.add(simplex_mu_best);
