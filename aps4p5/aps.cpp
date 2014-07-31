@@ -2428,11 +2428,15 @@ void aps::simplex_too_few_candidates(array_1d<int> &candidates){
 }
 
 void aps::refine_center(){
-    //printf("    option to refine\n");
+    /*
+    Evaluate the known centers of low chisquared regions to see if any of them
+    can be improved upon
+    */
     
     int ic,ic_chosen=-1;
     double maxchi;
     
+    /*choose the center with the highest value of chisquared*/
     for(ic=0;ic<centers.get_rows();ic++){
         
         if(boundary_pts.get_cols(ic)>=gg.get_dim()+1 && 
@@ -2458,6 +2462,10 @@ void aps::refine_center(){
     
     int ii,i;
     
+    /*
+    sort the boundary points of the chosen center by their distance
+    from the chosen center
+    */
     for(i=0;i<boundary_pts.get_cols(ic_chosen);i++){
         ii=boundary_pts.get_data(ic_chosen,i);
         
@@ -2470,19 +2478,32 @@ void aps::refine_center(){
     array_1d<int> neigh;
     neigh.set_name("refine_neigh");
     
+    /*
+    Set the simplex to the dim+1 farthest boundary points from the center
+    */
     for(i=0;i<gg.get_dim()+1;i++){
         neigh.set(i,inn.get_data(inn.get_dim()-1-i));
     }
     
+    /*
+    If this simplex is identical to the simplex chosen the last time
+    this center was used in refine_center(), do not proceed with 
+    the simplex search
+    */
     if(refined_simplex.get_rows()>ic_chosen){
         if(compare_int_arr(*refined_simplex(ic_chosen),neigh)==1){
             return;
         }
     }
     
+    /*
+    Make note that we are starting a simplex search with this seed simplex
+    */
     refined_simplex.set_row(ic_chosen,neigh);
     
-    //printf("    refining %d\n",ic_chosen);
+    /*
+    Perform the simplex searc
+    */
     find_global_minimum(neigh);
     
 

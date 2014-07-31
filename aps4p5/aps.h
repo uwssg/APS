@@ -341,6 +341,20 @@ private:
     double simplex_evaluate(array_1d<double>&,int*,
         array_2d<double>&,array_1d<double>&,int);   
     
+    /*
+    If simplex_search() does not find any valid candidates to seed a new simplex search,
+    it will call refine_center() which will evaluate all of the known centers of
+    low-chisquared regions and determine whether any of them are worth exploring to see
+    if their local minima in chisquared can be improved.
+    
+    This is done by choosing the center with the highest chisquared value.  The boundary points
+    of that center that are the farthest away from the center will be chosen to seed the simplex.
+    
+    Note: if, the last time this center was chosen by refine_center, the exact same boundary points
+    were chosen to seed the simplex, then the simplex will not proceed (it will be assumed that the
+    center has actually converged).  This will be determined by storing the seed simplex in
+    the assym_array_2d<int> refined_simplex below.
+    */
     void refine_center();
     void simplex_too_few_candidates(array_1d<int>&);
     
