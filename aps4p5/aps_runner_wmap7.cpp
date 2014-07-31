@@ -107,9 +107,6 @@ for(i=0;i<dim;i++){
     chisq.set_max(i,max.get_data(i));
 }
 
-/*how many candidate points will be proposed in step 2A*/
-aps_test.set_n_samples(250);
-
 /*initialize the aps object with n_init random samples*/
 aps_test.initialize(n_init,min,max);
 

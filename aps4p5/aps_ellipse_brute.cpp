@@ -72,8 +72,6 @@ for(i=0;i<dim;i++){
 
 aps_test.initialize(1000,min,max);
 
-aps_test.set_n_samples(1000);
-
 double chival,chivaltest,err,maxerr;
 int found_all=0;
 

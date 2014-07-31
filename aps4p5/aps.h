@@ -143,7 +143,7 @@ public:
     
     i.e., this method will call aps_wide() and aps_focus() below
     */
-    void aps_search(int);
+    void aps_search();
     
     /*
     Perform the simplex search
@@ -192,11 +192,6 @@ public:
     NOTE: THIS IS NOT WELL-TESTED
     */
     void set_gibbs_set(array_1d<int>&);
-    
-    /*
-    set the number of random candidates to be chosen for steps 1A-3A
-    */
-    void set_n_samples(int);
     
     /*turn off the bisection option (default is to turn it on)*/
     void disable_bisection();
@@ -285,11 +280,6 @@ private:
     change as chisquared_min changes
     */
     int simplex_ct,target_asserted;
-    
-    /*
-    the number of random candidates to propose for steps 1A-3A
-    */
-    int n_samples;
     
     /*the names of the output files*/
     char outname[letters],timingname[letters];
@@ -390,8 +380,8 @@ private:
     
     void bisection(array_1d<double>&,double);
     
-    void aps_wide(int);
-    void aps_focus(int);
+    void aps_wide();
+    void aps_focus();
     void random_focus(int);
     void corner_focus(int);
     

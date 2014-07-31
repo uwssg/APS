@@ -78,9 +78,6 @@ aps_test.set_outname(outname);
 //initialize aps with 1000 random samples
 aps_test.initialize(1000,min,max);
 
-//set N_c from step 2A in the paper
-aps_test.set_n_samples(1000);
-
 double chival,chivaltest,err;
 
 i=-1;

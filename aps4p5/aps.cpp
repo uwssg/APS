@@ -91,9 +91,7 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     i_gibbs=0;
     called_focus=0;
     called_wide=0;
-    
-    n_samples=250;
-    
+        
     last_optimized=0;
     time_optimizing=0.0;
     time_refactoring=0.0;
@@ -177,10 +175,6 @@ void aps::start_timingfile(){
 
 void aps::set_write_every(int ii){
     write_every=ii;
-}
-
-void aps::set_n_samples(int ii){
-    n_samples=ii;
 }
 
 void aps::set_outname(char *word){
@@ -1331,7 +1325,7 @@ void aps::search(){
         simplex_search();
     }
     
-    aps_search(n_samples);
+    aps_search();
     
     if(gg.get_pts()>n_printed+write_every){
         write_pts();
@@ -1340,7 +1334,7 @@ void aps::search(){
     time_total+=double(time(NULL))-before;
 }
 
-void aps::aps_wide(int in_samples){
+void aps::aps_wide(){
     
     called_wide++;
     double sig;
@@ -1973,7 +1967,7 @@ void aps::corner_focus(int ic){
     }
 }
 
-void aps::aps_focus(int in_samples){
+void aps::aps_focus(){
    
    array_1d<int> neigh;
    array_1d<double> ddneigh;
@@ -2248,7 +2242,7 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
 }
 
-void aps::aps_search(int in_samples){
+void aps::aps_search(){
     
     if(chisq==NULL){
         printf("WARNING chisq is null in aps_scatter_search\n");
@@ -2259,11 +2253,10 @@ void aps::aps_search(int in_samples){
     int ibefore=chisq->get_called();
  
     if(called_focus<called_wide){
-        //aps_focus(in_samples);
-        aps_focus(in_samples);
+        aps_focus();
     }
     else{
-        aps_wide(in_samples);
+        aps_wide();
     }
 
     time_aps+=double(time(NULL))-before;
