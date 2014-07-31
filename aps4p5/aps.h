@@ -233,6 +233,59 @@ public:
     double get_chival(int);
     
 private:
+
+    
+    void find_global_minimum();
+    void find_global_minimum(int);
+    void find_global_minimum(array_1d<double>&);
+    void find_global_minimum(array_1d<int>&);
+    
+    void refine_center();
+    void simplex_too_few_candidates(array_1d<int>&);
+    
+    void find_global_minimum_meta();
+    
+    void set_chimin(double,array_1d<double>&,int);
+    int is_it_a_candidate(int);
+    
+    int add_pt(array_1d<double>&,double);
+
+    void start_timingfile();
+    
+    void set_where(char*);
+    
+    void bisection(array_1d<double>&,double);
+    
+    void aps_wide();
+    void aps_focus();
+    void random_focus(int);
+    void corner_focus(int);
+    
+    void initialize_focus();
+    
+    double simplex_strad(array_1d<double>&, array_1d<double>&);
+    double simplex_metric(array_1d<double>&,array_1d<double>&, array_1d<double>&);
+    
+    void evaluate(array_1d<double>&,double*,int*,int);
+    void evaluate(array_1d<double>&,double*,int*);
+    void evaluate(array_1d<double>&,double*);
+    
+    
+    double simplex_evaluate(array_1d<double>&,int*);
+    double simplex_evaluate(array_1d<double>&,int*,
+              array_2d<double>&,array_1d<double>&);
+    
+    double simplex_evaluate(array_1d<double>&,int*,
+        array_2d<double>&,array_1d<double>&,int);     
+
+    double distance(int,int,array_1d<double>&);
+    
+    int in_bounds(array_1d<double>&);
+    int is_valid(array_1d<double>&);
+    int is_valid(array_1d<double>&, double*);
+    int find_nearest_center(array_1d<double>&);
+    int find_nearest_center(array_1d<double>&, double);
+
     
     /*the pseudo random number generator used by APS*/
     Ran *dice;
@@ -350,57 +403,6 @@ private:
     
     gp gg;
     straddle_parameter strad;
-    
-    void find_global_minimum();
-    void find_global_minimum(int);
-    void find_global_minimum(array_1d<double>&);
-    void find_global_minimum(array_1d<int>&);
-    
-    void refine_center();
-    void simplex_too_few_candidates(array_1d<int>&);
-    
-    void find_global_minimum_meta();
-    
-    void set_chimin(double,array_1d<double>&,int);
-    int is_it_a_candidate(int);
-    
-    int add_pt(array_1d<double>&,double);
-
-    void start_timingfile();
-    
-    void set_where(char*);
-    
-    void bisection(array_1d<double>&,double);
-    
-    void aps_wide();
-    void aps_focus();
-    void random_focus(int);
-    void corner_focus(int);
-    
-    void initialize_focus();
-    
-    double simplex_strad(array_1d<double>&, array_1d<double>&);
-    double simplex_metric(array_1d<double>&,array_1d<double>&, array_1d<double>&);
-    
-    void evaluate(array_1d<double>&,double*,int*,int);
-    void evaluate(array_1d<double>&,double*,int*);
-    void evaluate(array_1d<double>&,double*);
-    
-    
-    double simplex_evaluate(array_1d<double>&,int*);
-    double simplex_evaluate(array_1d<double>&,int*,
-              array_2d<double>&,array_1d<double>&);
-    
-    double simplex_evaluate(array_1d<double>&,int*,
-        array_2d<double>&,array_1d<double>&,int);     
-
-    double distance(int,int,array_1d<double>&);
-    
-    int in_bounds(array_1d<double>&);
-    int is_valid(array_1d<double>&);
-    int is_valid(array_1d<double>&, double*);
-    int find_nearest_center(array_1d<double>&);
-    int find_nearest_center(array_1d<double>&, double);
     
     int called_wide,called_focus;
     
