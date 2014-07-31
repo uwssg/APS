@@ -283,6 +283,13 @@ private:
     */
     void random_focus(int);
     
+    /*
+    The function bisection() takes a point and a chisquared value and uses bisection
+    to find a chisquared = chisquared_lim point near the proposed point.  It does so
+    by finding the nearest center of a known low-chisquared region and stepping along
+    the line connecting that center to the proposed point.
+    */
+    void bisection(array_1d<double>&,double);
     
     /*
     The functions evaluate() below are how APS actually calls the chisquared function.
@@ -422,7 +429,6 @@ private:
     */
     int is_it_a_candidate(int);
    
-    void bisection(array_1d<double>&,double);
     
     void start_timingfile();
     
