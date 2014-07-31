@@ -545,16 +545,7 @@ void aps::set_chimin(double cc,array_1d<double> &pt, int dex){
     }
     
     global_mindex=dex;
-    
-    //printf("    setting chimin to %e\n",chimin);
-    
-    /*printf("    chimin %e\n    ",chimin);
-    for(i=0;i<(pt.get_dim()-2)/5;i++){
-        printf("%e ",minpt.get_data(i*5+1));
-    }
-    printf("\n");*/
-    
-    //printf("set chimin to %e target %e\n",chimin,strad.get_target());
+
 }
 
 double aps::get_chimin(){

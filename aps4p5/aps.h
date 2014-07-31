@@ -356,10 +356,24 @@ private:
     the assym_array_2d<int> refined_simplex below.
     */
     void refine_center();
+    
+    /*
+    If simplex_search() found some candidates for a simplex search, but not enough
+    to seed a full simplex, this method will randomly sample points around the 
+    candidate with the minimum chisquared value, trying to fill in enough candidates
+    to run a simplex.  If it succeeds in filling out the list of candidates (it will
+    only try a finite number of calls to evaluate()), then the simplex search will 
+    proceed with the filled-out list of candidates.
+    */
     void simplex_too_few_candidates(array_1d<int>&);
     
-    void find_global_minimum_meta();
+    /*
+    set_chimin() will set the minimum value of chisquared, the point at which that minimum occurred
+    and the index by which that point is stored in the Gaussian Process
     
+    If chisquared_lim is set relative to chisquared_min, this method will also update
+    the value of chisquared_lim
+    */
     void set_chimin(double,array_1d<double>&,int);
     int is_it_a_candidate(int);
    
