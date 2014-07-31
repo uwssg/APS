@@ -277,6 +277,9 @@ void aps::evaluate(array_1d<double> &pt, double *chiout, int *dex, int validity)
     else{
         chiout[0]=(*chisq)(pt);
         if(chiout[0]<chisq_exception){
+            /*
+            Add the point to the Gaussian Process
+            */
             add_pt(pt,chiout[0]);
             dex[0]=gg.get_pts()-1;
         }
@@ -804,7 +807,6 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     _last_found=0;
     _last_min=2.0*chisq_exception;
     _last_simplex.reset();
-    _false_minima.reset();
     _last_ff.reset();
     
     /*

@@ -233,9 +233,70 @@ public:
     double get_chival(int);
     
 private:
+    
+    /*
+    The functions evaluate() below are how APS actually calls the chisquared function.
+    
+    There are two risks involved in just calling the operator() to the provided chisquared
+    function:
+    
+    1) There is no obvious mechanism in APS preventing APS from calling points outside of the
+    allowed bounds of parameter space
+    
+    2) There is no mechanism preventing APS from calling points that are infinitesimally
+    close to points that are already sampled and thus choking the Gaussian Process with neighbor
+    points that are essentially identical.
+    
+    evaluate() fixes these problems.  Whenever a point is proposed for chisquared evaluation,
+    evaluate first tests that it is in the bounds allowed by the chisquared function.  If not,
+    evaluate returns chisquared = 2 x 10^30 and does not add the point to the Gaussian Process
+    (if points with absurdly high values of chisquared are kept in the Gaussian Process, our
+    attempts to predict chisquared using the Gaussian Process will become invalid near the boundaries
+    of parameter space).
+    
+    If the point passes that test, evaluate() searches for the nearest neighbor to the proposed point.
+    If that neighbor is closer than a (normalized) distance of 1.0 x 10^-8 in parameter space,
+    evaluate returns the chisquared value of the nearest neighbor and, again, does not add the
+    new point to the Gaussian Process.
+    
+    The arguments to evaluate are
+    
+    array_1d<double> -- the point to be evaluated
+    
+    double* -- a pointer to store the chisquared value of the point
+    
+    int* -- a pointer to store the index of the point, assuming it is added to the Gaussina Process
+    (this is set to -1 if the point is not added to the Gaussian Process)
+    
+    There are some cases in which APS may evaluate the validity of a point before calling evaluate.
+    In that case, one can pass the value 1 as a final int and evaluate() will dispense with
+    the validity tests described above.
+    
+    */
+    void evaluate(array_1d<double>&,double*,int*,int);
+    void evaluate(array_1d<double>&,double*,int*);
+    void evaluate(array_1d<double>&,double*);
+    
+    /*
+    The function add_pt() actually adds a point to the Gaussian Process.
+    
+    The arguments are
+    
+    array_1d<double> -- the point to be added
+    double -- the chisquared value associated with that point
+    
+    the function will return the index of the point, once it is added to the
+    Gaussian Process
+    
+    add_pt() will also assess whether or not the point improves upon chisquared_min
+    or is a "good" point (i.e. whether chisquared<=chisquared_im)
+    */
+    int add_pt(array_1d<double>&,double);
+
+
 
     /*
-    This function will take the list of indices stored in the array_1d<int>
+    The function find_global_minimum() will take the list of indices stored in the array_1d<int>
     and use the points specified by those indices as the seed for a
     simplex search.
     
@@ -277,9 +338,7 @@ private:
     
     void set_chimin(double,array_1d<double>&,int);
     int is_it_a_candidate(int);
-    
-    int add_pt(array_1d<double>&,double);
-
+   
     void start_timingfile();
     
     void set_where(char*);
@@ -295,12 +354,7 @@ private:
     
     double simplex_strad(array_1d<double>&, array_1d<double>&);
     double simplex_metric(array_1d<double>&,array_1d<double>&, array_1d<double>&);
-    
-    void evaluate(array_1d<double>&,double*,int*,int);
-    void evaluate(array_1d<double>&,double*,int*);
-    void evaluate(array_1d<double>&,double*);
-    
-    
+       
   
 
     double distance(int,int,array_1d<double>&);
@@ -432,12 +486,17 @@ private:
     int called_wide,called_focus;
     
     
-    ///variables related to finding global minimum
+    /*
+    These variables are used by find_global_minimum() to keep track
+    of the convergence of the simplex search.
+    
+    The user should see the source code for find_global_minimum in aps.cpp
+    for a detailed explanation of how they are used.
+    */
     int _min_ct,_last_found,_mindex;
     double _simplex_min,_last_min;
     array_2d<double> _last_simplex;
     array_1d<double> _last_ff;
-    array_1d<int> _false_minima;
     
     //variables for figuring out which wide points to do bisection on
     kd_tree *unitSpheres;
