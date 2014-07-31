@@ -305,10 +305,10 @@ private:
     array_1d<int> known_minima,forbidden_candidates;
     
     /*
-    these arrays store the indexes of points found by aps_wide, aps_focus, aps_gibbs,
+    these arrays store the indexes of points found by aps_wide, aps_focus,
     and points that satisfy chisquared<=chisquared_lim, respectively
     */
-    array_1d<int> wide_pts,focus_pts,gibbs_pts,good_pts;
+    array_1d<int> wide_pts,focus_pts,good_pts;
     
     /*the characteristic lengths of dimensions in parameter space*/
     array_1d<double> characteristic_length;
@@ -397,7 +397,6 @@ private:
     void random_focus(int);
     void corner_focus(int);
     
-    void aps_gibbs(int);
     void initialize_focus();
     
     double simplex_strad(array_1d<double>&, array_1d<double>&);
@@ -424,7 +423,7 @@ private:
     int find_nearest_center(array_1d<double>&, double);
     
     asymm_array_2d<int> gibbs_sets;
-    int i_gibbs,called_gibbs,called_wide,called_focus;
+    int i_gibbs,called_wide,called_focus;
     
     
     ///variables related to finding global minimum

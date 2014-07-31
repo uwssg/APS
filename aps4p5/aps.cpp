@@ -1,6 +1,6 @@
 #include "aps.h"
 
-enum{iGIBBS,iWIDE,iFOCUS};
+enum{iWIDE,iFOCUS};
 
 straddle_parameter::straddle_parameter(){
     target=-1.0;
@@ -68,7 +68,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     good_min.set_name("aps_good_min");
     wide_pts.set_name("aps_wide_pts");
     focus_pts.set_name("aps_focus_pts");
-    gibbs_pts.set_name("aps_gibbs_pts");
     good_pts.set_name("aps_good_pts");
     centers.set_name("aps_centers");
     center_dexes.set_name("aps_center_dexes");
@@ -92,7 +91,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     i_gibbs=0;
     called_focus=0;
     called_wide=0;
-    called_gibbs=0;
     
     n_samples=250;
     
@@ -2003,43 +2001,6 @@ void aps::aps_focus(int in_samples){
 }
 
 
-void aps::aps_gibbs(int in_samples){
-    //printf("gibbs\n");
-    
-    if(gibbs_sets.get_rows()==0){
-        called_gibbs++;
-        return;
-    }
-
-    array_2d<double> samples;
-    int i,j,i_dim;
-    
-    samples.set_cols(dim);
-    
-    if(i_gibbs>=gibbs_sets.get_rows()){
-        i_gibbs=0;
-    }
-
-    for(i=0;i<in_samples;i++){
-        for(j=0;j<dim;j++){
-            samples.set(i,j,minpt.get_data(j));
-        }
-        
-        for(j=0;j<gibbs_sets.get_cols(i_gibbs);j++){
-            i_dim=gibbs_sets.get_data(i_gibbs,j);
-            
-            samples.set(i,i_dim,range_min.get_data(i_dim)+dice->doub()*(range_max.get_data(i_dim)-range_min.get_data(i_dim)));
-        }
-        
-    }
-    
-    i=gg.get_pts();
-    aps_choose_best(samples,iGIBBS);
-    
-    i_gibbs++;
-    called_gibbs++;
-
-}
 
 void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
     
@@ -2120,9 +2081,6 @@ void aps::aps_choose_best(array_2d<double> &samples, int which_aps){
                 }
             }
    
-        }
-        else if(which_aps==iGIBBS){
-            gibbs_pts.add(actually_added);
         }
         else if(which_aps==iFOCUS){
             focus_pts.add(actually_added);
@@ -2399,11 +2357,8 @@ void aps::aps_search(int in_samples){
 
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
-
-    if(gibbs_sets.get_rows()>0 && called_gibbs<called_wide && called_gibbs<called_focus){
-        aps_gibbs(in_samples);
-    }    
-    else if(called_focus<called_wide){
+ 
+    if(called_focus<called_wide){
         //aps_focus(in_samples);
         aps_focus(in_samples);
     }
@@ -2446,13 +2401,6 @@ void aps::simplex_search(){
             candidates.add(wide_pts.get_data(i));
         }
     }
-    
-    for(i=0;i<gibbs_pts.get_dim();i++){
-        if(ct_simplex <10 || is_it_a_candidate(gibbs_pts.get_data(i))>0){
-            candidates.add(gibbs_pts.get_data(i));
-        }
-    }
-    
     
     //printf("    candidates %d\n",candidates.get_dim());
     if(candidates.get_dim()<gg.get_dim()+1){
@@ -2949,11 +2897,6 @@ void aps::write_pts(){
     for(i=0;i<wide_pts.get_dim();i++){
         tosort.set(i,gg.get_fn(wide_pts.get_data(i)));
         inn.set(i,wide_pts.get_data(i));
-    }
-    
-    for(i=0;i<gibbs_pts.get_dim();i++){
-        tosort.add(gg.get_fn(gibbs_pts.get_data(i)));
-        inn.add(gibbs_pts.get_data(i));
     }
     
     sort_and_check(tosort,sorted,inn);
