@@ -570,8 +570,6 @@ int aps::is_it_a_candidate(int dex){
     array_1d<double> mid_pt;
     double chitrial;
 
-    //printf("  is %e a candidate -- med %e grat %e min %e\n",gg.get_fn(dex),global_median,grat,chimin);
-    
     for(i=0;i<forbidden_candidates.get_dim();i++){
         if(dex==forbidden_candidates.get_data(i))return 0;
     }
@@ -1893,25 +1891,16 @@ void aps::corner_focus(int ic){
 }
 
 void aps::aps_focus(){
-   
-   array_1d<int> neigh;
-   array_1d<double> ddneigh;
 
    int ic;
 
-  
-   
-   //printf("in focus\n");
-   
    for(ic=0;ic<centers.get_rows();ic++){
        called_focus++;
        if(boundary_pts.get_cols(ic)<gg.get_dim()){
-           //printf("randomly focusing\n");
            random_focus(ic);
            
        }//if don't have enough boundary points
        else{
-           //printf("focusing on corners\n");
            corner_focus(ic);
        }    
        

@@ -245,6 +245,46 @@ private:
     gp gg;
     
     /*
+    aps_wide() carries out a ``traditional'' APS, seeking to maximize the S statistic (equation 1 of the
+    paper) in parameter space.
+    
+    We have introduced a new development here.  Rather than maximizing S by taking a random sample of
+    points in parameter space and choosing the point from that sample which maximizes S, aps_wide will
+    randomly sample dim+1 points, evaluate S at those points, and use those points to seed a simplex search
+    which seeks to maximize S.  This simplex search is run by simplex_strad() and simplex_strad_metric()
+    below.
+    */
+    void aps_wide();
+    
+    /*
+    aps_focus() runs the focused search (steps 1B-5B in the paper) about known centers of
+    low-chisquared regions.
+    
+    For each center, it will call either corner_focus() or random_focus() below
+    */
+    void aps_focus();
+    
+    /*
+    If a center has more than dim boundary points, attempt the search described in steps 3B-5B:
+    Find the boundary points that maximize and minimize each parameter.  From these points, step
+    randomly away in a direction perpendicular to the line connecting the boundary points to the
+    center.  Evaluate S at these random points.  Evaluate chisquared at the point which maximizes S.
+    
+    The argument of corner_focus is the index which identifies the center in the array_1d<int> center_dexes
+    and the array_2d<double> centers
+    */
+    void corner_focus(int);
+    
+    /*
+    If a center does not have dim boundary points, randomly select a point near that center
+    to evaluate chisquared.
+    
+    The argument of random_focus is the same as the argument for corner_focus
+    */
+    void random_focus(int);
+    
+    
+    /*
     The functions evaluate() below are how APS actually calls the chisquared function.
     
     There are two risks involved in just calling the operator() to the provided chisquared
@@ -375,18 +415,19 @@ private:
     the value of chisquared_lim
     */
     void set_chimin(double,array_1d<double>&,int);
+    
+    /*
+    Determine whether or not the point stored by the index passed as int is a candidate
+    for seeding a simplex search.  Return 1 if so.  Return 0 if not.
+    */
     int is_it_a_candidate(int);
    
+    void bisection(array_1d<double>&,double);
+    
     void start_timingfile();
     
     void set_where(char*);
     
-    void bisection(array_1d<double>&,double);
-    
-    void aps_wide();
-    void aps_focus();
-    void random_focus(int);
-    void corner_focus(int);
     
     void initialize_focus();
     
