@@ -88,7 +88,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
 
     chimin=-1.0;
     
-    i_gibbs=0;
     called_focus=0;
     called_wide=0;
         
@@ -205,10 +204,6 @@ void aps::assign_chisquared(chisquared *cc){
 
 void aps::set_characteristic_length(int dex, double nn){
     characteristic_length.set(dex,nn);
-}
-
-void aps::set_gibbs_set(array_1d<int> &row){
-    gibbs_sets.add_row(row);
 }
 
 void aps::initialize(int npts,array_1d<double> &min, array_1d<double> &max){

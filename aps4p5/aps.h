@@ -180,19 +180,6 @@ public:
     */
     void set_characteristic_length(int,double);
     
-    /*
-    There is another variation on the APS search in which all of the dimensions
-    but a few are held fixed to their best fit values and an APS search (steps 1A-3A)
-    is carried out on the other dimensions. The array_1d<int> lists the dimensions that
-    are allowed to vary.
-    
-    If such sets are specified, the code will alternate between conducting one of these
-    ``Gibbs'' - like searches and conducting the other variants of search.
-    
-    NOTE: THIS IS NOT WELL-TESTED
-    */
-    void set_gibbs_set(array_1d<int>&);
-    
     /*turn off the bisection option (default is to turn it on)*/
     void disable_bisection();
     
@@ -410,8 +397,7 @@ private:
     int find_nearest_center(array_1d<double>&);
     int find_nearest_center(array_1d<double>&, double);
     
-    asymm_array_2d<int> gibbs_sets;
-    int i_gibbs,called_wide,called_focus;
+    int called_wide,called_focus;
     
     
     ///variables related to finding global minimum
