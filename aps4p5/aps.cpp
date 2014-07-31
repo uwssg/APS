@@ -1635,16 +1635,21 @@ void aps::corner_focus(int ic){
     for(i=0;i<gg.get_dim();i++)length.set(i,max.get_data(i)-min.get_data(i));
     
     stradmax=-2.0*chisq_exception;
+    
+    /*idx=0 means we are trying to expand on the minimum points
+    idx=1 means we are trying to expand on the maximum points*/
     for(idx=0;idx<2;idx++){
         if(idx==0)extremity=&min_dex;
         else if(idx==1) extremity=&max_dex;
         
         for(ix=0;ix<gg.get_dim();ix++){
-        
+            
+            /*get the vector pointing from the center to the boundary point in question*/
             for(i=0;i<gg.get_dim();i++){
                 rr.set(i,gg.get_pt(extremity->get_data(ix),i)-origin.get_data(i));
             }
             
+            /*normalize that vector by the size of the low-chisquared region*/
             nn=0.0;
             for(i=0;i<gg.get_dim();i++){
                 nn+=rr.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
@@ -1662,10 +1667,9 @@ void aps::corner_focus(int ic){
                 rr.divide_val(i,nn);
             }
             
-        //after this, you need to propose some number of perpendicular directions
-        //set up trial points along these directions
-        //then add a dx that is along the direction of extremity
-        
+           
+            /*propose 20 points that are displaced from the boundary point
+            in a direction perpendicular to rr*/
             for(ict=0;ict<20;ict++){
                 
                 for(i=0;i<gg.get_dim();i++){
@@ -1698,14 +1702,23 @@ void aps::corner_focus(int ic){
                 for(i=0;i<gg.get_dim();i++){
                     rr_perp.divide_val(i,nn);
                 }
-             
+                
+                /*try several different distances long the perpendicular displacement;
+                with each successive step, step farther away from the boundary point.
+                */
                 norm=0.1;
                 for(jct=0;jct<5;jct++){
                 
                     for(i=0;i<gg.get_dim();i++){
                         trial.set(i,gg.get_pt(extremity->get_data(ix),i)+norm*rr_perp.get_data(i));
                     }
-                
+                    
+                    
+                    /*set the dimension whose extremum we are expanding from
+                    to remain unchanged; in theory, this means we should be stepping
+                    along the surface of the low-chisquared region (that is almost
+                    certainly not what is happening in practice; that is why
+                    we will follow up with a bisection search)*/
                     if(idx==0){
                         trial.subtract_val(ix,0.1*length.get_data(ix));
                     }
@@ -1721,7 +1734,11 @@ void aps::corner_focus(int ic){
                         stradval=strad(mu,sig);
                     }
                 
-                
+                    /*
+                    Of these proposed candidate points, select the one which
+                    maximizes the S statistic from equation (1) of the paper
+                    to actually evaluate chisquared
+                    */
                     if(stradval>stradmax){
                         stradmax=stradval;
                 
@@ -1737,6 +1754,7 @@ void aps::corner_focus(int ic){
                     }
                     
                     norm+=0.1;
+                    
                 }//loop over jct
             }//loop over ict (the number of trials proposed from each boundary point)
             
@@ -1744,7 +1762,13 @@ void aps::corner_focus(int ic){
         
     }//loop over idx which controls whether this is max or min
     
+    
+    
     if(stradmax>-1.0*chisq_exception){
+        /*
+        Evaluate chisquared at the chosen point.
+        Perform bisection to make certain that a new boundary point is found.
+        */
         evaluate(sambest,&chitrue,&actually_added,1);
         if(actually_added>=0){
             focus_pts.add(actually_added);
@@ -1752,13 +1776,12 @@ void aps::corner_focus(int ic){
                 bisection(sambest,chitrue);
             }
         }
-        /*printf("found %e\n",chitrue);
-        printf("ix %d dx %d\n",ix_chosen,dx_chosen);
-        printf("strad %e mu %e sig %e\n",stradmax,mu_chosen,sig_chosen);
-        printf("norm %e\n\n",norm_chosen);*/
     }
     else{
-        //printf("going to have to randomly focus instead\n");
+        
+        /*in the event that a suitable candidate was not found,
+        randomly select a point to sample that is near the center in question*/
+        
         random_focus(ic);
     }
 }
