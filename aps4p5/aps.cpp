@@ -2593,22 +2593,25 @@ void aps::write_pts(){
     double mu,sig;
     FILE *output;
 
-    
-    array_1d<double> hy;
-    
-    gg.get_hyper_parameters(hy);
-    
-    /*
-    double mu_true,sig_true,chi_true=(*chisq)(correct_ans);
-    mu_true=gg.user_predict(correct_ans,&sig_true,0);
-    */
-    
     double per_chisq,per_total,overhead;
+    
+    /*how much clock time is spent per call to chisquared just calling chisquared*/
     per_chisq=chisq->get_time_spent()/chisq->get_called();
+    
+    /*how much clock time is spent per call to chisquared on all of the calculations*/
     per_total=(double(time(NULL))-start_time)/chisq->get_called();
+    
+    /*how much extra clock time has been added to each chisquared call
+    by all of the extra calculations involved in APS*/
     overhead=per_total-per_chisq;
     
     
+    /*
+    If we have not optimized hyper parameters yet, or if 100 aps_wide() points have
+    been sampled since the last time hyper parameters were optimized AND the overhead
+    in clock time per chisquared is less than 1/10 the normal time spent on a chisquared
+    evaluation, optimize the Gaussian Process hyper parameters
+    */
     if(last_optimized==0 ||
       (wide_pts.get_dim()>last_optimized+100 && 
       overhead<0.1*per_chisq)){
@@ -2616,6 +2619,11 @@ void aps::write_pts(){
         optimize();
     }
     
+    /*
+    Figure out which points satisfy chisquared<=chisquared_lim
+    (since chisquared_lim may have changed because of the discovery of a new
+    chisquared_min)
+    */
     good_pts.reset();
     ngood=0;
     for(i=0;i<gg.get_pts();i++){
@@ -2649,6 +2657,10 @@ void aps::write_pts(){
     volume.set_name("write_volume");
     vmax.set_name("write_vmax");
     vmin.set_name("write_vmin");
+    
+    /*
+    Find the parameter space volumes of each independent low-chisquared region
+    */
     for(i=0;i<center_dexes.get_dim();i++){
         vmax.reset();
         vmin.reset();
@@ -2681,7 +2693,9 @@ void aps::write_pts(){
         
     }
     
-    
+    /*
+    Print all of the points sampled by APS
+    */
     output=fopen(outname,"w");
     fprintf(output,"# ");
     for(i=0;i<gg.get_dim();i++){
@@ -2726,7 +2740,10 @@ void aps::write_pts(){
     array_1d<int> inn;
     inn.set_name("aps_write_pts_inn");
     
-   
+    
+    /*
+    Find the 1/10 quantile of chisquared among points discovered by aps_wide()
+    */
     for(i=0;i<wide_pts.get_dim();i++){
         tosort.set(i,gg.get_fn(wide_pts.get_data(i)));
         inn.set(i,wide_pts.get_data(i));
@@ -2738,6 +2755,10 @@ void aps::write_pts(){
     inn.reset();
     
     if(ddUnitSpheres.get_dim()>0){
+        /*
+        Find the 2/3 quantile of nearest neighbor distances among the spherical projection of boundary
+        points and aps_wide points.  Consider only points discovered since the last call to write_pts
+        */
         for(i=0;i<ddUnitSpheres.get_dim();i++)inn.set(i,i);
         sort_and_check(ddUnitSpheres,sorted,inn);
         sphere_threshold=sorted.get_data((2*tosort.get_dim())/3);
@@ -2753,12 +2774,14 @@ void aps::write_pts(){
     sphere_data.set_name("sphere_data");
     
     if(unitSpheres==NULL){
+        /*
+        If the KD-tree of spherical projections has not yet been instantiated, do so now (if enough
+        boundary points have been found)
+        */
         ii=0;
         for(i=0;i<boundary_pts.get_rows();i++){
             ii+=boundary_pts.get_cols(i);
         }
-        
-        //printf("ii boundary_pts %d\n",ii);
         
         if(ii>=gg.get_dim()){
             for(i=0;i<gg.get_dim();i++){
@@ -2783,7 +2806,11 @@ void aps::write_pts(){
     i=gg.get_last_refactored()/2;
     if(i<1000)i=1000;
     
+    /*
+    Consider refactoring the kd_tree in the Gaussian Process object gg.
     
+    The hope is that this will make the nearest neighbor search more efficient.
+    */
     if(gg.get_pts()>gg.get_last_refactored()+i && gg.get_pts()<20000){
         //printf("refactoring\n");
     
@@ -2793,7 +2820,9 @@ void aps::write_pts(){
     }
 
    
-   
+    /*
+    Output the timing statistics file
+    */
     double time_now = double(time(NULL));
    
     output=fopen(timingname,"a");
