@@ -1584,9 +1584,14 @@ void aps::random_focus(int ic){
 }
 
 void aps::corner_focus(int ic){
-    array_1d<double> min,max,trial,sambest,rr_perp,rr,max_mid_val,min_mid_val,origin;
-    array_2d<double> mid_pt_bases;
-    array_1d<int> min_dex,max_dex,min_mid_dex,max_mid_dex,*extremity;
+    /*
+    ic identifies the center around whic we are focusing
+    
+    center_dexes.get_data(ic) is the index of the center as stored in the Gaussian Process
+    */
+
+    array_1d<double> min,max,trial,sambest,rr_perp,rr,origin;
+    array_1d<int> min_dex,max_dex,*extremity;
     double nn,chitrue,stradval,stradmax,mu,sig,mu_chosen,sig_chosen,norm,norm_chosen;
     int i,j,actually_added;
     int ix,idx,ix_chosen,dx_chosen;
@@ -1595,9 +1600,10 @@ void aps::corner_focus(int ic){
     
     min_dex.set_name("corner_focus_min_dex");
     max_dex.set_name("corner_focus_max_dex");
-    min_mid_dex.set_name("corner_focus_min_mid_dex");
-    max_mid_dex.set_name("corner_focus_max_mid_dex");
     
+    /*
+    Find the boudary points that minimize and maximize each parameter
+    */
     for(i=0;i<boundary_pts.get_cols(ic);i++){
         for(j=0;j<gg.get_dim();j++){
             nn=gg.get_pt(boundary_pts.get_data(ic,i),j);
@@ -1624,55 +1630,6 @@ void aps::corner_focus(int ic){
         }
     }
     
-    for(ix=0;ix<gg.get_dim();ix++){
-        for(i=0;i<gg.get_dim();i++){
-            rr.set(i,(gg.get_pt(max_dex.get_data(ix),i)-gg.get_pt(min_dex.get_data(ix),i)));
-        }
-        rr.multiply_val(ix,-1.0);
-        
-        norm=0.0;
-        for(i=0;i<gg.get_dim();i++){
-            norm+=rr.get_data(i)*rr.get_data(i)/power(max.get_data(i)-min.get_data(i),2);
-        }
-        norm=sqrt(norm);
-        
-        if(norm>0.0){        
-            for(i=0;i<gg.get_dim();i++){
-                rr.divide_val(i,norm);
-            
-                if(isnan(rr.get_data(i))){
-                    printf("WARNING mid_rr %d is nan\n",i);
-                    exit(1);
-                }
-            }
-        
-            mid_pt_bases.add_row(rr);
-        
-            for(i=0;i<boundary_pts.get_cols(ic);i++){
-                nn=0.0;
-                for(j=0;j<gg.get_dim();j++){
-                    nn+=(gg.get_pt(boundary_pts.get_data(ic,i),j)-origin.get_data(j))*rr.get_data(j)/power(max.get_data(j)-min.get_data(j),2);
-                }
-            
-                if(i==0 || nn>max_mid_val.get_data(ix)){
-                    max_mid_val.set(ix,nn);
-                    max_mid_dex.set(ix,boundary_pts.get_data(ic,i));
-                }
-            
-                if(i==0 || nn<min_mid_val.get_data(ix)){
-                    min_mid_val.set(ix,nn);
-                    min_mid_dex.set(ix,boundary_pts.get_data(ic,i));
-                }
-            }
-        }
-        else{
-            mid_pt_bases.add_row(rr);
-            max_mid_val.set(ix,2.0*chisq_exception);
-            min_mid_val.set(ix,-2.0*chisq_exception);
-        }
-        
-    }
-    
     array_1d<double> length;
     
     for(i=0;i<gg.get_dim();i++)length.set(i,max.get_data(i)-min.get_data(i));
@@ -1681,195 +1638,111 @@ void aps::corner_focus(int ic){
     for(idx=0;idx<2;idx++){
         if(idx==0)extremity=&min_dex;
         else if(idx==1) extremity=&max_dex;
-        else if(idx==2) extremity=&min_mid_dex;
-        else if(idx==3) extremity=&max_mid_dex;
         
         for(ix=0;ix<gg.get_dim();ix++){
-            if(idx<2 ||
-            (idx==2 && min_mid_val.get_data(ix)>-1.0*chisq_exception) ||
-            (idx==3 && max_mid_val.get_data(ix)<chisq_exception)){
         
-                for(i=0;i<gg.get_dim();i++){
-                    rr.set(i,gg.get_pt(extremity->get_data(ix),i)-origin.get_data(i));
-                }
+            for(i=0;i<gg.get_dim();i++){
+                rr.set(i,gg.get_pt(extremity->get_data(ix),i)-origin.get_data(i));
+            }
             
+            nn=0.0;
+            for(i=0;i<gg.get_dim();i++){
+                nn+=rr.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
+            }
+            
+            if(nn<1.0e-30 || isnan(nn)){
+                printf("WARNNING norm of rr %e\n",nn);
+                printf("in corner_focus; before ict loop\n");
+                printf("ix %d idx %d\n",ix,idx);
+                exit(1);
+            }
+            
+            nn=sqrt(nn);
+            for(i=0;i<gg.get_dim();i++){
+                rr.divide_val(i,nn);
+            }
+            
+        //after this, you need to propose some number of perpendicular directions
+        //set up trial points along these directions
+        //then add a dx that is along the direction of extremity
+        
+            for(ict=0;ict<20;ict++){
+                
+                for(i=0;i<gg.get_dim();i++){
+                    rr_perp.set(i,normal_deviate(dice,0.0,length.get_data(i)));
+                }
+                    
+                rr_perp.set(ix,0.0);
+                
                 nn=0.0;
                 for(i=0;i<gg.get_dim();i++){
-                    nn+=rr.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
+                    nn+=rr_perp.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
                 }
-            
-                if(nn<1.0e-30 || isnan(nn)){
-                    printf("WARNNING norm of rr %e\n",nn);
-                    printf("in corner_focus; before ict loop\n");
+                for(i=0;i<gg.get_dim();i++){
+                    rr_perp.subtract_val(i,nn*rr.get_data(i));
+                }
+                    
+                nn=0.0;
+                for(i=0;i<gg.get_dim();i++){
+                    nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(length.get_data(i),2);
+                }
+                
+                if(nn<1.0e-10 || isnan(nn)){
+                    printf("WARNING norm of rr_perp is %e\n",nn);
+                    printf("in corner focus; inside ict loop; outside jct loop\n");
                     printf("ix %d idx %d\n",ix,idx);
                     exit(1);
                 }
-            
+                
                 nn=sqrt(nn);
                 for(i=0;i<gg.get_dim();i++){
-                    rr.divide_val(i,nn);
+                    rr_perp.divide_val(i,nn);
                 }
-            
-            //after this, you need to propose some number of perpendicular directions
-            //set up trial points along these directions
-            //then add a dx that is along the direction of extremity
-        
-                for(ict=0;ict<20;ict++){
+             
+                norm=0.1;
+                for(jct=0;jct<5;jct++){
                 
                     for(i=0;i<gg.get_dim();i++){
-                        rr_perp.set(i,normal_deviate(dice,0.0,length.get_data(i)));
+                        trial.set(i,gg.get_pt(extremity->get_data(ix),i)+norm*rr_perp.get_data(i));
                     }
-                    
-                    rr_perp.set(ix,0.0);
                 
-                    nn=0.0;
-                    for(i=0;i<gg.get_dim();i++){
-                        nn+=rr_perp.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
+                    if(idx==0){
+                        trial.subtract_val(ix,0.1*length.get_data(ix));
                     }
-                    for(i=0;i<gg.get_dim();i++){
-                        rr_perp.subtract_val(i,nn*rr.get_data(i));
+                    else if(idx==1){
+                        trial.add_val(ix,0.1*length.get_data(ix));
                     }
                      
-                    /*
-                    if(idx<2){
-                        rr_perp.set(ix,0.0);
+                    if(is_valid(trial)==0){
+                        stradval=-2.0*chisq_exception;
                     }
                     else{
-                        nn=0.0;
-                        for(i=0;i<gg.get_dim();i++){
-                            nn+=rr_perp.get_data(i)*mid_pt_bases.get_data(ix,i)/power(max.get_data(i)-min.get_data(i),2);
-                        }
-                        for(i=0;i<gg.get_dim();i++){
-                            rr_perp.subtract_val(i,nn*mid_pt_bases.get_data(ix,i));
-                        }
-                        
-                    }
-                    */
-                    
-                    nn=0.0;
-                    for(i=0;i<gg.get_dim();i++){
-                        nn+=rr_perp.get_data(i)*rr_perp.get_data(i)/power(length.get_data(i),2);
+                        mu=gg.user_predict(trial,&sig,0);
+                        stradval=strad(mu,sig);
                     }
                 
-                    if(nn<1.0e-10 || isnan(nn)){
-                        printf("WARNING norm of rr_perp is %e\n",nn);
-                        printf("in corner focus; inside ict loop; outside jct loop\n");
-                        printf("ix %d idx %d\n",ix,idx);
-                        exit(1);
-                    }
                 
-                    nn=sqrt(nn);
-                    for(i=0;i<gg.get_dim();i++){
-                        rr_perp.divide_val(i,nn);
-                    }
-             
-                    norm=0.1;
-                    for(jct=0;jct<5;jct++){
+                    if(stradval>stradmax){
+                        stradmax=stradval;
                 
                         for(i=0;i<gg.get_dim();i++){
-                            trial.set(i,gg.get_pt(extremity->get_data(ix),i)+norm*rr_perp.get_data(i));
-                        }
-                
-                        if(idx==0){
-                            trial.subtract_val(ix,0.1*length.get_data(ix));
-                        }
-                        else if(idx==1){
-                            trial.add_val(ix,0.1*length.get_data(ix));
-                        }
-                        else if(idx==2){
-                        
-                            nn=0.1*(max_mid_val.get_data(ix)-min_mid_val.get_data(ix));
-                            for(i=0;i<gg.get_dim();i++){
-                                trial.subtract_val(i,nn*mid_pt_bases.get_data(ix,i));
-                            }
-                        
-                        }
-                        else if(idx==3){
-                    
-                            nn=0.1*(max_mid_val.get_data(ix)-min_mid_val.get_data(ix));
-                            for(i=0;i<gg.get_dim();i++){
-                                trial.add_val(i,nn*mid_pt_bases.get_data(ix,i));
-                            }
-                    
-                        }
-
-                        if(is_valid(trial)==0){
-                            stradval=-2.0*chisq_exception;
-                        }
-                        else{
-                            mu=gg.user_predict(trial,&sig,0);
-                            stradval=strad(mu,sig);
-                        }
-                
-                
-                        if(stradval>stradmax){
-                            stradmax=stradval;
-                
-                            for(i=0;i<gg.get_dim();i++){
-                                sambest.set(i,trial.get_data(i));
-                            }
-                    
-                            ix_chosen=ix;
-                            dx_chosen=idx;
-                            mu_chosen=mu;
-                            sig_chosen=sig;
-                            norm_chosen=norm;
+                            sambest.set(i,trial.get_data(i));
                         }
                     
-                        norm+=0.1;
-                    }//loop over jct
-                }//loop over ict (the number of trials proposed from each boundary point)
-            }
+                        ix_chosen=ix;
+                        dx_chosen=idx;
+                        mu_chosen=mu;
+                        sig_chosen=sig;
+                        norm_chosen=norm;
+                    }
+                    
+                    norm+=0.1;
+                }//loop over jct
+            }//loop over ict (the number of trials proposed from each boundary point)
+            
         }//loop over ix (which is the dimension)
         
     }//loop over idx which controls whether this is max or min
-    
-
-    for(i=0;i<gg.get_dim();i++){
-        origin.set(i,0.5*(max.get_data(i)+min.get_data(i)));
-        length.set(i,0.5*(max.get_data(i)-min.get_data(i)));
-    }
-    
-    /*
-    for(ict=0;ict<200;ict++){
-        for(i=0;i<gg.get_dim();i++){
-            rr.set(i,normal_deviate(dice,0.0,length.get_data(i)));    
-        }
-        norm=0.0;
-        for(i=0;i<gg.get_dim();i++){
-            norm+=rr.get_data(i)*rr.get_data(i)/power(length.get_data(i),2);
-        }
-        norm=sqrt(norm);
-        for(i=0;i<gg.get_dim();i++){
-            rr.divide_val(i,norm);
-        }
-        
-        norm=1.0+0.5*dice->doub();
-        
-        for(i=0;i<gg.get_dim();i++){
-            trial.set(i,origin.get_data(i)+norm*rr.get_data(i));
-        }
-        
-        if(is_valid(trial)==1){
-            mu=gg.user_predict(trial,&sig,0);
-            stradval=strad(mu,sig);
-            if(stradval>stradmax){
-                stradmax=stradval;
-                
-                for(i=0;i<gg.get_dim();i++){
-                    sambest.set(i,trial.get_data(i));
-                }
-                
-                mu_chosen=mu;
-                sig_chosen=sig;
-                ix_chosen=-1;
-                dx_chosen=-1;
-            }
-        }
-        
-    
-    }
-    */
     
     if(stradmax>-1.0*chisq_exception){
         evaluate(sambest,&chitrue,&actually_added,1);
