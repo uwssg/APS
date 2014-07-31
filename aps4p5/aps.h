@@ -235,6 +235,16 @@ public:
 private:
     
     /*
+    gg is a Gaussian Process object (source code in gaussian_process.h and gaussian_process.cpp)
+    
+    In addition to being how the chisquared approximations take place, the Gaussian Process
+    contains a KD-tree which will store all of the points discovered by APS (and which allows
+    for rapid nearest neighbor searches).  Thus, whenever a point is evaluated for a chisquared value,
+    it is ``added to the Gaussian Process.''
+    */
+    gp gg;
+    
+    /*
     The functions evaluate() below are how APS actually calls the chisquared function.
     
     There are two risks involved in just calling the operator() to the provided chisquared
@@ -480,7 +490,6 @@ private:
     
     double chimin,delta_chisquared,grat,dot_product_threshold;
     
-    gp gg;
     straddle_parameter strad;
     
     int called_wide,called_focus;

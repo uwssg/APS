@@ -1,5 +1,15 @@
 //this is the 27 February 2012 rewrite
 
+/*
+Based on description in
+
+Bentley, J. L.
+Communications of the Association for Computint Machinery
+volume 18
+p 509
+(1975)
+*/
+
 #include "containers.h"
 
 #ifndef KD_H
