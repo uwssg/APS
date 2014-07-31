@@ -124,8 +124,6 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     sphere_threshold=-2.0*chisq_exception;
     grat=1.0;
     
-    dot_product_threshold=0.8;
-    
     dim=dim_in;
     paramnames=new char*[dim];
     int i;
@@ -1879,6 +1877,11 @@ void aps::project_to_unit_sphere(int ic, array_1d<double> &pt_in, array_1d<doubl
     int i;
     for(i=0;i<gg.get_dim();i++){
         dir.set(i,pt_in.get_data(i)-centers.get_data(ic,i));
+        
+        /*
+        gg.get_max-gg.get_min will return the characteristic length if it was set,
+        and the range_max-range_min if not.  That is why we use that here
+        */
         norm+=power(dir.get_data(i)/(gg.get_max(i)-gg.get_min(i)),2);
     }
     norm=sqrt(norm);

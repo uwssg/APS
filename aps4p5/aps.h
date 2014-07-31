@@ -619,6 +619,7 @@ private:
     double time_node,time_aps,time_simplex,time_total,start_time;
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
     int ct_node,ct_aps,ct_simplex;
+    int called_wide,called_focus;
     
     /*
     global_threshold is the 1/10 quantile of chisquared values of points discovered by aps_wide, used
@@ -630,13 +631,20 @@ private:
     */
     double global_threshold,sphere_threshold;
     
-    double chimin,delta_chisquared,grat,dot_product_threshold;
+    /*global variables
     
+    chimin is the absolute minimum chisquared value discovered
+    
+    delta_chisquared is used for setting chisquared_lim=chimin+delta_chisquared
+    
+    grat is the G parameter from equation (4) of the paper
+    */
+    double chimin,delta_chisquared,grat;
+    
+    /*the object that stores the target value of chisquared and calculates the S statistic*/
     straddle_parameter strad;
-    
-    int called_wide,called_focus;
-    
-    
+
+       
     /*
     These variables are used by find_global_minimum() to keep track
     of the convergence of the simplex search.
@@ -649,10 +657,20 @@ private:
     array_2d<double> _last_simplex;
     array_1d<double> _last_ff;
     
-    //variables for figuring out which wide points to do bisection on
+    /*
+    These are the variables which store the projection of boundary points onto unit spheres
+    surrounding their low-chisquared centers.  This is used for determining when to do
+    bisection on points discovered by aps_wide()
+    */
     kd_tree *unitSpheres;
     array_1d<double> ddUnitSpheres;
     
+    /*
+    project the first array_1d<double> onto a normalized unit sphere about the center
+    specified by the int.  Store the result in the second array_1d<double>.  This is how
+    we build up the set of boundary points projected onto unit spheres which is used to determine
+    when to do bisection on aps_wide() points.
+    */
     void project_to_unit_sphere(int, array_1d<double>&, array_1d<double>&);
     
 };
