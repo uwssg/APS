@@ -560,7 +560,7 @@ private:
     double time_cleaning,time_writing,time_optimizing,time_refactoring;
     int ct_node,ct_aps,ct_simplex;
     
-    double global_median,sphere_median;
+    double global_threshold,sphere_threshold;
     
     double chimin,delta_chisquared,grat,dot_product_threshold;
     

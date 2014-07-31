@@ -120,8 +120,8 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     
     chisq=NULL;
     
-    global_median=-2.0*chisq_exception;
-    sphere_median=-2.0*chisq_exception;
+    global_threshold=-2.0*chisq_exception;
+    sphere_threshold=-2.0*chisq_exception;
     grat=1.0;
     
     dot_product_threshold=0.8;
@@ -578,7 +578,7 @@ int aps::is_it_a_candidate(int dex){
         if(dex==known_minima.get_data(i))return 0;
     }
     
-    if(gg.get_fn(dex)<chimin+grat*(fabs(global_median)-chimin) && 
+    if(gg.get_fn(dex)<chimin+grat*(fabs(global_threshold)-chimin) && 
         gg.get_fn(dex)>strad.get_target()){
           
         /*
@@ -1287,17 +1287,17 @@ void aps::aps_wide(){
             sig_storage.add(simplex_sig_best);
          
             if(do_bisection==1){
-                if(sphere_median<0.0 && chitrue<global_median){
+                if(sphere_threshold<0.0 && chitrue<global_threshold){
                     bisect_it=1;
                 }
-                else if(sphere_median>0.0){
+                else if(sphere_threshold>0.0){
                     ic=find_nearest_center(simplex_best);
                     if(ic>=0){
                         project_to_unit_sphere(ic,simplex_best,unit_v);
                         unitSpheres->nn_srch(unit_v,1,neigh_sphere,dd_sphere);
                         ddUnitSpheres.add(dd_sphere.get_data(0));
                    
-                        if(dd_sphere.get_data(0)>sphere_median){
+                        if(dd_sphere.get_data(0)>sphere_threshold){
                             bisect_it=1;
                         }
                     }
@@ -2678,14 +2678,14 @@ void aps::write_pts(){
     }
     
     sort_and_check(tosort,sorted,inn);
-    global_median=sorted.get_data(tosort.get_dim()/10);
+    global_threshold=sorted.get_data(tosort.get_dim()/10);
     sorted.reset();
     inn.reset();
     
     if(ddUnitSpheres.get_dim()>0){
         for(i=0;i<ddUnitSpheres.get_dim();i++)inn.set(i,i);
         sort_and_check(ddUnitSpheres,sorted,inn);
-        sphere_median=sorted.get_data((2*tosort.get_dim())/3);
+        sphere_threshold=sorted.get_data((2*tosort.get_dim())/3);
         
         ddUnitSpheres.reset();
     }
