@@ -1855,6 +1855,10 @@ void aps::project_to_unit_sphere(int ic, array_1d<double> &pt_in, array_1d<doubl
 
 void aps::bisection(array_1d<double> &inpt, double chi_in){
     
+    /*
+    If the point is already fairly near to chisquared_lim, or if APS has not yet found
+    a low-chisquared region for which chisquared<chisquared_lim, do not do bisection
+    */
     if(chi_in<strad.get_target() && strad.get_target()-chi_in<0.1*delta_chisquared || chimin>strad.get_target()){
         return;
     }
@@ -1869,9 +1873,29 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     double bisection_tolerance=0.1*delta_chisquared;
     
-    //if(bisection_tolerance>0.1)bisection_tolerance=0.1;
+    /*
+    The code will work by finding one point with chisquared<chisquared_lim which will
+    be stored as the array_1d<double> lowball (and corresponding chisquared value flow)
+    and one point with chisquared>chisquared_lim which will be stored as the 
+    array_1d<double> highball (and corresponding chisquared value fhigh).
+    The code will iteratively step between lowball and highball until it finds a point that is within
+    bisection_tolerance of chisquared_lim.
     
-    //need to allow for an inpt that is inside the bound...
+    The code will also store an array_1d<double> dir_origin which is the low-chisquared center
+    from which the bisection effectively began.  This is for purposes of code at the end of this 
+    routine (which is presently commented-out) which had bisection follow up the iterative search
+    with one step intentionally just outside of the chisquared=chisquared_lim contour and one
+    step intentionally just inside of that contour.  It was hoped that this would give us a better
+    characterization of the chisquared function.  The benefit was difficult to prove.
+    */
+    
+   /*
+   Finding dir_origin and f_dir_origin;  this point will also be used for lowball,
+   if chi_in>chisquared_lim
+   
+   i_center will be the index (as stored in array_1d<int> center_dexes or array_2d<double> centers
+   of the nearest low-chisquared center point) 
+   */
     if(good_pts.get_dim()==0){
         for(i=0;i<gg.get_dim();i++)dir_origin.set(i,minpt.get_data(i));
         fdir_origin=chimin;
@@ -1910,6 +1934,9 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     array_1d<double> mu_to_sort;
     array_1d<int> mu_dex;
     
+    /*
+    Initially set lowball and highball
+    */
     if(chi_in>strad.get_target()){
         for(i=0;i<gg.get_dim();i++){
             lowball.set(i,dir_origin.get_data(i));
@@ -1919,6 +1946,12 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         fhigh=chi_in;
     }
     else{
+        /*
+        If chi_in<chisquared_lim, then find the direction connecting
+        inpt to dir_origin.  Step along this point in larger and larger
+        steps until you find a point with chisquared>chisquared_lim.
+        Set that to highball and begin bisection.
+        */
         for(i=0;i<gg.get_dim();i++){
             dir.set(i,inpt.get_data(i)-dir_origin.get_data(i));
             lowball.set(i,inpt.get_data(i));
@@ -1927,6 +1960,10 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         
         rr=2.0*dir.normalize();
         while(rr<1.0e-20){
+            /*
+            In case, for some reason, in_pt is dir_origin
+            (that should not happen, but one cannot be too careful)
+            */
             for(i=0;i<gg.get_dim();i++){
                 dir.set(i,dice->doub());
             }
@@ -1940,7 +1977,6 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
                 highball.set(i,lowball.get_data(i)+rr*dir.get_data(i));
             }
             
-            //printf("rr %e\n",rr);
             
             evaluate(highball,&fhigh);
  
@@ -1949,7 +1985,12 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     
     }
     
+    /*
+    nearest_pt will keep track of the point that is actually nearest to
+    chisquared_lim
     
+    i_nearest will be the index of that point as stored in the Gaussian Process
+    */
     array_1d<double> nearest_pt;
         
     if(strad.get_target()-flow<fhigh-strad.get_target()){
@@ -1967,6 +2008,9 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     }
     
     if(flow>strad.get_target() || fhigh<strad.get_target()){
+        /*
+        Something went horribly wrong; stop now
+        */
         return;
     }
         
@@ -2013,6 +2057,14 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         
     }
    
+   
+    /*
+    This is unused code which had bisection sample points that were intentionally
+    just inside and just outside of the bound after finding the chisquared=chisquared_lim
+    point.  The thought was that this would be useful in constructing Bayesian credible
+    limits from APS outputs.  It is not clear that this was helpful, but we are leaving
+    the code here for future investigation.
+    */
     /*    
     for(i=0;i<dim;i++){
         dir.set(i,nearest_pt.get_data(i)-dir_origin.get_data(i));
@@ -2032,8 +2084,12 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
     evaluate(trial,&mu,&i_test);
     */
     
+    
+    /*add the discovered point to the list of boundary points for the center
+    from which we began our bisection search*/
     if(i_center>=0 && i_nearest>=0){
         if(i_center>=boundary_pts.get_rows()){
+            /*we need to add an entirely new row to the asymm_array_2d<int> boundary_pts*/
             boundary_pts.set(i_center,0,i_nearest);
         }
         else{
@@ -2041,6 +2097,10 @@ void aps::bisection(array_1d<double> &inpt, double chi_in){
         }
     }
     
+    /*
+    Add the spherical projection of this point about it's low-chisquared center
+    to the KD-tree of spherical projections
+    */
     array_1d<double> unit_v;
     unit_v.set_name("bisection_unit_v");
     if(i_nearest>=0 && i_center>=0){
