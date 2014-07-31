@@ -657,14 +657,6 @@ double aps::simplex_evaluate(array_1d<double> &pt, int *actually_added,
         }
     }
     
-    /*repulsion=0.0;
-    double dd;
-    for(i=0;i<_false_minima.get_dim();i++){
-        dd=gg.distance(pt,_false_minima.get_data(i));
-        repulsion+=10.0*exp(-1.0*power(dd/0.01,2));
-    }
-    
-    mu+=repulsion;*/
     
     return mu;
 }
@@ -926,16 +918,21 @@ void aps::find_global_minimum(array_1d<int> &neigh){
         if(_min_ct-_last_found>delta_max)delta_max=_min_ct-_last_found;
         sig=ff.get_data(ih)-ff.get_data(il);
         
-        /*printf("chimin %e il %e sig %.3e -- %d -- %d %d\n",
-        chimin,ff.get_data(il),
-        sig,chisq->get_called()-i_before,delta_max,
-        reflected);*/
         
         if(sig<1.0e-4){
-            //_false_minima.add(_mindex);
+            /*
+            If it appears that the simplex has converged, try a modified gradient
+            descent from the current minimum point of the simplex, just to make sure
+            that the search has not settled into a very narrow valley from which
+            the simplex cannot escape.
+            */
             
             reflected++;
             
+            /*
+            First: numerically approximate the gradient in chisquared about the point
+            pts(il) (the current minimum of the simplex)
+            */
             gradient.reset();
             for(ix=0;ix<dim;ix++){
                 for(i=0;i<dim;i++)trial.set(i,pts.get_data(il,i));
@@ -980,6 +977,12 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             mu2=gradient.normalize();
             
+            /*
+            Find the vector between the current simplex minimum point and the point that
+            was the minimum of the simplex the last time that simplex_min was improved.
+            
+            This vector will be stored in the array_1d<double> step
+            */
             for(i=0;i<dim+1;i++){
                 if(i==0 || _last_ff.get_data(i)<_last_ff.get_data(j))j=i;
             }
@@ -990,6 +993,11 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             mu=step.normalize();
             
+            /*
+            Take the algebraic mean of gradient and step.
+            
+            Store this in step
+            */
             if(!(isnan(mu2))){
                 for(i=0;i<dim;i++){
                     mu1=0.5*(step.get_data(i)-gradient.get_data(i));
@@ -1003,6 +1011,16 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             step.normalize();
             
+            /*
+            Take each point in the simplex and move it slightly along the 
+            direction currently stored in step.  The hope is that this will
+            move simplex_min towards a lower value of chisquared.
+            
+            For points that are not currently the minimum of the simplex, we will
+            add a small deviation in a random direction perpendicular to step
+            so that the simplex will be re-randomized and have a decent change of
+            converging to a better minimum.
+            */
             for(i=0;i<dim+1;i++){
                 for(j=0;j<dim;j++){
                     pts.add_val(i,j,mu*step.get_data(j));
