@@ -429,19 +429,18 @@ private:
     */
     int is_it_a_candidate(int);
    
-    
+    /*write the header to the timing file*/
     void start_timingfile();
     
+    /*set the where_am_i member variable to a handful of class member array_1d and array_2d
+    variables (to keep track of where the code is in the event of a crash)*/
     void set_where(char*);
     
-    
-    void initialize_focus();
-    
+ 
     double simplex_strad(array_1d<double>&, array_1d<double>&);
     double simplex_metric(array_1d<double>&,array_1d<double>&, array_1d<double>&);
        
-  
-
+ 
     double distance(int,int,array_1d<double>&);
     
     int in_bounds(array_1d<double>&);
