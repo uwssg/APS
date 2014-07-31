@@ -1288,9 +1288,23 @@ void aps::aps_wide(){
          
             if(do_bisection==1){
                 if(sphere_threshold<0.0 && chitrue<global_threshold){
+                    /*
+                    If the KD-tree of boundary points projected onto a unit sphere has not
+                    yet been established, and chisquared is less than the 1/10 quantile of
+                    points sampled by aps_wide, do bisection
+                    */
+                    
                     bisect_it=1;
                 }
                 else if(sphere_threshold>0.0){
+                    /*
+                    If the KD-tree of boundary points projected onto a unit sphere has
+                    been established, find the nearest low-chisquared center, project
+                    this point onto a unit sphere about that center, compare the distance
+                    between that projected point and its nearest projected neighbor
+                    to the last few hundred such distances.  If that distance is greater
+                    than the 2/3 quantile of such distances, do bisection.
+                    */
                     ic=find_nearest_center(simplex_best);
                     if(ic>=0){
                         project_to_unit_sphere(ic,simplex_best,unit_v);
@@ -1310,6 +1324,10 @@ void aps::aps_wide(){
                 }
             }
             
+            /*
+            If chisquared<chisquared_lim, assess whether or not we have
+            discovered a new low-chisquared region.
+            */
             if(chitrue<strad.get_target()){
                 use_it=1;
                 for(ic=0;ic<centers.get_rows() && use_it==1;ic++){
