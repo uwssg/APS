@@ -162,7 +162,7 @@ void aps::start_timingfile(){
     
     fprintf(output,"ct_aps time_aps -- ");
     fprintf(output,"ct_simplex time_simplex -- ");
-    fprintf(output,"time_refactoring -- time_optimizing_gp -- ");
+    fprintf(output,"time_optimizing_gp -- time_refactoring -- ");
     fprintf(output,"chisq_min target -- volumes -- called_wide ");
     fprintf(output,"called_focus");
     fprintf(output,"\n");

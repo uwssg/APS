@@ -78,11 +78,11 @@ Each row represents a moment during the run of APS.  The columns are as follows
         
         The amount of clock time spent on simplex searches
         
-        The amount of clock time spent redesignign the kd_tree that drives the
-        Guassian process's nearest neighbor search
-        
         The amount of clock time spent optimizing the Gaussian process's hyper
         parameters
+        
+        The amount of clock time spent redesignign the kd_tree that drives the
+        Guassian process's nearest neighbor search
         
         The minimum discovered value of chisquared
         
