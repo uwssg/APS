@@ -53,14 +53,14 @@ for(i=0;i<dim;i++){
 
 
 printf("time to start declaring stuff\n");
-mcmc mcmc_test(dim,nchains,"chains/ellipse_140718_chains",min,max,sig,2.0,&chaos);
+mcmc mcmc_test(dim,nchains,"chains/ellipse_140804_chains",min,max,sig,2.0,&chaos);
 mcmc_test.set_chisq(&chifn,1);
 
 printf("done with constructor\n");
 
 //mcmc_test.set_statname("chains/integrable_test_mcmc_status.sav");
-mcmc_test.set_statname("chains/ellipse_140718_status.sav");
-mcmc_test.set_diagname("chains/ellipse_140718_diagnostic.sav");
+mcmc_test.set_statname("chains/ellipse_140804_status.sav");
+mcmc_test.set_diagname("chains/ellipse_140804_diagnostic.sav");
 mcmc_test.begin_update(1000);
 mcmc_test.step_update(500);
 //mcmc_test.cutoff_update(30000);

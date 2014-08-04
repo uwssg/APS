@@ -86,7 +86,8 @@ double wmap_likelihood::operator()(array_1d<double> &v) const{
   FILE *output;
 
   for(i=0;i<dim;i++){
-      if(v.get_data(i)<mins.get_data(i) || v.get_data(i)>maxs.get_data(i)){
+      if((v.get_data(i)<mins.get_data(i) && mins.get_data(i)<chisq_exception) || 
+      (v.get_data(i)>maxs.get_data(i) && maxs.get_data(i)>-1.0*chisq_exception)){
           time_spent+=double(time(NULL))-before;
       
           return 2.0*chisq_exception;
