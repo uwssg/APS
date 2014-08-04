@@ -165,8 +165,9 @@ theoretically-motivated results will likely need to resort to a sampling routine
 like MCMC to derive their final constraints.  We hope to show, however, in Section
 \ref{sec:toy}, that even in these use cases, APS can provide a valuable service by
 identifying the general regions of parameter space over which the Bayesian
-posterior needs to be integrated, i.e. by guiding researchers in the process of setting
-priors for a sampling algorithm, a problem which has posed significant problems
+posterior needs to be integrated, i.e. by guiding users in the process of setting
+priors and proposal densities for a sampling algorithm, 
+a problem which has posed significant problems
 for MCMC in the case of multi-modal likelihood functions.
 } %marking new text
 
@@ -645,7 +646,7 @@ shape of the Bayesian credible limits, however, with significant noise.  The Bay
 credible limits found by APS are systematically larger than the Bayesian credible
 limits found by MCMC.  This motivates our claim in the introduction that APS may be
 principally useful for identifying regions of high posterior density on largely unknown
-likelihood functions, allowing researchers to more shrewdly set thep priors for sampling
+likelihood functions, allowing users to more shrewdly set priors for sampling
 algorithms like MCMC.
 }%marking nex text
 
@@ -1424,7 +1425,7 @@ those found by MCMC.  This should not be surprising.  APS was designed with Freq
 confidence limits in mind, and Figures \ref{fig:contours_gauss}-\ref{fig:contours_br}
 seem much better converged than Figure \ref{fig:contours_bayes}.  However, it does seem
 that APS might be useful in cases where little prior knowledge is known about $\vec{\theta}$
-and researchers need to be confident that they have discovered all of the low-$\chi^2$
+and users need to be confident that they have discovered all of the low-$\chi^2$
 regions in a particular parameter space.  Once APS has been used to identify rough
 Bayesian credible limits, more detailed algorithms (like MCMC) can be run using the prior
 knowledge gained by APS to refine the credible limits.
@@ -1722,17 +1723,17 @@ In Section \ref{sec:toy} we indicated that, consistent with the findings
 of Bryan {\it et al}. (2007), APS is more robust
 than MCMC against multi-modal likelihood functions (at least on the idealized
 cartoon $\vec{\theta}\rightarrow\chi^2$ functions considered).
-In Section \ref{sec:wmap} we showed that on realistic data, APS
-is able to yield Frequentist confidence limits that are comparable to
-Bayesian credible limits with significantly fewer calls to $\vec{\theta}\rightarrow\chi^2$
-than MCMC (recall that APS required only 50,000 $\chi^2$ evaluations to yield Figures
-\ref{fig:contours_gauss}-\ref{fig:contours_br}).  However, the Bayesian credible
-limits yielded by APS remain rough and imprecise.  We believe that this performance
+{\bf %marking new text
+In Section \ref{sec:wmap}, we showed that the presence of realistic noise
+does not interfere with APS's ability to derive Frequentist confidence limits.
+}%marking new text
+However, the Bayesian credible
+limits yielded by APS remain noisy and imprecise.  We believe that this performance
 can still be of use to the community, especially when trying to evaluate proof-of-concept
 parameter constraints (perhaps for forecasting future parameter constraints)
 with very expensive $\vec{\theta}\rightarrow\chi^2$ functions on poorly-understood
-parameter spaces.  Certainly, for researchers interested in plotting Frequentist confidence limits,
-APS is a viable option.
+parameter spaces.  Certainly, for users interested in plotting Frequentist confidence 
+limits, APS is a viable option.
 
 There remain, however, several concerns to be addressed in the use of APS.  Unlike MCMC, there is
 no obvious criterion for convergence of the APS algorithm.  One possibility is to interpret the Frequentist
