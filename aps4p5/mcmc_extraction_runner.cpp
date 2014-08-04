@@ -12,7 +12,7 @@ nparams = 81;
 test.set_nchains(4);
 test.set_nparams(nparams);
 
-test.set_cutoff(12500);
+//test.set_cutoff(12500);
 //control has a total 453,051 samples
 
 test.set_chainname("/Users/noldor/physics/recreate_getdist/ieuchains_1304/wmap7_learn");
@@ -26,7 +26,7 @@ printf("thinby %d\nused %d\nkept %d\n",test.get_thinby(),test.get_total_used(),t
 printf("rows %d\n",test.get_total_rows());
 printf("best_covar %e\n",test.get_best_covar());
 
-test.print_samples("test_wmap7_samples50k.sav");
+test.print_samples("test_wmap7_samplescontrol.sav");
 
 kde kde_test;
 kde_test.set_data(test.get_samples());
@@ -51,8 +51,11 @@ ix.set(3,2);
 ix.set(4,17);
 ix.set(5,20);
 
+
 char outname[letters];
 int i,j;
+
+
 for(i=0;i<6;i++){
     for(j=i+1;j<6;j++){
         if(i!=3 && j!=3){
@@ -61,13 +64,13 @@ for(i=0;i<6;i++){
 
             //kde_test.plot_boundary(ix.get_data(i),dx.get_data(i),ix.get_data(j),dx.get_data(j),0.95,outname,3);
             
-            sprintf(outname,"mcmc_processed/wmap_scatter_%d_%d_50k.sav",i,j);
+            sprintf(outname,"mcmc_processed/wmap_scatter_%d_%d_control.sav",i,j);
             kde_test.plot_density(ix.get_data(i),dx.get_data(i),ix.get_data(j),dx.get_data(j),0.95,outname,3);
         }
     }
 }
 
-test.plot_delta("mcmc_good_pts_test50k.sav",0.5*12.61);
+test.plot_delta("mcmc_good_pts_testcontrol.sav",0.5*12.61);
 
 
 array_1d<double> RR,VV,WW,mean,var;
@@ -81,7 +84,7 @@ test.calculate_mean(mean,var);
 
 for(i=0;i<nparams;i++){
     if(fabs(var.get_data(i)/mean.get_data(i))>1.0e-20){
-        printf("%d %e -- %e %e\n",i,RR.get_data(i),mean.get_data(i),var.get_data(i));
+        printf("%d %e -- %e %e\n",i,RR.get_data(i),mean.get_data(i),sqrt(var.get_data(i)));
     }
 }
 
