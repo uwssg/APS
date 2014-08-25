@@ -167,8 +167,6 @@ class gp{
         
     public:
 
-        double dav,dsig,ctav;
-  
         gp();
         ~gp();
         
