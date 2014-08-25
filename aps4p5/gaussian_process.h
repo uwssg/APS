@@ -259,8 +259,6 @@ class gp{
         void reset_cache() const;
         void set_sig_cap(double);
 
-        void get_neighbor_range(array_1d<double>&,array_1d<double>&,array_1d<double>&,double*);
-    
         double get_nearest_distance();
     
         int get_dim();
@@ -284,8 +282,13 @@ class gp{
         void set_kk(int);
         
         double get_fn(int) const;
-    
+        
+        /*return a component of a point stored in the kd_tree
+        the first int specifies the index of the point
+        the second int specifies the dimension in parameter space desired*/
         double get_pt(int,int);
+        
+        /*fills the array_1d<double> with the stored point specified by the int*/
         void get_pt(int,array_1d<double>&);
         
         /*

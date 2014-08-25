@@ -349,47 +349,6 @@ void gp::get_pt(int dex, array_1d<double> &output){
     kptr->get_pt(dex,output);
 }
 
-void gp::get_neighbor_range(array_1d<double> &pt, array_1d<double> &omax, 
-array_1d<double> &omin, double *omean){
-    
-    printf("in gp::get_neighbor_range;\nno idea why I wrote this\n");
-    exit(1);
-    
-    pt.set_where("gp_get_neighbor_range");
-    omax.set_where("gp_get_neighbor_range");
-    omin.set_where("gp_get_neighbor_range");
-   
-
-    array_1d<int> neigh;
-    neigh.set_name("gp_get_neighbor_range_neigh");
-    neigh.set_dim(kk);
-    
-    array_1d<double> dd;
-    dd.set_name("gp_get_neighbor_range_dd");
-    dd.set_dim(kk);
-    
-    
-    kptr->nn_srch(pt,kk,neigh,dd);
-    
-    int i;
-    double ans;
-    omean[0]=0.0;
-    for(i=0;i<kk;i++){
-       if(i==0 || fn.get_data(neigh.get_data(i))>omax.get_data(0))omax.set(0,fn.get_data(neigh.get_data(i)));
-   
-       omean[0]+=fn.get_data(neigh.get_data(i));
-    }
-    omin.set(0,fn.get_data(neigh.get_data(0)));
-
-    omean[0]=omean[0]/double(kk);
-    
-    pt.set_where("nowhere");
-    omax.set_where("nowhere");
-    omin.set_where("nowhere");    
-    
-    
-}
-
 double gp::user_predict(array_1d<double> &pt, double *sigout, int verbose) const{
     array_1d<double> ff;
     return predict(pt,sigout,verbose,1,ff);
