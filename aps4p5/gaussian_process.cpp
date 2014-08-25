@@ -531,13 +531,15 @@ const{
     for(i=0;i<dim;i++){
         pmin.subtract_val(i,0.01*fabs(pmin.get_data(i)));
         pmax.add_val(i,0.01*fabs(pmax.get_data(i)));
-     
+        
+        nn=fabs(get_max(i)-get_min(i));
+        
         while(!(pmax.get_data(i)>pmin.get_data(i))){
             /*
             make sure that pmax is greater than pmin, since pmax-pmin will be used
             to normalize parameter space distances
             */
-            nn=get_max(i)-get_min(i);
+
             pmin.subtract_val(i,0.001*nn);
             pmax.add_val(i,0.001*nn);
 
@@ -1668,6 +1670,12 @@ const{
     
     for(i=0;i<dim;i++)pt.set(i,kptr->get_pt(dex,i));
     
+    /*
+    Find the kk+1 nearest neighbors of the desired point.  The 0th nearest neighbor
+    ought to be the point itself, so strip that out from the list of neighbors to
+    use for interpolation.  If the 0th nearest neighbor is not the point itself, 
+    print an error message and exit the program.
+    */
     kptr->nn_srch(pt,kk+1,raw_neigh,raw_dd);
     if(raw_neigh.get_data(0)!=dex){
         printf("WARNING in self predict dex %d neigh %d dd %e\n",
@@ -1697,7 +1705,10 @@ const{
     }
     fbar=fbar/double(kk);
 
-
+    /*
+    Find the bounds in parameter space dictated by the nearest neighbors (and the point itself).
+    These will be used by the covariogram to normalize parameter space distances
+    */
     for(i=0;i<kk;i++){
         for(j=0;j<dim;j++){
             if(i==0 || kptr->get_pt(neigh.get_data(i),j)<pmin.get_data(j))pmin.set(j,kptr->get_pt(neigh.get_data(i),j));
@@ -1714,30 +1725,33 @@ const{
     
         pmin.subtract_val(i,0.01*fabs(pmin.get_data(i)));
         pmax.add_val(i,0.01*fabs(pmax.get_data(i)));
+        
+        nn=fabs(get_max(i)-get_min(i));
+        while(!(pmax.get_data(i)>pmin.get_data(i))){
+
+            pmin.subtract_val(i,0.001*nn);
+            pmax.add_val(i,0.001*nn);
      
-         if(!(pmax.get_data(i)>pmin.get_data(i))){
-             printf("did pmax/min wrong %e %e\n",pmax.get_data(i),pmin.get_data(i));
-             exit(1);
-     
-         }
+        }
     }
     
+    /*set the covariogram between the query point and the nearest neighbor points*/
     for(i=0;i<kk;i++){
-        kptr->get_pt(neigh.get_data(i),vv);
-        ggq.set(i,(*covariogram)(vv,pt,pmin,pmax,grad,0));
+        ggq.set(i,(*covariogram)(*kptr->data(neigh.get_data(i)),pt,pmin,pmax,grad,0));
 
     }
 
+    /*set the covariogram between all combinations of the nearest neighbor points*/
     for(i=0;i<kk;i++){
-        kptr->get_pt(neigh.get_data(i),vv);
-            
         for(j=i;j<kk;j++){
-            kptr->get_pt(neigh.get_data(j),uu);
-            gg.set(i,j,(*covariogram)(vv,uu,pmin,pmax,grad,0));
+            gg.set(i,j,(*covariogram)(*kptr->data(neigh.get_data(i)),*kptr->data(neigh.get_data(j)),pmin,pmax,grad,0));
             if(j!=i){
                 gg.set(j,i,gg.get_data(i,j));
             }
-            else gg.add_val(i,j,0.0001);
+            else{
+                /*add a kernel to the diagonal elements so that gg is invertible*/
+                gg.add_val(i,j,0.0001);
+            }
         }
             
     }
@@ -1745,13 +1759,13 @@ const{
     invert_lapack(gg,ggin,0);
     nn=check_inversion(gg,ggin);
     if(nn>1.0e-5){
-        printf("WRANING inversion err %e\n",nn);
+        printf("WARNING inversion err %e\n",nn);
             exit(1);
-        }
+    }
         
-        gg.reset();
+    gg.reset();
         
-    
+    /*calculate the interpolated function value*/
     mu=fbar;
     for(i=0;i<kk;i++){
         for(j=0;j<kk;j++){
@@ -1762,16 +1776,22 @@ const{
   
     double ikp,xx;
     if(sigswit==1){
+        /*
+        calculate uncertainty on interpolated value (if desired)
+        */
+        
         sigout[0]=0.0;
       
         xx=0.0;
         for(i=0;i<kk;i++){
-            kptr->get_pt(neigh.get_data(i),vv);
             for(j=0;j<kk;j++){
-                kptr->get_pt(neigh.get_data(j),uu);
                 xx+=(fn.get_data(neigh.get_data(j))-fbar)*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(i))-fbar);
             }
         }
+        
+        /*
+        normalize the uncertainty so as to maximize the likelihood of the nearest neighbor data
+        */
         ikp=xx/double(kk);
      
         for(i=0;i<kk;i++){
@@ -1782,7 +1802,7 @@ const{
       
         sigout[0]=(*covariogram)(pt,pt,pmin,pmax,grad,0)-sigout[0];
         sigout[0]*=ikp;
-      
+        
         if(sigout[0]<=0.0)sigout[0]=1.0e-10;
         else sigout[0]=sqrt(sigout[0]);
     }  
