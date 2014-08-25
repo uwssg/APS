@@ -492,20 +492,19 @@ const{
   array_1d<int> neigh;;
   neigh.set_name("gp_user_predict_neigh");
   
-  array_1d<double> dd,pmin,pmax,grad,ggq,modelfn;
-  array_2d<double> gg,ggin,modelpts;
+  array_1d<double> dd,pmin,pmax,grad,ggq;
+  array_2d<double> gg,ggin;
   
   dd.set_name("gp_user_predict_dd");
   pmin.set_name("gp_user_predict_pmin");
   pmax.set_name("gp_user_predict_pmax");
   grad.set_name("gp_user_predict_grad");
   ggq.set_name("gp_user_predict_ggq");
-  modelfn.set_name("gp_user_predict_modelfn");
   gg.set_name("gp_user_predict_gg");
   ggin.set_name("gp_user_predict_ggin");
-  modelpts.set_name("gp_user_predict_modelpts");
+
    
-  fbar_model fbar(dim);
+  double fbar;
   
     dd.set_dim(kk);
     neigh.set_dim(kk);
@@ -546,19 +545,12 @@ const{
         ffout.set(i,fn.get_data(neigh.get_data(i)));
     }
    
-    
-    modelpts.set_dim(kk,dim);
-    modelfn.set_dim(kk);
-    
+    fbar=0.0;
     for(i=0;i<kk;i++){
-        modelfn.set(i,fn.get_data(neigh.get_data(i)));
-	for(j=0;j<dim;j++)modelpts.set(i,j,kptr->get_pt(neigh.get_data(i),j));
-    } 
-    fbar.set_model(modelpts,modelfn,dim,kk);
-    
-    modelfn.reset();
-    modelpts.reset();
-    
+        fbar+=fn.get_data(neigh.get_data(i));
+    }
+    fbar=fbar/double(kk);
+        
     for(i=0;i<kk;i++){
     for(j=0;j<dim;j++){
       if(i==0 || kptr->get_pt(neigh.get_data(i),j)<pmin.get_data(j))pmin.set(j,kptr->get_pt(neigh.get_data(i),j));
@@ -637,11 +629,11 @@ const{
     }
     
     
-    mu=fbar(pt);
+    mu=fbar;
     for(i=0;i<kk;i++){
         for(j=0;j<kk;j++){
 	     //kptr->get_pt(neigh.get_data(j),vv);
-             mu+=ggq.get_data(i)*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(j))-fbar((*kptr->data(neigh.get_data(j)))));
+             mu+=ggq.get_data(i)*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(j))-fbar);
 	}
     }
     
@@ -663,14 +655,14 @@ const{
   
        //kptr->get_pt(neigh.get_data(i),vv);
        
-           nn+=(fn.get_data(neigh.get_data(i))-fbar((*kptr->data(neigh.get_data(i))))*ggin.get_data(i,i)*(fn.get_data(neigh.get_data(i))-fbar((*kptr->data(neigh.get_data(i))))));
+           nn+=(fn.get_data(neigh.get_data(i))-fbar)*ggin.get_data(i,i)*(fn.get_data(neigh.get_data(i))-fbar);
 	 
           for(j=i+1;j<kk;j++){
          
 	 //kptr->get_pt(neigh.get_data(j),uu);
 	 
-             nn+=2.0*(fn.get_data(neigh.get_data(j))-fbar((*kptr->data(neigh.get_data(j)))))*
-	     (fn.get_data(neigh.get_data(i))-fbar((*kptr->data(neigh.get_data(i)))))*ggin.get_data(i,j);
+             nn+=2.0*(fn.get_data(neigh.get_data(j))-fbar)*
+	     (fn.get_data(neigh.get_data(i))-fbar)*ggin.get_data(i,j);
 	      
          }
        }
@@ -723,22 +715,10 @@ const{
           for(j=0;j<kk;j++)printf("%e ",ggin.get_data(i,j));
 	  printf("\n");
       }
-      printf("fbar %e\n",fbar(pt));
+      printf("fbar %e\n",fbar);
       exit(1);
   }
-   if(verbose==2)printf("mu %e fbar %e nn %e\n",mu,fbar(pt),fn.get_data(neigh.get_data(0)));
-
-  /*dd.reset();
-  pmin.reset();
-  pmax.reset();
-  grad.reset();
-  ggq.reset();
-  modelfn.reset();
-  gg.reset();
-  ggin.reset();
-  modelpts.reset();*/
-
-
+   if(verbose==2)printf("mu %e fbar %e nn %e\n",mu,fbar,fn.get_data(neigh.get_data(0)));
   
   pt.set_where("nowhere");
   time_predict+=double(time(NULL))-before;
@@ -1919,419 +1899,6 @@ void gp::set_sig_cap(double nn){
     //sigcap=-1.0;
 }
 
-fbar_model::fbar_model(){
-    printf("I'm sorry; you can't call the default constructor for fbar_model\n");
-    exit(1);
-}
-
-fbar_model::fbar_model(int i){
-    dim=i;
-
-    coeffs.set_name("fbar_model_coeffs");
-    coeffs.set_dim(dim+1);
-
-}
-
-fbar_model::~fbar_model(){
-}
-
-double fbar_model::operator()(array_1d<double> &vv){
-   double ans;
-   int i;
-   //ans=coeffs.get_data(dim);
-   //for(i=0;i<dim;i++)ans+=vv[i]*coeffs[i];
-   
-   if(isnan(ans) || isinf(ans)){
-       printf("WARNING fbar returning %e\n",ans);
-       for(i=0;i<dim;i++)printf("coeff%d %e pt %e\n",i,coeffs.get_data(i),vv.get_data(i));
-       printf("coeffs %e\n",coeffs.get_data(dim));
-       exit(1);
-      
-      ans=0.0;
-   }
-   
-   
-   return coeffs.get_data(dim);
-}
-
-double fbar_model::get_coeff(int i){return coeffs.get_data(i);}
-
-
-void fbar_model::set_model(array_2d<double> &datapts, array_1d<double> &datafn, int dim, int npts){
-
-    if(npts!=datapts.get_rows()){
-        printf("WARNING fbar_model doesn't agree on npts %d %d\n",
-	npts,datapts.get_rows());
-	
-	exit(1);
-    }
-    
-    if(dim!=datapts.get_cols()){
-        printf("WARNING fbar_model doesn't agree on dim %d %d\n",
-	dim,datapts.get_cols());
-	
-	exit(1);
-    }
-    
-    if(datapts.get_rows()!=datafn.get_dim()){
-        printf("WARNING in fbar_model %d datapts %d datafn\n",
-	datapts.get_rows(),datafn.get_dim());
-	
-	exit(1);
-    }
-       int i;
-       double mean;
-       
-       for(i=0;i<dim;i++)coeffs.set(i,0.0);
-       mean=0.0;
-       for(i=0;i<npts;i++)mean+=datafn.get_data(i);
-       mean=mean/double(npts);
-       coeffs.set(dim,mean);
-    
-   /* array_1d<double> matrix,bvec,soln;
-    
-    matrix.set_dim((dim+1)*(dim+1));
-    bvec.set_dim(dim+1);
-    soln.set_dim(dim+1);
-    
-    matrix.set_name("fbar_set_model_matrix");
-    bvec.set_name("fbar_set_model_bvec");
-    soln.set_name("fbar_set_model_soln");
-    
-    int ipt;
-    int ct,i,j;
-    
-
-    array_2d<double> sum2;
-    array_1d<double> sum1;
-    
-    
-    sum2.set_dim(dim+1,dim+1);
-    sum1.set_dim(dim+1);
-    
-    sum2.set_name("fbar_set_model_sum2");
-    sum1.set_name("fbar_set_model_sum1");
-   
-    for(i=0;i<dim+1;i++){
-        sum1[i]=0.0;
-	for(j=0;j<dim+1;j++)sum2[i][j]=0.0;
-    }
-   
-    for(i=0;i<dim;i++){
-        for(ipt=0;ipt<npts;ipt++){
-	    sum1[i]+=datapts[ipt][i];
-	    for(j=i;j<dim;j++)sum2[i][j]+=datapts[ipt][i]*datapts[ipt][j];
-	    sum2[i][dim]+=datafn[ipt]*datapts[ipt][i];
-	}
-
-    }
-   
-    for(ipt=0;ipt<npts;ipt++){
-        sum2[dim][dim]+=datafn[ipt]*datafn[ipt];
-	sum1[dim]+=datafn[ipt];
-    }
-    
-    double nn;
-    for(i=0;i<dim;i++){
-        for(j=0;j<dim;j++){
-	    if(i<=j)nn=sum2[i][j];
-	    else nn=sum2[j][i];
-	    
-	    matrix[i*(dim+1)+j]=nn;
-	    
-	}
-        matrix[i*(dim+1)+dim]=sum1[i];
-	bvec[i]=sum2[i][dim];
-    }
-    bvec[dim]=sum1[dim];
-    for(i=0;i<dim;i++){
-        matrix[dim*(dim+1)+i]=sum1[i];
-    }
-    matrix[dim*(dim+1)+dim]=double(npts);
-    
-    naive_gaussian_solver(matrix,bvec,soln,dim+1);
-    
-    for(i=0;i<dim+1;i++)coeffs[i]=soln[i];*/
-    
-
-      // printf("WARNING a coeff is nan\n");
-
- 
-
-}
-
-gross_gp::gross_gp(){
-
-    pts.set_name("gross_gp_pts");
-    ggin.set_name("gross_gp_ggin");
-    fn.set_name("gross_gp_fn");
-    max.set_name("gross_gp_max");
-    min.set_name("gross_gp_min");
-    gginvec.set_name("gross_gp_minvec");
-    fbarvec.set_name("gross_gp_fbarvec");
-    
-    covariogram=NULL;
-    fbar=NULL;
-    
-
-}
-
-gross_gp::~gross_gp(){  
-     if(fbar!=NULL)delete fbar;
-}
-
-void gross_gp::set_covariogram(covariance_function *cc){
-     covariogram=cc;
-}
-
-void gross_gp::set_pts(array_2d<double> &pin, array_1d<double> &ffin, int dd, int kkin){
-     int i,j,k,l;
-
-
-     if(fbar!=NULL) delete fbar;
-
-     dim=dd;
-     kk=kkin;
-     
-     fn.set_dim(kk);
-     pts.set_dim(kk,dim);
-     ggin.set_dim(kk,kk);
-     gginvec.set_dim(kk);
-     
-  
-     
-     for(i=0;i<kk;i++){
-        
-          for(j=0;j<dim;j++){
-               pts.set(i,j,pin.get_data(i,j));
-
-	       
-	       if(isnan(pts.get_data(i,j))){
-	          printf("hello %e %e\n",pts.get_data(i,j),pin.get_data(i,j));
-	       }
-          }
-          fn.set(i,ffin.get_data(i));
-     }
-     
-     
-     
-     fbar=new fbar_model(dim);
-     fbar->set_model(pts,fn,dim,kk);
-     
-     fbarvec.set_dim(kk);
-    
-    
-     array_1d<double> vv;
-     vv.set_name("gross_gp_set_pts_vv");
-     vv.set_dim(dim);
-     
-     for(i=0;i<kk;i++){
-         for(j=0;j<dim;j++)vv.set(j,pts.get_data(i,j));
-      
-         fbarvec.set(i,fn.get_data(i)-(*fbar)(vv));
-     
-     }
-     //printf("made fbarvec\n");
-
-     double nn;
-     min.set_dim(dim);
-     max.set_dim(dim);
-     
-     for(i=0;i<dim;i++){
-         min.set(i,0.0);
-         max.set(i,1.0);
-     }
-     
-     array_2d<double> ranges;
-     ranges.set_name("gross_gp_set_pts_ranges");
-     ranges.set_dim(dim,kk*(kk-1)/2);
-     
-   
-     
-     int ct=0;
-     for(j=0;j<kk;j++){
-         for(k=j+1;k<kk;k++){
-	     for(i=0;i<dim;i++){
-	         ranges.set(i,ct,fabs(pts.get_data(j,i)-pts.get_data(k,i)));
-	     }
-	     ct++;
-	 }
-     }
-     
-     if(ct!=kk*(kk-1)/2){
-         printf("WARNING got %d rather than %d when finding ranges\n",
-	 ct,kk*(kk-1)/2);
-     }
-     
-     array_1d<double> sorted,vector;
-     sorted.set_name("gross_gp_set_pts_sorted");
-     sorted.set_dim(kk*(kk-1)/2);
-     vector.set_name("gross_gp_set_pts_vector");
-     
-     
-     array_1d<int> inn;
-     inn.set_name("gross_gp_st_pts_inn");
-     inn.set_dim(kk*(kk-1)/2);   
-     
-     for(i=0;i<dim;i++){
-         for(j=0;j<kk*(kk-1)/2;j++)inn.set(j,j);
-	 for(j=0;j<kk*(kk-1)/2;k++)vector.set(j,ranges.get_data(i,j));
-	 
-         sort_and_check(vector,sorted,inn);
-	 max.set(i,sorted.get_data(kk*(kk-1)/4));
-	 
-     }
-     
-     ranges.reset();
-     inn.reset();
-     vector.reset();
-     sorted.reset();
-   
-     
-     
-     //for(i=0;i<dim;i++)printf("maxmin %d %e %e\n",i,min[i],max[i]);
-     
-     for(i=0;i<dim;i++){
-        if(max.get_data(i)<1.0e-1){
-	    /*for(j=0;j<kk;j++){
-	        for(k=j+1;k<kk;k++){
-		    printf("%e %e\n",pts[j][i],pts[k][i]);
-		}
-	    }*/
-	    max.set(i,0.1);
-	}
-	
-     
-     }
-     
-     for(i=0;i<dim;i++)max.set(i,200.0);
-     
-     make_ggin();
-}
-
-void gross_gp::make_ggin(){
-     if(covariogram==NULL){
-          printf("You cannot make ggin yet; you have not set covariogram\n");
-          exit(1);
-      }
-      
-      array_1d<double> grad,p1,p2;
-      grad.set_name("gross_gp_make_ggin_grad");
-      p1.set_name("gross_gp_make_ggin_p1");
-      p2.set_name("gross_gp_make_ggin_p2");
-      
-      p1.set_dim(dim);
-      p2.set_dim(dim);
-      
-      array_2d<double> gg;
-      gg.set_name("gross_gp_make_ggin_gg");
-      
-      int i,j,k,l,ii,jj;
-      grad.set_dim(dim);
-      gg.set_dim(kk,kk);
-
-      for(i=0;i<kk;i++){
-           for(ii=0;ii<dim;ii++)p1.set(ii,pts.get_data(i,ii));
-           for(j=i;j<kk;j++){
-	       for(jj=0;jj<dim;jj++)p2.set(jj,pts.get_data(j,jj));
-
-                gg.set(i,j,(*covariogram)(p1,p2,min,max,grad,0));
-                if(j==i)gg.add_val(i,j,0.0001);
-                else gg.set(j,i,gg.get_data(i,j));
-           }
-      }
-
-      double err;
-      invert_lapack(gg,ggin,0);
-      err=check_inversion(gg,ggin);
-      if(err>1.0e-5){
-             printf("WARNING err in gross_gp %e\n",err);
-	     exit(1);
-      }
-      
-     double xx=0.0;
-     for(i=0;i<kk;i++){
-          xx+=fbarvec.get_data(i)*fbarvec.get_data(i)*ggin.get_data(i,i);
-          for(j=i+1;j<kk;j++){
-               xx+=2.0*fbarvec.get_data(i)*fbarvec.get_data(j)*ggin.get_data(i,j);
-          }
-     }
-     ikp=xx/double(kk);
-     
-     for(i=0;i<kk;i++){
-         gginvec.set(i,0.0);
-	 for(j=0;j<kk;j++)gginvec.add_val(i,ggin.get_data(i,j)*fbarvec.get_data(j));
-     }
-      
-}
-
-double gross_gp::user_predict(array_1d<double> &q, double *sig) const{
-     if(covariogram==NULL || fbar==NULL){
-            printf("cannot call user predict yet; you have not initialized\n");
-            printf("this is in gross\n");
-            exit(1);
-     }
-     
-     array_1d<double> gq,grad,vector;
-     gq.set_name("gross_gp_user_predict_gq");
-     grad.set_name("gross_gp_user_predict_grad");
-     vector.set_name("gross_gp_user_predict_vector");
-     
-     gq.set_dim(kk);
-     grad.set_dim(dim);
-     
- 
-     
-     int i,j;
-     for(i=0;i<kk;i++){
-         for(j=0;j<dim;j++)vector.set(j,pts.get_data(i,j));
-         gq.set(i,(*covariogram)(q,vector,min,max,grad,0));
-     
-     }
-     
-     double mu;
-     //printf("calling fbar on q \n");
-     //for(i=0;i<dim;i++)printf("%e\n",q[i]);
-     //printf("covar dim %d\n",covariogram->get_dim());
-     //printf("\ngq %e %e %e\n",gq[0],gq[1],gq[2]);
-     
-     mu=(*fbar)(q);
-     //printf("done\n");
-     
-     for(i=0;i<kk;i++){
-          /*for(j=0;j<kk;j++){
-               mu+=gq[i]*ggin[i][j]*fbarvec[j];
-          }*/
-	  mu+=gq.get_data(i)*gginvec.get_data(i);
-     }
-    
-     
-     sig[0]=0.0;
-     for(i=0;i<kk;i++){
-          sig[0]-=gq.get_data(i)*gq.get_data(i)*ggin.get_data(i,i);
-          for(j=i+1;j<kk;j++)sig[0]-=2.0*gq.get_data(i)*gq.get_data(j)*ggin.get_data(i,j);
-     }
-     sig[0]+=(*covariogram)(q,q,min,max,grad,0);
-     sig[0]=sig[0]*ikp;
-     if(sig[0]>0.0)sig[0]=sqrt(sig[0]);
-     else{
-          printf("WARNING gross is returning sig^2 %e\n",sig[0]);
-          //exit(1);
-	  
-	  mu=chisq_exception;
-	  sig[0]=0.0;
-     }
-     
-      //printf("mu %e sig %e -- %e %e -- %e %e\n",mu,sig[0],q[0],q[1],gq[0],gq[1]);
-    
-    
-     return mu;
-}
-
-int gross_gp::get_dim() const{
-     return dim;
-}
-
 double gp::get_nearest_distance(){
     return neighbor_storage->get_dd(0);
 }
@@ -2377,20 +1944,18 @@ const{
   array_1d<int> neigh;
   neigh.set_name("gp_self_predict_neigh");
   
-  array_1d<double> dd,pmin,pmax,grad,ggq,modelfn;
+  array_1d<double> dd,pmin,pmax,grad,ggq;
   dd.set_name("gp_self_predict_dd");
   pmin.set_name("gp_self_predict_pmin");
   pmax.set_name("gp_self_predict_pmax");
   grad.set_name("gp_self_predict_grad");
   ggq.set_name("gp_self_predict_ggq");
-  modelfn.set_name("gp_self_predict_modelfn");
   
-  array_2d<double> gg,ggin,modelpts;
+  array_2d<double> gg,ggin;
   ggin.set_name("gp_self_predict_ggin");
   gg.set_name("gp_self_predict_gg");
-  modelpts.set_name("gp_self_predict_modelpts");
   
-  fbar_model fbar(dim);
+  double fbar;
   
   array_1d<int> raw_neigh;
   raw_neigh.set_name("gp_self_predict_raw_neigh");
@@ -2443,19 +2008,13 @@ const{
     raw_neigh.reset();
     raw_dd.reset();
     
-    modelpts.set_dim(kk,dim);
-    modelfn.set_dim(kk);
-    
+    fbar=0.0;
     for(i=0;i<kk;i++){
-        modelfn.set(i,fn.get_data(neigh.get_data(i)));
-	for(j=0;j<dim;j++)modelpts.set(i,j,kptr->get_pt(neigh.get_data(i),j));
-    } 
-    fbar.set_model(modelpts,modelfn,dim,kk);
-    
-    modelfn.reset();
-    modelpts.reset();
-   
-    
+        fbar+=fn.get_data(neigh.get_data(i));
+    }
+    fbar=fbar/double(kk);
+
+
     for(i=0;i<kk;i++){
     for(j=0;j<dim;j++){
       if(i==0 || kptr->get_pt(neigh.get_data(i),j)<pmin.get_data(j))pmin.set(j,kptr->get_pt(neigh.get_data(i),j));
@@ -2512,11 +2071,11 @@ const{
 	gg.reset();
 	
     
-    mu=fbar(pt);
+    mu=fbar;
     for(i=0;i<kk;i++){
         for(j=0;j<kk;j++){
 	     kptr->get_pt(neigh.get_data(j),vv);
-             mu+=ggq.get_data(i)*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(j))-fbar(vv));
+             mu+=ggq.get_data(i)*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(j))-fbar);
 	}
     }
   
@@ -2529,7 +2088,7 @@ const{
           kptr->get_pt(neigh.get_data(i),vv);
           for(j=0;j<kk;j++){
               kptr->get_pt(neigh.get_data(j),uu);
-              xx+=(fn.get_data(neigh.get_data(j))-fbar(uu))*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(i))-fbar(vv));
+              xx+=(fn.get_data(neigh.get_data(j))-fbar)*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(i))-fbar);
           }
       }
       ikp=xx/double(kk);
@@ -2555,7 +2114,7 @@ const{
           for(j=0;j<kk;j++)printf("%e ",ggin.get_data(i,j));
 	  printf("\n");
       }
-      printf("fbar %e\n\n",fbar(pt));
+      printf("fbar %e\n\n",fbar);
       
       for(i=0;i<dim;i++){
          printf(" %e %e\n",pmax.get_data(i),pmin.get_data(i));

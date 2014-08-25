@@ -6,24 +6,6 @@
 #include "containers.h"
 #include "kd.h"
 
-class fbar_model{
-
-private:
-    int dim;
-    array_1d<double> coeffs;
-
-public:
-    fbar_model();
-    fbar_model(int);
-    ~fbar_model();
-    double operator()(array_1d<double>&);
-    void set_model(array_2d<double>&,array_1d<double>&,int,int);
-    double get_coeff(int);
-  
- 
-
-};
-
 class covariance_function{
 
 protected:
@@ -293,31 +275,6 @@ class gp{
     array_1d<double>* get_pt(int);
     covariance_function* get_covariogram();
     
-};
-
-class gross_gp{
-
-public:
-     gross_gp();
-     ~gross_gp();
-     double user_predict(array_1d<double>&,double*) const;
-     void set_pts(array_2d<double>&,array_1d<double>&,int,int);
-     void set_covariogram(covariance_function*);
-     int get_dim() const;
-
-private:
-     double ikp;
-     
-     array_2d<double> pts,ggin;
-     array_1d<double> fn,fbarvec,gginvec;
-     array_1d<double> min,max;
-     
-     
-     int dim,kk;
-     covariance_function *covariogram;
-     fbar_model *fbar;
-
-     void make_ggin();
 };
 
 #endif
