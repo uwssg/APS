@@ -821,27 +821,6 @@ covariance_function::~covariance_function(){
 
 void covariance_function::set_dim(int dd){
     dim=dd;
-    global_maxs.set_dim(dim);
-    global_mins.set_dim(dim);
-    
-    global_maxs.set_name("covariogram_global_maxs");
-    global_mins.set_name("covariogram_global_mins");
-}
-
-void covariance_function::set_max(int dex, double val){
-    if(dex>=dim || dex<0){
-        printf("WARNING tried to set covariance max to %d but dim %d\n",dex,dim);
-        exit(1);
-    }
-    global_maxs.set(dex,val);
-}
-
-void covariance_function::set_min(int dex, double val){
-    if(dex>=dim || dex<0){
-        printf("WARNING tried to set covariance min to %d but dim %d\n",dex,dim);
-        exit(1);
-    }
-    global_mins.set(dex,val);
 }
 
 int covariance_function::get_dim(){

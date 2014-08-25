@@ -7,10 +7,16 @@
 #include "kd.h"
 
 class covariance_function{
-
+    /*
+    This is the parent class for all covariogram functions.
+    This class itself does not provide a covariogram.
+    
+    Any covagriogram class must inherit from this class.
+    It must also declare its own hyper parameters as well as its own operator (see below).
+    */
+    
     protected:
         int dim;
-        array_1d<double> global_maxs,global_mins;
     
         int n_hyperparameters;
         array_1d<double> hyper_max,hyper_min;
