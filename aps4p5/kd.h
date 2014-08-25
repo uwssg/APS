@@ -119,7 +119,8 @@ class kd_tree{
         neighbors reckoned by unnormalized parameter space distances.
         */
         array_1d<double> maxs,mins;
-  
+        
+        /*masterparent is the point that is the first node of the tree*/
         int masterparent;
 
         double tol;
@@ -127,7 +128,11 @@ class kd_tree{
         int nkernel;
   
         void confirm(int,int,int,int);
+        
+        /*the iterative backend of build_tree*/
         void organize(array_1d<int>&,int,int,int,int,int);
+        
+        
         int find_node(array_1d<double>&);
         void neigh_check(array_1d<double>&,
             int,array_1d<int>&,array_1d<double>&,int,int);

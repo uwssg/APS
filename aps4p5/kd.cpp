@@ -102,17 +102,20 @@ void kd_tree::build_tree(array_2d<double> &mm,
 
     sort_and_check(tosort,sorted,inn);
 
-   
+    /*try to pick the median value as the first node in the tree (the
+    masterparent)*/
     inp=data.get_rows()/2;
     while(inp>0 && sorted.get_data(inp)-sorted.get_data(inp-1)<tol){
-         //make sure that the division doesn't come in the middle of a bunch
-         //of identical points
+         /*make sure that the division doesn't come in the middle of a bunch
+         of identical points*/
+         
          inp--;
     }
    
     masterparent=inn.get_data(inp);
-    //printf("inp %d masterparent %d\n",inp,masterparent);
-
+    
+    /*assign the remaining points to either the left branch or the right
+    branch of the masterparent*/
     for(j=0;j<data.get_rows();j++){
         if(masterparent!=j){
             if(data.get_data(j,0)<sorted.get_data(inp)){
@@ -124,20 +127,23 @@ void kd_tree::build_tree(array_2d<double> &mm,
         }
     } 
 
-   
+    /*organize all of the points on the left branch of the masterparent*/
     if(use_left.get_dim()>0){
         organize(use_left,0,masterparent,1,use_left.get_dim(),1);   
     }
     else tree.set(masterparent,1,-1);
    
+    /*organize all of the points on the right branch of the masterparent*/
     if(use_right.get_dim()>0){
         organize(use_right,0,masterparent,1,use_right.get_dim(),2);    
     }
     else tree.set(masterparent,2,-1);
    
-    tree.set(masterparent,3,-1);
-    tree.set(masterparent,0,0);
+    tree.set(masterparent,3,-1);/*masterparent has no parent of its own*/
+    
+    tree.set(masterparent,0,0);/*masterparent split on the 0th dimension*/
    
+    /*check to make sure everything has the dimensions that it should*/
     if(mins.get_dim()!=maxs.get_dim() || mins.get_dim()!=data.get_cols() || tree.get_rows()!=data.get_rows()){
         printf("WARNING tried to make tree but\n");
         printf("nmax %d\n",maxs.get_dim());
@@ -148,12 +154,36 @@ void kd_tree::build_tree(array_2d<double> &mm,
         exit(1);
     }
   
-  
 }
 
 void kd_tree::organize(array_1d<int> &use_in, int u_start, 
                        int parent, int idim, int ct, int dir){
-
+    
+    /*
+    This routine provides the iterative backend of build_tree.  It takes a
+    set of datapoints and organizes them into a self-consistent KD-tree by calling
+    itself over and over again until it has no more data to organize.
+    
+    The inputs are:
+    
+    use_in -- a list of points to be organized (referred to by their row number in data)
+    
+    u_start -- the dimension that was last split on (i.e. the dimension used to determine that
+    these points are all in the same branch)
+    
+    parent -- the index of the parent of these points
+    
+    idim -- a guess as to which dimension should be split on next
+    
+    ct -- the number of points being passed in
+    
+    dir -- is this the left hand (dir=1) or the righ hand (dir=2) branch of parent
+    
+    This routine will pick a node from among these points, split the remaining points
+    into the left and right hand branches of that node, and pass those branche to another
+    iteration of organize
+    */
+    
     int i,j,k,l,newparent,inp;
     double pivot,nn;
  
@@ -169,165 +199,154 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
    
    
    
-   for(i=0;i<ct;i++){
-      use.add(use_in.get_data(u_start+i));
-   }
+    for(i=0;i<ct;i++){
+        use.add(use_in.get_data(u_start+i));
+    }
    
-   if(idim>=data.get_cols())idim=0;
+    if(idim>=data.get_cols())idim=0;
    
-   /*printf("parent %d pdim %d dir %d\n",parent,idim-1,dir);
-   for(i=0;i<ct;i++)printf("%d\n",use[i]);
-   printf("\n");*/
+    for(i=0;i<data.get_cols();i++){
+        mean.set(i,0.0);
+        var.set(i,0.0);      
+    }
    
+    for(i=0;i<ct;i++){
+        for(j=0;j<data.get_cols();j++)mean.add_val(j,data.get_data(use.get_data(i),j));
+    }
    
-   
-   for(i=0;i<data.get_cols();i++){
-       mean.set(i,0.0);
-       var.set(i,0.0);
-       
-   }
-   
-   for(i=0;i<ct;i++){
-       for(j=0;j<data.get_cols();j++)mean.add_val(j,data.get_data(use.get_data(i),j));
-   }
-   
-   for(i=0;i<data.get_cols();i++)mean.divide_val(i,double(ct));
+    for(i=0;i<data.get_cols();i++)mean.divide_val(i,double(ct));
   
-   for(i=0;i<ct;i++){
-       for(j=0;j<data.get_cols();j++){
-           var.add_val(j,power((mean.get_data(j)-data.get_data(use.get_data(i),j))/(maxs.get_data(j)-mins.get_data(j)),2));
-       }
-   }
+    for(i=0;i<ct;i++){
+        for(j=0;j<data.get_cols();j++){
+            var.add_val(j,power((mean.get_data(j)-data.get_data(use.get_data(i),j))/(maxs.get_data(j)-mins.get_data(j)),2));
+        }
+    }
    
-   for(i=0;i<data.get_cols();i++){
-       if(i==0 || var.get_data(i)>nn){
-           nn=var.get_data(i);
-           idim=i;
-       }
-   }  
+    for(i=0;i<data.get_cols();i++){
+        if(i==0 || var.get_data(i)>nn){
+            nn=var.get_data(i);
+            idim=i;
+        }
+    }  
    
-   mean.reset();
-   var.reset();
+    mean.reset();
+    var.reset();
    
      
-   if(ct>2){
-     
-      for(i=0;i<ct;i++)tosort.set(i,data.get_data(use.get_data(i),idim));
-      sort_and_check(tosort,sorted,use);
+    if(ct>2){
+        for(i=0;i<ct;i++)tosort.set(i,data.get_data(use.get_data(i),idim));
+        sort_and_check(tosort,sorted,use);
 
-      inp=ct/2;     
+        inp=ct/2;     
       
-      while(inp>0 && sorted.get_data(inp)-sorted.get_data(inp-1)<tol)inp--;
+        while(inp>0 && sorted.get_data(inp)-sorted.get_data(inp-1)<tol)inp--;
       
-      if(use.get_data(inp)==parent){
+        if(use.get_data(inp)==parent){
           
-          if(fabs(sorted.get_data(inp+1)-sorted.get_data(inp))>tol || inp==ct-1){
-              printf("CANNOT rectify inp ambiguity in kd_tree::organize\n");
-              exit(1);
-          }
+            if(fabs(sorted.get_data(inp+1)-sorted.get_data(inp))>tol || inp==ct-1){
+                printf("CANNOT rectify inp ambiguity in kd_tree::organize\n");
+                exit(1);
+            }
           
-          i=use.get_data(inp);
-          use.set(inp,use.get_data(inp+1));
-          use.set(inp+1,i);
+            i=use.get_data(inp);
+            use.set(inp,use.get_data(inp+1));
+            use.set(inp+1,i);
           
-          nn=sorted.get_data(inp);
-          sorted.set(inp,sorted.get_data(inp+1));
-          sorted.set(inp+1,nn);
-          
-        
-          
-          
-      }
+            nn=sorted.get_data(inp);
+            sorted.set(inp,sorted.get_data(inp+1));
+            sorted.set(inp+1,nn);
+
+        }
       
-      newparent=use.get_data(inp);   
-      pivot=data.get_data(newparent,idim);
+        newparent=use.get_data(inp);   
+        pivot=data.get_data(newparent,idim);
    
-      if(newparent==parent){
-          printf("WARNING just set self as own ancestor\n");
-          printf("inp %d ct %d -- %d %d\n",inp,ct,parent,use.get_data(inp));
+        if(newparent==parent){
+            printf("WARNING just set self as own ancestor\n");
+            printf("inp %d ct %d -- %d %d\n",inp,ct,parent,use.get_data(inp));
         
-          exit(1);
-      }
+            exit(1);
+        }
       
       
    
       
-      tree.set(parent,dir,newparent);
-      tree.set(newparent,3,parent);
-      tree.set(newparent,0,idim);
+        tree.set(parent,dir,newparent);
+        tree.set(newparent,3,parent);
+        tree.set(newparent,0,idim);
       
-      //now I need to re-order use[] so that I can pass it to another
-      //call of ::organize and have the proper indices available
+        //now I need to re-order use[] so that I can pass it to another
+        //call of ::organize and have the proper indices available
       
          //k=use.get_data(inp);
          //use.set(inp,newparent);
          //use.set(inn.get_data(inp),k);         
 
       
-      for(i=0;i<ct;i++){
-             use_in.set(u_start+i,use.get_data(i));
-      }
+        for(i=0;i<ct;i++){
+            use_in.set(u_start+i,use.get_data(i));
+        }
       
-      use.reset();
+        use.reset();
       
-      if(inp!=0){
+        if(inp!=0){
 
-         organize(use_in,u_start,newparent,idim+1,inp,1);
+           organize(use_in,u_start,newparent,idim+1,inp,1);
          
-         organize(use_in,u_start+inp+1,newparent,idim+1,ct-inp-1,2);
+           organize(use_in,u_start+inp+1,newparent,idim+1,ct-inp-1,2);
          
       
-      }//if(inp!=0)
-      else{
+        }//if(inp!=0)
+        else{
         
-        tree.set(newparent,1,-1);        
+            tree.set(newparent,1,-1);        
         
-        organize(use_in,u_start+1,newparent,idim+1,ct-1,2);
+            organize(use_in,u_start+1,newparent,idim+1,ct-1,2);
         
         
-      }//if(inp==0)
+        }//if(inp==0)
       
       
-   }//if(ct>2)
-   else if(ct==2){
-     if(data.get_data(use.get_data(0),idim)<data.get_data(use.get_data(1),idim)){
-       tree.set(parent,dir,use.get_data(1));
-       tree.set(use.get_data(1),1,use.get_data(0));
-       tree.set(use.get_data(1),2,-1);
-       tree.set(use.get_data(1),3,parent);
-       tree.set(use.get_data(1),0,idim);
+    }//if(ct>2)
+    else if(ct==2){
+        if(data.get_data(use.get_data(0),idim)<data.get_data(use.get_data(1),idim)){
+            tree.set(parent,dir,use.get_data(1));
+            tree.set(use.get_data(1),1,use.get_data(0));
+            tree.set(use.get_data(1),2,-1);
+            tree.set(use.get_data(1),3,parent);
+            tree.set(use.get_data(1),0,idim);
      
-     }
-     else{
+        }
+        else{
      
-       tree.set(parent,dir,use.get_data(1));
-       tree.set(use.get_data(1),1,-1);
-       tree.set(use.get_data(1),2,use.get_data(0));
-       tree.set(use.get_data(1),3,parent);
-       tree.set(use.get_data(1),0,idim);
+            tree.set(parent,dir,use.get_data(1));
+            tree.set(use.get_data(1),1,-1);
+            tree.set(use.get_data(1),2,use.get_data(0));
+            tree.set(use.get_data(1),3,parent);
+            tree.set(use.get_data(1),0,idim);
      
-     }
+        }
      
-     tree.set(use.get_data(0),0,idim+1);
+        tree.set(use.get_data(0),0,idim+1);
      
-     if(tree.get_data(use.get_data(0),0)>=data.get_cols())tree.set(use.get_data(0),0,0);
+        if(tree.get_data(use.get_data(0),0)>=data.get_cols())tree.set(use.get_data(0),0,0);
      
-     tree.set(use.get_data(0),1,-1);
-     tree.set(use.get_data(0),2,-1);
-     tree.set(use.get_data(0),3,use.get_data(1));
+        tree.set(use.get_data(0),1,-1);
+        tree.set(use.get_data(0),2,-1);
+        tree.set(use.get_data(0),3,use.get_data(1));
 
    
-   }
-   else if(ct==1){
+    }
+    else if(ct==1){
       
-      tree.set(parent,dir,use.get_data(0));
-      tree.set(use.get_data(0),1,-1);
-      tree.set(use.get_data(0),2,-1);
-      tree.set(use.get_data(0),3,parent);
-      tree.set(use.get_data(0),0,idim);
+        tree.set(parent,dir,use.get_data(0));
+        tree.set(use.get_data(0),1,-1);
+        tree.set(use.get_data(0),2,-1);
+        tree.set(use.get_data(0),3,parent);
+        tree.set(use.get_data(0),0,idim);
       
-   }
-   else if(ct==0)printf("WARNING called organize with ct==0\n");
+    }
+    else if(ct==0)printf("WARNING called organize with ct==0\n");
   
 }
 
