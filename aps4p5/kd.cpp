@@ -1,5 +1,3 @@
-//this is the 27 February 2012 rewrite
-
 //this includes the version of kd cube that was used for the Bayesian
 //appendix of the APS paper (copied to this directory on 1 March 2013
 //(the sandwich division model of kd cube)

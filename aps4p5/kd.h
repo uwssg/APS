@@ -1,5 +1,3 @@
-//this is the 27 February 2012 rewrite
-
 /*
 Based on description in
 
