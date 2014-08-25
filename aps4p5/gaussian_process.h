@@ -183,6 +183,9 @@ class gp{
         /*this provides the backend for calculation in the user_predict routines*/
         double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
  
+        void optimize_grid(array_1d<int>&);
+        void optimize_simplex(array_1d<int>&);
+ 
     public:
 
         double inversionerr;
@@ -306,8 +309,7 @@ class gp{
         int get_last_optimized();
         int get_last_refactored();
     
-        void optimize_grid(array_1d<int>&);
-        void optimize_simplex(array_1d<int>&);
+
     
         void optimize(array_1d<int>&);
         void optimize();
