@@ -12,13 +12,29 @@ class covariance_function{
     This class itself does not provide a covariogram.
     
     Any covagriogram class must inherit from this class.
-    It must also declare its own hyper parameters as well as its own operator (see below).
+    
+    Any covariogram class must declare its own own operator.
+    
+    Any covariogram class must declare its own set_hyper_parameters method.
+    
+    Any covariogram class must declare its own get_hyper_parameters method.
+    
+    Any covariogram class must declare its own print_hyper_parameters method.
+    
+    Any covariogram class may wish to declare its own set_dim method, so that
+    the method can adjust the number of hyperparameters (if the user wishes for
+    the number of hyperparameters to match the number of dimensions).
     */
     
     protected:
+        /*dimensionality of parameter space*/
         int dim;
-    
+        
+        /*number of hyper parameters associated with the covariogram*/
         int n_hyperparameters;
+        
+        /*maximum and minimum allowed values of the hyper parameters associated
+        with the covariogram*/
         array_1d<double> hyper_max,hyper_min;
 
     
@@ -26,32 +42,73 @@ class covariance_function{
     
         covariance_function();
         ~covariance_function();
+        
+        /*
+        This is the operator called by the Gaussian Prpcess when interpolating its
+        function.  The arguments are as follows:
+        
+        array_1d<double> the first point
+        
+        array_1d<double> the second point (remember,the covariogram calculates the
+        theoretical covariance between two points in parameter space)
+        
+        array_1d<double> the local minimum values of the parameters in parameter
+        space
+        
+        array_1d<double> the local maximum values of the parameters in parameter
+        space
+        
+        array_1d<double> an array in which the gradient of the covariogram
+        can be stored, if calculated (NOT CURRENTLY USED)
+        
+        int a switch telling the operator whether or not to calculate the gradient
+        (0 means 'no', 1 means 'yes')
+        
+        This function will return the value of the covariance matrix between the
+        points in parameter space specified by the first two arguments
+        */
         virtual double operator()(const array_1d<double>&, const array_1d<double>&,
               const array_1d<double>&, const array_1d<double>&, 
               array_1d<double>&, const int) const;
     
         /*set the hyper parameters of the covariogram*/
         virtual void set_hyper_parameters(array_1d<double>&);
-    
+        
+        /*set the dimensionality of the covariogram*/
         virtual void set_dim(int);
-        void set_max(int,double);
-        void set_min(int, double);
+        
+        /*return the dimensionality of the covariogram*/
         int get_dim();
-    
+        
+        /*return the number of hyper parameters in the covariogram*/
         int get_n_hyper_parameters();
+        
+        /*return the maximum hyperparameter value; int specifies which hyperparameter*/
         double get_hyper_parameter_max(int);
+        
+        /*return the minimum hyperparameter value; int specifies which hyperperameter*/
         double get_hyper_parameter_min(int);
+        
+        /*set the maximum/minimum hyper parameter value; 
+        int specifies which hyperparameter*/
         void set_hyper_parameter_max(int,double);
         void set_hyper_parameter_min(int,double);
-    
+        
+        /*fill the provided array_1d<double> with the hyperparameters
+        assigned to this covariogram*/
         virtual void get_hyper_parameters(array_1d<double>&);
     
-        virtual void print_hyperparams();
+        /*print the hyperparameters assigned to this covariogram to the screen*/
+        virtual void print_hyper_parameters();
 
 };
 
 class gaussian_covariance : public covariance_function{
-
+    /*
+    This class implements the Gaussian covariogram (Rasmussen and Williams equation
+    4.9) with only one hyperparameter, the length scale ellsquared
+    */
+    
     private:
         double ellsquared;
     
@@ -63,14 +120,18 @@ class gaussian_covariance : public covariance_function{
 	
         virtual void set_hyper_parameters(array_1d<double>&);
     
-        virtual void print_hyperparams();
+        virtual void print_hyper_parameters();
     
         virtual void get_hyper_parameters(array_1d<double>&);
 
 };
 
 class nn_covariance : public covariance_function{
-
+    /*
+    This class implements the covariogram from Rasmussen and Williams equation 4.29
+    with only two hyperparameters, sigma0 and sigma
+    */
+    
     private:
         double sigma0,sigma;
 
@@ -84,12 +145,15 @@ class nn_covariance : public covariance_function{
     
         virtual void get_hyper_parameters(array_1d<double>&);
     
-        virtual void print_hyperparams();
+        virtual void print_hyper_parameters();
 
 };
 
 class matern_covariance : public covariance_function{
-
+    /*
+    This class implements the Matern covariogram (Rasmussen and Williams equation 4.17)
+    with only one hyperparameter, the length scale ell.
+    */
     private:
         double ell;
 
@@ -101,14 +165,18 @@ class matern_covariance : public covariance_function{
 	
         virtual void set_hyper_parameters(array_1d<double>&);
     
-        virtual void print_hyperparams();
+        virtual void print_hyper_parameters();
     
         virtual void get_hyper_parameters(array_1d<double>&);
 
 };
 
 class matern_covariance_multiD : public covariance_function{
-
+    /*
+    This class implements the Matern covariogram (Rasmussen and Williams equation 4.17)
+    with one length scale hyperparameter per dimension in parameter space
+    */
+    
     private:
         array_1d<double> ell;
     
@@ -120,7 +188,7 @@ class matern_covariance_multiD : public covariance_function{
 	
         virtual void set_hyper_parameters(array_1d<double>&);
     
-        virtual void print_hyperparams();
+        virtual void print_hyper_parameters();
     
         virtual void get_hyper_parameters(array_1d<double>&);
         
@@ -128,7 +196,10 @@ class matern_covariance_multiD : public covariance_function{
 };
 
 class gaussian_covariance_multiD : public covariance_function{
-
+    /*
+    This class implements the Gaussian covariogram (Rasmussen and Williams equation 4.9)
+    with one hyperparameter length scale per dimension in parameter space.
+    */
     private:
         array_1d<double> ell;
     
@@ -140,7 +211,7 @@ class gaussian_covariance_multiD : public covariance_function{
 	
         virtual void set_hyper_parameters(array_1d<double>&);
     
-        virtual void print_hyperparams();
+        virtual void print_hyper_parameters();
     
         virtual void get_hyper_parameters(array_1d<double>&);
         
@@ -148,7 +219,17 @@ class gaussian_covariance_multiD : public covariance_function{
 };
 
 class neighbor_cache{
-
+    /*
+    This class stores the results of nearest neighbor searches in the gp class
+    below.  Each time a call is made to the interpolation functions in gp,
+    this class will determine whether or not a new nearest neighbor search 
+    is needed.  If not, gp will read in the nearest neighbors and the inverted
+    covariance matrix from the data stored in this class.  It is our hope
+    that this will substantially speed up the algorithm by obviating excessive,
+    repetitive nearest neighbor searches.
+    
+    */
+    
     public:
         neighbor_cache(kd_tree*);
         ~neighbor_cache();

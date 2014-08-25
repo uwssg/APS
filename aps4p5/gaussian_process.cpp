@@ -765,7 +765,7 @@ void covariance_function::get_hyper_parameters(array_1d<double> &output){
     exit(1);
 }
 
-void covariance_function::print_hyperparams(){
+void covariance_function::print_hyper_parameters(){
     printf("sorry there are no hyper params\n");
     exit(1);
 }
@@ -842,7 +842,7 @@ nn_covariance::nn_covariance(){
     hyper_min.set(1,0.001);
 }
 
-void nn_covariance::print_hyperparams(){
+void nn_covariance::print_hyper_parameters(){
     printf("nn hyper params %e %e\n",sigma0,sigma);
 }
 
@@ -959,7 +959,7 @@ void gaussian_covariance::get_hyper_parameters(array_1d<double> &output){
     output.set(0,ellsquared);
 }
 
-void gaussian_covariance::print_hyperparams(){
+void gaussian_covariance::print_hyper_parameters(){
     printf("gaussian hyper params %e\n",ellsquared);
 }
 
@@ -1063,7 +1063,7 @@ void gaussian_covariance_multiD::set_hyper_parameters(array_1d<double> &input){
     }
 }
 
-void gaussian_covariance_multiD::print_hyperparams(){
+void gaussian_covariance_multiD::print_hyper_parameters(){
     printf("in gaussian_covariance_multiD\n");
     int i;
     for(i=0;i<n_hyperparameters;i++){
@@ -1141,7 +1141,7 @@ void matern_covariance::set_hyper_parameters(array_1d<double> &vin){
     ell=vin.get_data(0);
 }
 
-void matern_covariance::print_hyperparams(){
+void matern_covariance::print_hyper_parameters(){
     printf("matern hyper params %e\n",ell);
 }
 
@@ -1297,7 +1297,7 @@ void matern_covariance_multiD::set_hyper_parameters(array_1d<double> &input){
     }
 }
 
-void matern_covariance_multiD::print_hyperparams(){
+void matern_covariance_multiD::print_hyper_parameters(){
     printf("in matern_covariance_multiD\n");
     int i;
     for(i=0;i<n_hyperparameters;i++){
@@ -1797,7 +1797,7 @@ const{
         }
       
         printf("\n");
-        covariogram->print_hyperparams();
+        covariogram->print_hyper_parameters();
       
         exit(1);
     }
@@ -1960,7 +1960,7 @@ void gp::optimize(array_1d<int> &use_dex){
     */
     covariogram->set_hyper_parameters(hhbest);
     
-    covariogram->print_hyperparams();
+    covariogram->print_hyper_parameters();
     
     /*
     log how much time was spent on optimization, as well as how many points
