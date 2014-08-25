@@ -225,10 +225,26 @@ class gp{
         
         /*Set the minimum bound in a given dimension; see set_max above*/
         void set_min(int,double);
-       
+        
+        /*The user_predict functions below are all variations on the function to do
+        Gaussian Process interpolation.  All of them accept as their first argument
+        a point in parameter space where the interpolation is to occur.  All of them
+        return the interpolated value of the function at that point.  Some of them
+        will also return values for sigma, the uncertainty in the interpolated value.*/
+        
+        /*returns sigma in the double*; the int is for verbosity (1 prints some status
+        reports as the prediction is made; 0 prints nothing)*/
         double user_predict(array_1d<double>&,double*,int) const;
+        
+        /*does not calculate sigma (which can be verytime consuming). The int is verbosity*/
         double user_predict(array_1d<double>&,int) const;
+        
+        /*does not calculate sigma, but stores the values of the function used for
+        interpolation in the final array_1d<double>; the int is for verbosity*/
         double user_predict(array_1d<double>&,int,array_1d<double>&) const;
+        
+        /*returns sigma in the double* and the values of the function used for
+        interpolation in the final array_1d<double>; the int is for verbosity*/
         double user_predict(array_1d<double>&,double*,int,array_1d<double>&) const;
     
         double self_predict(int) const;
