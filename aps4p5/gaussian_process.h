@@ -8,92 +8,96 @@
 
 class covariance_function{
 
-protected:
-    int dim;
-    array_1d<double> global_maxs,global_mins;
+    protected:
+        int dim;
+        array_1d<double> global_maxs,global_mins;
     
-    int n_hyperparameters;
-    array_1d<double> hyper_max,hyper_min;
+        int n_hyperparameters;
+        array_1d<double> hyper_max,hyper_min;
 
     
-public:
+    public:
     
-    covariance_function();
-    ~covariance_function();
-    virtual double operator()(const array_1d<double>&, const array_1d<double>&,
-              const array_1d<double>&, const array_1d<double>&, array_1d<double>&, const int) const;
+        covariance_function();
+        ~covariance_function();
+        virtual double operator()(const array_1d<double>&, const array_1d<double>&,
+              const array_1d<double>&, const array_1d<double>&, 
+              array_1d<double>&, const int) const;
     
-    /*set the hyper parameters of the covariogram*/
-    virtual void set_hyper_parameters(array_1d<double>&);
+        /*set the hyper parameters of the covariogram*/
+        virtual void set_hyper_parameters(array_1d<double>&);
     
-    virtual void set_dim(int);
-    void set_max(int,double);
-    void set_min(int, double);
-    int get_dim();
+        virtual void set_dim(int);
+        void set_max(int,double);
+        void set_min(int, double);
+        int get_dim();
     
-    int get_n_hyper_parameters();
-    double get_hyper_parameter_max(int);
-    double get_hyper_parameter_min(int);
-    void set_hyper_parameter_max(int,double);
-    void set_hyper_parameter_min(int,double);
+        int get_n_hyper_parameters();
+        double get_hyper_parameter_max(int);
+        double get_hyper_parameter_min(int);
+        void set_hyper_parameter_max(int,double);
+        void set_hyper_parameter_min(int,double);
     
-    virtual void get_hyper_parameters(array_1d<double>&);
+        virtual void get_hyper_parameters(array_1d<double>&);
     
-    virtual void print_hyperparams();
+        virtual void print_hyperparams();
 
 };
 
 class gaussian_covariance : public covariance_function{
 
-private:
-    double ellsquared;
+    private:
+        double ellsquared;
     
-public:
-    gaussian_covariance();
-    virtual double operator()(const array_1d<double>&, const array_1d<double>&,
-        const array_1d<double>&, const array_1d<double>&, array_1d<double>&, const int)const;
+    public:
+        gaussian_covariance();
+        virtual double operator()(const array_1d<double>&, const array_1d<double>&,
+            const array_1d<double>&, const array_1d<double>&, 
+            array_1d<double>&, const int)const;
 	
-    virtual void set_hyper_parameters(array_1d<double>&);
+        virtual void set_hyper_parameters(array_1d<double>&);
     
-    virtual void print_hyperparams();
+        virtual void print_hyperparams();
     
-    virtual void get_hyper_parameters(array_1d<double>&);
+        virtual void get_hyper_parameters(array_1d<double>&);
 
 };
 
 class nn_covariance : public covariance_function{
 
-private:
-    double sigma0,sigma;
+    private:
+        double sigma0,sigma;
 
-public:
-    nn_covariance();
-    virtual double operator()(const array_1d<double>&, const array_1d<double>&, const array_1d<double>&,
-        const array_1d<double>&, array_1d<double>&, const int)const;
+    public:
+        nn_covariance();
+        virtual double operator()(const array_1d<double>&, 
+            const array_1d<double>&, const array_1d<double>&,
+            const array_1d<double>&, array_1d<double>&, const int)const;
 	
-    virtual void set_hyper_parameters(array_1d<double>&);
+        virtual void set_hyper_parameters(array_1d<double>&);
     
-    virtual void get_hyper_parameters(array_1d<double>&);
+        virtual void get_hyper_parameters(array_1d<double>&);
     
-    virtual void print_hyperparams();
+        virtual void print_hyperparams();
 
 };
 
 class matern_covariance : public covariance_function{
 
-private:
-    double ell;
+    private:
+        double ell;
 
-public:
-    matern_covariance();
-    virtual double operator()(const array_1d<double>&,const array_1d<double>&, const array_1d<double>&,
-        const array_1d<double>&,array_1d<double>&, const int)const;
+    public:
+        matern_covariance();
+        virtual double operator()(const array_1d<double>&,
+            const array_1d<double>&, const array_1d<double>&,
+            const array_1d<double>&,array_1d<double>&, const int)const;
 	
-    virtual void set_hyper_parameters(array_1d<double>&);
+        virtual void set_hyper_parameters(array_1d<double>&);
     
-    virtual void print_hyperparams();
+        virtual void print_hyperparams();
     
-    virtual void get_hyper_parameters(array_1d<double>&);
+        virtual void get_hyper_parameters(array_1d<double>&);
 
 };
 
