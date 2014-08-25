@@ -45,6 +45,10 @@ class kd_tree{
         void build_tree(array_2d<double>&);
         void build_tree(array_2d<double>&,array_1d<double>&,array_1d<double>&);
  
+        /*
+        These routines will set the maximum and minimum values (used for
+        normalizing parameter distances; see above)
+        */
         void set_max(int,double);
         void set_min(int,double);
  
@@ -77,9 +81,43 @@ class kd_tree{
 
     private:
         int diagnostic;
+        
+        /*
+        The array_2d<int> tree stores the structure of the KD tree.
+        Each row corresponds to a data point stored in the tree.
+        There are four columns.
+        
+        The 0th column stores the dimension that the tree is branching on
+        at that point.
+        
+        The 1st column is the left-hand daughter (points whose value in the
+        dimension specified in the 0th column are less than the current
+        point).
+        
+        The 2nd column is the right-hand daughter (points whose value in
+        the dimension specified in the 0th column are greater than or
+        equal to the current point).
+        
+        The 3rd column is the parent of the current point.
+        
+        Columns are set to -1 if they have no meaningful answer (i.e. the parent
+        of the original point or the daughter of a terminal node).
+        */
         array_2d<int> tree;
-  
+        
+        /*
+        The array_2d<double> data contains the points that are stored in this
+        tree.
+        */
         array_2d<double> data;
+        
+        /*
+        maxs and mins are maximum and minimum values in each dimension of
+        parameter space.  Note: these are not bounds.  The difference max-min is
+        used to normalize parameter space distances when trying to find nearest
+        neighbors.  Setting all maxs=1 and all mins=0 will result in nearest
+        neighbors reckoned by unnormalized parameter space distances.
+        */
         array_1d<double> maxs,mins;
   
         int masterparent;

@@ -59,7 +59,6 @@ void kd_tree::build_tree(array_2d<double> &mm,
   
    int i,j,k,l,inp;
 
-   
    tol=1.0e-7;
 
    diagnostic=1;
