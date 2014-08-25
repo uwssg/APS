@@ -250,7 +250,7 @@ void gp::initialize(array_2d<double> &seed, array_1d<double> &seedfn,\
 }
 
 void gp::refactor(){
-    //printf("refactoring %d\n",pts);
+  
     double before,after;
     
     array_1d<double> max,min;
@@ -294,14 +294,13 @@ void gp::refactor(){
 void gp::add_pt(array_1d<double> &newpt, double newfn){
   
   //add a point to the gaussian process data set
-  //newpt[] contains the actual point in parameter space
-  //newfn contains the value that will go in fn[]
+  //newpt contains the actual point in parameter space
+  //newfn contains the value that will go in fn
   
   newpt.set_where("gp_add_pt");
   
   int i,j,k,l;
 
-  
   fn.add(newfn);
   
   kptr->add(newpt);
@@ -316,31 +315,6 @@ void gp::add_pt(array_1d<double> &newpt, double newfn){
  
   newpt.set_where("nowhere");
 
-}
-
-
-double gp::get_biggest_neighbor(array_1d<double> &pt){
-  
-    
-    array_1d<int> neigh;
-    neigh.set_name("gp_get_biggest_neighbor_neigh");
-    neigh.set_dim(kk);
-    
-    array_1d<double> dd;
-    dd.set_name("gp_get_biggest_neighbor_dd");
-    dd.set_dim(kk);
-    
-    kptr->nn_srch(pt,kk,neigh,dd);
-    
-    int i;
-    double ans;
-    for(i=0;i<kk;i++){
-       if(i==0 || fn.get_data(neigh.get_data(i))>ans){
-           ans=fn.get_data(neigh.get_data(i));
-         }  
-    }
-   
-    return ans;
 }
 
 array_1d<double>* gp::get_pt(int dex){

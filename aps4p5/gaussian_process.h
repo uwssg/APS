@@ -238,11 +238,19 @@ class gp{
         void user_predict_gradient(array_1d<double>&,array_1d<double>&,int);
         double actual_gradient(int,array_1d<double>&);
         double actual_gradient(array_1d<double>&,array_1d<double>&);
-
+        
+        /*add a new data point to the gaussian process;
+        the array_1d<double> is the point in parameter space;
+        the double is the corresponding function value*/
         void add_pt(array_1d<double>&,double);
+        
         void write_data(char*);
     
         void assign_covariogram(covariance_function*);
+        
+        /*rebuild the kd_tree (this could speed up the nearest neighbor searches
+        in the event that adding points to the tree resulted in the tree becoming
+        unbalanced)*/
         void refactor();
         
         /*print timing statistics to a file whose name is specified by the char* */
@@ -250,7 +258,7 @@ class gp{
         
         void reset_cache() const;
         void set_sig_cap(double);
-        double get_biggest_neighbor(array_1d<double>&);
+
         void get_neighbor_range(array_1d<double>&,array_1d<double>&,array_1d<double>&,double*);
     
         double get_nearest_distance();
