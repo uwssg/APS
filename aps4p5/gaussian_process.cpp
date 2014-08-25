@@ -1957,21 +1957,40 @@ void gp::optimize(array_1d<int> &use_dex){
     
     double before=double(time(NULL));
     
+    /*
+    These are all global variables that are used by optimize_simplex() to determine convergence
+    */
     called_opt=0;
     last_set=0;
     eebest=chisq_exception;
     
     if(covariogram->get_n_hyper_parameters()<=2){
+        /*
+        If this is only a 2-hyperparameter covariogram, we can afford to just search
+        hyperparameter space in a grid to find the bet combination
+        */
         optimize_grid(use_dex);
     }
     else{
+        /*
+        If there are more than 2 hyperparameters, use a Nelder-Mead simplex to find
+        the best combination of hyperparameters
+        */
         optimize_simplex(use_dex);
     }
     
+    /*
+    Whichever search (grid or simplex) is used above, the best combination of 
+    hyperparameters will be stored in the global variable hhbest 
+    */
     covariogram->set_hyper_parameters(hhbest);
     
     covariogram->print_hyperparams();
     
+    /*
+    log how much time was spent on optimization, as well as how many points
+    were stored in the kd_tree the last time this routine was called.
+    */
     last_optimized=pts;
     time_optimize+=double(time(NULL))-before;
     
@@ -1982,7 +2001,12 @@ double gp::get_time_optimize(){
 }
 
 void gp::optimize_grid(array_1d<int> &use_dex){
+    /*
+    This routine will search for the best combination of hyperparameters by
+    exploring a grid in ln(hyperparameter) space.
     
+    Only to be used for covariograms with <=2 hyperparameters
+    */
     int i,j,k,l;
     
     opt_dex.reset();
@@ -1996,8 +2020,8 @@ void gp::optimize_grid(array_1d<int> &use_dex){
     
     array_1d<double> lhh,dh;
     
-    lhh.set_name("gp_optimize(array<int>,int)_lhh");
-    dh.set_name("gp_optimize(array<int>,int)_dh");
+    lhh.set_name("gp_optimize_grid_lhh");
+    dh.set_name("gp_optimize_grid_dh");
     
     double nn;
     
@@ -2005,7 +2029,10 @@ void gp::optimize_grid(array_1d<int> &use_dex){
     hhbest.set_dim(nhy);
     dh.set_dim(nhy);
     
+    /*the number of steps to take in each dimension of the grid*/
     int nsteps=10;
+    
+    /*set the step size for each dimension of the grid*/
     for(i=0;i<nhy;i++){
         dh.set(i,(log(covariogram->get_hyper_parameter_max(i))-log(covariogram->get_hyper_parameter_min(i)))/double(nsteps-1));
     }
@@ -2018,6 +2045,7 @@ void gp::optimize_grid(array_1d<int> &use_dex){
     int ii;
     double E,mu;
     
+    /*walk through the grid of hyperparameters*/
     for(ii=0;ii<totalsteps;ii++){
         j=ii;
         l=totalsteps/nsteps;
@@ -2042,7 +2070,10 @@ void gp::optimize_grid(array_1d<int> &use_dex){
         
     }
     
-    
+    /*
+    If the best hyperparameters were found at the bounds of the allowed box in hyperparameter space,
+    extend the bounds for future use.
+    */
     for(i=0;i<nhy;i++){
         if(fabs(log(hhbest.get_data(i))-log(covariogram->get_hyper_parameter_max(i)))<dh.get_data(i)){
             nn=covariogram->get_hyper_parameter_max(i);
@@ -2055,17 +2086,18 @@ void gp::optimize_grid(array_1d<int> &use_dex){
         }
         
     }
-    
-    /*printf("chose hyper parameters ");
-    for(i=0;i<nhy;i++)printf("%e ",hhbest[i]);
-    printf("Ebest %e \n",Ebest/double(n_use));*/
-    
-    
+
     use_dex.set_where("nowhere");
 
 }
 
 void gp::optimize_simplex(array_1d<int> &use_dex){
+    /*
+    Use a Nelder-Mead simplex to find the best combination of hyperparameters (the one that minimizes
+    the figure of merit calculated by optimization_error()
+    */
+    
+    /*parameters of the Nelder-Mead simplex*/
     double alpha=1.0,beta=0.5,gamma=2.1;
     
     array_2d<double> opt_pts;
@@ -2084,9 +2116,7 @@ void gp::optimize_simplex(array_1d<int> &use_dex){
     
     Ran chaos(99);
     double nn;
-    
-    //printf("optimizing with simplex\n");
-    
+
     array_1d<double> lmin,lmax;
     for(i=0;i<nparams;i++){
         lmin.set(i,log(covariogram->get_hyper_parameter_min(i)));
@@ -2105,8 +2135,6 @@ void gp::optimize_simplex(array_1d<int> &use_dex){
     }
     
     double mu,sig=1.0;
-    int abort_max=200;
-    
     int il=0,ih=0;
     
     for(i=1;i<nparams+1;i++){
@@ -2118,6 +2146,10 @@ void gp::optimize_simplex(array_1d<int> &use_dex){
             il=i;
         }
     }
+    
+    /*if ever this routine goes more than 200 calls to optimization_error without
+    finding a new best set of hyperparameters, deem that the simplex has converged*/
+    int abort_max=200;
     
     while(sig>1.0e-4 && called_opt-last_set<abort_max){
         for(i=0;i<nparams;i++){
@@ -2232,6 +2264,19 @@ void gp::optimize_simplex(array_1d<int> &use_dex){
 
 double gp::optimization_error(array_1d<double> &lhh){
     
+    /*
+    This routine will take the proposed array of ln(hyperparameters) lhh
+    and compute the figure of merit for those hyperparameters
+    using the sample of points stored in the global variable opt_dex
+    
+    The figure of merit is \sum{(mu-f)^2} where the sum is over the points
+    in opt_dex, mu is the interpolated function values at those points and
+    f is the true function values at those points.
+    
+    The best combination of hyperparameters is the one that minimizes the 
+    figure of merit.
+    */
+    
     called_opt++;
     int i;
     
@@ -2242,55 +2287,21 @@ double gp::optimization_error(array_1d<double> &lhh){
     
     covariogram->set_hyper_parameters(hh);
     
-    double E=0.0,mu,sig;
-    
-    array_1d<double> xx,cum,shldbe;
-    
-    for(i=0;i<4;i++){
-        xx.add((i+1)*0.5);
-        cum.set(i,0.0);
-    }
-    
-    shldbe.set(0,0.383);
-    shldbe.set(1,0.6826);
-    shldbe.set(2,0.8664);
-    shldbe.set(3,0.9544);
-    
-    
-    double dd;
+    double E=0.0,mu;
     int j;
     
     E=0.0;
     for(i=0;i<opt_dex.get_dim();i++){
-        mu=self_predict(opt_dex.get_data(i),&sig);
-        dd=fabs((mu-fn.get_data(opt_dex.get_data(i)))/sig);
-        
-        for(j=0;j<xx.get_dim();j++){
-            if(dd<xx.get_data(j))cum.add_val(j,1.0);
-        }
-        
+        mu=self_predict(opt_dex.get_data(i));
         E+=power((fn.get_data(opt_dex.get_data(i))-mu),2);
     }
     
-    for(j=0;j<xx.get_dim();j++){
-        cum.divide_val(j,double(opt_dex.get_dim()));
-    }
-    /*
-    E=0.0;
-    for(j=0;j<xx.get_dim();j++){
-        E+=power(cum.get_data(j)-shldbe.get_data(j),2);
-    }*/
-
     if(E<eebest){
         last_set=called_opt;
         eebest=E;
         for(i=0;i<covariogram->get_n_hyper_parameters();i++){
             hhbest.set(i,hh.get_data(i));
         }
-        /*printf("\n");
-        for(j=0;j<xx.get_dim();j++){
-            printf("    %e %e\n",xx.get_data(j),cum.get_data(j));
-        }*/
     }
     
     return E;

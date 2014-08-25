@@ -164,28 +164,7 @@ class neighbor_cache{
 
 class gp{
   
-    private:
-        mutable neighbor_cache *neighbor_storage;   
-        covariance_function *covariogram;
-    
-        array_1d<double> fn,hhbest;
-        array_1d<int> opt_dex;
-        kd_tree *kptr;
-        int pts,kk,called_opt,last_set;
-    
-        int initialized,allottedpts,dim;
-        int last_optimized,last_validated,last_refactored;
-        double sigcap,time_optimize,eebest;
-   
-        mutable int ct_search,ct_predict;
-        mutable double time_search,time_predict;
         
-        /*this provides the backend for calculation in the user_predict routines*/
-        double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
- 
-        void optimize_grid(array_1d<int>&);
-        void optimize_simplex(array_1d<int>&);
- 
     public:
 
         double inversionerr;
@@ -356,8 +335,7 @@ class gp{
         stored in the kd_tree, this method will just call optimize() with no argument.
         */
         void optimize(array_1d<double>&,int);
-    
-        double optimization_error(array_1d<double>&);
+
     
         double get_time_optimize();
         
@@ -418,6 +396,45 @@ class gp{
     
         array_1d<double>* get_pt(int);
         covariance_function* get_covariogram();
+
+    private:
+        mutable neighbor_cache *neighbor_storage;   
+        covariance_function *covariogram;
+    
+        array_1d<double> fn;
+        kd_tree *kptr;
+        int pts,kk;
+    
+        int initialized,allottedpts,dim;
+        int last_optimized,last_validated,last_refactored;
+        double sigcap,time_optimize;
+   
+        mutable int ct_search,ct_predict;
+        mutable double time_search,time_predict;
+        
+        /*this provides the backend for calculation in the user_predict routines*/
+        double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
+        
+        /*global variables used by the optimize() routines*/
+        array_1d<double> hhbest;
+        array_1d<int> opt_dex;
+        double eebest;
+        int called_opt,last_set;
+        
+        /*optimize hyperparameters by exploring a grid in ln(hyperparameter)
+        space; only to be used for covariograms with <=2 hyperparameters*/
+        void optimize_grid(array_1d<int>&);
+        
+        /*optimize hyperparameters by using a Nelder-Mead simplex in
+        ln(hyperparameter) space*/
+        void optimize_simplex(array_1d<int>&);
+        
+        /*compute the figure of merit for optimizing hyper parameters
+        
+        Note that this function takes as an argument an array of ln(hyperparameters)
+        */    
+        double optimization_error(array_1d<double>&);
+
     
 };
 
