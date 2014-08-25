@@ -244,23 +244,6 @@ array_1d<double> &mx, array_1d<double> &mn){
   }
   neighbor_storage=new neighbor_cache(kptr);
   
-  paranoia.set_dim(dim+1);
-  
-  array_1d<double> uu;
-  uu.set_name("gp_initialize_uu");
-  
-  
-  uu.set_dim(dim+1);
-  for(i=0;i<pts;i++){
-      for(j=0;j<dim;j++)uu.set(j,seed.get_data(i,j));
-      uu.set(dim,seedfn.get_data(i));
-      paranoia.add_pt(uu);
-  }
-  
-  /*for(i=0;i<dim;i++){
-      printf("gp minmax %d %e %e\n",i,get_min(i),get_max(i));
-  }*/
-  
   seed.set_where("nowhere");
   seedfn.set_where("nowhere");
   mx.set_where("nowhere");
@@ -332,41 +315,7 @@ void gp::add_pt(array_1d<double> &newpt, double newfn){
       
       exit(1);
   }
-  
-  //paranoia
-  array_1d<double> uu;
-  uu.set_name("gp_add_pt_uu");
-  
-  uu.set_dim(dim+1);
-  for(i=0;i<dim;i++)uu.set(i,newpt.get_data(i));
-  uu.set(dim,newfn);
-  paranoia.add_pt(uu);
-  
-  double err,maxerr;
-  int worst_dex=-1;
-  if(pts>last_validated+1000){
-      for(i=0;i<pts;i++){
-          for(j=0;j<dim;j++){
-	      uu.set(j,kptr->get_pt(i,j));
-	  }
-	  uu.set(dim,fn.get_data(i));
-	  err=paranoia.validate(i,uu);
-	  
-	  if(i==0 || err>maxerr){
-	      maxerr=err;
-	      worst_dex=i;
-	  }
-      }
-
-      if(maxerr>1.0e-12){
-          printf("WARNING gp failed paranoid test %e %d\n",maxerr,worst_dex);
-          exit(1);
-      }
-      //printf("maxerr on paranoia %e\n",maxerr);
-      last_validated=pts;
-  }
-
-  
+ 
   newpt.set_where("nowhere");
 
 }
@@ -3106,81 +3055,6 @@ int gp::get_last_optimized(){
 
 int gp::get_last_refactored(){
     return last_refactored;
-}
-
-paranoid_backup::paranoid_backup(){
-    pts=0;
-    dim=0;    
-}
-
-paranoid_backup::~paranoid_backup(){
-}
-
-void paranoid_backup::set_dim(int ii){
-    dim=ii;
-    data.set_name("paranoid_backup_data");
-}
-
-double paranoid_backup::get_pt(int i, int j){
-    if(i<0 || i>=pts){
-        printf("WARNING asking for backup point %d but pts %d\n",i,pts);
-	exit(1);
-    }
-    
-    if(j<0 || j>=dim){
-        printf("WARNING asking for backup dim %d but dim is really %d\n",
-	j,dim);
-	
-	exit(1);
-    }
-    
-    data.set_where("paranoid_backup_get_pt");
-    
-    return data.get_data(i,j);
-
-}
-
-void paranoid_backup::add_pt(array_1d<double> &v){
-    
-    if(dim<=0){
-        printf("WARNING; have not yet set dim in backup %d\n",dim);
-	exit(1);
-    }
-    
-    data.set_where("paranoid_backup_add_pt");
-    
-    data.add_row(v);
-    pts=data.get_rows();
-}
-
-double paranoid_backup::validate(int dex, array_1d<double> &v){
-    if(dex<0 || dex>=pts){
-        printf("WARNING cannot validate %d pts %d\n",dex,pts);
-	exit(1);
-    }
-    
-    data.set_where("paranoid_backup_validation");
-    
-    int i;
-    double err=0.0;
-    
-    for(i=0;i<dim;i++){
-        err+=(v.get_data(i)-data.get_data(dex,i))*(v.get_data(i)-data.get_data(dex,i));
-    }
-    
-    data.set_where("nowhere");
-    
-    return err;
-}
-
-int paranoid_backup::get_dim(){
-    if(dim!=data.get_cols()){
-        printf("WARNING paranoid_backup does not agree on dim %d %d\n",
-	dim,data.get_cols());
-	
-	exit(1);
-    }
-    return dim;
 }
 
 covariance_function* gp::get_covariogram(){

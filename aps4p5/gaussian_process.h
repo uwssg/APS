@@ -6,26 +6,6 @@
 #include "containers.h"
 #include "kd.h"
 
-
-class paranoid_backup{
-
-public:
-    paranoid_backup();
-    ~paranoid_backup();
-    
-    int get_dim();
-    
-    void set_dim(int);
-    void add_pt(array_1d<double>&);
-    double get_pt(int,int);
-    double validate(int,array_1d<double>&);
-
-private:
-    array_2d<double> data;
-    int pts,dim;
-
-};
-
 class fbar_model{
 
 private:
@@ -203,8 +183,6 @@ class gp{
   private:
     mutable neighbor_cache *neighbor_storage;   
     covariance_function *covariogram;
-    
-    paranoid_backup paranoia;
     
     array_1d<double> fn,hhbest;
     array_1d<int> opt_dex;
