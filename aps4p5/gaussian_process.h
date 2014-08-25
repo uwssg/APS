@@ -255,9 +255,7 @@ class gp{
         double self_predict(int) const;
         double self_predict(int,double*) const;
         double self_predict(int,double*, int) const;
-    
-        void user_predict_gradient(array_1d<double>&,array_1d<double>&,int);
-        
+
         /*add a new data point to the gaussian process;
         the array_1d<double> is the point in parameter space;
         the double is the corresponding function value*/
