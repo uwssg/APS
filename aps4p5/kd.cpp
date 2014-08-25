@@ -15,7 +15,7 @@ kd_tree::kd_tree(array_2d<double> &mm){
     
     for(i=0;i<mm.get_cols();i++){
         i_min.set(i,0.0);
-	i_max.set(i,1.0);
+        i_max.set(i,1.0);
     }
 
     build_tree(mm,i_min,i_max);
@@ -32,7 +32,7 @@ void kd_tree::build_tree(array_2d<double> &mm){
     
     for(i=0;i<mm.get_cols();i++){
         i_min.set(i,0.0);
-	i_max.set(i,1.0);
+        i_max.set(i,1.0);
     }
     
     build_tree(mm,i_min,i_max);
@@ -41,132 +41,113 @@ void kd_tree::build_tree(array_2d<double> &mm){
 void kd_tree::build_tree(array_2d<double> &mm,
     array_1d<double> &nmin, array_1d<double> &nmax){
    
-   if(nmin.get_dim()!=mm.get_cols()){
-       printf("WARNING nimin dim %d cols %d\n",nmin.get_dim(),mm.get_cols());
-       throw -1;
-   }
+    if(nmin.get_dim()!=mm.get_cols()){
+        printf("WARNING nimin dim %d cols %d\n",nmin.get_dim(),mm.get_cols());
+        throw -1;
+    }
    
-   if(nmax.get_dim()!=mm.get_cols()){
-       printf("WARNING nmax dim %d cols %d\n",nmax.get_dim(),mm.get_cols());
-       throw -1;
-   } 
+    if(nmax.get_dim()!=mm.get_cols()){
+        printf("WARNING nmax dim %d cols %d\n",nmax.get_dim(),mm.get_cols());
+        throw -1;
+    } 
    
-   data.reset();
-   tree.reset();
+    data.reset();
+    tree.reset();
    
-   array_1d<int> inn,use_left,use_right;
-   array_1d<double> tosort,sorted;
+    array_1d<int> inn,use_left,use_right;
+    array_1d<double> tosort,sorted;
   
-   int i,j,k,l,inp;
+    int i,j,k,l,inp;
 
-   tol=1.0e-7;
+    tol=1.0e-7;
 
-   diagnostic=1;
+    diagnostic=1;
   
-   tree.set_dim(mm.get_rows(),4);
-   data.set_dim(mm.get_rows(),mm.get_cols());
+    tree.set_dim(mm.get_rows(),4);
+    data.set_dim(mm.get_rows(),mm.get_cols());
    
-   //printf("data pts %d\n",data.get_rows());
-   
-   use_left.set_name("kd_tree_constructor_use_left");
-   use_right.set_name("kd_tree_constructor_use_right");
-   tree.set_name("kd_tree_tree");
-   data.set_name("kd_tree_data");
+    use_left.set_name("kd_tree_constructor_use_left");
+    use_right.set_name("kd_tree_constructor_use_right");
+    tree.set_name("kd_tree_tree");
+    data.set_name("kd_tree_data");
    
     //tree[i][0] will be the dimension being split
     //tree[i][1] will be left hand node (so, lt)
     //tree[i][2] will be right hand node (so, ge)
     //tree[i][3] will be parent
+      
+    mins.set_name("kd_tree_mins");
+    maxs.set_name("kd_tree_maxs");
    
-   /*
-   data=new double*[pts];
-   for(i=0;i<pts;i++)data[i]=new double[dim];
-   tree=new int*[pts];
-   for(i=0;i<pts;i++){
-     tree[i]=new int[4];
+    for(i=0;i<data.get_cols();i++){
+        mins.set(i,nmin.get_data(i));
+        maxs.set(i,nmax.get_data(i));
+    }
+   
+    array_1d<double> vector;
+   
+    for(i=0;i<data.get_rows();i++){
+         data.set_row(i,(*mm(i)));
+    }
 
-   }
-   maxs=new double[dim];
-   mins=new double[dim];
-   */
-   
-   mins.set_name("kd_tree_mins");
-   maxs.set_name("kd_tree_maxs");
-   
-   for(i=0;i<data.get_cols();i++){
-     mins.set(i,nmin.get_data(i));
-     maxs.set(i,nmax.get_data(i));
-   }
-   
-   array_1d<double> vector;
-   
-   for(i=0;i<data.get_rows();i++){
-     data.set_row(i,(*mm(i)));
-   }
+    sorted.set_name("kd_tree_constructor_sorted");
+    tosort.set_name("kd_tree_constructor_tosort");
+    inn.set_name("kd_tree_constructor_inn");
+    
+    /*sort the data points by their 0th dimension component*/
+    for(i=0;i<data.get_rows();i++){
+         tosort.set(i,data.get_data(i,0));
+         inn.set(i,i);
+    }
 
-   sorted.set_name("kd_tree_constructor_sorted");
-   tosort.set_name("kd_tree_constructor_tosort");
-   inn.set_name("kd_tree_constructor_inn");
-  
-   for(i=0;i<data.get_rows();i++){
-     tosort.set(i,data.get_data(i,0));
-     inn.set(i,i);
-   }
-   
-  // printf("about to sort\n");
-   
-   
-   sort_and_check(tosort,sorted,inn);
+    sort_and_check(tosort,sorted,inn);
 
    
-   inp=data.get_rows()/2;
-   while(inp>0 && sorted.get_data(inp)-sorted.get_data(inp-1)<tol){
-     //make sure that the division doesn't come in the middle of a bunch
-     //of identical points
-     inp--;
-   }
+    inp=data.get_rows()/2;
+    while(inp>0 && sorted.get_data(inp)-sorted.get_data(inp-1)<tol){
+         //make sure that the division doesn't come in the middle of a bunch
+         //of identical points
+         inp--;
+    }
    
-   masterparent=inn.get_data(inp);
-   //printf("inp %d masterparent %d\n",inp,masterparent);
+    masterparent=inn.get_data(inp);
+    //printf("inp %d masterparent %d\n",inp,masterparent);
 
- 
-     for(j=0;j<data.get_rows();j++){
-       if(masterparent!=j){
-          if(data.get_data(j,0)<sorted.get_data(inp)){
-	      use_left.add(j);
-	  }
-	  else{
-	      
-	      use_right.add(j);
-	  }
-       }
-     } 
+    for(j=0;j<data.get_rows();j++){
+        if(masterparent!=j){
+            if(data.get_data(j,0)<sorted.get_data(inp)){
+                use_left.add(j);
+            }
+            else{
+                use_right.add(j);
+            }
+        }
+    } 
 
    
-   if(use_left.get_dim()>0){
-     organize(use_left,0,masterparent,1,use_left.get_dim(),1);   
-   }
-   else tree.set(masterparent,1,-1);
+    if(use_left.get_dim()>0){
+        organize(use_left,0,masterparent,1,use_left.get_dim(),1);   
+    }
+    else tree.set(masterparent,1,-1);
    
-   if(use_right.get_dim()>0){
-     organize(use_right,0,masterparent,1,use_right.get_dim(),2);    
-   }
-   else tree.set(masterparent,2,-1);
+    if(use_right.get_dim()>0){
+        organize(use_right,0,masterparent,1,use_right.get_dim(),2);    
+    }
+    else tree.set(masterparent,2,-1);
    
-   tree.set(masterparent,3,-1);
-   tree.set(masterparent,0,0);
+    tree.set(masterparent,3,-1);
+    tree.set(masterparent,0,0);
    
-   if(mins.get_dim()!=maxs.get_dim() || mins.get_dim()!=data.get_cols() || tree.get_rows()!=data.get_rows()){
-       printf("WARNING tried to make tree but\n");
-       printf("nmax %d\n",maxs.get_dim());
-       printf("nmin %d\n",mins.get_dim());
-       printf("tree %d %d data %d %d\n",tree.get_rows(),tree.get_cols(),
-       data.get_rows(),data.get_cols());
+    if(mins.get_dim()!=maxs.get_dim() || mins.get_dim()!=data.get_cols() || tree.get_rows()!=data.get_rows()){
+        printf("WARNING tried to make tree but\n");
+        printf("nmax %d\n",maxs.get_dim());
+        printf("nmin %d\n",mins.get_dim());
+        printf("tree %d %d data %d %d\n",tree.get_rows(),tree.get_cols(),
+        data.get_rows(),data.get_cols());
        
-       exit(1);
-   }
+        exit(1);
+    }
   
-    //printf("done %d\n",data.get_rows());
   
 }
 
@@ -221,7 +202,7 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
    for(i=0;i<data.get_cols();i++){
        if(i==0 || var.get_data(i)>nn){
            nn=var.get_data(i);
-	   idim=i;
+           idim=i;
        }
    }  
    
@@ -240,22 +221,22 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
       
       if(use.get_data(inp)==parent){
           
-	  if(fabs(sorted.get_data(inp+1)-sorted.get_data(inp))>tol || inp==ct-1){
-	      printf("CANNOT rectify inp ambiguity in kd_tree::organize\n");
-	      exit(1);
-	  }
+          if(fabs(sorted.get_data(inp+1)-sorted.get_data(inp))>tol || inp==ct-1){
+              printf("CANNOT rectify inp ambiguity in kd_tree::organize\n");
+              exit(1);
+          }
           
-	  i=use.get_data(inp);
-	  use.set(inp,use.get_data(inp+1));
-	  use.set(inp+1,i);
-	  
-	  nn=sorted.get_data(inp);
-	  sorted.set(inp,sorted.get_data(inp+1));
-	  sorted.set(inp+1,nn);
-	  
-	
-	  
-	  
+          i=use.get_data(inp);
+          use.set(inp,use.get_data(inp+1));
+          use.set(inp+1,i);
+          
+          nn=sorted.get_data(inp);
+          sorted.set(inp,sorted.get_data(inp+1));
+          sorted.set(inp+1,nn);
+          
+        
+          
+          
       }
       
       newparent=use.get_data(inp);   
@@ -263,9 +244,9 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
    
       if(newparent==parent){
           printf("WARNING just set self as own ancestor\n");
-	  printf("inp %d ct %d -- %d %d\n",inp,ct,parent,use.get_data(inp));
-	
-	  exit(1);
+          printf("inp %d ct %d -- %d %d\n",inp,ct,parent,use.get_data(inp));
+        
+          exit(1);
       }
       
       
@@ -279,31 +260,31 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
       //call of ::organize and have the proper indices available
       
          //k=use.get_data(inp);
-	 //use.set(inp,newparent);
-         //use.set(inn.get_data(inp),k);	 
+         //use.set(inp,newparent);
+         //use.set(inn.get_data(inp),k);         
 
       
       for(i=0;i<ct;i++){
-	     use_in.set(u_start+i,use.get_data(i));
+             use_in.set(u_start+i,use.get_data(i));
       }
       
       use.reset();
       
       if(inp!=0){
 
-	 organize(use_in,u_start,newparent,idim+1,inp,1);
-	 
-	 organize(use_in,u_start+inp+1,newparent,idim+1,ct-inp-1,2);
-	 
+         organize(use_in,u_start,newparent,idim+1,inp,1);
+         
+         organize(use_in,u_start+inp+1,newparent,idim+1,ct-inp-1,2);
+         
       
       }//if(inp!=0)
       else{
-	
-	tree.set(newparent,1,-1);	
-	
-	organize(use_in,u_start+1,newparent,idim+1,ct-1,2);
-	
-	
+        
+        tree.set(newparent,1,-1);        
+        
+        organize(use_in,u_start+1,newparent,idim+1,ct-1,2);
+        
+        
       }//if(inp==0)
       
       
@@ -387,7 +368,7 @@ void kd_tree::get_pt(int dex, array_1d<double> &output){
     
     if(dex<0 || dex>=data.get_rows()){
         printf("WARNING asked for point %d but pts %d\n",dex,data.get_rows());
-	exit(1);
+        exit(1);
     } 
     
     int i;
@@ -400,12 +381,12 @@ double kd_tree::get_pt(int dex, int i){
 
     if(dex<0 || dex>=data.get_rows()){
         printf("WARNING asked for point %d but pts %d\n",dex,data.get_rows());
-	exit(1);
+        exit(1);
     }
     
     if(i<0 || i>=data.get_cols()){
         printf("WARNING asked for point %d,%d but dim %d\n",dex,i,data.get_cols());
-	exit(1);
+        exit(1);
     }
     
     return data.get_data(dex,i);
@@ -430,15 +411,15 @@ void kd_tree::check_tree(int where){
       ancestor=tree.get_data(j,3);
       while(ancestor>=0){
           j=ancestor;
-	  ancestor=tree.get_data(j,3);
-	  
-	  //printf("%d %d %d\n",j,ancestor,masterparent);
+          ancestor=tree.get_data(j,3);
+          
+          //printf("%d %d %d\n",j,ancestor,masterparent);
       }
       
    
        if(j!=masterparent){
            printf("WARNING tree is not properly constructed\n");
-	   printf("could not reach the master parent\n");
+           printf("could not reach the master parent\n");
            exit(1);
        }
    }
@@ -470,8 +451,8 @@ void kd_tree::confirm(int idim, int compareto, int dir, int where){
      if(data.get_data(where,idim)>=data.get_data(compareto,idim)){
          diagnostic=0;
          printf("tree broken\n");
-	 printf("%e >= %e\n",data.get_data(where,idim),data.get_data(compareto,idim));
-	 exit(1);
+         printf("%e >= %e\n",data.get_data(where,idim),data.get_data(compareto,idim));
+         exit(1);
      }
      
      if(tree.get_data(where,1)>-1)confirm(idim,compareto,dir,tree.get_data(where,1));
@@ -483,8 +464,8 @@ void kd_tree::confirm(int idim, int compareto, int dir, int where){
          diagnostic=0;
      
          printf("tree broken\n");
-	 printf("%e < %e\n",data.get_data(where,idim),data.get_data(compareto,idim));
-	 exit(1);
+         printf("%e < %e\n",data.get_data(where,idim),data.get_data(compareto,idim));
+         exit(1);
      }
      
      if(tree.get_data(where,1)>-1)confirm(idim,compareto,dir,tree.get_data(where,1));
@@ -593,10 +574,10 @@ double kd_tree::distance(int dex1, int dex2){
 
     if(dex1<0 || dex2<0 || dex1>=data.get_rows() || dex2>=data.get_rows()){
         printf("WARNING asked for distance between pts %d %d\n",dex1,dex2);
-	printf("pts %d\n",data.get_rows());
-	
-	exit(1);
-	
+        printf("pts %d\n",data.get_rows());
+        
+        exit(1);
+        
     }
     
     double dd=0.0;
@@ -662,17 +643,17 @@ void kd_tree::neigh_check(array_1d<double> &v, int kk, array_1d<int> &neigh, arr
      
      if(goon==1){
         for(i=kk-2;i>=0 && dd.get_data(i)>dwhere;i--){
-	
-	   dd.set(i+1,dd.get_data(i));
-	   neigh.set(i+1,neigh.get_data(i));
+        
+           dd.set(i+1,dd.get_data(i));
+           neigh.set(i+1,neigh.get_data(i));
 
-	}
-	i++;
-	
-	dd.set(i,dwhere);
-	neigh.set(i,where);
-	
-	
+        }
+        i++;
+        
+        dd.set(i,dwhere);
+        neigh.set(i,where);
+        
+        
      }
      
      if(wherefrom==tree.get_data(where,3) || wherefrom==tree.get_data(where,side)){
@@ -842,18 +823,18 @@ void kd_tree::remove(int target){
       k=tree.get_data(target,3);
       if(k<0){
         masterparent=tree.get_data(target,side);
-	tree.set(masterparent,3,-1);
-	
+        tree.set(masterparent,3,-1);
+        
       }
       else{
         if(tree.get_data(k,1)==target){
-	  tree.set(k,1,tree.get_data(target,side));
-	  tree.set(tree.get_data(k,1),3,k);
-	
+          tree.set(k,1,tree.get_data(target,side));
+          tree.set(tree.get_data(k,1),3,k);
+        
         }
         else{
-	   tree.set(k,2,tree.get_data(target,side));
-	   tree.set(tree.get_data(k,2),3,k);
+           tree.set(k,2,tree.get_data(target,side));
+           tree.set(tree.get_data(k,2),3,k);
          }
       }
      
@@ -1081,52 +1062,52 @@ void kd_tree::radial_check(array_1d<double> &pt, double radius, array_1d<int> &r
     dd=distance(pt,consider);
     if(dd<=radius){
         rdex.set(nkernel,consider);
-	nkernel++;
+        nkernel++;
     }
     
     if(tree.get_data(consider,3)==from){
         if(tree.get_data(consider,2)>=0){
             
-	    j=tree.get_data(consider,0);
-	    dd=data.get_data(consider,j)-pt.get_data(j);
-	    
-	    if(dd<=radius){
-	        radial_check(pt,radius,rdex,tree.get_data(consider,2),consider);
-	    }
-	}
-	if(tree.get_data(consider,1)>=0){
-	
-	   
-	    j=tree.get_data(consider,0);
-	    
-	    dd=pt.get_data(j)-data.get_data(consider,j);
-	    if(dd<=radius){
-	        radial_check(pt,radius,rdex,tree.get_data(consider,1),consider);
-	    }
-	}
-	
+            j=tree.get_data(consider,0);
+            dd=data.get_data(consider,j)-pt.get_data(j);
+            
+            if(dd<=radius){
+                radial_check(pt,radius,rdex,tree.get_data(consider,2),consider);
+            }
+        }
+        if(tree.get_data(consider,1)>=0){
+        
+           
+            j=tree.get_data(consider,0);
+            
+            dd=pt.get_data(j)-data.get_data(consider,j);
+            if(dd<=radius){
+                radial_check(pt,radius,rdex,tree.get_data(consider,1),consider);
+            }
+        }
+        
     
     }//if you came here from the parent
     else{
        
-	if(tree.get_data(consider,3)>=0){
-	  radial_check(pt,radius,rdex,tree.get_data(consider,3),consider);
-	}
-	
-	
-	if(tree.get_data(consider,2)==from)otherbranch=1;
-	else otherbranch=2;
-	
-	if(tree.get_data(consider,otherbranch)>=0){
+        if(tree.get_data(consider,3)>=0){
+          radial_check(pt,radius,rdex,tree.get_data(consider,3),consider);
+        }
+        
+        
+        if(tree.get_data(consider,2)==from)otherbranch=1;
+        else otherbranch=2;
+        
+        if(tree.get_data(consider,otherbranch)>=0){
 
-	   
-	    j=tree.get_data(consider,0);
-	
-	    if(otherbranch==1)dd=pt.get_data(j)-data.get_data(consider,j);
-	    else dd=data.get_data(consider,j)-pt.get_data(j);
-	    
-	    radial_check(pt,radius,rdex,tree.get_data(consider,otherbranch),consider);
-	}
+           
+            j=tree.get_data(consider,0);
+        
+            if(otherbranch==1)dd=pt.get_data(j)-data.get_data(consider,j);
+            else dd=data.get_data(consider,j)-pt.get_data(j);
+            
+            radial_check(pt,radius,rdex,tree.get_data(consider,otherbranch),consider);
+        }
     
     }//if you came from one of the branches
     
