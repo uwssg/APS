@@ -228,29 +228,69 @@ class neighbor_cache{
     that this will substantially speed up the algorithm by obviating excessive,
     repetitive nearest neighbor searches.
     
+    In order for this to work, the cache must store
+    the point from which the last nearest neighbor search was done;
+    the list of neighbors found by that search;
+    the distances from the origin point to each of those neighbors;
+    the inverted covariance matrix that resulted from that search
+    
     */
     
     public:
+        
+        /*when you contruct a neighbor cache, you must pass it a point to a kd_tree
+        object so that it can check the necessity of nearest neighbor searches*/
         neighbor_cache(kd_tree*);
+        
         ~neighbor_cache();
+        
+        /*This is the method that will tell you whether or not a new nearest neighbor
+        search is necessary.  Give it a point in parameter space and a number of
+        nearest neighbors, and it will return 1 if a search is necessary; 0 of 
+        a search is unnecessar.  See the source code in gaussian_process.cpp for
+        more details*/
         int compare(array_1d<double>&,int);
-        void set(array_1d<double>&,array_1d<double>&,array_1d<int>&,int);
+        
+        /*
+        Set the data (except for the inverted covariance matrix) stored by this
+        cache. The arguments are, in order
+        
+        the point from which the search was done
+        the distance from that point to its neighbors
+        the list of indices referring to its neighbors
+        */
+        void set(array_1d<double>&,array_1d<double>&,array_1d<int>&);
+        
+        /*set the elements of the inverted covariance matrix stored by this 
+        cache*/
         void set_ggin(int,int,double);
+        
+        /*return the elements of the inverted covariance matrix stored by
+        this cache*/
         double get_ggin(int,int);
-   
+        
+        /*return the distances from the last search origin to the discovered neighbors*/
         double get_dd(int);
+        
+        /*return the neighbors stored by this neighbor_cache*/
         int get_neigh(int);
+        
+        /*reset this cache so that it appears to be empty*/
         void reset();
 
     private:
         kd_tree *kptr;
-    
+        
+        /*pt is the last point from which a nearest neighbor search was performed;
+        dd is the distance from that point to its nearest neighbors*/
         array_1d<double> dd,pt;
+        
+        /*ggin is the inverted covariance matrix discovered*/
         array_2d<double> ggin;
+        
+        /*neigh is the list of indices referring to the discovered nearest neighbors*/
         array_1d<int> neigh;    
-    
-        int dim;
-        int kk;
+        
 };
 
 class gp{

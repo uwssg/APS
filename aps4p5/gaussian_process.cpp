@@ -481,7 +481,7 @@ const{
         
         kptr->nn_srch(pt,kk,neigh,dd);//nearest neighbor search
 
-        neighbor_storage->set(pt,dd,neigh,kk);
+        neighbor_storage->set(pt,dd,neigh);
         ct_search++;
         time_search+=double(time(NULL))-nn;
     }
@@ -1419,9 +1419,7 @@ const array_1d<double> &min, const array_1d<double> &max, array_1d<double> &grad
 
 neighbor_cache::neighbor_cache(kd_tree *inptr){
      kptr=inptr;
-     dim=kptr->get_dim();
-     kk=0;
-     pt.set_dim(dim);
+     pt.set_dim(kptr->get_dim());
      
      dd.set_name("neigh_cache_dd");
      pt.set_name("neigh_cache_pt");
@@ -1434,7 +1432,7 @@ neighbor_cache::~neighbor_cache(){
 }
 
 void neighbor_cache::set(array_1d<double> &newpt, 
-array_1d<double> &ddin, array_1d<int> &neighin, int kkin){
+array_1d<double> &ddin, array_1d<int> &neighin){
    
     int i;
     
@@ -1449,13 +1447,13 @@ array_1d<double> &ddin, array_1d<int> &neighin, int kkin){
      //dd.reset();
      //ggin.reset();
      
-     kk=kkin;
+     int kk=neighin.get_dim();
      neigh.set_dim(kk);
      dd.set_dim(kk);
      ggin.set_dim(kk,kk);
      
    
-     for(i=0;i<dim;i++)pt.set(i,newpt.get_data(i));
+     for(i=0;i<kptr->get_dim();i++)pt.set(i,newpt.get_data(i));
      for(i=0;i<kk;i++){
          dd.set(i,ddin.get_data(i));
          neigh.set(i,neighin.get_data(i));
@@ -1477,32 +1475,40 @@ int neighbor_cache::compare(array_1d<double> &newpt, int kkin){
         printf("WARNING kkin is 0 in cache compare\n");
         exit(1);
     }
-    if(kk!=kkin) return 1;
+    if(neigh.get_dim()!=kkin){
+        /*if you are asking for a new number of nearest neighbors, then a search is necessary*/
+        return 1;
+    }
     
-    if(dd.get_data(kk/2)>dd.get_data(kk-1)*0.5){
-        ddmed=dd.get_data(kk/2);
+    /*find the median nearest neighbor distance from the last nearest neighbor search*/
+    if(dd.get_data(neigh.get_dim()/2)>dd.get_data(neigh.get_dim()-1)*0.5){
+        ddmed=dd.get_data(neigh.get_dim()/2);
     }
     else{
-        ddmed=dd.get_data(kk-1)*0.5;
+        ddmed=dd.get_data(neigh.get_dim()-1)*0.5;
     }
     
+    /*if the distance between the new point and the last point from which you conducted
+    a nearest neighbor search is greater than that median distance, you should do a new
+    nearest neighbor search; if not, you can just use the results of the previous
+    nearest neighbor search*/
     dist=kptr->distance(pt,newpt);
     if(dist<ddmed)return 0;
     else return 1;
 }
 
 int neighbor_cache::get_neigh(int i){
-    if(i>=kk || i<0){
-        printf("WARNING asked for %d in get_neigh; kk is %d\n",i,kk);
+    if(i>=neigh.get_dim() || i<0){
+        printf("WARNING asked for %d in get_neigh; kk is %d\n",i,neigh.get_dim());
         exit(1);
     }
     return neigh.get_data(i);
 }
 
 double neighbor_cache::get_dd(int i){
-      if(i<0 || i>=kk){
+      if(i<0 || i>=neigh.get_dim()){
           printf("WARNING asking neighbor cache for %d but kk %d\n",
-          i,kk);
+          i,neigh.get_dim());
           
           exit(1);
       }
@@ -1510,16 +1516,13 @@ double neighbor_cache::get_dd(int i){
 }
 
 void neighbor_cache::reset(){
-     kk=0;
-    // neigh.reset();
-     //dd.reset();
-    // ggin.reset();
+      neigh.set_dim(0);
 }
 
 void neighbor_cache::set_ggin(int i, int j, double nn){
-    if(i<0 || i>=kk || j<0 || j>=kk){
+    if(i<0 || i>=neigh.get_dim() || j<0 || j>=neigh.get_dim()){
         printf("WARNING trying to set neigh_cache ggin %d %d but kk %d\n",
-        i,j,kk);
+        i,j,neigh.get_dim());
         
         exit(1);
     }
@@ -1528,9 +1531,9 @@ void neighbor_cache::set_ggin(int i, int j, double nn){
 
 double neighbor_cache::get_ggin(int i, int j){
 
-    if(i<0 || i>=kk || j<0 || j>=kk){
+    if(i<0 || i>=neigh.get_dim() || j<0 || j>=neigh.get_dim()){
         printf("WARNING trying to get neigh_cache ggin %d %d but kk %d\n",
-        i,j,kk);
+        i,j,neigh.get_dim());
         
         exit(1);
     }
