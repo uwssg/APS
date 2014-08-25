@@ -14,16 +14,34 @@ p 509
 #define KD_H
 
 class kd_tree{
+    /*
+    This class stores points in an n-dimensional parameter space in a
+    KD-tree for easy nearest neighbor searching.
+    */
  
+    /*this friend declaration makes it possible for the Gaussian Process class 
+    to access the data stored in the tree*/
     friend class gp;
     
     public:
         int ktests;
-
+        
+        /*Build a tree out of the list of points provided (each row is a 
+        different point in parameter space; therefore, the number of columns
+        is the dimensionality of the parameter space)*/
         kd_tree(array_2d<double>&);
+        
+        /*Build a tree as above.  The array_1d<double> arguments are minimum
+        and maximum values of each parameter in parameter space.  These
+        are not bounds.  max-min is used to normalize distances in parameter
+        space when searching for nearest neighbors.*/
         kd_tree(array_2d<double>&,array_1d<double>&,array_1d<double>&);
+        
         ~kd_tree();
- 
+        
+        /*
+        These routines provide the back end for building the KD tree
+        */
         void build_tree(array_2d<double>&);
         void build_tree(array_2d<double>&,array_1d<double>&,array_1d<double>&);
  

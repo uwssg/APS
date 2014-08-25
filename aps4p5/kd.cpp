@@ -17,9 +17,7 @@ kd_tree::kd_tree(array_2d<double> &mm){
         i_min.set(i,0.0);
 	i_max.set(i,1.0);
     }
-    
-  
-    
+
     build_tree(mm,i_min,i_max);
 }
 
@@ -28,7 +26,6 @@ kd_tree::kd_tree(array_2d<double> &mm, array_1d<double> &nmin, array_1d<double> 
 }
 
 void kd_tree::build_tree(array_2d<double> &mm){
-    
     
     array_1d<double> i_min,i_max;
     int i;
@@ -42,7 +39,7 @@ void kd_tree::build_tree(array_2d<double> &mm){
 }
 
 void kd_tree::build_tree(array_2d<double> &mm,
-array_1d<double> &nmin, array_1d<double> &nmax){
+    array_1d<double> &nmin, array_1d<double> &nmax){
    
    if(nmin.get_dim()!=mm.get_cols()){
        printf("WARNING nimin dim %d cols %d\n",nmin.get_dim(),mm.get_cols());
