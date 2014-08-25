@@ -1,10 +1,3 @@
-//this includes the version of kd cube that was used for the Bayesian
-//appendix of the APS paper (copied to this directory on 1 March 2013
-//(the sandwich division model of kd cube)
-
-//on 1 March 2013 will try to add a routine to select all of the points
-//within a given range in each dimension
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
