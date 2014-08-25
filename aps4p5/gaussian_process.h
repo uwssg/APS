@@ -137,143 +137,143 @@ class gaussian_covariance_multiD : public covariance_function{
 
 class neighbor_cache{
 
-public:
-   neighbor_cache(kd_tree*);
-   ~neighbor_cache();
-   int compare(array_1d<double>&,int);
-   void set(array_1d<double>&,array_1d<double>&,array_1d<int>&,int);
-   void set_ggin(int,int,double);
-   double get_ggin(int,int);
+    public:
+        neighbor_cache(kd_tree*);
+        ~neighbor_cache();
+        int compare(array_1d<double>&,int);
+        void set(array_1d<double>&,array_1d<double>&,array_1d<int>&,int);
+        void set_ggin(int,int,double);
+        double get_ggin(int,int);
    
-   double get_dd(int);
-   int get_neigh(int);
-   void reset();
+        double get_dd(int);
+        int get_neigh(int);
+        void reset();
 
-private:
-    kd_tree *kptr;
+    private:
+        kd_tree *kptr;
     
-    array_1d<double> dd,pt;
-    array_2d<double> ggin;
-    array_1d<int> neigh;    
+        array_1d<double> dd,pt;
+        array_2d<double> ggin;
+        array_1d<int> neigh;    
     
-    int dim;
-    int kk;
+        int dim;
+        int kk;
 };
 
 class gp{
   
-  private:
-    mutable neighbor_cache *neighbor_storage;   
-    covariance_function *covariogram;
+    private:
+        mutable neighbor_cache *neighbor_storage;   
+        covariance_function *covariogram;
     
-    array_1d<double> fn,hhbest;
-    array_1d<int> opt_dex;
-    kd_tree *kptr;
-    int pts,kk,called_opt,last_set;
+        array_1d<double> fn,hhbest;
+        array_1d<int> opt_dex;
+        kd_tree *kptr;
+        int pts,kk,called_opt,last_set;
     
-    int initialized,allottedpts,dim;
-    int last_optimized,last_validated,last_refactored;
-    double sigcap,time_optimize,eebest;
+        int initialized,allottedpts,dim;
+        int last_optimized,last_validated,last_refactored;
+        double sigcap,time_optimize,eebest;
    
-    mutable int ct_search,ct_predict;
-    mutable double time_search,time_predict;
-    mutable double time_dummy_search;
+        mutable int ct_search,ct_predict;
+        mutable double time_search,time_predict;
+        mutable double time_dummy_search;
     
  
-    double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
+        double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
  
-  public:
+    public:
 
-    double inversionerr;
-    double dav,dsig,ctav;
+        double inversionerr;
+        double dav,dsig,ctav;
   
-    gp();
-    ~gp();
-    void initialize(array_2d<double>&,array_1d<double>&,array_1d<double>&,
-       array_1d<double>&);
+        gp();
+        ~gp();
+        void initialize(array_2d<double>&,array_1d<double>&,array_1d<double>&,
+            array_1d<double>&);
     
-    void initialize(array_2d<double>&,array_1d<double>&);
+        void initialize(array_2d<double>&,array_1d<double>&);
     
-    void set_hyper_parameters(array_1d<double>&);
+        void set_hyper_parameters(array_1d<double>&);
     
-    int is_kptr_null();
+        int is_kptr_null();
     
-    int get_kk();
+        int get_kk();
     
-    void set_max(int,double);
-    void set_min(int,double);
+        void set_max(int,double);
+        void set_min(int,double);
        
-    double user_predict(array_1d<double>&,double*,int) const;
-    double user_predict(array_1d<double>&,int) const;
-    double user_predict(array_1d<double>&,int,array_1d<double>&) const;
-    double user_predict(array_1d<double>&,double*,int,array_1d<double>&) const;
+        double user_predict(array_1d<double>&,double*,int) const;
+        double user_predict(array_1d<double>&,int) const;
+        double user_predict(array_1d<double>&,int,array_1d<double>&) const;
+        double user_predict(array_1d<double>&,double*,int,array_1d<double>&) const;
     
-    double self_predict(int) const;
-    double self_predict(int,double*) const;
-    double self_predict(int,double*, int) const;
+        double self_predict(int) const;
+        double self_predict(int,double*) const;
+        double self_predict(int,double*, int) const;
     
-    void user_predict_gradient(array_1d<double>&,array_1d<double>&,int);
-    double actual_gradient(int,array_1d<double>&);
-    double actual_gradient(array_1d<double>&,array_1d<double>&);
+        void user_predict_gradient(array_1d<double>&,array_1d<double>&,int);
+        double actual_gradient(int,array_1d<double>&);
+        double actual_gradient(array_1d<double>&,array_1d<double>&);
 
-    void add_pt(array_1d<double>&,double);
-    void write_data(char*);
+        void add_pt(array_1d<double>&,double);
+        void write_data(char*);
     
-    void assign_covariogram(covariance_function*);
-    void refactor();
-    void print_search_time(char*);
-    void reset_cache() const;
-    void set_sig_cap(double);
-    double get_biggest_neighbor(array_1d<double>&);
-    void get_neighbor_range(array_1d<double>&,array_1d<double>&,array_1d<double>&,double*);
+        void assign_covariogram(covariance_function*);
+        void refactor();
+        void print_search_time(char*);
+        void reset_cache() const;
+        void set_sig_cap(double);
+        double get_biggest_neighbor(array_1d<double>&);
+        void get_neighbor_range(array_1d<double>&,array_1d<double>&,array_1d<double>&,double*);
     
-    double get_nearest_distance();
+        double get_nearest_distance();
     
-       int get_dim();
-    int get_last_optimized();
-    int get_last_refactored();
+        int get_dim();
+        int get_last_optimized();
+        int get_last_refactored();
     
-    void optimize_grid(array_1d<int>&,int);
-    void optimize_simplex(array_1d<int>&,int);
+        void optimize_grid(array_1d<int>&,int);
+        void optimize_simplex(array_1d<int>&,int);
     
-    void optimize(array_1d<int>&,int);
-    void optimize();
-    void optimize(int,int);
-    int optimize(array_1d<double>&,double);
-    void optimize(array_1d<double>&,int);
+        void optimize(array_1d<int>&,int);
+        void optimize();
+        void optimize(int,int);
+        int optimize(array_1d<double>&,double);
+        void optimize(array_1d<double>&,int);
     
-    double optimization_error(array_1d<double>&);
+        double optimization_error(array_1d<double>&);
     
-    double get_time_optimize();
+        double get_time_optimize();
     
-    void set_kk(int);
-    double get_fn(int) const;
+        void set_kk(int);
+        double get_fn(int) const;
     
-    double get_pt(int,int);
-    void get_pt(int,array_1d<double>&);
+        double get_pt(int,int);
+        void get_pt(int,array_1d<double>&);
     
-    int get_pts();
+        int get_pts();
     
-    double distance(array_1d<double>&,array_1d<double>&);
-    double distance(int,array_1d<double>&);
-    double distance(array_1d<double>&,int);
-    double distance(int,int);
+        double distance(array_1d<double>&,array_1d<double>&);
+        double distance(int,array_1d<double>&);
+        double distance(array_1d<double>&,int);
+        double distance(int,int);
     
-    double get_max(int);
-    double get_min(int);
+        double get_max(int);
+        double get_min(int);
     
-    void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&) const;
-    void nn_srch(int,int,array_1d<int>&,array_1d<double>&) const;
+        void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&) const;
+        void nn_srch(int,int,array_1d<int>&,array_1d<double>&) const;
     
-    int get_ct_predict();
-    int get_ct_search();
-    double get_time_predict();
-    double get_time_search();
+        int get_ct_predict();
+        int get_ct_search();
+        double get_time_predict();
+        double get_time_search();
     
-    void get_hyper_parameters(array_1d<double>&);
+        void get_hyper_parameters(array_1d<double>&);
     
-    array_1d<double>* get_pt(int);
-    covariance_function* get_covariogram();
+        array_1d<double>* get_pt(int);
+        covariance_function* get_covariogram();
     
 };
 
