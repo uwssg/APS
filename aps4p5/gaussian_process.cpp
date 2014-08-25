@@ -193,52 +193,59 @@ void gp::initialize(array_2d<double> &seed, array_1d<double> &seedfn){
 }
 
 void gp::initialize(array_2d<double> &seed, array_1d<double> &seedfn,\
-array_1d<double> &mx, array_1d<double> &mn){
-  int i,j,k,l;
+    array_1d<double> &mx, array_1d<double> &mn){
+    
+    int i,j,k,l;
   
-  seed.set_where("gp_initialize");
-  seedfn.set_where("gp_initialize");
-  mx.set_where("gp_initialize");
-  mn.set_where("gp_initialize");
+    seed.set_where("gp_initialize");
+    seedfn.set_where("gp_initialize");
+    mx.set_where("gp_initialize");
+    mn.set_where("gp_initialize");
   
-  if(seed.get_rows()!=seedfn.get_dim()){
-      printf("WARNING cannot agree on input points to gp::initialize %d %d\n",
-      seed.get_rows(),seedfn.get_dim());
+    if(seed.get_rows()!=seedfn.get_dim()){
+        printf("WARNING cannot agree on input points to gp::initialize %d %d\n",
+        seed.get_rows(),seedfn.get_dim());
       
-      exit(1);
-  }
+        exit(1);
+    }
   
   
-  initialized=1;
+    initialized=1;
   
-  dim=seed.get_cols();  
-  if(covariogram!=NULL){
-      covariogram->set_dim(dim);
-  }
+    dim=seed.get_cols();  
+    if(covariogram!=NULL){
+        covariogram->set_dim(dim);
+    }
   
-  for(i=0;i<seed.get_rows();i++)fn.set(i,seedfn.get_data(i));
+    for(i=0;i<seed.get_rows();i++)fn.set(i,seedfn.get_data(i));
 
-  kptr=new kd_tree(seed,mn,mx);//store data points in a kd tree
-  kptr->check_tree(-1);//make sure kd tree is properly constructed
-  //printf("tree diagnostic %d\n",kptr->get_diagnostic());
-  if(kptr->get_diagnostic()!=1){
-      printf("WARNING: did not properly construct tree\n");
-      exit(1);
-  }
+    kptr=new kd_tree(seed,mn,mx);//store data points in a kd tree
+    
+    kptr->check_tree(-1);//make sure kd tree is properly constructed
+
+    if(kptr->get_diagnostic()!=1){
+        printf("WARNING: did not properly construct tree\n");
+        exit(1);
+    }
   
-  pts=kptr->get_pts();
-  //printf("setting pts to %d\n",pts);
+    pts=kptr->get_pts();
   
-  if(kptr->get_diagnostic()!=1){
-      printf("WARNING kd_tree diagnostic %d\n",kptr->get_diagnostic());
-      exit(1);
-  }
-  neighbor_storage=new neighbor_cache(kptr);
+    if(kptr->get_diagnostic()!=1){
+        printf("WARNING kd_tree diagnostic %d\n",kptr->get_diagnostic());
+        exit(1);
+    }
+    
+    /*
+    assign kptr to neighbor_storage so that, when interpolation is done, the Gaussian Process
+    can determine whether or not it needs to do a new nearest neighbor search (as opposed to
+    using the results from an old nearest neighbor search)
+    */
+    neighbor_storage=new neighbor_cache(kptr);
   
-  seed.set_where("nowhere");
-  seedfn.set_where("nowhere");
-  mx.set_where("nowhere");
-  mn.set_where("nowhere");
+    seed.set_where("nowhere");
+    seedfn.set_where("nowhere");
+    mx.set_where("nowhere");
+    mn.set_where("nowhere");
   
 }
 
