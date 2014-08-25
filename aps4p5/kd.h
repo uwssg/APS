@@ -18,7 +18,7 @@ class kd_tree{
     friend class gp;
     
     public:
-        int xplr,ktests;
+        int ktests;
 
         kd_tree(array_2d<double>&);
         kd_tree(array_2d<double>&,array_1d<double>&,array_1d<double>&);
