@@ -23,7 +23,9 @@ public:
     virtual double operator()(const array_1d<double>&, const array_1d<double>&,
               const array_1d<double>&, const array_1d<double>&, array_1d<double>&, const int) const;
     
+    /*set the hyper parameters of the covariogram*/
     virtual void set_hyper_parameters(array_1d<double>&);
+    
     virtual void set_dim(int);
     void set_max(int,double);
     void set_min(int, double);
@@ -187,18 +189,41 @@ class gp{
   
         gp();
         ~gp();
+        
+
+        /*initialize the GAussian Process; arguments are (in order):
+        array_2d<double> - a list of points in parameter space
+        array_1d<double> - corresponding function values
+        array_1d<double> - maximum values of parameters in parameter space
+        array_1d<double> - minimum values of parameters in parameter space
+        
+        Note: the maxima and minima are not actually bounds. max-min is used to
+        normalize the distances in parameter space returned by kd_tree*/
         void initialize(array_2d<double>&,array_1d<double>&,array_1d<double>&,
-            array_1d<double>&);
-    
+                array_1d<double>&);
+        
+        /*initialize the Gaussian Process; arguments are a list of data points
+        and corresponding function values (parameter maxima and minima are set to
+        1 and 0 respectively*/
         void initialize(array_2d<double>&,array_1d<double>&);
     
         void set_hyper_parameters(array_1d<double>&);
-    
+        
+        /*returns 1 if kptr is still NULL; zero otherwise*/
         int is_kptr_null();
-    
+        
+        /*return the number of nearest neighbors being used in the 
+        Gaussian Process*/
         int get_kk();
-    
+        
+        /*Set the maximum bound in a given dimension.
+        The int is the index of the dimension; the double is the value of the 
+        maximum.
+        Note: this is not actually a bound; it just normalizes the distances
+        in parameter space calculated by kd_tree*/
         void set_max(int,double);
+        
+        /*Set the minimum bound in a given dimension; see set_max above*/
         void set_min(int,double);
        
         double user_predict(array_1d<double>&,double*,int) const;
@@ -219,7 +244,10 @@ class gp{
     
         void assign_covariogram(covariance_function*);
         void refactor();
+        
+        /*print timing statistics to a file whose name is specified by the char* */
         void print_search_time(char*);
+        
         void reset_cache() const;
         void set_sig_cap(double);
         double get_biggest_neighbor(array_1d<double>&);
@@ -243,23 +271,38 @@ class gp{
         double optimization_error(array_1d<double>&);
     
         double get_time_optimize();
-    
+        
+        /*set the number of nearest neighbors to be used in interpolation*/
         void set_kk(int);
+        
         double get_fn(int) const;
     
         double get_pt(int,int);
         void get_pt(int,array_1d<double>&);
-    
+        
+        /*
+        returns the number of data points stored in the kd_tree
+        */
         int get_pts();
-    
+        
+        /*
+        These functions wrap the distance functions provided in kd_tree
+        */
         double distance(array_1d<double>&,array_1d<double>&);
         double distance(int,array_1d<double>&);
         double distance(array_1d<double>&,int);
         double distance(int,int);
-    
+        
+        /*
+        return the maximum and minimum values in the dimension specified
+        by the int
+        */
         double get_max(int);
         double get_min(int);
-    
+        
+        /*
+        These functions wrap the nn_srch functions in kd_tree
+        */
         void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&) const;
         void nn_srch(int,int,array_1d<int>&,array_1d<double>&) const;
     
