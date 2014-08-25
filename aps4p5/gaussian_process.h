@@ -179,7 +179,8 @@ class gp{
    
         mutable int ct_search,ct_predict;
         mutable double time_search,time_predict;
- 
+        
+        /*this provides the backend for calculation in the user_predict routines*/
         double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
  
     public:
@@ -230,7 +231,11 @@ class gp{
         Gaussian Process interpolation.  All of them accept as their first argument
         a point in parameter space where the interpolation is to occur.  All of them
         return the interpolated value of the function at that point.  Some of them
-        will also return values for sigma, the uncertainty in the interpolated value.*/
+        will also return values for sigma, the uncertainty in the interpolated value.
+        
+        The backend which actually performs the calculation is in the private
+        subroutine predict()
+        */
         
         /*returns sigma in the double*; the int is for verbosity (1 prints some status
         reports as the prediction is made; 0 prints nothing)*/
