@@ -329,8 +329,8 @@ class gp{
         return the maximum and minimum values in the dimension specified
         by the int
         */
-        double get_max(int);
-        double get_min(int);
+        double get_max(int)const;
+        double get_min(int)const;
         
         /*
         These functions wrap the nn_srch functions in kd_tree

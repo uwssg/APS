@@ -88,7 +88,7 @@ array_1d<double>&dd) const{
     kptr->nn_srch(pt,ikk,neigh,dd);
 }
 
-double gp::get_max(int dex){
+double gp::get_max(int dex) const{
     if(kptr==NULL) return 0.0;
 
     if(dex>=dim || dex<0){
@@ -99,7 +99,7 @@ double gp::get_max(int dex){
     return kptr->get_max(dex);
 }
 
-double gp::get_min(int dex){
+double gp::get_min(int dex) const{
     if(kptr==NULL)return 0.0;
 
     if(dex>=dim || dex<0){
@@ -378,6 +378,7 @@ const{
     This is the function that does the calculation for all variations of user_predict()
     
     pt is the point in parameter space where the function value is to be interpolated
+    (the `query point')
     
     sigout is the uncertainty in the interpolated value
     
@@ -432,7 +433,25 @@ const{
   
     array_1d<double> dd,pmin,pmax,grad,ggq;
     array_2d<double> gg,ggin;
-  
+    
+    /*
+    pmin and pmax will be the bounds in parameter space set by the nearest neighbors;
+    these are used by the covariogram to normalize parameter space distances so that
+    the Gaussian Process model reflects the actual region of parameter space being sampled
+    */
+    
+    /*
+    ggq will be a one dimensional array storing the values of the covariogram evaluated between
+    the query point and each of the nearest neighbor points used for interpolation
+    */
+    
+    /*
+    gg will be a 2-d array storing the covariogram evaluated on every combination of the nearest
+    neighbor points
+    
+    ggin will be the matrix inverse of gg
+    */
+    
     dd.set_name("gp_user_predict_dd");
     pmin.set_name("gp_user_predict_pmin");
     pmax.set_name("gp_user_predict_pmax");
@@ -452,26 +471,27 @@ const{
     grad.set_dim(dim);
     ggin.set_dim(kk,kk);
     
-    //printf("\ncalling from user predict\n");
-
+    /*
+    First we must determine whether we need to do a new nearest neighbor search,
+    or whether the results from the last nearest neighbor search will suffice
+    */
     int dosrch;
     dosrch=neighbor_storage->compare(pt,kk);
-    //printf("dosrch %d\n",dosrch);
+
     if(dosrch==1){
-        //for(i=0;i<dim;i++)printf("    %e\n",pt[i]);
-	
+        /*do a new nearest neighbor search*/
+        
 	nn=double(time(NULL));
 	
         kptr->nn_srch(pt,kk,neigh,dd);//nearest neighbor search
-	
-	//printf("got nn\n");
-	
+
         neighbor_storage->set(pt,dd,neigh,kk);
 	ct_search++;
 	time_search+=double(time(NULL))-nn;
-	
     }
     else{
+        /*restore the results from the previous nearest neighbor search*/
+        
         for(i=0;i<kk;i++){
               neigh.set(i,neighbor_storage->get_neigh(i));
               dd.set(i,kptr->distance(pt,neigh.get_data(i)));   
@@ -482,35 +502,46 @@ const{
     for(i=0;i<kk;i++){
         ffout.set(i,fn.get_data(neigh.get_data(i)));
     }
-   
+    
+    /*find the algebraic mean of the nearest neighbors*/
     fbar=0.0;
     for(i=0;i<kk;i++){
         fbar+=fn.get_data(neigh.get_data(i));
     }
     fbar=fbar/double(kk);
-        
+    
+    /*
+    Find the bounds in parameter space set by the nearest neighbors (and the sampled point)
+    */       
     for(i=0;i<kk;i++){
         for(j=0;j<dim;j++){
             if(i==0 || kptr->get_pt(neigh.get_data(i),j)<pmin.get_data(j))pmin.set(j,kptr->get_pt(neigh.get_data(i),j));
             if(i==0 || kptr->get_pt(neigh.get_data(i),j)>pmax.get_data(j))pmax.set(j,kptr->get_pt(neigh.get_data(i),j));
         }
-   }
+    }
   
     for(j=0;j<dim;j++){
         if(pt.get_data(j)<pmin.get_data(j))pmin.set(j,pt.get_data(j));
 	if(pt.get_data(j)>pmax.get_data(j))pmax.set(j,pt.get_data(j));
     }
-  
+    
+    /*
+    Expand the bounds just slightly.
+    */
     for(i=0;i<dim;i++){
-         //printf("in ::predict %e %e\n",pmin[i],pmax[i]);
-         pmin.subtract_val(i,0.01*fabs(pmin.get_data(i)));
-         pmax.add_val(i,0.01*fabs(pmax.get_data(i)));
+        pmin.subtract_val(i,0.01*fabs(pmin.get_data(i)));
+        pmax.add_val(i,0.01*fabs(pmax.get_data(i)));
      
-         if(!(pmax.get_data(i)>pmin.get_data(i))){
-             printf("did pmax/min wrong %e %e\n",pmax.get_data(i),pmin.get_data(i));
-             exit(1);
-     
-         }
+        while(!(pmax.get_data(i)>pmin.get_data(i))){
+            /*
+            make sure that pmax is greater than pmin, since pmax-pmin will be used
+            to normalize parameter space distances
+            */
+            nn=get_max(i)-get_min(i);
+            pmin.subtract_val(i,0.001*nn);
+            pmax.add_val(i,0.001*nn);
+
+        }
     }
     
     array_1d<double> vv,uu;
@@ -522,36 +553,43 @@ const{
     uu.set_dim(dim); 
 
     for(i=0;i<kk;i++){
-        //kptr->get_pt(neigh.get_data(i),vv);
+        /*set the values of the covariogram evaluated on the query point and each nearest neighbor*/
         ggq.set(i,(*covariogram)((*kptr->data(neigh.get_data(i))),pt,pmin,pmax,grad,0));
   
     }
 
     if(dosrch==1){
+        /*
+        If we had to do a new nearest neighbor search, we will have calculate gg and ggin from
+        scratch
+        */
         gg.set_dim(kk,kk);
   
 	for(i=0;i<kk;i++){
-	   
-	    //kptr->get_pt(neigh.get_data(i),vv);
+
 	    for(j=i;j<kk;j++){
-	        //kptr->get_pt(neigh.get_data(j),uu);
 	        gg.set(i,j,(*covariogram)((*kptr->data(neigh.get_data(i))),(*kptr->data(neigh.get_data(j))),pmin,pmax,grad,0));
 		if(j!=i){
 		    gg.set(j,i,gg.get_data(i,j));
 		}
-		else gg.add_val(i,j,0.0001);
+		else{
+                    /*add a kernel to the diagonal values so that gg is invertible*/
+                    gg.add_val(i,j,0.0001);
+                }
 	    }
 	    
         }
-	
-	
+
 	invert_lapack(gg,ggin,0);
 	nn=check_inversion(gg,ggin);
 	if(nn>1.0e-5){
-	    printf("WRANING inversion err %e\n",nn);
+	    printf("WARNING inversion err %e\n",nn);
 	    exit(1);
 	}
         
+        /*
+        store ggin in the neighbor_storage buffer so that we can use it in the future
+        */
 	for(i=0;i<kk;i++){
 	    for(j=0;j<kk;j++)neighbor_storage->set_ggin(i,j,ggin.get_data(i,j));
 	   
@@ -560,25 +598,28 @@ const{
 	
     }
     else{
+        /*if we did not do a new nearest neighbor search, just read ggin from the stored value*/
         for(i=0;i<kk;i++){
 	    for(j=0;j<kk;j++)ggin.set(i,j,neighbor_storage->get_ggin(i,j));
 	}
     }
     
-    
+    /*calculate the interpolated function value*/
     mu=fbar;
     for(i=0;i<kk;i++){
         for(j=0;j<kk;j++){
-	     //kptr->get_pt(neigh.get_data(j),vv);
              mu+=ggq.get_data(i)*ggin.get_data(i,j)*(fn.get_data(neigh.get_data(j))-fbar);
 	}
     }
     
     double ikp=0.0;
     
-    double mu_alg,sig_alg,ddmax;
+    double sig_alg,ddmax;
     
     if(get_sig==1){
+        /*
+        calculate the uncertainty in mu (if it was asked for)
+        */
         sigout[0]=0.0;
         for(i=0;i<kk;i++){
             for(j=0;j<kk;j++){
@@ -599,31 +640,37 @@ const{
 	      
             }
         }
-  
+        
+        /*normalize the uncertainty in such a way that maximizes the likelihood of the nearest neighbor
+        data*/
         ikp=nn/double(kk);
-    
-    
+
         sigout[0]=(*covariogram)(pt,pt,pmin,pmax,grad,0)-sigout[0];
         sigout[0]=(ikp)*(sigout[0]); 
      
         if(sigout[0]>0.0)sigout[0]=sqrt(sigout[0]);
         else{
-	    mu_alg=0.0;
+            /*
+            sigout<=0.0, then return as sigma the square root of the variance of the nearest neighbor data
+            multiplied by the ratio of the distance to the nearest neighbor to the distance to the farthest
+            nearest neighbor (so that if the query point is very near to its nearest neighbor, it gets a small
+            uncertainty)
+            */
 	    sig_alg=0.0;
 	     
-	    for(i=0;i<kk;i++)mu_alg+=fn.get_data(neigh.get_data(i));
-	    mu_alg=mu_alg/double(kk);
+
 	    for(i=0;i<kk;i++){
-	        sig_alg+=power(mu_alg-fn.get_data(neigh.get_data(i)),2);
+	        sig_alg+=power(fbar-fn.get_data(neigh.get_data(i)),2);
 	    }
 	    sig_alg=sig_alg/double(kk);
-
-	    sig_alg*=dd.get_data(0)/ddmax;*/
+            
+	    sig_alg*=dd.get_data(0)/dd.get_data(kk-1);
 	    sig_alg=sqrt(sig_alg);
 	     
 	    sigout[0]=sig_alg;
         }
-   
+        
+        /*if there is a cap set on the value fo sigma, apply it*/
         if(sigcap>0.0){
              if(sigout[0]>sigcap)sigout[0]=sigcap;
         }
@@ -640,7 +687,7 @@ const{
         printf("fbar %e\n",fbar);
         exit(1);
     }
-    if(verbose==2)printf("mu %e fbar %e nn %e\n",mu,fbar,fn.get_data(neigh.get_data(0)));
+    if(verbose==1)printf("mu %e fbar %e nn %e\n",mu,fbar,fn.get_data(neigh.get_data(0)));
   
     pt.set_where("nowhere");
     time_predict+=double(time(NULL))-before;
