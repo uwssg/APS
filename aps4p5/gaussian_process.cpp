@@ -16,7 +16,6 @@ gp::gp(){
   last_refactored=0;
   
   sigcap=-1.0;
-  time_dummy_search=0.0;
   ct_search=0;
   ct_predict=0;
   time_predict=0.0;
@@ -176,9 +175,8 @@ void gp::print_search_time(char *word){
     FILE *output;
     
     output=fopen(word,"a");
-    fprintf(output,"searchtime %e %e %d -- dummy %e %e\n",
-    time_search,time_search/double(ct_search),ct_search,
-    time_dummy_search,time_dummy_search/double(ct_search));
+    fprintf(output,"searchtime %e %e %d\n",
+    time_search,time_search/double(ct_search),ct_search);
     fclose(output);
 
    
