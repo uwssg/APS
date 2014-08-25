@@ -257,8 +257,6 @@ class gp{
         double self_predict(int,double*, int) const;
     
         void user_predict_gradient(array_1d<double>&,array_1d<double>&,int);
-        double actual_gradient(int,array_1d<double>&);
-        double actual_gradient(array_1d<double>&,array_1d<double>&);
         
         /*add a new data point to the gaussian process;
         the array_1d<double> is the point in parameter space;
@@ -337,12 +335,20 @@ class gp{
         */
         void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&) const;
         void nn_srch(int,int,array_1d<int>&,array_1d<double>&) const;
-    
+        
+        /*return the number of times predict() was called*/
         int get_ct_predict();
+        
+        /*return the number of nearest neighbor searches done*/
         int get_ct_search();
+        
+        /*return the amount of time spent in predict()*/
         double get_time_predict();
+        
+        /*return the amount of time spent doing nearest neighbor searches*/
         double get_time_search();
-    
+        
+        /*return the hyper parameters of the covariogram*/
         void get_hyper_parameters(array_1d<double>&);
     
         array_1d<double>* get_pt(int);
