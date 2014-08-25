@@ -163,8 +163,30 @@ class neighbor_cache{
 };
 
 class gp{
-  
-        
+    /*
+    This class does Gaussian Process interpolation of a function in parameter space.  
+    It stores its own data in the form of a list of points in parameter space and
+    the corresponding function values.  The points in parameter space are stored in
+    a KD tree (the source code for which is in kd.cpp) for easy nearest neighbor 
+    searching.  This object is referred to by the pointer kptr.    The function 
+    values are stored in the array_1d<double> fn.
+    
+    There is also a global variable neighbor_storage, which is a pointer to a neighbor_cache
+    object (see above).  This keeps track of the results
+    of the last nearest neighbor search performed.  When a call is made to the
+    interpolation routines, the gp class uses neighbor_storage to determine if a
+    new nearest neighbor search is warranted, or if it can simply use the results of
+    the last nearest neighbor search.  Since each nearest neighbor search is accompanied
+    by a covariogram inversion, it is hoped that this check can save the user 
+    considerable run time.
+    
+    The covariogram of the gp is provided by an external instantiation of the
+    covariance_function class (or one of its sub-classes).  The user must provide a
+    pointer to this instantiation using the assign_covariogram() routine before 
+    asking gp to do an interpolation.
+    
+    */
+      
     public:
 
         gp();
@@ -206,11 +228,13 @@ class gp{
         /*Set the minimum bound in a given dimension; see set_max above*/
         void set_min(int,double);
         
-        /*The user_predict functions below are all variations on the function to do
+        /*The user_predict routines below are all variations on the function to do
         Gaussian Process interpolation.  All of them accept as their first argument
         a point in parameter space where the interpolation is to occur.  All of them
         return the interpolated value of the function at that point.  Some of them
         will also return values for sigma, the uncertainty in the interpolated value.
+        Calculating sigma is a costly procedure, so should not be done if not
+        necessary.
         
         The backend which actually performs the calculation is in the private
         subroutine predict()
@@ -232,11 +256,11 @@ class gp{
         double user_predict(array_1d<double>&,double*,int,array_1d<double>&) const;
     
         /*
-        The self_predict functions take a point already stored in kd_tree
+        The self_predict routines below take a point already stored in kd_tree
         and interpolate the value of the function at that point using its
         kk nearest neighbors (ignoring itself).  The first argument is always
         the index of the point at which the interpolation is to take place (i.e.
-        where is the point stored in the kd_tree).  The function always returns
+        where is the point stored in the kd_tree).  The routine always returns
         the interpolated function value.
         
         As with user_predict, there is the option to calculate an uncertainty on
@@ -275,9 +299,15 @@ class gp{
         /*print timing statistics to a file whose name is specified by the char* */
         void print_search_time(char*);
         
+        /*call this function if you want to be sure that the next call to
+        user_predict does a brand new nearest neighbor search*/
         void reset_cache() const;
+        
+        /*Set the maximum allowed value for sigma, which is the uncertainty
+        in interpolated function values (if desired)*/
         void set_sig_cap(double);
-
+        
+        /*return the nearest distance stored in neighbor_storage*/
         double get_nearest_distance();
         
         /*return the dimensionality of parameter space*/
@@ -294,7 +324,7 @@ class gp{
         The backend calculations are done by the private routines
         optimize_grid() and optimize_simplex()
         
-        Note that all of the methods below end up calling optimize(array_1d<int>&)
+        Note that all of the routines below end up calling optimize(array_1d<int>&)
         before calling the ultimate backend.
         */
         
@@ -309,7 +339,7 @@ class gp{
         
         /*
         Optimize the hyper parameters using all of the points between the
-        two integers provided.
+        two integers provided (these integers are indices on the kd_tree).
         */
         void optimize(int,int);
         
@@ -333,7 +363,7 @@ class gp{
         */
         void optimize(array_1d<double>&,int);
 
-    
+        /*return the amount of time spent on the optimize routines*/
         double get_time_optimize();
         
         /*set the number of nearest neighbors to be used in interpolation*/
@@ -390,21 +420,42 @@ class gp{
         
         /*return the hyper parameters of the covariogram*/
         void get_hyper_parameters(array_1d<double>&);
-    
+        
+        /*return a pointer to the parameter space point specified by the int*/
         array_1d<double>* get_pt(int);
+        
+        /*return a pointer to the covariogram*/
         covariance_function* get_covariogram();
 
     private:
+    
+        /*this object will keep track of the results of nearest neighbor searches
+        and determine if a new search is needed whenever a call is made to
+        user_predict*/
         mutable neighbor_cache *neighbor_storage;   
+        
+        /*this pointer will point to the covariogram function*/
         covariance_function *covariogram;
-    
+        
+        /*this is where gp will store the known values of the function*/
         array_1d<double> fn;
+        
+        /*this will point to the kd_tree instantiation which will store
+        the points in parameter space corresponding to the known function 
+        values in fn*/
         kd_tree *kptr;
-        int pts,kk;
-    
-        int initialized,allottedpts,dim;
+        
+        /*optional maximum value for uncertainty on interpolated function values*/
+        double sigcap;
+        
+        /*pts is the number of points stored in the kd_tree;
+        kk is the number of nearest neighbors used for interpolation;
+        dim is the dimensionality of the parameter space*/
+        int pts,kk,dim;
+        
+        /*variables related to how the gp object is allotting its time*/
         int last_optimized,last_validated,last_refactored;
-        double sigcap,time_optimize;
+        double time_optimize;
    
         mutable int ct_search,ct_predict;
         mutable double time_search,time_predict;

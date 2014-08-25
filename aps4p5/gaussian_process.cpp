@@ -5,7 +5,7 @@
 #include <time.h>
 
 gp::gp(){
-  initialized=0;
+
   dim=2;
   kk=15;
   time_search=0.0;
@@ -207,9 +207,6 @@ void gp::initialize(array_2d<double> &seed, array_1d<double> &seedfn,\
       
         exit(1);
     }
-  
-  
-    initialized=1;
   
     dim=seed.get_cols();  
     if(covariogram!=NULL){
