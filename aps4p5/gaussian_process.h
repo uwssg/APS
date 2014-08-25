@@ -171,11 +171,11 @@ class gp{
         ~gp();
         
 
-        /*initialize the GAussian Process; arguments are (in order):
+        /*initialize the Gaussian Process; arguments are (in order):
         array_2d<double> - a list of points in parameter space
         array_1d<double> - corresponding function values
-        array_1d<double> - maximum values of parameters in parameter space
         array_1d<double> - minimum values of parameters in parameter space
+        array_1d<double> - maximum values of parameters in parameter space
         
         Note: the maxima and minima are not actually bounds. max-min is used to
         normalize the distances in parameter space returned by kd_tree*/

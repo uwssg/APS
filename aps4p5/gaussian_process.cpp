@@ -188,11 +188,11 @@ void gp::initialize(array_2d<double> &seed, array_1d<double> &seedfn){
         min.set(i,0.0);
     } 
     
-    initialize(seed,seedfn,max,min);
+    initialize(seed,seedfn,min,max);
 }
 
 void gp::initialize(array_2d<double> &seed, array_1d<double> &seedfn,\
-    array_1d<double> &mx, array_1d<double> &mn){
+    array_1d<double> &mn, array_1d<double> &mx){
     
     int i,j,k,l;
   

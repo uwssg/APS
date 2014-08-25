@@ -360,7 +360,7 @@ void aps::initialize(int npts, array_1d<double> &min, array_1d<double> &max,
     }
     
     printf("calling on gg.initialize\n");
-    gg.initialize(data,ff,ggmax,ggmin);
+    gg.initialize(data,ff,ggmin,ggmax);
     
     if(gg.get_dim()!=dim){
         printf("WARNING gg.get_dim %d dim %d\n",
@@ -514,7 +514,7 @@ void aps::resume(char *filename){
         }
     }
     
-    gg.initialize(data,ff,ggmax,ggmin);
+    gg.initialize(data,ff,ggmin,ggmax);
     printf("initialized gg\n");
     set_chimin(local_min,(*gg.get_pt(i_min)),i_min);
     mindex_is_candidate=1;
@@ -2563,7 +2563,7 @@ void aps::optimize(){
     }
     
     gg_opt.assign_covariogram(gg.get_covariogram());
-    gg_opt.initialize(data_opt,ff_opt,ggmax,ggmin);
+    gg_opt.initialize(data_opt,ff_opt,ggmin,ggmax);
     
     use_dex.reset();
     for(i=0;i<data_opt.get_rows();i++)use_dex.set(i,i);
