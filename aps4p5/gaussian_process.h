@@ -306,10 +306,10 @@ class gp{
         int get_last_optimized();
         int get_last_refactored();
     
-        void optimize_grid(array_1d<int>&,int);
-        void optimize_simplex(array_1d<int>&,int);
+        void optimize_grid(array_1d<int>&);
+        void optimize_simplex(array_1d<int>&);
     
-        void optimize(array_1d<int>&,int);
+        void optimize(array_1d<int>&);
         void optimize();
         void optimize(int,int);
         int optimize(array_1d<double>&,double);

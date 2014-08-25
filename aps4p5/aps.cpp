@@ -2568,7 +2568,7 @@ void aps::optimize(){
     use_dex.reset();
     for(i=0;i<data_opt.get_rows();i++)use_dex.set(i,i);
   
-    gg_opt.optimize(use_dex,use_dex.get_dim());
+    gg_opt.optimize(use_dex);
     
     
     array_1d<double> hh;

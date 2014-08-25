@@ -1837,7 +1837,6 @@ void gp::optimize(){
         return;
     }
     
-    int n_use;
     int i,j,k,l;
     
     array_1d<int> use_dex;
@@ -1846,16 +1845,15 @@ void gp::optimize(){
     Ran chaos(43);
     
     if(pts<3000){
-        n_use=pts;
         use_dex.set_dim(pts);
         for(i=0;i<pts;i++){
             use_dex.set(i,i);
         }
     }
     else{
-       n_use=3000;
-       use_dex.set_dim(n_use);
-       for(i=0;i<n_use;){
+
+       use_dex.set_dim(3000);
+       for(i=0;i<use_dex.get_dim();){
            j=chaos.int32()%pts;
            l=1;
            for(k=0;k<i;k++){
@@ -1870,25 +1868,22 @@ void gp::optimize(){
        
     }
     
-    optimize(use_dex,n_use);
+    optimize(use_dex);
     
  
 }
 
 void gp::optimize(int start, int end){
 
-    int n_use;
     array_1d<int> use_dex;
     use_dex.set_name("gp_optimize(int,int)_use_dex");
-    
-    
-    n_use=end-start;    
-    use_dex.set_dim(n_use);
+       
+    use_dex.set_dim(end-start);
     
     int i;
-    for(i=0;i<n_use;i++)use_dex.set(i,start+i);
+    for(i=0;i<use_dex.get_dim();i++)use_dex.set(i,start+i);
     
-    optimize(use_dex,n_use);
+    optimize(use_dex);
 
 }
 
@@ -1929,7 +1924,7 @@ int gp::optimize(array_1d<double> &pt, double rr){
             exit(1);
         }
         //printf("n_use %d\n",n_use);
-        optimize(use_dex,n_use);
+        optimize(use_dex);
 
     }
     
@@ -1954,7 +1949,7 @@ void gp::optimize(array_1d<double> &pt, int n_use){
 
         kptr->nn_srch(pt,n_use,use_dex,use_dd);
         
-        optimize(use_dex,n_use);
+        optimize(use_dex);
 
     }
     else{
@@ -1964,7 +1959,7 @@ void gp::optimize(array_1d<double> &pt, int n_use){
     pt.set_where("nowhere");
 }
 
-void gp::optimize(array_1d<int> &use_dex, int n_use){
+void gp::optimize(array_1d<int> &use_dex){
     
     double before=double(time(NULL));
     
@@ -1973,10 +1968,10 @@ void gp::optimize(array_1d<int> &use_dex, int n_use){
     eebest=chisq_exception;
     
     if(covariogram->get_n_hyper_parameters()<=2){
-        optimize_grid(use_dex,n_use);
+        optimize_grid(use_dex);
     }
     else{
-        optimize_simplex(use_dex,n_use);
+        optimize_simplex(use_dex);
     }
     
     covariogram->set_hyper_parameters(hhbest);
@@ -1992,7 +1987,7 @@ double gp::get_time_optimize(){
     return time_optimize;
 }
 
-void gp::optimize_grid(array_1d<int> &use_dex, int n_use){
+void gp::optimize_grid(array_1d<int> &use_dex){
     
     int i,j,k,l;
     
@@ -2076,7 +2071,7 @@ void gp::optimize_grid(array_1d<int> &use_dex, int n_use){
 
 }
 
-void gp::optimize_simplex(array_1d<int> &use_dex, int n_use){
+void gp::optimize_simplex(array_1d<int> &use_dex){
     double alpha=1.0,beta=0.5,gamma=2.1;
     
     array_2d<double> opt_pts;
