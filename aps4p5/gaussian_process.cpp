@@ -1874,7 +1874,21 @@ void gp::optimize(){
 }
 
 void gp::optimize(int start, int end){
-
+    
+    int ii;
+    if(end<start){
+        ii=end;
+        end=start;
+        start=ii;
+    }
+    
+    if(start<0 || end>=pts){
+        printf("WARNING cannot optimize using points %d to %d because there are only %d pts\n",
+        start,end,pts);
+        
+        exit(1);
+    }
+    
     array_1d<int> use_dex;
     use_dex.set_name("gp_optimize(int,int)_use_dex");
        
@@ -1891,46 +1905,26 @@ int gp::optimize(array_1d<double> &pt, double rr){
     
     pt.set_where("gp_optimize(array<double>,double)");
     
-    int n_use,i,j;
+    int i;
     double dd;
     
     array_1d<int> use_dex;
     use_dex.set_name("gp_optimize(array<double>,double)_use_dex");
-    
-    n_use=0;
+
     for(i=0;i<pts;i++){
         dd=kptr->distance(pt,i);
         if(dd<=rr){
-            n_use++;
-        }
-    }
-    
-    if(n_use>0){
-        j=0;
-        use_dex.set_dim(n_use);
-        for(i=0;i<pts;i++){
-            dd=kptr->distance(pt,i);
-            if(dd<=rr){
-                if(j>=n_use){
-                    printf("WARNING optimize overstepped\n");
-                    exit(1);
-                }
-                use_dex.set(j,i);
-                j++;
-            }
-        }
-        if(j!=n_use){
-            printf("WARNING optimize did not find n_use %d %d\n",n_use,j);
-            exit(1);
+            use_dex.add(i);
         }
         //printf("n_use %d\n",n_use);
-        optimize(use_dex);
-
     }
-    
+
+    if(use_dex.get_dim()>0){
+        optimize(use_dex);
+    }
     pt.set_where("nowhere");
     
-    return n_use;
+    return use_dex.get_dim();
 }
 
 void gp::optimize(array_1d<double> &pt, int n_use){

@@ -309,12 +309,52 @@ class gp{
         int get_last_optimized();
         int get_last_refactored();
     
-
+        /*
+        The optimize routines below all use self_predict on some subset of the
+        data stored in kd_tree to find the best combination of hyperparameters
+        for the covariogram.  They all take slightly different inputs, which
+        control what subset of points are used to optimize the hyperparameters.
     
+        The backend calculations are done by the private routines
+        optimize_grid() and optimize_simplex()
+        
+        Note that all of the methods below end up calling optimize(array_1d<int>&)
+        before calling the ultimate backend.
+        */
+        
+        /*the array_1d<int> is a list of indices indicating what points are
+        to be used when optimizing the hyperparameters*/
         void optimize(array_1d<int>&);
+        
+        /*
+        Randomly select 3000 points to be used to optimize the hyperparameters
+        */
         void optimize();
+        
+        /*
+        Optimize the hyper parameters using all of the points between the
+        two integers provided.
+        */
         void optimize(int,int);
+        
+        /*
+        The array_1d<double> is a point in parameter space; the double is a distance.
+        
+        Optimize the hyperparameters using every point that is that distance or less
+        away from the provided point (distances are normalized as in the kd_tree::distance()
+        routines)
+        
+        Returns the number of points used to optimize.
+        */
         int optimize(array_1d<double>&,double);
+        
+        /*
+        The array_1d<double> is a point.  The int is a number of nearest neighbors.
+        
+        Use that many nearest neighbors of the provided point to optimize.  If the
+        number of nearest neighbors requested is larger than the number of points
+        stored in the kd_tree, this method will just call optimize() with no argument.
+        */
         void optimize(array_1d<double>&,int);
     
         double optimization_error(array_1d<double>&);
