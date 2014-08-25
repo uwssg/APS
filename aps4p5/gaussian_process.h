@@ -167,7 +167,6 @@ class gp{
         
     public:
 
-        double inversionerr;
         double dav,dsig,ctav;
   
         gp();

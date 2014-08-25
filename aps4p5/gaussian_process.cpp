@@ -8,7 +8,6 @@ gp::gp(){
   initialized=0;
   dim=2;
   kk=15;
-  inversionerr=-1.0e10;
   time_search=0.0;
   
   last_optimized=0;
@@ -2297,6 +2296,10 @@ double gp::optimization_error(array_1d<double> &lhh){
     }
     
     if(E<eebest){
+        /*
+        If discovered a new best figure of merit, store this combination of 
+        hyperparameters in the global variable hhbest
+        */
         last_set=called_opt;
         eebest=E;
         for(i=0;i<covariogram->get_n_hyper_parameters();i++){
