@@ -35,9 +35,6 @@ gp::~gp(){
   if(kptr!=NULL) delete kptr;
   if(neighbor_storage!=NULL) delete neighbor_storage;
 
-  //printf("done deleting gp\n");
-
- 
 }
 
 void gp::set_hyper_parameters(array_1d<double> &hh){
@@ -178,10 +175,6 @@ void gp::print_search_time(char *word){
     fprintf(output,"searchtime %e %e %d\n",
     time_search,time_search/double(ct_search),ct_search);
     fclose(output);
-
-   
-    
-    
     
 }
 

@@ -177,8 +177,6 @@ class gp{
    
         mutable int ct_search,ct_predict;
         mutable double time_search,time_predict;
-        mutable double time_dummy_search;
-    
  
         double predict(array_1d<double>&,double*,int,int,array_1d<double>&) const;
  
