@@ -374,68 +374,75 @@ int verbose, array_1d<double> &ffout) const{
 double gp::predict(array_1d<double> &pt,double *sigout,int verbose, int get_sig,
     array_1d<double> &ffout)
 const{
+    /*
+    This is the function that does the calculation for all variations of user_predict()
+    
+    pt is the point in parameter space where the function value is to be interpolated
+    
+    sigout is the uncertainty in the interpolated value
+    
+    verbose tells the routine whether or not to print its status to the screen (0 means 'no';
+    1 means 'yes')
+    
+    get_sig tells this routine whether or not to actually calculate sigout (0 means 'no';
+    1 means 'yes')
+    
+    ffout stores the values of the function used for this interpolation
+    
+    This function returns the interpolated value of the function
+    
+    */
 
-  //this is the function that oustide code actually calls to use
-  //the Gaussian process for prediction
   
-  //  *pt contains the query point
-  //  *sigout will point to the variance of the prediction
-
-  //  *fbarout will point to the algebraic mean of the nearest neighbor fn[]'s
-  //           used in the prediction (not really important for anything) 
-  //
-  //  the function will return the predicted value of fn[] at the
-  //  query point
+    pt.set_where("gp_user_predict");
   
-  pt.set_where("gp_user_predict");
+    if(covariogram==NULL){
+        printf("WARNING in user predict covariogram is null\n");
+        exit(1);
+    }
   
-  if(covariogram==NULL){
-      printf("WARNING in user predict covariogram is null\n");
-      exit(1);
-  }
+    if(kptr==NULL){
+        printf("WARNING in user predict kptr is null\n");
+        exit(1);
+    }
   
-  if(kptr==NULL){
-      printf("WARNING in user predict kptr is null\n");
-      exit(1);
-  }
-  
-  if(neighbor_storage==NULL){
-      printf("WARNING in user predict neighbor storage is null\n");
-      exit(1);
-  }
+    if(neighbor_storage==NULL){
+        printf("WARNING in user predict neighbor storage is null\n");
+        exit(1);
+    }
   
   
-  int i,j,k,l;
+    int i,j,k,l;
   
-  for(i=0;i<dim;i++){
-      if(isnan(pt.get_data(i))){
-          printf("WARNING passed a nan point to user_predict\n");
-	  exit(1);
-      }
-  }
+    for(i=0;i<dim;i++){
+        if(isnan(pt.get_data(i))){
+            printf("WARNING passed a nan point to user_predict\n");
+	    exit(1);
+        }
+    }
   
-  double mu,nn;
-  double before,after;
+    double mu,nn;
+    double before,after;
   
-  before=double(time(NULL));
-  ct_predict++;
+    before=double(time(NULL));
+    ct_predict++;
   
-  array_1d<int> neigh;;
-  neigh.set_name("gp_user_predict_neigh");
+    array_1d<int> neigh;;
+    neigh.set_name("gp_user_predict_neigh");
   
-  array_1d<double> dd,pmin,pmax,grad,ggq;
-  array_2d<double> gg,ggin;
+    array_1d<double> dd,pmin,pmax,grad,ggq;
+    array_2d<double> gg,ggin;
   
-  dd.set_name("gp_user_predict_dd");
-  pmin.set_name("gp_user_predict_pmin");
-  pmax.set_name("gp_user_predict_pmax");
-  grad.set_name("gp_user_predict_grad");
-  ggq.set_name("gp_user_predict_ggq");
-  gg.set_name("gp_user_predict_gg");
-  ggin.set_name("gp_user_predict_ggin");
+    dd.set_name("gp_user_predict_dd");
+    pmin.set_name("gp_user_predict_pmin");
+    pmax.set_name("gp_user_predict_pmax");
+    grad.set_name("gp_user_predict_grad");
+    ggq.set_name("gp_user_predict_ggq");
+    gg.set_name("gp_user_predict_gg");
+    ggin.set_name("gp_user_predict_ggin");
 
    
-  double fbar;
+    double fbar;
   
     dd.set_dim(kk);
     neigh.set_dim(kk);
@@ -483,43 +490,42 @@ const{
     fbar=fbar/double(kk);
         
     for(i=0;i<kk;i++){
-    for(j=0;j<dim;j++){
-      if(i==0 || kptr->get_pt(neigh.get_data(i),j)<pmin.get_data(j))pmin.set(j,kptr->get_pt(neigh.get_data(i),j));
-      if(i==0 || kptr->get_pt(neigh.get_data(i),j)>pmax.get_data(j))pmax.set(j,kptr->get_pt(neigh.get_data(i),j));
-    }
+        for(j=0;j<dim;j++){
+            if(i==0 || kptr->get_pt(neigh.get_data(i),j)<pmin.get_data(j))pmin.set(j,kptr->get_pt(neigh.get_data(i),j));
+            if(i==0 || kptr->get_pt(neigh.get_data(i),j)>pmax.get_data(j))pmax.set(j,kptr->get_pt(neigh.get_data(i),j));
+        }
    }
   
-     for(j=0;j<dim;j++){
+    for(j=0;j<dim;j++){
         if(pt.get_data(j)<pmin.get_data(j))pmin.set(j,pt.get_data(j));
 	if(pt.get_data(j)>pmax.get_data(j))pmax.set(j,pt.get_data(j));
     }
   
-   for(i=0;i<dim;i++){
-     //printf("in ::predict %e %e\n",pmin[i],pmax[i]);
-     pmin.subtract_val(i,0.01*fabs(pmin.get_data(i)));
-     pmax.add_val(i,0.01*fabs(pmax.get_data(i)));
+    for(i=0;i<dim;i++){
+         //printf("in ::predict %e %e\n",pmin[i],pmax[i]);
+         pmin.subtract_val(i,0.01*fabs(pmin.get_data(i)));
+         pmax.add_val(i,0.01*fabs(pmax.get_data(i)));
      
-     if(!(pmax.get_data(i)>pmin.get_data(i))){
-         printf("did pmax/min wrong %e %e\n",pmax.get_data(i),pmin.get_data(i));
-         exit(1);
+         if(!(pmax.get_data(i)>pmin.get_data(i))){
+             printf("did pmax/min wrong %e %e\n",pmax.get_data(i),pmin.get_data(i));
+             exit(1);
      
-     }
-   }
+         }
+    }
     
-   array_1d<double> vv,uu;
+    array_1d<double> vv,uu;
    
-   vv.set_name("gp_user_predict_vv");
-   uu.set_name("gp_user_predict_uu");
+    vv.set_name("gp_user_predict_vv");
+    uu.set_name("gp_user_predict_uu");
    
-   vv.set_dim(dim);
-   uu.set_dim(dim); 
+    vv.set_dim(dim);
+    uu.set_dim(dim); 
 
+    for(i=0;i<kk;i++){
+        //kptr->get_pt(neigh.get_data(i),vv);
+        ggq.set(i,(*covariogram)((*kptr->data(neigh.get_data(i))),pt,pmin,pmax,grad,0));
   
-   for(i=0;i<kk;i++){
-       //kptr->get_pt(neigh.get_data(i),vv);
-       ggq.set(i,(*covariogram)((*kptr->data(neigh.get_data(i))),pt,pmin,pmax,grad,0));
-  
-   }
+    }
 
     if(dosrch==1){
         gg.set_dim(kk,kk);
@@ -573,87 +579,72 @@ const{
     double mu_alg,sig_alg,ddmax;
     
     if(get_sig==1){
-          sigout[0]=0.0;
-          for(i=0;i<kk;i++){
-           for(j=0;j<kk;j++){
-             sigout[0]+=ggq.get_data(i)*ggq.get_data(j)*ggin.get_data(i,j);
+        sigout[0]=0.0;
+        for(i=0;i<kk;i++){
+            for(j=0;j<kk;j++){
+                sigout[0]+=ggq.get_data(i)*ggq.get_data(j)*ggin.get_data(i,j);
 
-           }
-          }
+            }
+        }
     
-         nn=0.0;
-         for(i=0;i<kk;i++){
+        nn=0.0;
+        for(i=0;i<kk;i++){
   
-       //kptr->get_pt(neigh.get_data(i),vv);
-       
-           nn+=(fn.get_data(neigh.get_data(i))-fbar)*ggin.get_data(i,i)*(fn.get_data(neigh.get_data(i))-fbar);
+              nn+=(fn.get_data(neigh.get_data(i))-fbar)*ggin.get_data(i,i)*(fn.get_data(neigh.get_data(i))-fbar);
 	 
-          for(j=i+1;j<kk;j++){
-         
-	 //kptr->get_pt(neigh.get_data(j),uu);
-	 
-             nn+=2.0*(fn.get_data(neigh.get_data(j))-fbar)*
-	     (fn.get_data(neigh.get_data(i))-fbar)*ggin.get_data(i,j);
+             for(j=i+1;j<kk;j++){
+
+                nn+=2.0*(fn.get_data(neigh.get_data(j))-fbar)*
+	        (fn.get_data(neigh.get_data(i))-fbar)*ggin.get_data(i,j);
 	      
-         }
-       }
+            }
+        }
   
-       ikp=nn/double(kk);
+        ikp=nn/double(kk);
     
     
         sigout[0]=(*covariogram)(pt,pt,pmin,pmax,grad,0)-sigout[0];
         sigout[0]=(ikp)*(sigout[0]); 
      
-         if(sigout[0]>0.0)sigout[0]=sqrt(sigout[0]);
-         else{
-	     mu_alg=0.0;
-	     sig_alg=0.0;
+        if(sigout[0]>0.0)sigout[0]=sqrt(sigout[0]);
+        else{
+	    mu_alg=0.0;
+	    sig_alg=0.0;
 	     
-	     for(i=0;i<kk;i++)mu_alg+=fn.get_data(neigh.get_data(i));
-	     mu_alg=mu_alg/double(kk);
-	     for(i=0;i<kk;i++){
-	         sig_alg+=power(mu_alg-fn.get_data(neigh.get_data(i)),2);
-	     }
-	     sig_alg=sig_alg/double(kk);
+	    for(i=0;i<kk;i++)mu_alg+=fn.get_data(neigh.get_data(i));
+	    mu_alg=mu_alg/double(kk);
+	    for(i=0;i<kk;i++){
+	        sig_alg+=power(mu_alg-fn.get_data(neigh.get_data(i)),2);
+	    }
+	    sig_alg=sig_alg/double(kk);
+
+	    sig_alg*=dd.get_data(0)/ddmax;*/
+	    sig_alg=sqrt(sig_alg);
 	     
-	     
-	     /*for(i=0;i<kk;i++){
-	         for(j=i+1;j<kk;j++){
-		     nn=kptr->distance(neigh.get_data(i),neigh.get_data(j));
-		     
-		     if((i==0 && j==1) || nn>ddmax){
-		         ddmax=nn;
-		     }
-		 }
-	     }
-	     
-	     sig_alg*=dd.get_data(0)/ddmax;*/
-	     sig_alg=sqrt(sig_alg);
-	     
-	     sigout[0]=sig_alg;
-	 }
+	    sigout[0]=sig_alg;
+        }
    
-         if(sigcap>0.0){
-              if(sigout[0]>sigcap)sigout[0]=sigcap;
-         }
+        if(sigcap>0.0){
+             if(sigout[0]>sigcap)sigout[0]=sigcap;
+        }
   
-  }//if getsig==1
+    }//if getsig==1
    
-  if(isnan(mu)){
-      printf("WARNING mu %e\n",mu);
-      for(i=0;i<kk;i++)printf("%d %e ggq%d %e\n",neigh.get_data(i),dd.get_data(i),i,ggq.get_data(i));
-      for(i=0;i<kk;i++){
-          for(j=0;j<kk;j++)printf("%e ",ggin.get_data(i,j));
-	  printf("\n");
-      }
-      printf("fbar %e\n",fbar);
-      exit(1);
-  }
-   if(verbose==2)printf("mu %e fbar %e nn %e\n",mu,fbar,fn.get_data(neigh.get_data(0)));
+    if(isnan(mu)){
+        printf("WARNING mu %e\n",mu);
+        for(i=0;i<kk;i++)printf("%d %e ggq%d %e\n",neigh.get_data(i),dd.get_data(i),i,ggq.get_data(i));
+        for(i=0;i<kk;i++){
+            for(j=0;j<kk;j++)printf("%e ",ggin.get_data(i,j));
+	    printf("\n");
+        }
+        printf("fbar %e\n",fbar);
+        exit(1);
+    }
+    if(verbose==2)printf("mu %e fbar %e nn %e\n",mu,fbar,fn.get_data(neigh.get_data(0)));
   
-  pt.set_where("nowhere");
-  time_predict+=double(time(NULL))-before;
-  return mu;
+    pt.set_where("nowhere");
+    time_predict+=double(time(NULL))-before;
+    return mu;
 }
 
 int gp::get_ct_predict(){
