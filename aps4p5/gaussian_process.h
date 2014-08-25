@@ -252,8 +252,29 @@ class gp{
         interpolation in the final array_1d<double>; the int is for verbosity*/
         double user_predict(array_1d<double>&,double*,int,array_1d<double>&) const;
     
+        /*
+        The self_predict functions take a point already stored in kd_tree
+        and interpolate the value of the function at that point using its
+        kk nearest neighbors (ignoring itself).  The first argument is always
+        the index of the point at which the interpolation is to take place (i.e.
+        where is the point stored in the kd_tree).  The function always returns
+        the interpolated function value.
+        
+        As with user_predict, there is the option to calculate an uncertainty on
+        the interpolated value (though this is a costly calculation).
+        
+        This routine is principally used for optimizing the hyper parameters of the
+        covariogram.
+        */
+        
+        /*just interpolate the function; do not return an uncertainty*/
         double self_predict(int) const;
+        
+        /*interpolate the function, but also calculate the uncertainty;
+        the uncertainty is stored in the double* */
         double self_predict(int,double*) const;
+        
+        /*this is the backend for the other two self_predict routines*/
         double self_predict(int,double*, int) const;
 
         /*add a new data point to the gaussian process;
@@ -261,8 +282,10 @@ class gp{
         the double is the corresponding function value*/
         void add_pt(array_1d<double>&,double);
         
+        /*write the data stored in kd_tree to a file whose name is specified by the char* */
         void write_data(char*);
-    
+        
+        /*assign a covariogram to this Gaussian Process*/
         void assign_covariogram(covariance_function*);
         
         /*rebuild the kd_tree (this could speed up the nearest neighbor searches
@@ -277,7 +300,8 @@ class gp{
         void set_sig_cap(double);
 
         double get_nearest_distance();
-    
+        
+        /*return the dimensionality of parameter space*/
         int get_dim();
         int get_last_optimized();
         int get_last_refactored();
@@ -298,6 +322,7 @@ class gp{
         /*set the number of nearest neighbors to be used in interpolation*/
         void set_kk(int);
         
+        /*return the function value at the point specified by the index int*/
         double get_fn(int) const;
         
         /*return a component of a point stored in the kd_tree
