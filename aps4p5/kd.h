@@ -2,7 +2,7 @@
 Based on description in
 
 Bentley, J. L.
-Communications of the Association for Computint Machinery
+Communications of the Association for Computing Machinery
 volume 18
 p 509
 (1975)
