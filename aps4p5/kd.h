@@ -82,9 +82,14 @@ class kd_tree{
         /*the parameter space distance between two nodes on the tree*/
         double distance(int,int);
 
- 
+        /*fill the array-1d<double> with the node specified by the int*/
         void get_pt(int,array_1d<double>&);
+        
+        /*return a node on the tree one dimension at a time; the first
+        int specifies the node; the second int specifies the dimension*/
         double get_pt(int,int);
+        
+        /*return the number of points stored in the tree*/
         int get_pts();
 
         void write_tree(char*);
