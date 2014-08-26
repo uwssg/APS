@@ -165,8 +165,10 @@ class kd_tree{
         /*the iterative backend of build_tree*/
         void organize(array_1d<int>&,int,int,int,int,int);
         
-        
+        /*find the node where a new point would be added to the tree;
+        this is part of the backend for the add() routine*/
         int find_node(array_1d<double>&);
+        
         void neigh_check(array_1d<double>&,
             int,array_1d<int>&,array_1d<double>&,int,int);
   

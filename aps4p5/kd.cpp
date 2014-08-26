@@ -518,11 +518,15 @@ void kd_tree::confirm(int idim, int compareto, int dir, int where){
 }
 
 void kd_tree::add(array_1d<double> &v){
-  
+    /*
+    add the point v to the tree
+    */
+    
     int i,j,k,l,node,dir;
   
     int pts=data.get_rows();
-
+    
+    /*first, find the node that this new point will descend from*/
     node=find_node(v);
   
     if(node>=data.get_rows() || node<0){
@@ -563,6 +567,7 @@ void kd_tree::add(array_1d<double> &v){
         exit(1);
     }
   
+    /*make sure that the new point is still connected to the masterparent*/
     int ancestor=tree.get_data(pts-1,3);
     i=pts-1;
     while(ancestor>=0){
@@ -579,26 +584,20 @@ void kd_tree::add(array_1d<double> &v){
 int kd_tree::find_node(array_1d<double> &v){
    
     int i,j,k,l,nextstep,where;
-    
-    //printf("in find_node %d\n",masterparent);
-    
+
     where=masterparent;
-    
-    //printf("starting at %d\n",where);
-    
+
     if(v.get_data(tree.get_data(masterparent,0))<data.get_data(masterparent,tree.get_data(masterparent,0))){
-      nextstep=tree.get_data(masterparent,1);
+        nextstep=tree.get_data(masterparent,1);
     }
     else nextstep=tree.get_data(masterparent,2);
     
-    //printf("next step is %d\n",nextstep);
-    
     while(nextstep>-1){
-      where=nextstep;   
-      if(v.get_data(tree.get_data(where,0))<data.get_data(where,tree.get_data(where,0))){
-        nextstep=tree.get_data(where,1);
-      } 
-      else nextstep=tree.get_data(where,2);
+        where=nextstep;   
+        if(v.get_data(tree.get_data(where,0))<data.get_data(where,tree.get_data(where,0))){
+            nextstep=tree.get_data(where,1);
+        } 
+        else nextstep=tree.get_data(where,2);
     }
     
     return where;
