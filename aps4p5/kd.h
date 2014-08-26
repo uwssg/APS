@@ -61,9 +61,25 @@ class kd_tree{
         the node specified by the int is properly constructed*/
         void check_tree(int);
         
+        /*
+        The distance routines all return parameter space distances between
+        points.  These points do not have to be on the tree, but they can be.
+        
+        The distances are Euclidean, except that they are normalized by the
+        values stored in the private global variables maxs and mins, i.e.
+        
+        distance = sqrt{\sum_i [(p1_i - p2_i)/(maxs_i - mins_i)]^2}
+        */
+        
+        /*the parameter space distance between arbitrary points*/
         double distance(array_1d<double>&,array_1d<double>&);
+ 
+        /*the parameter space distance between and arbitrary point and a node
+        on the tree*/
         double distance(array_1d<double>&,int);
         double distance(int,array_1d<double>&);
+        
+        /*the parameter space distance between two nodes on the tree*/
         double distance(int,int);
 
  
