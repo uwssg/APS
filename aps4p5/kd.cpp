@@ -447,6 +447,7 @@ void kd_tree::check_tree(int where){
    
    if(where<0)where=masterparent;
    
+   /*first make sure that all nodes are somehow descended from the masterparent*/
    if(where!=masterparent){
       j=where;
       ancestor=tree.get_data(j,3);
@@ -465,29 +466,30 @@ void kd_tree::check_tree(int where){
        }
    }
    
-   //printf("got to the master parent\n");
-   
-      //printf("checking %d %d %d %d\n",where,tree[where][1],tree[where][2],tree[where][0]);
-   
+   /*make sure that the left hand branch is properly constructed*/
    if(tree.get_data(where,1)>-1)confirm(tree.get_data(where,0),where,1,tree.get_data(where,1));
    
-   //printf("confirmed 1\n");
-   
+   /*make sure that the right hand branch is properly constructed*/
    if(tree.get_data(where,2)>-1)confirm(tree.get_data(where,0),where,2,tree.get_data(where,2));
-   //printf("confirmed 2\n");
-   
-   //if(tree.get_data(where,1)>-1)check_tree(tree.get_data(where,1));
-   //if(tree.get_data(where,2)>-1)check_tree(tree.get_data(where,2));
-     
- 
+
 }
 
 
 
 void kd_tree::confirm(int idim, int compareto, int dir, int where){
+   /*
+   idim is the dimension on which this branch was originally split
+   compareto is the index of the parent which first split on idim
+   dir is the branch that we are on relative to compareto
+   where is the specific node we are currently considering
    
-   //printf("confirm %d %d %d %d\n",idim,compareto,dir,where);
+   This routine will start from some specified node (compareto) and walk down
+   all of its descendants, making sure they are in proper relationship to it
+   with respect to the dimension idim.
    
+   It is iterative, and probably very slow, so don't call it too often.
+   */
+
    if(dir==1){
      if(data.get_data(where,idim)>=data.get_data(compareto,idim)){
          diagnostic=0;

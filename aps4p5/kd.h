@@ -51,9 +51,16 @@ class kd_tree{
         */
         void set_max(int,double);
         void set_min(int,double);
- 
+        
+        /*check to make sure the tree is properly constructed;
+        if it is, set the global variable diagnostic=1;
+        if not, set diagnostic=0*/
         void check_tree();
+        
+        /*check to make sure the part of the tree that descendes from
+        the node specified by the int is properly constructed*/
         void check_tree(int);
+        
         double distance(array_1d<double>&,array_1d<double>&);
         double distance(array_1d<double>&,int);
         double distance(int,array_1d<double>&);
@@ -126,7 +133,9 @@ class kd_tree{
         double tol;
 
         int nkernel;
-  
+        
+        /*this provides the backend for check_tree;
+        see source code in kd.cpp for more details*/
         void confirm(int,int,int,int);
         
         /*the iterative backend of build_tree*/
