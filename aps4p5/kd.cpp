@@ -253,9 +253,13 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
         while(inp>0 && sorted.get_data(inp)-sorted.get_data(inp-1)<tol)inp--;
         
         /*in the event that we have been passed a large collection of points with identical values
-        in the idim dimension*/
+        in the idim dimension
+        
+        I'm actually not sure this code is necessary any more....
+        
+        */
         if(use.get_data(inp)==parent){
-          
+ 
             if(fabs(sorted.get_data(inp+1)-sorted.get_data(inp))>tol || inp==ct-1){
                 printf("CANNOT rectify inp ambiguity in kd_tree::organize\n");
                 exit(1);
