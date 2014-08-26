@@ -792,117 +792,98 @@ void kd_tree::nn_srch(array_1d<double> &v, int kk, array_1d<int> &neigh, array_1
 
 void kd_tree::remove(int target){
 
-  int nl,nr,i,j,k,l,mvup,side,putit;
-  int root;
+    int nl,nr,i,j,k,l,mvup,side,putit;
+    int root;
   
   
-  nl=0;
-  nr=0;
-  //printf("about to subtract %d\n",target);
+    nl=0;
+    nr=0;
   
-  if(tree.get_data(target,1)>=0){
-     nl++;
-    count(tree.get_data(target,1),&nl);
-  }
-  //printf("got nl %d\n",nl);
+    if(tree.get_data(target,1)>=0){
+        nl++;
+        count(tree.get_data(target,1),&nl);
+    }
   
-  if(tree.get_data(target,2)>=0){
-     nr++;
-    count(tree.get_data(target,2),&nr);
-  }
+    if(tree.get_data(target,2)>=0){
+        nr++;
+        count(tree.get_data(target,2),&nr);
+    }
  
-  //printf("got nr %d\n",nr);
-  
-  if(nl==0 && nr==0){
-    //printf("easiest case %d %d %d %d\n",tree[target][1],tree[target][2],\
-    tree[target][3],target);
-    
-    k=tree.get_data(target,3);
+    if(nl==0 && nr==0){    
+        k=tree.get_data(target,3);
       
-      if(tree.get_data(k,1)==target)tree.set(k,1,-1);
-      else if(tree.get_data(k,2)==target)tree.set(k,2,-1);
+       if(tree.get_data(k,1)==target)tree.set(k,1,-1);
+       else if(tree.get_data(k,2)==target)tree.set(k,2,-1);
     
-  }//if target is terminal
-  else if((nl==0 && nr>0) || (nr==0 && nl>0)){
-    //printf("lopsided case\n");
-    if(nl==0)side=2;
-    else side=1;
+    }//if target is terminal
+    else if((nl==0 && nr>0) || (nr==0 && nl>0)){
     
-    k=tree.get_data(target,3);
-    if(k>=0){//printf("k is non-negative\n");
-     if(tree.get_data(k,1)==target){
-       tree.set(k,1,tree.get_data(target,side));
-       tree.set(tree.get_data(k,1),3,k);
+        if(nl==0)side=2;
+        else side=1;
+    
+        k=tree.get_data(target,3);
+        if(k>=0){//printf("k is non-negative\n");
+            if(tree.get_data(k,1)==target){
+                tree.set(k,1,tree.get_data(target,side));
+                tree.set(tree.get_data(k,1),3,k);
    
-     }
-     else{
-       tree.set(k,2,tree.get_data(target,side));
-       tree.set(tree.get_data(k,2),3,k);
+            }
+            else{
+                tree.set(k,2,tree.get_data(target,side));
+                tree.set(tree.get_data(k,2),3,k);
 
-     }
-    }
-    else{
-      //printf("ah... the masterparent\n");
-      masterparent=tree.get_data(target,side);
-      tree.set(tree.get_data(target,side),3,-1);
- 
-      //printf("assigned the indices\n");
-      //printf("continue?");
-      //scanf("%d",&i);
-    }
+            }
+        }
+        else{
+      
+            masterparent=tree.get_data(target,side);
+            tree.set(tree.get_data(target,side),3,-1);
     
-  
-  }//if only one side is populated
-  else{
-     //printf("hardest case master parent %d\n",masterparent);
-     if(nl>nr)side=1;
-     else side=2;
+        }
+
+    }//if only one side is populated
+    else{
      
-      k=tree.get_data(target,3);
-      if(k<0){
-        masterparent=tree.get_data(target,side);
-        tree.set(masterparent,3,-1);
-        
-      }
-      else{
-        if(tree.get_data(k,1)==target){
-          tree.set(k,1,tree.get_data(target,side));
-          tree.set(tree.get_data(k,1),3,k);
+        if(nl>nr)side=1;
+        else side=2;
+        k=tree.get_data(target,3);
+        if(k<0){
+            masterparent=tree.get_data(target,side);
+            tree.set(masterparent,3,-1);
         
         }
         else{
-           tree.set(k,2,tree.get_data(target,side));
-           tree.set(tree.get_data(k,2),3,k);
-         }
-      }
+            if(tree.get_data(k,1)==target){
+                tree.set(k,1,tree.get_data(target,side));
+                tree.set(tree.get_data(k,1),3,k);
+        
+            }
+            else{
+                tree.set(k,2,tree.get_data(target,side));
+                tree.set(tree.get_data(k,2),3,k);
+            }
+        }
      
-     //printf("side is %d\n",side);
-     //printf("parent was %d\n",tree[target][3]);
+        root=tree.get_data(target,3-side);
+        descend(root);
      
-
-     root=tree.get_data(target,3-side);
-     
-     descend(root);
-     
-
-  }//if both sides are populated
+    }//if both sides are populated
   
     if(target<data.get_rows()-1){
-      for(i=target+1;i<data.get_rows();i++){
-        for(j=0;j<4;j++)tree.set(i-1,j,tree.get_data(i,j));
-        for(j=0;j<data.get_cols();j++)data.set(i-1,j,data.get_data(i,j));
-     }
+        for(i=target+1;i<data.get_rows();i++){
+            for(j=0;j<4;j++)tree.set(i-1,j,tree.get_data(i,j));
+            for(j=0;j<data.get_cols();j++)data.set(i-1,j,data.get_data(i,j));
+        }
     
-      for(i=0;i<data.get_rows();i++){
-        for(j=1;j<4;j++)if(tree.get_data(i,j)>target)tree.subtract_val(i,j,1);
-      }
+        for(i=0;i<data.get_rows();i++){
+            for(j=1;j<4;j++)if(tree.get_data(i,j)>target)tree.subtract_val(i,j,1);
+        }
     
-      if(masterparent>target)masterparent--;
+        if(masterparent>target)masterparent--;
     }
   
-  data.decrement_rows();
-  //printf("done subtracting %d\n",pts);
-  
+    data.decrement_rows();
+ 
 }
 
 void kd_tree::count(int where, int *ct){
