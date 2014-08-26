@@ -477,106 +477,102 @@ void kd_tree::check_tree(int where){
 
 
 void kd_tree::confirm(int idim, int compareto, int dir, int where){
-   /*
-   idim is the dimension on which this branch was originally split
-   compareto is the index of the parent which first split on idim
-   dir is the branch that we are on relative to compareto
-   where is the specific node we are currently considering
+     /*
+     idim is the dimension on which this branch was originally split
+     compareto is the index of the parent which first split on idim
+     dir is the branch that we are on relative to compareto
+     where is the specific node we are currently considering
    
-   This routine will start from some specified node (compareto) and walk down
-   all of its descendants, making sure they are in proper relationship to it
-   with respect to the dimension idim.
+     This routine will start from some specified node (compareto) and walk down
+     all of its descendants, making sure they are in proper relationship to it
+     with respect to the dimension idim.
    
-   It is iterative, and probably very slow, so don't call it too often.
-   */
+     It is iterative, and probably very slow, so don't call it too often.
+     */
 
-   if(dir==1){
-     if(data.get_data(where,idim)>=data.get_data(compareto,idim)){
-         diagnostic=0;
-         printf("tree broken\n");
-         printf("%e >= %e\n",data.get_data(where,idim),data.get_data(compareto,idim));
-         exit(1);
-     }
+    if(dir==1){
+        if(data.get_data(where,idim)>=data.get_data(compareto,idim)){
+            diagnostic=0;
+            printf("tree broken\n");
+            printf("%e >= %e\n",data.get_data(where,idim),data.get_data(compareto,idim));
+            exit(1);
+        }
      
-     if(tree.get_data(where,1)>-1)confirm(idim,compareto,dir,tree.get_data(where,1));
-     if(tree.get_data(where,2)>-1)confirm(idim,compareto,dir,tree.get_data(where,2));
+        if(tree.get_data(where,1)>-1)confirm(idim,compareto,dir,tree.get_data(where,1));
+        if(tree.get_data(where,2)>-1)confirm(idim,compareto,dir,tree.get_data(where,2));
      
-   }
-   else if(dir==2){
-     if(data.get_data(where,idim)<data.get_data(compareto,idim)){
-         diagnostic=0;
+    }
+    else if(dir==2){
+        if(data.get_data(where,idim)<data.get_data(compareto,idim)){
+            diagnostic=0;
      
-         printf("tree broken\n");
-         printf("%e < %e\n",data.get_data(where,idim),data.get_data(compareto,idim));
-         exit(1);
-     }
+            printf("tree broken\n");
+            printf("%e < %e\n",data.get_data(where,idim),data.get_data(compareto,idim));
+            exit(1);
+        }
      
-     if(tree.get_data(where,1)>-1)confirm(idim,compareto,dir,tree.get_data(where,1));
-     if(tree.get_data(where,2)>-1)confirm(idim,compareto,dir,tree.get_data(where,2));
-   }
+        if(tree.get_data(where,1)>-1)confirm(idim,compareto,dir,tree.get_data(where,1));
+        if(tree.get_data(where,2)>-1)confirm(idim,compareto,dir,tree.get_data(where,2));
+    }
    
 }
 
 void kd_tree::add(array_1d<double> &v){
   
-  int i,j,k,l,node,dir;
+    int i,j,k,l,node,dir;
   
-  int pts=data.get_rows();
-  
+    int pts=data.get_rows();
 
+    node=find_node(v);
+  
+    if(node>=data.get_rows() || node<0){
+        printf("WARNING in kd::add node %d pts %d\n",node,data.get_rows());
+        exit(1);
+    }
 
-  node=find_node(v);
+    if(v.get_data(tree.get_data(node,0))<data.get_data(node,tree.get_data(node,0)))dir=1;
+    else dir=2;
   
-  if(node>=data.get_rows() || node<0){
-      printf("WARNING in kd::add node %d pts %d\n",node,data.get_rows());
-      exit(1);
-  }
+    if(tree.get_data(node,dir)>=0){
+        printf("WARNING in kd::add intended ancestor already occupied\n");
+        exit(1);
+    }
   
+    tree.set(node,dir,pts);
+    tree.set(pts,3,node);
+    tree.set(pts,0,tree.get_data(node,0)+1);
+    if(tree.get_data(pts,0)>=data.get_cols())tree.set(pts,0,0);
+    tree.set(pts,1,-1);
+    tree.set(pts,2,-1);
   
+    data.add_row(v);
   
-  if(v.get_data(tree.get_data(node,0))<data.get_data(node,tree.get_data(node,0)))dir=1;
-  else dir=2;
+    int oldpts=pts;
+    pts=tree.get_rows();
   
-  if(tree.get_data(node,dir)>=0){
-      printf("WARNING in kd::add intended ancestor already occupied\n");
-      exit(1);
-  }
-  
-  tree.set(node,dir,pts);
-  tree.set(pts,3,node);
-  tree.set(pts,0,tree.get_data(node,0)+1);
-  if(tree.get_data(pts,0)>=data.get_cols())tree.set(pts,0,0);
-  tree.set(pts,1,-1);
-  tree.set(pts,2,-1);
-  
-  data.add_row(v);
-  
-  int oldpts=pts;
-  pts=tree.get_rows();
-  
-  if(pts!=oldpts+1){
-      printf("WARNING added point to kd tree but did not increment by one %d %d\n",
-      oldpts,pts);
+    if(pts!=oldpts+1){
+        printf("WARNING added point to kd tree but did not increment by one %d %d\n",
+        oldpts,pts);
       
-      exit(1);
-  }
+        exit(1);
+    }
   
-  if(data.get_rows()!=tree.get_rows()){
-      printf("WARNING in kd add pt data rows %d tree rows %d\n",data.get_rows(),tree.get_rows());
+    if(data.get_rows()!=tree.get_rows()){
+        printf("WARNING in kd add pt data rows %d tree rows %d\n",data.get_rows(),tree.get_rows());
       
-      exit(1);
-  }
+        exit(1);
+    }
   
-  int ancestor=tree.get_data(pts-1,3);
-  i=pts-1;
-  while(ancestor>=0){
-      i=ancestor;
-      ancestor=tree.get_data(i,3);
-  }
-  if(i!=masterparent){
-      printf("WARNING in tree:add, I cannot get back to masterparent\n");
-      exit(1);
-  }
+    int ancestor=tree.get_data(pts-1,3);
+    i=pts-1;
+    while(ancestor>=0){
+        i=ancestor;
+        ancestor=tree.get_data(i,3);
+    }
+    if(i!=masterparent){
+        printf("WARNING in tree:add, I cannot get back to masterparent\n");
+        exit(1);
+    }
 
 }
 

@@ -93,7 +93,10 @@ class kd_tree{
         int get_pts();
 
         void write_tree(char*);
+        
+        /*add a point to the tree*/
         void add(array_1d<double>&);
+        
         void remove(int);
         void count(int,int*);
         void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&);
