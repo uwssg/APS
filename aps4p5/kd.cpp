@@ -168,8 +168,10 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
     
     use_in -- a list of points to be organized (referred to by their row number in data)
     
-    u_start -- the dimension that was last split on (i.e. the dimension used to determine that
-    these points are all in the same branch)
+    u_start -- the index in use_in marking the first valid point (this way, we do not have
+    to keep making copies of use_in every time we call organize; we can just pass the existing
+    array on to the next call of organize, and move u_start to indicate that not all of the 
+    points are still in need of organization)
     
     parent -- the index of the parent of these points
     
@@ -198,13 +200,17 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
     var.set_name("kd_tree_organize_var");
    
    
-   
+    /*assign an array containing all of the points that will actually be used*/
     for(i=0;i<ct;i++){
         use.add(use_in.get_data(u_start+i));
     }
-   
+    
+    /*make sure that we are splitting on a valid dimension*/
     if(idim>=data.get_cols())idim=0;
-   
+     
+    /*
+    we will now try to learn the dimension with the largest variance and split the branches on that
+    */
     for(i=0;i<data.get_cols();i++){
         mean.set(i,0.0);
         var.set(i,0.0);      
@@ -232,8 +238,10 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
     mean.reset();
     var.reset();
    
-     
     if(ct>2){
+        /*
+        We will need to call organize again
+        */
         for(i=0;i<ct;i++)tosort.set(i,data.get_data(use.get_data(i),idim));
         sort_and_check(tosort,sorted,use);
 
