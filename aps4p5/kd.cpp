@@ -177,7 +177,7 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
     
     idim -- a guess as to which dimension should be split on next
     
-    ct -- the number of points being passed in
+    ct -- the number of points to organize
     
     dir -- is this the left hand (dir=1) or the righ hand (dir=2) branch of parent
     
@@ -241,14 +241,19 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
     if(ct>2){
         /*
         We will need to call organize again
+        
+        First: find the median point as reckoned by the idim dimension.  This will be the new node.
         */
+        
         for(i=0;i<ct;i++)tosort.set(i,data.get_data(use.get_data(i),idim));
         sort_and_check(tosort,sorted,use);
 
         inp=ct/2;     
       
         while(inp>0 && sorted.get_data(inp)-sorted.get_data(inp-1)<tol)inp--;
-      
+        
+        /*in the event that we have been passed a large collection of points with identical values
+        in the idim dimension*/
         if(use.get_data(inp)==parent){
           
             if(fabs(sorted.get_data(inp+1)-sorted.get_data(inp))>tol || inp==ct-1){
@@ -265,7 +270,11 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
             sorted.set(inp+1,nn);
 
         }
-      
+        
+        /*
+        set the new node index (newparent) and the value of the coordinate about which
+        the branches will split (pivot)
+        */
         newparent=use.get_data(inp);   
         pivot=data.get_data(newparent,idim);
    
@@ -275,29 +284,24 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
         
             exit(1);
         }
-      
-      
-   
-      
+     
         tree.set(parent,dir,newparent);
         tree.set(newparent,3,parent);
         tree.set(newparent,0,idim);
-      
-        //now I need to re-order use[] so that I can pass it to another
-        //call of ::organize and have the proper indices available
-      
-         //k=use.get_data(inp);
-         //use.set(inp,newparent);
-         //use.set(inn.get_data(inp),k);         
+             
 
-      
+        /*re-order the points in use_in so that it can safely be passed to
+        the next iteration of organize()*/
         for(i=0;i<ct;i++){
             use_in.set(u_start+i,use.get_data(i));
         }
-      
+        
+        /*reset use before calling organize again; this prevents organize
+        from eating up memory with unwieldy numbers of copies of use*/
         use.reset();
       
         if(inp!=0){
+           /*there will be both a left and a right branch; call organize on both*/
 
            organize(use_in,u_start,newparent,idim+1,inp,1);
          
@@ -306,7 +310,9 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
       
         }//if(inp!=0)
         else{
-        
+            
+            /*there is only a right branch; set the left daughter to -1*/
+            
             tree.set(newparent,1,-1);        
         
             organize(use_in,u_start+1,newparent,idim+1,ct-1,2);
@@ -317,6 +323,10 @@ void kd_tree::organize(array_1d<int> &use_in, int u_start,
       
     }//if(ct>2)
     else if(ct==2){
+        /*
+        If there are only two points to organize,
+        arbitrarily set the 1st point in use to the node; the 0th point will be the terminal node
+        */
         if(data.get_data(use.get_data(0),idim)<data.get_data(use.get_data(1),idim)){
             tree.set(parent,dir,use.get_data(1));
             tree.set(use.get_data(1),1,use.get_data(0));
