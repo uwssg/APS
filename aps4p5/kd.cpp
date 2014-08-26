@@ -403,7 +403,9 @@ int kd_tree::get_pts(){
     return data.get_rows();
 } 
 
-
+array_1d<double>* kd_tree::get_pt(int dex){
+    return data(dex);
+}
 
 void kd_tree::get_pt(int dex, array_1d<double> &output){
     

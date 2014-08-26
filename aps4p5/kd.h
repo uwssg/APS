@@ -89,6 +89,9 @@ class kd_tree{
         int specifies the node; the second int specifies the dimension*/
         double get_pt(int,int);
         
+        /*return a pointer to a node on the tree*/
+        array_1d<double>* get_pt(int);
+        
         /*return the number of points stored in the tree*/
         int get_pts();
 
