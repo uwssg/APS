@@ -721,7 +721,8 @@ void kd_tree::neigh_check(array_1d<double> &v, int kk, array_1d<int> &neigh, arr
 
 }
 
-void kd_tree::nn_srch(int dex, int kk, array_1d<int> &neigh, array_1d<double> &dd){
+void kd_tree::nn_srch(int dex, int kk, array_1d<int> &neigh, 
+array_1d<double> &dd){
     
     if(dex<0 || dex>=data.get_rows()){
         printf("WARNING wanted neighbors to %d but pts %d\n",dex,data.get_rows());
@@ -734,61 +735,53 @@ void kd_tree::nn_srch(int dex, int kk, array_1d<int> &neigh, array_1d<double> &d
     
 }
 
-void kd_tree::nn_srch(array_1d<double> &v, int kk, array_1d<int> &neigh, array_1d<double> &dd){
+void kd_tree::nn_srch(array_1d<double> &v, int kk, array_1d<int> &neigh, 
+array_1d<double> &dd){
 
-   int i,j,k,l,node,where,behind;
-   double ddnode,ddtry;
+    int i,j,k,l,node,where,behind;
+    double ddnode,ddtry;
    
-   neigh.set_dim(kk);
-   dd.set_dim(kk);
+    neigh.set_dim(kk);
+    dd.set_dim(kk);
    
-   array_1d<int> inn;
-   inn.set_name("kd_tree_nn_srch_inn");
+    array_1d<int> inn;
+    inn.set_name("kd_tree_nn_srch_inn");
   
-   node=find_node(v);
+    node=find_node(v);
 
-   ddnode=distance(v,node);
+    ddnode=distance(v,node);
    
-   dd.set(0,ddnode);
-   neigh.set(0,node);
-   
-   
-   
-   j=1;
-   for(i=0;j<kk;i++){
+    dd.set(0,ddnode);
+    neigh.set(0,node);
+
+    j=1;
+    for(i=0;j<kk;i++){
      
-     l=1;
-     for(k=0;k<j;k++){
-       if(neigh.get_data(k)==i)l=0;
-     }
-     if(l==1){
-       dd.set(j,distance(i,v));
-       neigh.set(j,i);   
-       j++;
-     }
+        l=1;
+        for(k=0;k<j;k++){
+            if(neigh.get_data(k)==i)l=0;
+        }
+        if(l==1){
+            dd.set(j,distance(i,v));
+            neigh.set(j,i);   
+            j++;
+        }
      
-   }
-   
-   //printf("starting with %d %d\n",neigh.get_dim(),dd.get_dim());
-   
-   array_1d<double> ddstore;
-   ddstore.set_name("kd_tree_nn_srch_ddstore");
+    }
+
+    array_1d<double> ddstore;
+    ddstore.set_name("kd_tree_nn_srch_ddstore");
    
 
-   for(i=0;i<kk;i++){
-       ddstore.set(i,dd.get_data(i));
-   }
+    for(i=0;i<kk;i++){
+        ddstore.set(i,dd.get_data(i));
+    }
    
-   //sort(dd,neigh,kk);
-   sort_and_check(ddstore,dd,neigh);
-   
+    sort_and_check(ddstore,dd,neigh);
 
-   //printf("\n");
-   //for(i=0;i<kk;i++)printf("pre-neigh %d\n",neigh[i]);
-   
-   if(tree.get_data(node,3)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,3),node);
-   if(tree.get_data(node,1)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,1),node);
-   if(tree.get_data(node,2)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,2),node);
+    if(tree.get_data(node,3)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,3),node);
+    if(tree.get_data(node,1)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,1),node);
+    if(tree.get_data(node,2)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,2),node);
   
 }
 
