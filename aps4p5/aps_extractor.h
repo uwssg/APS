@@ -38,7 +38,7 @@ class aps_extractor{
         /*write all points for which chisquared<chisquared_lim*/
         void write_good_points(char*);
         
-        void write_good_points(char*,int,int,double);
+        void write_good_points(char*,int,int);
         void plot_chimin(char*);
     
         void show_minpt();
@@ -47,7 +47,7 @@ class aps_extractor{
         void sample_posterior(array_2d<double>&,int);
         void sample_posterior(char*,array_2d<double>&,int,int);
     
-        void draw_bayesian_bounds(char*,int,int,double,double);
+        void draw_bayesian_bounds(char*,int,int,double);
     
         void make_boxes();
     

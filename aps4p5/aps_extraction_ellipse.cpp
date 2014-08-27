@@ -18,10 +18,10 @@ int i,j;
 for(i=0;i<5;i++){
     for(j=i+1;j<5;j++){
         sprintf(bayesname,"aps_processed/ellipse/bayesianThinned/ellipse_d5_c4_%d_%d_bayes.sav",i,j);
-        test.draw_bayesian_bounds(bayesname,i,j,0.95,1.0e-3);
+        test.draw_bayesian_bounds(bayesname,i,j,0.95);
         
         sprintf(bayesname,"aps_processed/ellipse/frequentistThinned/ellipse_d5_c4_%d_%d_frequentist.sav",i,j);
-        test.write_good_points(bayesname,i,j,1.0e-3);
+        test.write_good_points(bayesname,i,j);
     }
 }
 

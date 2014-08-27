@@ -162,7 +162,7 @@ void aps_extractor::write_good_points(char *outname){
     printf("wrote good pts with chi_min %e target %e\n",chi_min,chi_target);
 }
 
-void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol){
+void aps_extractor::write_good_points(char *outname, int ix, int iy){
     if(chi_min<0.0){
         learn_chimin();
     }
@@ -519,7 +519,7 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     }
 }
 
-void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double limit, double tol){
+void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double limit){
     if(l_probability.get_dim()==0){
         make_boxes();
     }

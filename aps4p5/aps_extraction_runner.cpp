@@ -55,12 +55,11 @@ for(i=0;i<6;i++){
             the first argument is the name of the output file.
             the second and third arguments denote which dimensions to plot.
             the fourth argument is the confidence limit to plot
-            the fifth argument actually is not used
             */
-            apsExtractorObj.draw_bayesian_bounds(outname,i,j,0.95,0.01);
+            apsExtractorObj.draw_bayesian_bounds(outname,i,j,0.95);
             
             sprintf(outname,"aps_processed/WMAP/frequentist/gaussLearn_%d_%d_frequentist.sav",i,j);
-            apsExtractorObj.write_good_points(outname,i,j,0.01);
+            apsExtractorObj.write_good_points(outname,i,j);
         }
     }
 }
