@@ -658,71 +658,100 @@ double kd_tree::distance(array_1d<double> &p1, array_1d<double> &p2){
   return dd;
 }
 
-void kd_tree::neigh_check(array_1d<double> &v, int kk, array_1d<int> &neigh, array_1d<double> &dd,\
- int where, int wherefrom){
-
-   int i,j,k,l,side,goon;
-   double dtry,dwhere;
-   
-   if(v.get_data(tree.get_data(where,0))<data.get_data(where,tree.get_data(where,0)))side=1;
-   else side=2;
-   
-   dtry=fabs((v.get_data(tree.get_data(where,0))-data.get_data(where,tree.get_data(where,0)))/\
-   (maxs.get_data(tree.get_data(where,0))-mins.get_data(tree.get_data(where,0))));
-   
-   
-   if(dtry<=dd.get_data(kk-1)){
-          
-     dwhere=distance(where,v);
-     
-     goon=0;
-     if(dwhere<dd.get_data(kk-1)){
-         goon=1;
-         for(k=0;k<kk;k++)if(neigh.get_data(k)==where)goon=0;
-     }
-     
-     if(goon==1){
-        for(i=kk-2;i>=0 && dd.get_data(i)>dwhere;i--){
-        
-           dd.set(i+1,dd.get_data(i));
-           neigh.set(i+1,neigh.get_data(i));
-
-        }
-        i++;
-        
-        dd.set(i,dwhere);
-        neigh.set(i,where);
-        
-        
-     }
-     
-     if(wherefrom==tree.get_data(where,3) || wherefrom==tree.get_data(where,side)){
-      if(tree.get_data(where,3-side)>-1){
-       neigh_check(v,kk,neigh,dd,tree.get_data(where,3-side),where);
-       //check the other side of this node
-      }
-     }
-     
-   }
-   
-   if(wherefrom==tree.get_data(where,3)){
-     if(tree.get_data(where,side)>-1){
-       neigh_check(v,kk,neigh,dd,tree.get_data(where,side),where);
-       //check the side of this node I am naturally on
-     } 
-   }
-   else{
-     if(tree.get_data(where,3)>-1){
-       neigh_check(v,kk,neigh,dd,tree.get_data(where,3),where);
-       //check the parent of this node, if that is not where I came from
-     }
-   }
+void kd_tree::neigh_check(array_1d<double> &v, int kk, 
+array_1d<int> &neigh, array_1d<double> &dd, int where, int wherefrom){
     
-
+    /*
+    This routine provides the backend for nn_srch
+    
+    v is the point for which we are trying to find nearest neighbors
+    
+    kk is the number of nearest neighbors we are trying to find
+    
+    neigh stores the indices of the nearest neighbors
+    
+    dd stores the (normalized) parameter space distances from v to the nearest neighbors
+    
+    where indicates what node we are examining now
+    
+    wherefrom indicates what node we just came from (so this search does not backtrack)
+    
+    This routine will call itself such that it walks through the tree until all possible
+    steps are ruled out (by being obviously farther away than the kkth nearest neighbor
+    discovered so far).
+    */
+    
+    int i,j,k,l,side,goon;
+    double dtry,dwhere;
+    
+    /*on what side of where does v belong?*/
+    if(v.get_data(tree.get_data(where,0))<data.get_data(where,tree.get_data(where,0)))side=1;
+    else side=2;
+    
+    /*
+    the parameter space distance between v and where in the dimension on which where splits
+    the tree; if this is longer than the distance to the kkth nearest neighbor, there is no
+    point in calculating the full parameter space distance bewtween v and where
+    */
+    dtry=fabs((v.get_data(tree.get_data(where,0))-data.get_data(where,tree.get_data(where,0)))/\
+    (maxs.get_data(tree.get_data(where,0))-mins.get_data(tree.get_data(where,0))));
+   
+   
+    if(dtry<=dd.get_data(kk-1)){
+          
+        dwhere=distance(where,v);
+     
+        goon=0;
+        if(dwhere<dd.get_data(kk-1)){
+            goon=1;
+            //make sure that where isn't already one of the nearest neighbors
+            for(k=0;k<kk;k++)if(neigh.get_data(k)==where)goon=0;
+        }
+     
+        if(goon==1){
+            //add where to the list of nearest neighbors
+            for(i=kk-2;i>=0 && dd.get_data(i)>dwhere;i--){
+                dd.set(i+1,dd.get_data(i));
+                neigh.set(i+1,neigh.get_data(i));
+            }
+            i++;
+        
+            dd.set(i,dwhere);
+            neigh.set(i,where);
+        }
+     
+        if(wherefrom==tree.get_data(where,3) || wherefrom==tree.get_data(where,side)){
+            /*inspect the other side of the tree as split by where (assuming we did not just
+            come from there)*/
+            if(tree.get_data(where,3-side)>-1){
+                neigh_check(v,kk,neigh,dd,tree.get_data(where,3-side),where);
+            }
+        }
+     
+    }
+   
+    if(wherefrom==tree.get_data(where,3)){
+        if(tree.get_data(where,side)>-1){
+            //check the side of this node v is naturally on
+            neigh_check(v,kk,neigh,dd,tree.get_data(where,side),where);
+        } 
+    }
+    else{
+        if(tree.get_data(where,3)>-1){
+            //check the parent of this node, if that is not where I came from
+            neigh_check(v,kk,neigh,dd,tree.get_data(where,3),where);
+        }
+    }
 }
 
 void kd_tree::nn_srch(int dex, int kk, array_1d<int> &neigh, 
 array_1d<double> &dd){
+    
+    /*
+    Find the nearest neighbors of the tree node specified by dex.
+    
+    This will return dex itself as the nearest neighbor.
+    */
     
     if(dex<0 || dex>=data.get_rows()){
         printf("WARNING wanted neighbors to %d but pts %d\n",dex,data.get_rows());
@@ -737,7 +766,18 @@ array_1d<double> &dd){
 
 void kd_tree::nn_srch(array_1d<double> &v, int kk, array_1d<int> &neigh, 
 array_1d<double> &dd){
-
+    
+    /*
+    Find the nearest neighbors of the point specified by v.
+    
+    kk is the number of nearest neighbors to find.
+    
+    neigh will store the indices of the nearest neighbors.
+    
+    dd will store the (normalized) parameter space distances from v to its
+    nearest neighbors
+    */
+    
     int i,j,k,l,node,where,behind;
     double ddnode,ddtry;
    
@@ -746,14 +786,21 @@ array_1d<double> &dd){
    
     array_1d<int> inn;
     inn.set_name("kd_tree_nn_srch_inn");
-  
+    
+    /*first, find the node in the tree where you would add v, were you adding
+    v to the tree*/
     node=find_node(v);
-
+    
+    /*what is the distance from v to that node*/
     ddnode=distance(v,node);
-   
+    
+    /*set this node as the nearest neighbor (this is just a guess, not
+    a final answer*/
     dd.set(0,ddnode);
     neigh.set(0,node);
-
+    
+    /*arbitrarily set the first kk-1 nodes as the rest of the nearest neighbors
+    (again, just a guess to get things going)*/
     j=1;
     for(i=0;j<kk;i++){
      
@@ -766,19 +813,24 @@ array_1d<double> &dd){
             neigh.set(j,i);   
             j++;
         }
-     
     }
 
     array_1d<double> ddstore;
     ddstore.set_name("kd_tree_nn_srch_ddstore");
    
-
     for(i=0;i<kk;i++){
         ddstore.set(i,dd.get_data(i));
     }
-   
+    
+    /*arrange dd so that it is in ascending order of parameter space distance*/
     sort_and_check(ddstore,dd,neigh);
-
+    
+    /*
+    Check the three subdivisions of the tree defined by node:
+    node's ancestors
+    node's left hand side daughters
+    node's right hand side daughters
+    */
     if(tree.get_data(node,3)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,3),node);
     if(tree.get_data(node,1)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,1),node);
     if(tree.get_data(node,2)>=0)neigh_check(v,kk,neigh,dd,tree.get_data(node,2),node);

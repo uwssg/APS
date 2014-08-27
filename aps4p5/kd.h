@@ -106,8 +106,25 @@ class kd_tree{
         /*counts the number of nodes descended from a given parent*/
         void count(int,int*);
         
+        /*
+        The nn_srch routins perform the nearest neighbor searches.
+        The first argument specifies the point whose nearest neighbors
+        you want to find (if it is just an int, you are looking for the
+        nearest neighbors of a node onthe tree)
+        
+        The second argument specifies the number of nearest neighbors to find.
+        
+        The third argument will store the indices of the nearest neighbors.
+        
+        The fourth argument will store the (normalized) parameter space
+        distances to those nearest neighbors.
+        
+        Remember: all distances are normalized by maxs-mins (see documentation
+        of the distance() routines)
+        */
         void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&);
         void nn_srch(int,int,array_1d<int>&,array_1d<double>&);
+        
         int kernel_srch(array_1d<double>&,array_1d<double>&,array_1d<int>&);
  
         int radial_srch(array_1d<double>&,double,array_1d<int>&);
@@ -176,6 +193,7 @@ class kd_tree{
         this is part of the backend for the add() routine*/
         int find_node(array_1d<double>&);
         
+        /*neigh_check provides the back end for nn_srch*/
         void neigh_check(array_1d<double>&,
             int,array_1d<int>&,array_1d<double>&,int,int);
   
