@@ -199,7 +199,7 @@ void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol)
     
     fclose(input);
     
-    plot_thinned_data(to_plot,tol,outname);
+    plot_thinned_data(to_plot,outname);
     
     printf("wrote good pts with chi_min %e target %e\n",chi_min,chi_target);
 }
@@ -555,10 +555,10 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
         
     }
     
-    plot_thinned_data(to_plot,tol,filename);    
+    plot_thinned_data(to_plot,filename);    
 }
 
-void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, double tol, char *filename){    
+void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, char *filename){    
     
     array_1d<double> max,min,center;
     int i,j;
