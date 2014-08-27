@@ -26,7 +26,14 @@ note that the data file referred to here is not a part of the repository
 apsExtractorObj.set_filename("aps_output/WMAP/apsWMAP_unitSphere_GaussLearn_output.sav");
 
 
-/*set the delta chisquared so that chisquared_lim = chisquared_min + delta chisquared*/
+/*
+set the delta chisquared so that 
+
+chisquared_lim = chisquared_min + delta chisquared
+
+12.6 is the delta chisquared corresponding to the 95% Frequentist 
+confidence limit for a chisquared distribution with 6 degrees of freedom
+*/
 apsExtractorObj.set_delta_chi(12.6);
 
 /*one could alternative set chisquared_lim by hand using*/
