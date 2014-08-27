@@ -154,6 +154,7 @@ all:
 	make ellipse
 	make integrate
 	make mcmc_test
+	make extract
 	make aps_extract
 	make aps_extract_ellipse
 	make ellipseBrute
@@ -163,5 +164,5 @@ all:
 
 clean:
 	rm *.o test_containers test_kd test_eigen ellipse \
-	integrate mcmc_test aps_extract aps_extract_ellipse \
+	integrate mcmc_test extract aps_extract aps_extract_ellipse \
 	ellipseBrute mcmcBrute apsWMAP
