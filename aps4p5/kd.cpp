@@ -1133,6 +1133,13 @@ int consider, int wherefrom){
 }
 
 int kd_tree::radial_srch(array_1d<double> &pt, double radius, array_1d<int> &rdex){
+   /*
+   Find all the points within (normalized) radius of pt.  Store their indices in rdex.
+   Return the number of points found.
+   
+   THIS IS NOT WELL-TESTED
+   */
+   
    int node;
    double dd;
    

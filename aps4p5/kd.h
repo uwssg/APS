@@ -129,13 +129,21 @@ class kd_tree{
         kernel_srch will do a neighbor search centered on a point (the first
         argument).  It will return all of the points located within a hyperbox 
         whose half-width is specified by the second argument.  The third
-        argument stores the indices of the found neighbors.  The method returns
+        argument stores the indices of the found neighbors.  The routine returns
         the number of found neighbors.
         
         NOTE: THIS IS NOT WELL-TESTED
         */
         int kernel_srch(array_1d<double>&,array_1d<double>&,array_1d<int>&);
- 
+        
+        /*
+        radial_srch performs a neighbor search centered on a point (the first
+        argument).  It returns all points within a given (normalized) radius
+        (the second argument).  The third argument stores the indices of the
+        found neighbors.  The routine returns the number of found neighbors.
+        
+        NOTE: THIS IS NOT WELL-TESTED
+        */
         int radial_srch(array_1d<double>&,double,array_1d<int>&);
         int get_dim();
         int get_diagnostic();
@@ -209,7 +217,8 @@ class kd_tree{
         /*kernel_check provides the backend for kernel_srch*/
         void kernel_check(array_1d<double>&,array_1d<double>&,array_1d<int>&,
             int,int);
-  
+        
+        /*radial_check provides the backend for radial_srch*/
         void radial_check(array_1d<double>&,double,array_1d<int>&,int,int);
         
         /*
