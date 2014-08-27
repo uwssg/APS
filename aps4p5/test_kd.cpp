@@ -8,12 +8,20 @@
 main(int iarg, char *argv[]){
 
 double tol=1.0e-12;
+int seed=71;
 
 array_2d<double> data;
 int rows=20,cols=5;
 int i,j;
 
-Ran chaos(71);
+if(iarg>1){
+    seed=atoi(argv[1]);
+}
+
+if(seed<0)seed=double(time(NULL));
+
+printf("seed %d\n",seed);
+Ran chaos(seed);
 
 double **base_data;
 base_data=new double*[rows];
@@ -69,7 +77,7 @@ double dtrial;
 
 int k,l,use_it,total_iterations=200;
 
-int outerloop;
+int outerloop,i_remove,total_remove;
 
 for(outerloop=0;outerloop<3;outerloop++){
     
@@ -188,7 +196,49 @@ for(outerloop=0;outerloop<3;outerloop++){
     }
 
     printf("maxerr %e \n",maxerr);
-
+    
+    data.reset();
+    for(i=0;i<kd_test.get_pts();i++){
+        data.add_row(*kd_test.get_pt(i));
+    }
+    
+    total_remove=data.get_rows()/2;
+    for(i=0;i<total_remove;i++){
+        i_remove=chaos.int32()%data.get_rows();
+        
+        kd_test.remove(i_remove);
+        data.remove_row(i_remove);
+        
+        if(kd_test.get_pts()!=data.get_rows()){
+            printf("WARNING after removing %d rows %d %d\n",
+            i,kd_test.get_pts(),data.get_rows());
+            
+            exit(1);
+        }
+        
+        kd_test.check_tree();
+        if(kd_test.get_diagnostic()!=1){
+            printf("WARNING after removing %d kd_test diagnostic fails\n",
+            i);
+            
+            exit(1);
+        }
+        
+        for(j=0;j<data.get_rows();j++){
+            kd_test.nn_srch(*data(j),1,neigh,dd);
+            if(dd.get_data(0)>tol){
+                printf("WARNING after removing %d distance error %e\n",
+                i,dd.get_data(0));
+                
+                exit(1);
+            }
+            
+            if(dd.get_data(0)>maxerr)maxerr=dd.get_data(0);
+            
+        }
+    }
+    
+    
     data.reset();
     vector.reset();
     
