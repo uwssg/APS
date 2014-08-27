@@ -29,7 +29,7 @@ void aps_extractor::show_minpt(){
     for(i=0;i<nparams;i++){
         printf("%e\n",min_pt.get_data(i));
     }
-    printf("\nat %e\n",chi_min);
+    printf("\nwith chi^2 = %e\n",chi_min);
 }
 
 void aps_extractor::validate(){
