@@ -145,13 +145,23 @@ class kd_tree{
         NOTE: THIS IS NOT WELL-TESTED
         */
         int radial_srch(array_1d<double>&,double,array_1d<int>&);
+        
+        /*return the dimensionality of the parameter space*/
         int get_dim();
+        
+        /*return diagnostic, the global variable that logs whether or not
+        the tree was properly constructed*/
         int get_diagnostic();
- 
+        
+        /*return the maximum and minimum values in a dimension of parameter
+        space*/
         double get_max(int);
         double get_min(int);
 
     private:
+    
+        /*a global variable logging whether or not the tree was properly
+        constructed; diagnostic=1 if the tree is correct; diagnostic=0 if not*/
         int diagnostic;
         
         /*
@@ -194,9 +204,16 @@ class kd_tree{
         
         /*masterparent is the point that is the first node of the tree*/
         int masterparent;
-
+        
+        /*a global variable to define the tolerance with which dimensions
+        are sorted on the tree*/
         double tol;
-
+        
+        /*a global variable used by kernel_srch to keep track of how many
+        points were found within the kernel
+        
+        also used by radial_srch
+        */
         int nkernel;
         
         /*this provides the backend for check_tree;
