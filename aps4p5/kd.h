@@ -100,8 +100,12 @@ class kd_tree{
         /*add a point to the tree*/
         void add(array_1d<double>&);
         
+        /*removes a node from the tree and then rebuilds the tree*/
         void remove(int);
+        
+        /*counts the number of nodes descended from a given parent*/
         void count(int,int*);
+        
         void nn_srch(array_1d<double>&,int,array_1d<int>&,array_1d<double>&);
         void nn_srch(int,int,array_1d<int>&,array_1d<double>&);
         int kernel_srch(array_1d<double>&,array_1d<double>&,array_1d<int>&);
@@ -179,7 +183,10 @@ class kd_tree{
             int,int);
   
         void radial_check(array_1d<double>&,double,array_1d<int>&,int,int);
-  
+        
+        /*
+        reassign() and descend() provide some of the backend for remove()
+        */
         void reassign(int);
         void descend(int);
 

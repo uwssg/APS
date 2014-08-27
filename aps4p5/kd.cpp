@@ -793,11 +793,16 @@ void kd_tree::nn_srch(array_1d<double> &v, int kk, array_1d<int> &neigh, array_1
 }
 
 void kd_tree::remove(int target){
-
+    /*
+    remove the node specified by target
+    */
+    
     int nl,nr,i,j,k,l,mvup,side,putit;
     int root;
   
-  
+    
+    /*first, need to find out how many nodes are on the left and right hand brances
+    of the node you are removing*/
     nl=0;
     nr=0;
   
@@ -811,7 +816,9 @@ void kd_tree::remove(int target){
         count(tree.get_data(target,2),&nr);
     }
  
-    if(nl==0 && nr==0){    
+    if(nl==0 && nr==0){  
+        /*this node had no daughters, so you can just cut it off*/
+          
         k=tree.get_data(target,3);
       
        if(tree.get_data(k,1)==target)tree.set(k,1,-1);
@@ -819,12 +826,14 @@ void kd_tree::remove(int target){
     
     }//if target is terminal
     else if((nl==0 && nr>0) || (nr==0 && nl>0)){
-    
+        
+        /*only one side had daughters*/
+        
         if(nl==0)side=2;
         else side=1;
     
         k=tree.get_data(target,3);
-        if(k>=0){//printf("k is non-negative\n");
+        if(k>=0){
             if(tree.get_data(k,1)==target){
                 tree.set(k,1,tree.get_data(target,side));
                 tree.set(tree.get_data(k,1),3,k);
@@ -845,7 +854,14 @@ void kd_tree::remove(int target){
 
     }//if only one side is populated
     else{
-     
+        
+        /*
+        Both sides have daughters;  pick the one with the most daughters and
+        glue it on to target's parent.
+        
+        Use descend() to reassign the other daughters
+        */
+        
         if(nl>nr)side=1;
         else side=2;
         k=tree.get_data(target,3);
@@ -865,7 +881,15 @@ void kd_tree::remove(int target){
                 tree.set(tree.get_data(k,2),3,k);
             }
         }
-     
+        
+        /*
+        Now that the most populated branch has assumed its parent's location
+        on the tree, the other branch is dangling, cut off from the masterparent.
+        
+        Use descend() (and, ultimately, reassign()) to find the nodes of that branch
+        new places on the tree.
+        */
+        
         root=tree.get_data(target,3-side);
         descend(root);
      
@@ -889,51 +913,64 @@ void kd_tree::remove(int target){
 }
 
 void kd_tree::count(int where, int *ct){
-//a way to count the number of vital elements on a given branch
-
-  if(tree.get_data(where,1)>=0){
-    ct[0]++;
-    count(tree.get_data(where,1),ct);
-  }
-  if(tree.get_data(where,2)>=0){
-    ct[0]++;
-    count(tree.get_data(where,2),ct);
-  }
+    /*
+    a way to count the number of nodes on a branch
+    */
+    
+    if(tree.get_data(where,1)>=0){
+        ct[0]++;
+        count(tree.get_data(where,1),ct);
+    }
+    if(tree.get_data(where,2)>=0){
+        ct[0]++;
+        count(tree.get_data(where,2),ct);
+    }
 }
 
 void kd_tree::reassign(int target){
+    /*
+    For use when removing a node from the tree.
+    
+    This will reassign target to its new location on the tree.
+    */
+    
+    int where,dir,k;
    
-   int where,dir,k;
+    where=masterparent;
+    if(data.get_data(target,tree.get_data(where,0))<data.get_data(where,tree.get_data(where,0)))dir=1;
+    else dir=2;
    
-   where=masterparent;
-   if(data.get_data(target,tree.get_data(where,0))<data.get_data(where,tree.get_data(where,0)))dir=1;
-   else dir=2;
+    k=tree.get_data(where,dir);
+    while(k>=0){
+        where=k;
+        if(data.get_data(target,tree.get_data(where,0))<data.get_data(where,tree.get_data(where,0)))dir=1;
+        else dir=2;
+        k=tree.get_data(where,dir);
+    }
    
-   k=tree.get_data(where,dir);
-   while(k>=0){
-     where=k;
-     if(data.get_data(target,tree.get_data(where,0))<data.get_data(where,tree.get_data(where,0)))dir=1;
-     else dir=2;
-     k=tree.get_data(where,dir);
-   }
+    tree.set(where,dir,target);
+    tree.set(target,3,where);
+    tree.set(target,1,-1);
+    tree.set(target,2,-1);
    
-   tree.set(where,dir,target);
-   tree.set(target,3,where);
-   tree.set(target,1,-1);
-   tree.set(target,2,-1);
-   
-   k=tree.get_data(where,0)+1;
-   if(k==data.get_cols())k=0;
-   tree.set(target,0,k);
+    k=tree.get_data(where,0)+1;
+    if(k==data.get_cols())k=0;
+    tree.set(target,0,k);
    
 }
 
 void kd_tree::descend(int root){
-
-  if(tree.get_data(root,1)>=0)descend(tree.get_data(root,1));
-  if(tree.get_data(root,2)>=0)descend(tree.get_data(root,2));
+    /*
+    For use when removing a node from the tree.
+    
+    Wander down the specified branch until you find a terminal node.
+    Reassign that terminal node to the new tree.
+    */
+    
+    if(tree.get_data(root,1)>=0)descend(tree.get_data(root,1));
+    if(tree.get_data(root,2)>=0)descend(tree.get_data(root,2));
   
-  reassign(root);  
+    reassign(root);  
     
 
 }
