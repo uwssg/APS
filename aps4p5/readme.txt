@@ -97,6 +97,22 @@ Each row represents a moment during the run of APS.  The columns are as follows
         A diagnostic to make sure that the unit spheres in steps 1C-4C are being
         used
 
+//////////////////INTERPRETING THE OUTPUT
+
+Classes and routines to turn the outputs of APS into Frequentist and Bayesian
+constraints on parameter space are defined in aps_extractor.h and
+aps_extractor.cpp.  An example of how to use these classes is provided in
+aps_extraction_runner.cpp, which can be compiled and run using
+
+	make aps_extract
+        ./aps_extract
+
+Note: the data files assumed by aps_extraction_runner.cpp are not a part of this
+repository, so you will have to run APS and then alter aps_extraction_runner.cpp
+to point to the data files that you have created (you will also need to change
+the output file names, as the directory structure assumed by
+aps_extraction_runner.cpp is also not a part of this repository).
+
 //////////////////RUNNING THE WMAP7 CODE
 
 (Note: this code was written with a version CAMB downloaded on April 19, 2011

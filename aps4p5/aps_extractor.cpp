@@ -29,7 +29,7 @@ void aps_extractor::show_minpt(){
     for(i=0;i<nparams;i++){
         printf("%e\n",min_pt.get_data(i));
     }
-    printf("\nat %e\n",chi_min);
+    printf("\nwith chi^2 = %e\n",chi_min);
 }
 
 void aps_extractor::validate(){
@@ -162,7 +162,7 @@ void aps_extractor::write_good_points(char *outname){
     printf("wrote good pts with chi_min %e target %e\n",chi_min,chi_target);
 }
 
-void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol){
+void aps_extractor::write_good_points(char *outname, int ix, int iy){
     if(chi_min<0.0){
         learn_chimin();
     }
@@ -199,7 +199,7 @@ void aps_extractor::write_good_points(char *outname, int ix, int iy, double tol)
     
     fclose(input);
     
-    plot_thinned_data(to_plot,tol,outname);
+    plot_thinned_data(to_plot,outname);
     
     printf("wrote good pts with chi_min %e target %e\n",chi_min,chi_target);
 }
@@ -246,6 +246,11 @@ void aps_extractor::sample_posterior(array_2d<double> &samples, int nsamples){
 
 void aps_extractor::make_boxes(){
     
+    /*
+    generate the hyperboxes used for approximating the Bayesian posterior 
+    as described in the paper
+    */
+    
     if(filename[0]==0){
         printf("WARNING filename no set in sample_posterior\n");
         exit(1);
@@ -255,6 +260,17 @@ void aps_extractor::make_boxes(){
         learn_chimin();
     }
     
+    /*
+    l_probability stores the log of the posterior probability in each box
+    
+    l_prob_dexes stores the index of the sample at the center of each box
+    
+    box_max and box_min store the bounds of each box in all dimensions
+    
+    chisq stores the chisquared value at the center of each box
+    
+    these are all global variables
+    */
     l_prob_dexes.reset();
     l_probability.reset();
     box_max.reset();
@@ -265,7 +281,6 @@ void aps_extractor::make_boxes(){
     box_min.set_cols(nparams);
     
     array_2d<double> data;
-    array_1d<double> min,max;
     
     data.set_name("data");
     
@@ -274,7 +289,8 @@ void aps_extractor::make_boxes(){
 
     char word[letters];
     int i,ct=0;
-
+    
+    /*read in the data (the raw APS outputs)*/
     input=fopen(filename,"r");
     for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
     double nn,chimin=chisq_exception;
@@ -292,12 +308,8 @@ void aps_extractor::make_boxes(){
         for(i=0;i<extra_words-2;i++)fscanf(input,"%le",&nn);
     }
     fclose(input);
-
-    for(i=0;i<nparams;i++){
-        min.set(i,-100.0);
-        max.set(i,100.0);
-    }
-
+    
+    /*arrange the data in k-d tree for nearest neighbor searching*/
     kd_tree kd(data);
 
     array_1d<double> dd;
@@ -311,17 +323,18 @@ void aps_extractor::make_boxes(){
     double mm;
         
     for(i=0;i<nparams;i++)smallest_radius.set(i,1.0e30);
-
-
+    
     for(i=0;i<data.get_rows();i++){
-        //printf("\n");
+        
+        /*find the nearest neighbors of each point*/
         kd.nn_srch(*data(i),n_neigh,neigh,dd);
     
         for(j=0;j<nparams;j++){
             box_max.set(i,j,2.0*chisq_exception);
             box_min.set(i,j,2.0*chisq_exception);
         }
-    
+        
+        /*iterate over the neighbors, trying to set bounds on the hyberbox*/
         for(j=1;j<n_neigh;j++){
             for(k=0;k<nparams;k++){
                 r_dim.set(k,fabs(data.get_data(i,k)-data.get_data(neigh.get_data(j),k)));
@@ -330,23 +343,36 @@ void aps_extractor::make_boxes(){
         
             sort_and_check(r_dim,r_dim_sorted,r_dex);
         
+            /*
+            iterate over the dimensions, trying to find the component of the neighbor point that
+            is most useful for setting a new hyperbox bound
+            */
             found_it=0;
             for(k=nparams-1;k>0 && found_it==0;){
                 if(data.get_data(neigh.get_data(j),r_dex.get_data(k))<data.get_data(i,r_dex.get_data(k)) &&
                    box_min.get_data(i,r_dex.get_data(k))>=chisq_exception){
+                   
+                   /*this neighbor is useful for setting a minimum of the hyperbox*/
 
                     found_it=1;
               
                 }
                 else if(data.get_data(neigh.get_data(j),r_dex.get_data(k))>data.get_data(i,r_dex.get_data(k)) &&
                    box_max.get_data(i,r_dex.get_data(k))>=chisq_exception){
-            
+                    
+                    /*this neighbor is useful for setting a maximum of the hyperbox*/
+                    
                     found_it=1;
                 }   
                 else k--;
             }
         
             if(k==0){
+                
+                /*we got all the way to the smallest r_dim without finding a useful minimum;
+                check to see if maybe that smallset r_dim will help us set a useful hyberbox
+                bound*/
+                
                 if(data.get_data(neigh.get_data(j),r_dex.get_data(k))>data.get_data(i,r_dex.get_data(k)) &&
                    box_max.get_data(i,r_dex.get_data(k))>=chisq_exception){
                
@@ -361,7 +387,9 @@ void aps_extractor::make_boxes(){
             }
         
             if(found_it==1){
-            
+                
+                /*the neighbor is useful for setting a hyperbox bound*/
+                
                 nn=data.get_data(neigh.get_data(j),r_dex.get_data(k));
                 mm=data.get_data(i,r_dex.get_data(k));
             
@@ -378,10 +406,6 @@ void aps_extractor::make_boxes(){
             
             }
         
-        
-            //radii.set(i,r_dex.get_data(k),r_dim_sorted.get_data(k));
-            //printf("set %d %d %e\n",r_dex.get_data(k),k,radii.get_data(i,r_dex.get_data(k)));
-           
         }
     
         for(k=0;k<nparams;k++){
@@ -415,10 +439,11 @@ void aps_extractor::make_boxes(){
     }
 
     printf("rows %d %d %d\n",data.get_rows(),box_max.get_rows(),box_min.get_rows());
-
+    
+    
+    /*symmetrize the hyperboxes*/
     double lv,lp,total_p=0.0;
     double dmin,dmax;
-    
     for(i=0;i<data.get_rows();i++){
         for(j=0;j<nparams;j++){
             dmin=data.get_data(i,j)-box_min.get_data(i,j);
@@ -433,17 +458,20 @@ void aps_extractor::make_boxes(){
         }
     }
     
-
+    /*assign a ln(posterior probability) to each hyperbox*/
     for(i=0;i<data.get_rows();i++){
-    
+        
+        /*calculate the ln(volume) of the hyperbox*/
         lv=0.0;
         for(j=0;j<nparams;j++)lv+=log(box_max.get_data(i,j)-box_min.get_data(i,j));
-    
+        
+        /*find the ln(probability) = ln_volume - 0.5*(chisquared-chisquared_min)*/
         nn=chisq.get_data(i)-chimin;
         l_probability.set(i,lv-0.5*nn);
         total_p+=exp(l_probability.get_data(i));
     }
-
+    
+    /*normalize the ln(probability)*/
     nn=log(total_p);
     for(i=0;i<data.get_rows();i++){
         l_probability.subtract_val(i,nn);
@@ -456,7 +484,7 @@ void aps_extractor::make_boxes(){
     printf("\ntotal_p %e\n",total_p);
 
 
-
+    /*sort the boxes by chisquared; l_prob_dexes will be in ascending order of chisquared*/
     array_1d<double> sorted_prob;
     for(i=0;i<l_probability.get_dim();i++)l_prob_dexes.set(i,i);
     
@@ -468,7 +496,25 @@ void aps_extractor::make_boxes(){
 }
 
 void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, int nsamples, int which_output){
-   
+    
+    /*
+    draw random samples from the posterior described by the hyperbox scheme described in the paper
+    
+    outname is the file to which the code writes the samples
+    
+    samples is an array_2d<double> where the samples will be stored
+    
+    nsamples is the number of samples desired
+    
+    which_output determines whether you are asking the routine to write to a file, or just store the samples in
+    the array_2d<double> (there are wrappers for this routine)
+    
+    NOTE: this is not the Bayesian inference method described in the paper.  It does not seem to work
+    as well.  For the method described in the paper, see draw_bayesian_bounds.
+    
+    */
+    
+    /*first, create the hyperbox approximation to the posterior*/
     if(l_probability.get_dim()==0){
         make_boxes();
     }
@@ -489,19 +535,28 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     }
     
     for(ii=0;ii<nsamples;ii++){
+    
+        /*draw a random number*/
         roll=chaos.doub();
         sum=0.0;
- 
+        
+        /*sum the probability in the hyperboxes until you reach the number drawn*/
         for(i=0;i<chisq.get_dim() && sum<roll;i++){
             sum+=exp(l_probability.get_data(l_prob_dexes.get_data(i)));
         } 
-    
+        
+        /*this is the hyperbox in which the random sample will be placed*/
         k=l_prob_dexes.get_data(i);
         
+        /*uniformly choose a point in that hyperbox (because we assume that chisquared is uniform
+        in the hyperboxes, we cannot say anything more about the distribution of points in that
+        box*/
         for(j=0;j<nparams;j++){
             pt.set(j,box_min.get_data(k,j)+chaos.doub()*(box_max.get_data(k,j)-box_min.get_data(k,j)));    
         }
         
+        
+        /*either write the sample to the output file, or store it in the array_2d<double> as desired*/
         if(which_output==1){
             fprintf(output,"%d %e ",1,chisq.get_data(k));
             for(j=0;j<nparams;j++){
@@ -519,23 +574,46 @@ void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, in
     }
 }
 
-void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double limit, double tol){
+void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double limit){
+    
+    /*
+    List the pixels in a 2-dimensional Bayesian credible limit as described in the paper
+    
+    filename is the name of the file where the pixels will be written
+    
+    ix and iy describe the 2-dimensional sub-space to be plotted
+    
+    limit is the credible limit desired (i.e 0.95 or 0.68, etc.)
+    */
+    
+    /*first, create the hyperbox approximation to the posterior*/
     if(l_probability.get_dim()==0){
         make_boxes();
     }
     
-
     int i,j,ibox;
     double sum=0.0;
     
+    /*
+    to_plot will store all of the pixels found in the two-dimensional sub-space.
+    These will be the corners of the hyperboxes containing the desired amount of the
+    posterior probability.  They will be fed to the routine plot_thinned_data so that
+    we do not print too many redundant, overlapping pixels
+    */
     array_2d<double> to_plot;
     
     to_plot.set_cols(2);
 
     for(i=0;i<l_probability.get_dim() && sum<limit;i++){
+        /*Iterate over the hyperboxes from lowest chisquared to highest, summing
+        the probability until we reach the desired limit.  All of the hyperboxes
+        contributing to this sum will contain the Bayesian credible limit.*/
+        
         ibox=l_prob_dexes.get_data(i);
         sum+=exp(l_probability.get_data(ibox));
         
+        /*add the four corners (in this 2-dimensional subspace) of the hyperbox
+        to to_plot*/
         j=to_plot.get_rows();
         to_plot.set(j,0,box_max.get_data(ibox,ix));
         to_plot.set(j,1,box_max.get_data(ibox,iy));
@@ -555,11 +633,21 @@ void aps_extractor::draw_bayesian_bounds(char *filename, int ix, int iy, double 
         
     }
     
-    plot_thinned_data(to_plot,tol,filename);    
+    /*feed to_plot to plot_thinned_data so that the output file is of reasonable size*/
+    plot_thinned_data(to_plot,filename);    
 }
 
-void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, double tol, char *filename){    
+void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, char *filename){    
+    /*
+    Because the points written by write_good_points() and draw_bayesian_bounds() are
+    likely to overlap a lot, this routine thins them out so that it plots points that
+    are not too densely clustered.
     
+    This routine assumes that to_plot has only two columns (i.e. it is for generating
+    plot data in 2-dimensional subspaces of the full parameter space)
+    */
+    
+    /*find the maximums and minimums of the dimensions in to_plot*/
     array_1d<double> max,min,center;
     int i,j;
     for(i=0;i<to_plot.get_rows();i++){
@@ -573,6 +661,7 @@ void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, double tol, cha
     center.set(0,0.5*(max.get_data(0)+min.get_data(0)));
     center.set(1,0.5*(max.get_data(1)+min.get_data(1)));
     
+    /*sort the points by their distance from the center of the points in to_plot*/
     array_1d<double> dd;
     array_1d<int> dex;
     double nn;
@@ -590,6 +679,13 @@ void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, double tol, cha
     array_1d<double> sorted;
     sort_and_check(dd,sorted,dex);
     
+    /*
+    been_plotted will contain all of the points that finally were output to the output file.
+    
+    been_plotted_tree will store these in a kd_tree so that, once enough points have been output,
+    we will only output points that are at least a normalized parameter space distance of 0.01 from
+    each other
+    */
     array_2d<double> been_plotted;
     kd_tree *been_plotted_tree;
     been_plotted_tree=NULL;
@@ -601,12 +697,18 @@ void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, double tol, cha
     FILE *output;
     output=fopen(filename,"w");
     for(i=0;i<to_plot.get_rows();i++){
+        /*iterate over the points starting with those furthest from the center of to_plot and
+        working inward*/
         chosen=dex.get_data(to_plot.get_rows()-1-i);
         
         if(been_plotted_tree==NULL){
+            /*if the k-d tree has not been made yet, go ahead and plot it*/
             plot_it=1;
         }
         else{
+            /*otherwise, only plot the point if the nearest already plotted point is farther away
+            than a normalized parameter space distance of 0.01*/
+        
             been_plotted_tree->nn_srch(*to_plot(chosen),1,neigh,ddneigh);
             
             if(ddneigh.get_data(0)>0.01){
@@ -642,23 +744,5 @@ void aps_extractor::plot_thinned_data(array_2d<double> &to_plot, double tol, cha
     if(been_plotted_tree!=NULL){
         delete been_plotted_tree;
     }
-    
-    /*
-    sum=0.0;
-    output=fopen(filename,"w");
-    for(i=0;i<l_probability.get_dim() && sum<limit;i++){
-        ibox=l_prob_dexes.get_data(i);
-        sum+=exp(l_probability.get_data(ibox));
         
-        fprintf(output,"%e %e\n",box_max.get_data(ibox,ix),box_max.get_data(ibox,iy));
-        fprintf(output,"%e %e\n",box_max.get_data(ibox,ix),box_min.get_data(ibox,iy));
-        fprintf(output,"%e %e\n",box_min.get_data(ibox,ix),box_min.get_data(ibox,iy));
-        fprintf(output,"%e %e\n",box_min.get_data(ibox,ix),box_max.get_data(ibox,iy));
-        fprintf(output,"%e %e\n",box_max.get_data(ibox,ix),box_max.get_data(ibox,iy));
-        
-        
-    }
-    fclose(output);
-    */
-    
 }
