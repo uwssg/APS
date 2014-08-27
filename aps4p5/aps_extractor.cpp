@@ -246,6 +246,11 @@ void aps_extractor::sample_posterior(array_2d<double> &samples, int nsamples){
 
 void aps_extractor::make_boxes(){
     
+    /*
+    generate the hyperboxes used for approximating the Bayesian posterior 
+    as described in the paper
+    */
+    
     if(filename[0]==0){
         printf("WARNING filename no set in sample_posterior\n");
         exit(1);
@@ -255,6 +260,17 @@ void aps_extractor::make_boxes(){
         learn_chimin();
     }
     
+    /*
+    l_probability stores the log of the posterior probability in each box
+    
+    l_prob_dexes stores the index of the sample at the center of each box
+    
+    box_max and box_min store the bounds of each box in all dimensions
+    
+    chisq stores the chisquared value at the center of each box
+    
+    these are all global variables
+    */
     l_prob_dexes.reset();
     l_probability.reset();
     box_max.reset();
@@ -265,7 +281,6 @@ void aps_extractor::make_boxes(){
     box_min.set_cols(nparams);
     
     array_2d<double> data;
-    array_1d<double> min,max;
     
     data.set_name("data");
     
@@ -293,11 +308,6 @@ void aps_extractor::make_boxes(){
     }
     fclose(input);
 
-    for(i=0;i<nparams;i++){
-        min.set(i,-100.0);
-        max.set(i,100.0);
-    }
-
     kd_tree kd(data);
 
     array_1d<double> dd;
@@ -314,7 +324,7 @@ void aps_extractor::make_boxes(){
 
 
     for(i=0;i<data.get_rows();i++){
-        //printf("\n");
+     
         kd.nn_srch(*data(i),n_neigh,neigh,dd);
     
         for(j=0;j<nparams;j++){

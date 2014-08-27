@@ -76,13 +76,19 @@ class aps_extractor{
         double chi_min,delta_chi,global_tol;
         int nparams,extra_words;
         int cutoff,asserted;
-    
+        
         array_1d<int> l_prob_dexes;
         array_1d<double> min_pt,l_probability,chisq;
         array_2d<double> box_max,box_min;
-    
+        
+        /*find the minimum value of chisquared in the set of samples*/
         void learn_chimin();
+        
+        /*find the number of parameters in parameter space*/
         void learn_nparams();
+        
+        /*make sure that filename has been set before you try to do any
+        real work*/
         void validate();
         
         /*thin out the points plotted by write_good_points and
