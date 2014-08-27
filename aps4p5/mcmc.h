@@ -1,3 +1,10 @@
+/*
+NOTE: do not use gibbs sampling
+
+Test done on WMAP 7 likelihood did not converge well with
+Gibbs sampling.  Converged very well without.
+*/
+
 #ifndef MCMC_H
 #define MCMC_H
 
