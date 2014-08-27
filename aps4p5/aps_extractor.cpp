@@ -289,7 +289,8 @@ void aps_extractor::make_boxes(){
 
     char word[letters];
     int i,ct=0;
-
+    
+    /*read in the data (the raw APS outputs)*/
     input=fopen(filename,"r");
     for(i=0;i<nparams+extra_words;i++)fscanf(input,"%s",word);
     double nn,chimin=chisq_exception;
@@ -307,7 +308,8 @@ void aps_extractor::make_boxes(){
         for(i=0;i<extra_words-2;i++)fscanf(input,"%le",&nn);
     }
     fclose(input);
-
+    
+    /*arrange the data in k-d tree for nearest neighbor searching*/
     kd_tree kd(data);
 
     array_1d<double> dd;
@@ -321,17 +323,18 @@ void aps_extractor::make_boxes(){
     double mm;
         
     for(i=0;i<nparams;i++)smallest_radius.set(i,1.0e30);
-
-
+    
     for(i=0;i<data.get_rows();i++){
-     
+        
+        /*find the nearest neighbors of each point*/
         kd.nn_srch(*data(i),n_neigh,neigh,dd);
     
         for(j=0;j<nparams;j++){
             box_max.set(i,j,2.0*chisq_exception);
             box_min.set(i,j,2.0*chisq_exception);
         }
-    
+        
+        /*iterate over the neighbors, trying to set bounds on the hyberbox*/
         for(j=1;j<n_neigh;j++){
             for(k=0;k<nparams;k++){
                 r_dim.set(k,fabs(data.get_data(i,k)-data.get_data(neigh.get_data(j),k)));
@@ -340,23 +343,36 @@ void aps_extractor::make_boxes(){
         
             sort_and_check(r_dim,r_dim_sorted,r_dex);
         
+            /*
+            iterate over the dimensions, trying to find the component of the neighbor point that
+            is most useful for setting a new hyperbox bound
+            */
             found_it=0;
             for(k=nparams-1;k>0 && found_it==0;){
                 if(data.get_data(neigh.get_data(j),r_dex.get_data(k))<data.get_data(i,r_dex.get_data(k)) &&
                    box_min.get_data(i,r_dex.get_data(k))>=chisq_exception){
+                   
+                   /*this neighbor is useful for setting a minimum of the hyperbox*/
 
                     found_it=1;
               
                 }
                 else if(data.get_data(neigh.get_data(j),r_dex.get_data(k))>data.get_data(i,r_dex.get_data(k)) &&
                    box_max.get_data(i,r_dex.get_data(k))>=chisq_exception){
-            
+                    
+                    /*this neighbor is useful for setting a maximum of the hyperbox*/
+                    
                     found_it=1;
                 }   
                 else k--;
             }
         
             if(k==0){
+                
+                /*we got all the way to the smallest r_dim without finding a useful minimum;
+                check to see if maybe that smallset r_dim will help us set a useful hyberbox
+                bound*/
+                
                 if(data.get_data(neigh.get_data(j),r_dex.get_data(k))>data.get_data(i,r_dex.get_data(k)) &&
                    box_max.get_data(i,r_dex.get_data(k))>=chisq_exception){
                
@@ -371,7 +387,9 @@ void aps_extractor::make_boxes(){
             }
         
             if(found_it==1){
-            
+                
+                /*the neighbor is useful for setting a hyperbox bound*/
+                
                 nn=data.get_data(neigh.get_data(j),r_dex.get_data(k));
                 mm=data.get_data(i,r_dex.get_data(k));
             
@@ -388,10 +406,6 @@ void aps_extractor::make_boxes(){
             
             }
         
-        
-            //radii.set(i,r_dex.get_data(k),r_dim_sorted.get_data(k));
-            //printf("set %d %d %e\n",r_dex.get_data(k),k,radii.get_data(i,r_dex.get_data(k)));
-           
         }
     
         for(k=0;k<nparams;k++){
@@ -425,10 +439,11 @@ void aps_extractor::make_boxes(){
     }
 
     printf("rows %d %d %d\n",data.get_rows(),box_max.get_rows(),box_min.get_rows());
-
+    
+    
+    /*symmetrize the hyperboxes*/
     double lv,lp,total_p=0.0;
     double dmin,dmax;
-    
     for(i=0;i<data.get_rows();i++){
         for(j=0;j<nparams;j++){
             dmin=data.get_data(i,j)-box_min.get_data(i,j);
@@ -443,17 +458,20 @@ void aps_extractor::make_boxes(){
         }
     }
     
-
+    /*assign a ln(posterior probability) to each hyperbox*/
     for(i=0;i<data.get_rows();i++){
-    
+        
+        /*calculate the ln(volume) of the hyperbox*/
         lv=0.0;
         for(j=0;j<nparams;j++)lv+=log(box_max.get_data(i,j)-box_min.get_data(i,j));
-    
+        
+        /*find the ln(probability) = ln_volume - 0.5*(chisquared-chisquared_min)*/
         nn=chisq.get_data(i)-chimin;
         l_probability.set(i,lv-0.5*nn);
         total_p+=exp(l_probability.get_data(i));
     }
-
+    
+    /*normalize the ln(probability)*/
     nn=log(total_p);
     for(i=0;i<data.get_rows();i++){
         l_probability.subtract_val(i,nn);
@@ -466,7 +484,7 @@ void aps_extractor::make_boxes(){
     printf("\ntotal_p %e\n",total_p);
 
 
-
+    /*sort the boxes by chisquared; l_prob_dexes will be in ascending order of chisquared*/
     array_1d<double> sorted_prob;
     for(i=0;i<l_probability.get_dim();i++)l_prob_dexes.set(i,i);
     
@@ -478,7 +496,11 @@ void aps_extractor::make_boxes(){
 }
 
 void aps_extractor::sample_posterior(char *outname,array_2d<double> &samples, int nsamples, int which_output){
-   
+    
+    /*
+    draw random samples from the posterior described by the hyperbox scheme described in the paper
+    */
+    
     if(l_probability.get_dim()==0){
         make_boxes();
     }
