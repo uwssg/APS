@@ -15,14 +15,29 @@ aps_extraction_runner.cpp
 #define APS_EXTRACTOR_H
 
 class aps_extractor{
-
+    /*
+    This class will store the name of the file in which the APS output being
+    processed is stored in the global variable filenam.
+    
+    The file will automatically learn the number of parameters in parameter
+    space (provided that the user has not changed the columns output by
+    aps.write_pts() in aps.cpp)
+    */
+    
     public:
         aps_extractor();
         ~aps_extractor();
-    
+        
+        /*set the name of the file where the APS output is stored*/
         void set_filename(char*);
+        
+        /*if chisquared_lim = chisquared_min + delta chisquared, set 
+        delta chisquared*/
         void set_delta_chi(double);
+        
+        /*write all points for which chisquared<chisquared_lim*/
         void write_good_points(char*);
+        
         void write_good_points(char*,int,int,double);
         void plot_chimin(char*);
     
