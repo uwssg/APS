@@ -1021,12 +1021,17 @@ void kd_tree::descend(int root){
 }
 
 int kd_tree::kernel_srch(array_1d<double> &pt, array_1d<double> &kern, array_1d<int> &kdex){
-   //*pt is the center of your kernel
-  //*kern will specify the the width in each dimension you are looking for
-  //*kdex is where the routine will store the indices of the allowed points
+   /*
+   pt is the center of your kernel
   
-  //the routine will return the number of allowed points found
+   kern will specify the the half-width in each dimension you are looking for
   
+   kdex is where the routine will store the indices of the allowed points
+  
+   the routine will return the number of allowed points found
+   
+   THIS IS NOT WELL-TESTED
+  */
   int node,i,k;
   
   nkernel=0;
