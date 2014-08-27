@@ -2,6 +2,12 @@
 This code gives an example of how to use the aps_extractor class defined
 in aps_extractor.h and aps_extractor.cpp to take the output from APS and
 return both Frequentist confidence limits and Bayesian credible limits.
+
+This file can be compiled using
+
+make aps_extract
+
+the executable aps_extract will then run this file
 */
 
 #include "aps_extractor.h"
@@ -13,21 +19,26 @@ char outname[letters];
 
 aps_extractor apsExtractorObj;
 
-//set the name of the file where the APS data is stored
+/*set the name of the file where the APS data is stored
+
+note that the data file referred to here is not a part of the repository
+*/
 apsExtractorObj.set_filename("aps_output/WMAP/apsWMAP_unitSphere_GaussLearn_output.sav");
 
-//set the delta chisquared so that chisquared_lim = chisquared_min + delta chisquared
+
+/*set the delta chisquared so that chisquared_lim = chisquared_min + delta chisquared*/
 apsExtractorObj.set_delta_chi(12.6);
-//one could alternative set chisquared_lim by hand using
+
+/*one could alternative set chisquared_lim by hand using*/
 //apsExtractorObj.set_target(1283.3)
 
-//optionally set the maximum number of points from the data file to use
+/*optionally set the maximum number of points from the data file to use*/
 //apsExtractorObj.set_cutoff(47000);
 
-//select out only those points with chisquared < chisquared_lim and print them to the output file
+/*select out only those points with chisquared < chisquared_lim and print them to the output file*/
 apsExtractorObj.write_good_points("aps_processed/WMAP/frequentist/gaussLearn_good_points.sav");
 
-//plot chisquared_min discovered as a function of the number of samples
+/*plot chisquared_min discovered as a function of the number of samples*/
 apsExtractorObj.plot_chimin("aps_chi_min_test.sav");
 
 /*
