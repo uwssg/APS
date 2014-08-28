@@ -1080,7 +1080,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     int ic,acutally_added,use_it;
     array_1d<double> midpt;
-    double chimin;
+    double chimid;
     
     /*
     Now we must assess whether the point to which this simplex search converged is an
@@ -1094,9 +1094,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             midpt.set(i,0.5*(centers.get_data(ic,i)+gg.get_pt(_mindex,i)));
         }
         
-        evaluate(midpt,&chimin,&actually_added);
+        evaluate(midpt,&chimid,&actually_added);
         
-        if(chimin<strad.get_target()){
+        if(chimid<strad.get_target()){
             use_it=0;
             
             if(gg.get_fn(_mindex)<gg.get_fn(center_dexes.get_data(ic))){
