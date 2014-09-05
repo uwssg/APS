@@ -2767,7 +2767,7 @@ void aps::write_pts(){
     }
     
     int ii,jj,ic;
-    array_1d<double> min,max;
+    array_1d<double> min,max,unit_v;
     array_2d<double> sphere_data;
     min.set_name("unitsphere_min");
     max.set_name("unitsphere_max");
@@ -2786,12 +2786,15 @@ void aps::write_pts(){
         if(ii>=gg.get_dim()){
             for(i=0;i<gg.get_dim();i++){
                 min.set(i,0.0);
-                max.set(i,gg.get_max(i)-gg.get_min(i));
+                max.set(i,1.0);
             }
             
             for(i=0;i<boundary_pts.get_rows();i++){
                 for(j=0;j<boundary_pts.get_cols(i);j++){
-                    sphere_data.add_row(*gg.get_pt(boundary_pts.get_data(i,j)));
+                    
+                    project_to_unit_sphere(i,*gg.get_pt(boundary_pts.get_data(i,j)),unit_v);
+                    sphere_data.add_row(unit_v);
+
                 }
             }
             
