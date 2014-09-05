@@ -2786,7 +2786,7 @@ void aps::write_pts(){
         if(ii>=gg.get_dim()){
             for(i=0;i<gg.get_dim();i++){
                 min.set(i,0.0);
-                max.set(i,1.0);
+                max.set(i,gg.get_max(i)-gg.get_min(i));
             }
             
             for(i=0;i<boundary_pts.get_rows();i++){
