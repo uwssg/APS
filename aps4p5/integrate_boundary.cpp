@@ -3,7 +3,7 @@
 main(){
 
 //d=5 means delta_chisq=11
-int dim=5,ncenters=3;
+int dim=8,ncenters=3;
 
 ellipses_integrable *chifn;
 

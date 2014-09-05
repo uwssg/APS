@@ -67,8 +67,8 @@ min.set_dim(dim);
 int i,j;
 
 for(i=0;i<dim;i++){
-    min.set(i,-100.0);
-    max.set(i,100.0);
+    min.set(i,-200.0);
+    max.set(i,200.0);
 }
 
 
