@@ -997,37 +997,42 @@ void aps::find_global_minimum(array_1d<int> &neigh){
             
             mu2=gradient.normalize();
             
-            /*
-            Find the vector between the current simplex minimum point and the point that
-            was the minimum of the simplex the last time that _simplex_min was improved.
+            if(_last_ff.get_dim()>0){
+                /*
+                Find the vector between the current simplex minimum point and the point that
+                was the minimum of the simplex the last time that _simplex_min was improved.
             
-            This vector will be stored in the array_1d<double> step
-            */
-            for(i=0;i<dim+1;i++){
-                if(i==0 || _last_ff.get_data(i)<_last_ff.get_data(j))j=i;
-            }
-            
-            for(i=0;i<dim;i++){
-                step.set(i,pts.get_data(il,i)-_last_simplex.get_data(j,i));
-            }
-            
-            mu=step.normalize();
-            
-            /*
-            Take the algebraic mean of gradient and step.
-            
-            Store this in step
-            */
-            if(!(isnan(mu2))){
-                for(i=0;i<dim;i++){
-                    mu1=0.5*(step.get_data(i)-gradient.get_data(i));
-                    step.set(i,mu1);
+                This vector will be stored in the array_1d<double> step
+                */
+                for(i=0;i<dim+1;i++){
+                    if(i==0 || _last_ff.get_data(i)<_last_ff.get_data(j))j=i;
                 }
-            }
+            
+                for(i=0;i<dim;i++){
+                    step.set(i,pts.get_data(il,i)-_last_simplex.get_data(j,i));
+                }
+            
+                mu=step.normalize();
+            
+                /*
+                Take the algebraic mean of gradient and step.
+            
+                Store this in step
+                */
+                if(!(isnan(mu2))){
+                    for(i=0;i<dim;i++){
+                        mu1=0.5*(step.get_data(i)-gradient.get_data(i));
+                        step.set(i,mu1);
+                    }
+                }
+                else{
+                    printf("    WARNING gradient had nan norm\n");
+                }
+                //printf("    gradient norm %e\n",mu2);
+            }//if _last_ff.get_dim()>0
             else{
-                printf("    WARNING gradient had nan norm\n");
+                for(i=0;i<dim;i++)step.set(i,gradient.get_data(i));
             }
-            //printf("    gradient norm %e\n",mu2);
             
             step.normalize();
             
