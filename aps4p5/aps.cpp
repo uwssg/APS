@@ -1,7 +1,5 @@
 #include "aps.h"
 
-enum{iWIDE,iFOCUS};
-
 straddle_parameter::straddle_parameter(){
     target=-1.0;
 }
@@ -77,6 +75,9 @@ aps::aps(int dim_in, int kk, double dd, int seed){
     range_min.set_name("range_min");
     ddUnitSpheres.set_name("ddUnitSpheres");
     refined_simplex.set_name("refined_simplex");
+    
+    _last_ff.set_name("find_global_min_last_ff");
+    _last_simplex.set_name("find_global_min_last_simplex");
     
     unitSpheres=NULL;
     
@@ -700,6 +701,7 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     min.set_name("find_global_min_min");
     max.set_name("find_global_min_max");
     true_var.set_name("find_global_min_true_var");
+    length.set_name("find_global_min_length");
     
     double fstar,fstarstar,dx;
     int ih,il,i,j,k,actually_added;
@@ -773,11 +775,21 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     
     array_1d<double> p_min,p_max,step,deviation;
     array_1d<int> ix_candidates;
+    
+    p_min.set_name("find_global_min_p_min");
+    p_max.set_name("find_global_min_p_max");
+    step.set_name("find_global_min_step");
+    deviation.set_name("find_global_min_deviation");
+    ix_candidates.set_name("find_global_min_ix_candidates");
+    
     int ix;
     double theta;
     
     array_1d<double> trial,gradient;
     double mu1,mu2,x1,x2;
+    
+    trial.set_name("find_global_min_trial");
+    gradient.set_name("find_global_min_gradient");
     
     int delta_max=0;
     
@@ -1081,6 +1093,8 @@ void aps::find_global_minimum(array_1d<int> &neigh){
     int ic,acutally_added,use_it;
     array_1d<double> midpt;
     double chimid;
+    
+    midpt.set_name("find_global_min_midpt");
     
     /*
     Now we must assess whether the point to which this simplex search converged is an
