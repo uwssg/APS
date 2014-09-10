@@ -438,15 +438,16 @@ void aps_extractor::make_boxes(){
             if(box_max.get_data(i,k)>=chisq_exception && box_min.get_data(i,k)>=chisq_exception){
                 for(j=0;j<n_neigh;j++){
                     nn=data.get_data(neigh.get_data(j),k);
+                   
                     
-                    if(nn<data.get_data(i,k)-1.0e-10){
-                        if(box_min.get_data(i,k)>=chisq_exception || nn<box_min.get_data(i,k)){
+                    if(nn<data.get_data(i,k)-1.0e-10*(kd.get_max(k)-kd.get_min(k))){
+                        if(box_min.get_data(i,k)>=chisq_exception || nn>box_min.get_data(i,k)){
                             box_min.set(i,k,nn);
                         }
                     }
                     
-                    if(nn>data.get_data(i,k)+1.0e-10){
-                        if(box_max.get_data(i,k)>=chisq_exception || nn>box_max.get_data(i,k)){
+                    if(nn>data.get_data(i,k)+1.0e-10*(kd.get_max(k)-kd.get_min(k))){
+                        if(box_max.get_data(i,k)>=chisq_exception || nn<box_max.get_data(i,k)){
                             box_max.set(i,k,nn);
                         }
                     }
@@ -510,6 +511,11 @@ void aps_extractor::make_boxes(){
         /*calculate the ln(volume) of the hyperbox*/
         lv=0.0;
         for(j=0;j<nparams;j++)lv+=log(box_max.get_data(i,j)-box_min.get_data(i,j));
+        
+        if(isnan(lv) || isinf(-1.0*lv) || isinf(lv)){
+            printf("WARNING lv %e\n",lv);
+            exit(1);
+        }
         
         /*find the ln(probability) = ln_volume - 0.5*(chisquared-chisquared_min)*/
         nn=chisq.get_data(i)-chimin;
