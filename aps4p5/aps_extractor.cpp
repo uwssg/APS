@@ -321,14 +321,40 @@ void aps_extractor::make_boxes(){
     array_1d<double> r_dim,r_dim_sorted;
     array_1d<int> r_dex;
     double mm;
+    int found_n_neigh;
         
     for(i=0;i<nparams;i++)smallest_radius.set(i,1.0e30);
     
     for(i=0;i<data.get_rows();i++){
         
         /*find the nearest neighbors of each point*/
-        kd.nn_srch(*data(i),n_neigh,neigh,dd);
-    
+        found_n_neigh=-1;
+        while(found_n_neigh==-1){
+            kd.nn_srch(*data(i),n_neigh,neigh,dd);
+            
+            found_n_neigh=1;
+            for(j=0;j<nparams && found_n_neigh==1;j++){
+                for(k=0;k<n_neigh;k++){
+                    nn=fabs(data.get_data(i,j)-data.get_data(neigh.get_data(k),j));
+                    if(k==0 || nn>mm){
+                        mm=nn;
+                    }
+                }
+                
+                if(mm<1.0e-10*(kd.get_max(j)-kd.get_min(j))){
+                    n_neigh+=10;
+                    found_n_neigh=-1;
+                    printf("increasing n_neigh to %d -- %e\n",n_neigh,mm);
+                }
+                
+                if(n_neigh>=data.get_rows()){
+                    printf("WARNING could not make n_neigh large enough to get bayesian bounds\n");
+                    exit(1);
+                }
+            }
+            
+        }
+        
         for(j=0;j<nparams;j++){
             box_max.set(i,j,2.0*chisq_exception);
             box_min.set(i,j,2.0*chisq_exception);
@@ -407,7 +433,27 @@ void aps_extractor::make_boxes(){
             }
         
         }
-    
+        
+        for(k=0;k<nparams;k++){
+            if(box_max.get_data(i,k)>=chisq_exception && box_min.get_data(i,k)>=chisq_exception){
+                for(j=0;j<n_neigh;j++){
+                    nn=data.get_data(neigh.get_data(j),k);
+                    
+                    if(nn<data.get_data(i,k)-1.0e-10){
+                        if(box_min.get_data(i,k)>=chisq_exception || nn<box_min.get_data(i,k)){
+                            box_min.set(i,k,nn);
+                        }
+                    }
+                    
+                    if(nn>data.get_data(i,k)+1.0e-10){
+                        if(box_max.get_data(i,k)>=chisq_exception || nn>box_max.get_data(i,k)){
+                            box_max.set(i,k,nn);
+                        }
+                    }
+                }
+            }
+        }
+        
         for(k=0;k<nparams;k++){
             if(box_max.get_data(i,k)>=chisq_exception && box_min.get_data(i,k)>=chisq_exception){
                 printf("WARNING failed to find a bound %d %d %e %e\n",i,k,box_min.get_data(i,k),box_max.get_data(i,k));
