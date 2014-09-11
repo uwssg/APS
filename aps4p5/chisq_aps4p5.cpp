@@ -81,7 +81,7 @@ double wmap_likelihood::operator()(array_1d<double> &v) const{
   double *dir;
  
   double before=double(time(NULL));
-  called++;
+
   
   FILE *output;
 
@@ -93,6 +93,8 @@ double wmap_likelihood::operator()(array_1d<double> &v) const{
           return 2.0*chisq_exception;
       }
   }
+  
+  called++;
   
   while((v.get_data(0)+v.get_data(1))/(v.get_data(2)*v.get_data(2))>1.0){
     v.multiply_val(0,0.9);
