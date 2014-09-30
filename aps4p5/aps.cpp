@@ -1847,15 +1847,16 @@ void aps::aps_focus(){
    int ic;
 
    for(ic=0;ic<centers.get_rows();ic++){
-       called_focus++;
-       if(boundary_pts.get_cols(ic)<gg.get_dim()){
-           random_focus(ic);
+       if(gg.get_fn(center_dexes.get_data(ic))<strad.get_target()){
+           called_focus++;
+           if(boundary_pts.get_cols(ic)<gg.get_dim()){
+               random_focus(ic);
            
-       }//if don't have enough boundary points
-       else{
-           corner_focus(ic);
-       }    
-       
+           }//if don't have enough boundary points
+           else{
+               corner_focus(ic);
+           }    
+       }
    }
    
 }
@@ -2182,8 +2183,15 @@ void aps::aps_search(){
 
     double before=double(time(NULL));
     int ibefore=chisq->get_called();
- 
-    if(called_focus<called_wide){
+    
+    int ic,valid_centers=0;
+    for(ic=0;ic<center_dexes.get_dim();ic++){
+        if(gg.get_fn(center_dexes.get_data(ic))<strad.get_target()){
+            valid_centers++;
+        }
+    }
+    
+    if(called_focus<called_wide && valid_centers>0){
         aps_focus();
     }
     else{
