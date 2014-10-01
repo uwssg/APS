@@ -97,35 +97,37 @@ test_eigen: test_eigen.cpp eigen_wrapper.o
 	$(gg) -o test_eigen test_eigen.cpp goto_tools.o containers.o \
 	eigen_wrapper.o $(LIBRARIES) $(INCLUDE) -Wno-deprecated
 
+box.o: box.cpp box.h goto_tools.o
+	$(gg) -c box.cpp
+
 gaussian_process.o: gaussian_process.cpp gaussian_process.h kd.o goto_tools.o \
-eigen_wrapper.o containers.o
+eigen_wrapper.o containers.o box.o
 	$(gg) -c gaussian_process.cpp goto_tools.o kd.o eigen_wrapper.o \
 	containers.o \
 	$(LIBRARIES) $(INCLUDE)
 
 aps.o: aps.h aps.cpp kd.o goto_tools.o eigen_wrapper.o gaussian_process.o \
-chisq.o containers.o
+chisq.o containers.o box.o
 	$(gg) -c aps.cpp goto_tools.o \
 	eigen_wrapper.o kd.o gaussian_process.o \
 	chisq.o containers.o $(LIBRARIES) \
 	$(INCLUDE) -Wno-deprecated
 
-ellipse: aps_runner_ellipses.cpp aps.o chisq.o
+ellipse: aps_runner_ellipses.cpp aps.o chisq.o box.o
 	$(gg) -o ellipse aps_runner_ellipses.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
+	chisq.o aps.o box.o $(LIBRARIES) $(INCLUDE)
 
-ellipseBrute: aps_ellipse_brute.cpp aps.o chisq.o
+ellipseBrute: aps_ellipse_brute.cpp aps.o chisq.o box.o
 	$(gg) -o ellipseBrute aps_ellipse_brute.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq.o aps.o $(LIBRARIES) $(INCLUDE)
+	chisq.o aps.o box.o $(LIBRARIES) $(INCLUDE)
 
-
-
-integrate: integrate_boundary.cpp kd.o eigen_wrapper.o gaussian_process.o chisq.o
+integrate: integrate_boundary.cpp kd.o eigen_wrapper.o \
+gaussian_process.o chisq.o box.o
 	$(gg) -o integrate integrate_boundary.cpp \
 	goto_tools.o containers.o kd.o eigen_wrapper.o gaussian_process.o \
-	chisq.o $(LIBRARIES) $(INCLUDE)
+	chisq.o box.o $(LIBRARIES) $(INCLUDE)
 
 mcmc_test: mcmc.o mcmc_test.cpp
 	$(gg) -o mcmc_test mcmc_test.cpp \
@@ -140,11 +142,11 @@ mcmcBrute: mcmc.o mcmc_brute.cpp
 	$(LIBRARIES) $(INCLUDE)
 
 apsWMAP: aps_runner_wmap7.cpp aps.o chisq_aps4p5.o camb_wrapper_wmap.o \
-wmap_wrapper.o
+wmap_wrapper.o box.o
 	$(gg) -D_WMAP7_ -o apsWMAP aps_runner_wmap7.cpp \
 	goto_tools.o containers.o wmap_wrapper.o camb_wrapper_wmap.o \
 	kd.o eigen_wrapper.o gaussian_process.o \
-	chisq.o chisq_aps4p5.o aps.o \
+	chisq.o chisq_aps4p5.o aps.o box.o \
 	$(WMAP_LIBRARIES) $(WMAP_INCLUDE)
 
 all:

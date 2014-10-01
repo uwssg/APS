@@ -5,6 +5,7 @@
 #include "eigen_wrapper.h"
 #include "containers.h"
 #include "kd.h"
+#include "box.h"
 
 class covariance_function{
     /*
@@ -555,9 +556,34 @@ class gp{
         /*return a pointer to the parameter space point specified by the int*/
         array_1d<double>* get_pt(int);
         
+        void actual_gradient(array_1d<double>&,array_1d<double>&);
+        void actual_gradient(int,array_1d<double>&);
+        
         /*return a pointer to the covariogram*/
         covariance_function* get_covariogram();
-
+        
+        double get_search_time();
+        int get_search_ct();
+        
+        double get_search_time_solo();
+        int get_search_ct_solo();
+        
+        double get_search_time_box();
+        int get_search_ct_box();
+        
+        int get_biggest_box();
+        int get_smallest_box();
+        int get_biggest_bad_box(double);
+        
+        int get_n_small_boxes();
+        int get_n_optimal_boxes();
+        
+        int get_nboxes();
+        int get_box_contents(int);
+        int get_box_contents(int,int);
+        double get_box_max(int,int);
+        double get_box_min(int,int);
+        
     private:
     
         /*this object will keep track of the results of nearest neighbor searches
@@ -575,6 +601,8 @@ class gp{
         the points in parameter space corresponding to the known function 
         values in fn*/
         kd_tree *kptr;
+        
+        box *bptr;
         
         /*optional maximum value for uncertainty on interpolated function values*/
         double sigcap;
@@ -613,7 +641,12 @@ class gp{
         Note that this function takes as an argument an array of ln(hyperparameters)
         */    
         double optimization_error(array_1d<double>&);
-
+        
+        ////////////////
+        mutable array_2d<double> cached_ggin;
+        mutable array_1d<int> cached_neigh;
+        mutable array_1d<double> cached_pmin,cached_pmax;
+        mutable int cached_ibox,cached_kk;
     
 };
 
