@@ -1054,9 +1054,9 @@ void aps::find_global_minimum(array_1d<int> &neigh){
                 }
                 
                 if(i!=il){
-                    theta=0.0;
                     mu1=-1.0;
                     while(mu1<0.0 || isnan(mu1)){
+                        theta=0.0;
                         for(j=0;j<dim;j++){
                             deviation.set(j,normal_deviate(dice,0.0,1.0));
                             theta+=deviation.get_data(j)*step.get_data(j);
